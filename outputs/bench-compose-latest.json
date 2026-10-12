@@ -12,86 +12,86 @@
  "tenants": [
   {
    "tenant_source": "ks",
-   "image": "mlp-app:c18af0f-wt49e48804",
+   "image": "mlp-app:c4227dd-wteccfd076",
    "dirty_tree": true,
-   "host_port": 63757,
-   "train_in_container_s": 2.71,
-   "health_s": 1.592,
-   "startup_s": 1.674,
+   "host_port": 64274,
+   "train_in_container_s": 2.73,
+   "health_s": 1.634,
+   "startup_s": 1.713,
    "per_task": {
     "remaining_hours": {
      "type": "regression",
-     "p50_ms": 20.51,
-     "p95_ms": 21.69,
-     "max_ms": 60.15,
-     "batch500_s": 0.091,
+     "p50_ms": 20.82,
+     "p95_ms": 22.87,
+     "max_ms": 60.94,
+     "batch500_s": 0.093,
      "n": 200
     },
     "failure_24h": {
      "type": "risk",
-     "p50_ms": 21.89,
-     "p95_ms": 23.06,
-     "max_ms": 26.9,
+     "p50_ms": 22.02,
+     "p95_ms": 22.76,
+     "max_ms": 24.46,
      "batch500_s": 0.11,
      "n": 200
     },
     "sensor_ood": {
      "type": "anomaly",
-     "p50_ms": 26.24,
-     "p95_ms": 27.27,
-     "max_ms": 29.01,
-     "batch500_s": 0.315,
+     "p50_ms": 28.11,
+     "p95_ms": 30.32,
+     "max_ms": 34.17,
+     "batch500_s": 0.311,
      "n": 200
     }
    },
-   "rss_mb": 245.5,
+   "rss_mb": 246.2,
    "cgroup_memory_max": "805306368",
    "cgroup_cpu_max": "100000 100000"
   },
   {
    "tenant_source": "sw",
-   "image": "mlp-app:c18af0f-wt49e48804",
+   "image": "mlp-app:c4227dd-wteccfd076",
    "dirty_tree": true,
-   "host_port": 63781,
-   "train_in_container_s": 2.8,
-   "health_s": 1.592,
-   "startup_s": 1.673,
+   "host_port": 64303,
+   "train_in_container_s": 2.82,
+   "health_s": 1.635,
+   "startup_s": 1.715,
    "per_task": {
     "delta_e": {
      "type": "regression",
-     "p50_ms": 22.62,
-     "p95_ms": 24.54,
-     "max_ms": 64.4,
+     "p50_ms": 23.21,
+     "p95_ms": 24.93,
+     "max_ms": 70.97,
      "batch500_s": 0.093,
      "n": 200
     },
     "defect_risk": {
      "type": "risk",
-     "p50_ms": 20.62,
-     "p95_ms": 21.94,
-     "max_ms": 22.81,
+     "p50_ms": 21.26,
+     "p95_ms": 22.79,
+     "max_ms": 25.12,
      "batch500_s": 0.108,
      "n": 200
     },
     "print_ood": {
      "type": "anomaly",
-     "p50_ms": 26.38,
-     "p95_ms": 27.96,
-     "max_ms": 31.01,
+     "p50_ms": 27.03,
+     "p95_ms": 28.42,
+     "max_ms": 31.85,
      "batch500_s": 0.312,
      "n": 200
     }
    },
-   "rss_mb": 246.8,
+   "rss_mb": 249.2,
    "cgroup_memory_max": "805306368",
    "cgroup_cpu_max": "100000 100000"
   }
  ],
  "worst": {
-  "p95_ms": 27.96,
-  "batch500_s": 0.315,
-  "startup_s": 1.674,
-  "rss_mb": 246.8
+  "p95_ms": 30.32,
+  "batch500_s": 0.312,
+  "startup_s": 1.715,
+  "rss_mb": 249.2
  },
  "pass": {
   "p95_ms": true,
