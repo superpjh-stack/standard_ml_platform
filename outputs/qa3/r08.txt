@@ -1,0 +1,5 @@
+G-S02  불량 등록부 r1_override_type 실기동  PASS  기동=exit R1", f"{ 
+G-S02  불량 등록부 r2_missing_required_feature 실기동  PASS  기동=exit R2", f"{full}: 필수 변수 {f} 를 채울 원천이 없다") 
+G-S02  불량 등록부 r3_uses_disabled 실기동  PASS  기동=exit R3", f"{full}: 의존 과제 {u} 가 꺼져 있다") 
+G-S02  불량 등록부 r4_live_synthetic 실기동  WARN  기동=up(D-27 대로) 그러나 zz4 는 DB 에 production 이 없어 R4 가 실제로 판정됐는지 알 수 없음 — 실경로는 t09 에서 FAIL(DEF-QA3-001) ·  {"status":"ok","db":true,"version":"0.1.0","tenant":"zz4","tasks":[{"task":"zz4.delta_e","model_ready":false,"version":null}]}
+G-S02  불량 등록부 r5_plugin_conflict 실기동  PASS  기동=exit R5", f"{full}: 비용식 {module} 이 팩과 회사에 다른 구현으로 있다") 

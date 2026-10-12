@@ -223,3 +223,25 @@ def fit_calibrator(method, p_valid, y_valid) / apply_calibrator(method, cal, p) 
 - running 에서 죽은 작업(작업자 비정상 종료) 회수 정책 — 지금은 손으로 failed 처리 뒤 재접수.
 - 시계열 결합(`join: {on, window, agg}` — spec §4.2)은 아직 없다(gateway 창 집계만).
 - 원천 DB 사본이 생기면 `test_source_contract` 를 그것으로.
+
+## §6 웨이브 C — QA1 결함 수정 실측 (2026-10-12, 기준 9d2febc 위 작업 트리 · 커밋 안 함)
+
+회귀 시험 `tests/test_qa1_regressions.py` 23개 — QA 재현 스크립트(`outputs/qa1/lv_flip.py` · `group_probe*.py` · `guard_bypass_probe.py` · `snapshot_hash_probe.py` · `source_probe.py`)를 시험으로 옮겼다. **고치기 전 16 failed / 7 passed → 고친 뒤 23 passed.**
+
+| 결함 | 처리 | 회귀 시험 | 실측 |
+|---|---|---|---|
+| DEF-QA1-001 #8 | last_value 기준선을 분할 **뒤** 재적합 구간(학습+검증) 행만으로 잇는다(`trainer.last_value_lag`). 시험 기준선은 final_eval 로 받은 시험 행 + 재적합 구간 | `test_last_value_lag_uses_only_given_rows` · `test_last_value_baseline_ignores_test_targets` · `test_lv_flip_probe_no_longer_flips_baseline` | 시험 목표 +500~5000 교란: `baselines_compared.valid` · 기준선 종류(last_value) 같음 · 시험 지표만 변화. QA lv_flip 배치(60그룹 무작위)는 두 실행 모두 `split_time_group_conflict` 로 거부 — 뒤집힘 0 |
+| DEF-QA1-002 #9 | 그룹 블록 재정렬 제거, 시간순 배열에서 그룹 · 같은 시각을 넘지 않는 위치로만 자른다. 못 자르면 `SplitRefused(code="split_time_group_conflict")` → failed (D-85, 개발1 제안 · 아키텍트 확인 요청) | `test_interleaved_groups_refuse_time_split[600·300]` · `test_grouped_time_split_is_strictly_chronological` (6) · `test_split.py::test_interleaved_groups_refuse_instead_of_losing_time_order` | 학습 · 검증 행 중 시험 최초 시각보다 늦은 것 0(QA 585/600 → 0). `report.error.code` · warnings[0].code · `GET /runs/{id}` warnings 코드 같음 |
+| DEF-QA1-008 | 위 자르는 위치 규칙에 같은 시각 묶음 불가분 포함(시험 · 검증 · time_cv5 폴드) | `test_same_timestamp_rows_never_straddle_a_boundary` (3) | 3행/시각 1002행: 학습∩검증 시각 0 · 검증∩시험 0(QA 1 · 1) |
+| DEF-QA1-006 | `GuardedTest` `__slots__` · copy/deepcopy/pickle 거부 · final_eval 1회 ledger 단위 · overlaps 래퍼당 1회. `gates/check_leakage.py` 정적 우회 패턴(D-86 — gates 수정 사유 기록) | `test_guard_hides_index_from_vars_and_copies` · `test_guard_final_eval_once_per_ledger_and_overlaps_once` · `test_leakage_static_check_flags_bypass_patterns` | 래퍼 자체 시험 14 → **20/20** · 정적 위반 0 · 9개 우회 문구 전부 검출 |
+| DEF-QA1-007 | 해시 규칙 v2(중복 키 행 전체 정렬 · 머리줄 `열:종류` · ROW-n 내용 순서) · 기존 v1 파일 호환 검증 (D-87) | `test_hash_stable_for_duplicate_key_rows_in_any_order` · `test_hash_distinguishes_numeric_and_string_columns` · `test_hash_stable_when_source_has_no_entity_id` · `test_legacy_snapshot_files_still_load` | QA 실패 3건 → 0. 기존 var/snapshots 941개 전부 로드. **스냅숏 ID 는 바뀐다**(예 ks.remaining_hours `snp_9c4da71a20764ded`) → 다음 학습은 새 run |
+| DEF-QA1-009 | 조회 · 행 수를 명시 `SET TRANSACTION READ ONLY` 트랜잭션으로 · 선택 키 `read_role` → `SET ROLE` · probe 에 쓰기 권한 경고 (D-88) | `test_reads_run_in_read_only_transaction_even_if_session_default_is_off` · `test_read_role_and_write_privilege_warning` | 세션 값을 끄고 쓰기 함수를 부르는 뷰를 SELECT → `source_disconnected` · 원천 쓰기 0. 소유자 계정 probe = "경고: 쓰기 권한 있는 계정 …" |
+| D-68 #7 | `test_source_contract.py` 가 `tests/fixtures/{ks,sw}/source_db.sql` 을 임시 스키마에 적재해 읽는다 | `test_source_contract.py` 18 | 18 passed · 행 수 diff 0 |
+
+| 확인 | 결과 | 명령 |
+|---|---|---|
+| 전체 시험 | **452 passed · 3 skipped · 4 failed** — 실패 4는 모두 `tests/test_compat.py`(optimize 옛 행 키 · overview `products` · sw optimize `anomaly`) — 개발2 · 개발3 가 동시에 고치는 중인 파일(tasks/optimize.py · compat · tenants/*.yaml · compat_expected.yaml, 이 회전 중 수정 시각 확인). 내 파일 변경 전 기준선은 381 passed · 0 failed. 개발1 시험 전부 통과 | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| gate | G-M05 PASS(A 20/20 · B 0 · C/D test_split 20) · G-M06 PASS(determinism 9 · registry 13) · G-S05 PASS(5/5 · 정적 0 · 18) · G-M12 PASS(과제 8 · 행 일치 100%). 합계 PASS 21 · FAIL 2(G-M04 test_compat 4 · G-M13 — 개발2 진행 중, 직후 test_optimize 단독 11 passed) · BLOCKED 1 | `make gate` |
+| 이관 지표 | 변화 0 — ks.remaining_hours MAE 5.5683 · RMSE 6.9793 · R² 0.9199 / ks.failure_24h Brier 0.0576 · AUC 0.6444 · AP 0.1426 / sw.delta_e MAE 0.5569 · RMSE 0.7088 · R² 0.7222 / sw.defect_risk Brier 0.1261 · AUC 0.8686 · AP 0.7823 / flag_rate ks 0.1389 · sw 0.1458. 분할 432/144/144 · `cut_moved` 없음 | scratchpad 스크립트(read_frame → StandardTrainer) |
+
+남은 일: D-85 아키텍트 확인(거부 대 계약 예외) · interfaces §2.2 해시 v2 문구 · tenant-contract `read_role` 키(아키텍트) · 실 계정 SELECT 전용 역할(사람, D-13) · 기존 ml_db 등록 모델은 v1 스냅숏 ID 그대로(재학습하면 새 run).

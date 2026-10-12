@@ -1,0 +1,9 @@
+LV 1000 FAIL policy=time_60_20_20 test_rows=199 champion=ridge 바뀐 항목=['baselines_compared.valid'] 시험지표 변화=예
+   valid baselines A: {"train_mean": {"mae": 14.345310889765518, "rmse": 17.129838350935042, "r2": -0.007019186246450815}, "last_value": {"mae": 19.472264486821164, "rmse": 24.137926823756743, "r2": -0.9995448432515304}}
+   valid baselines B: {"train_mean": {"mae": 14.345310889765518, "rmse": 17.129838350935042, "r2": -0.007019186246450815}, "last_value": {"mae": 35.03922738833956, "rmse": 54.43991521202577, "r2": -9.171057182202246}}
+   baseline kind A/B: train_mean train_mean beats A/B: True True
+LV 400 FAIL policy=time_cv5 test_rows=80 champion=ridge 바뀐 항목=['baselines_compared.valid'] 시험지표 변화=예
+   valid baselines A: {"train_mean": {"mae": 14.309484548964702, "rmse": 16.884901530201272, "r2": -0.002380869885912018}, "last_value": {"mae": 18.395313230192652, "rmse": 22.933996043761223, "r2": -0.8492480597370244}}
+   valid baselines B: {"train_mean": {"mae": 14.309484548964702, "rmse": 16.884901530201272, "r2": -0.002380869885912018}, "last_value": {"mae": 31.742873476841012, "rmse": 50.11707156720655, "r2": -7.830942928500221}}
+   baseline kind A/B: train_mean train_mean beats A/B: True True
+TIE sizes 601 201 200 train∩valid ts 1 valid∩test ts 1

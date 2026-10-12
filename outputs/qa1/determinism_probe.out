@@ -1,0 +1,30 @@
+G-M06  결정성 기준 OMP=1 HASHSEED=0              ks.remaining_hours   PASS  다른 항목=없음 pred=685d45c93b09 snap=snp_c646471b341f5227
+G-M06  결정성 기준 OMP=1 HASHSEED=0              ks.failure_24h       PASS  다른 항목=없음 pred=e90c12f10c80 snap=snp_41eec40894b20733
+G-M06  결정성 기준 OMP=1 HASHSEED=0              ks.sensor_ood        PASS  다른 항목=없음 pred=e98953aca8ad snap=snp_6bab7855ce0c2838
+G-M06  결정성 기준 OMP=1 HASHSEED=0              sw.delta_e           PASS  다른 항목=없음 pred=7300bf0bfacd snap=snp_2ebbaaaf50762d95
+G-M06  결정성 기준 OMP=1 HASHSEED=0              sw.defect_risk       PASS  다른 항목=없음 pred=9ce7c4880b33 snap=snp_de07c23124f85709
+G-M06  결정성 기준 OMP=1 HASHSEED=0              sw.print_ood         PASS  다른 항목=없음 pred=5e7847ed60c4 snap=snp_8f05b7d7f614cc0e
+G-M06  결정성 재실행 OMP=1 HASHSEED=0             ks.remaining_hours   PASS  다른 항목=없음 pred=685d45c93b09 snap=snp_c646471b341f5227
+G-M06  결정성 재실행 OMP=1 HASHSEED=0             ks.failure_24h       PASS  다른 항목=없음 pred=e90c12f10c80 snap=snp_41eec40894b20733
+G-M06  결정성 재실행 OMP=1 HASHSEED=0             ks.sensor_ood        PASS  다른 항목=없음 pred=e98953aca8ad snap=snp_6bab7855ce0c2838
+G-M06  결정성 재실행 OMP=1 HASHSEED=0             sw.delta_e           PASS  다른 항목=없음 pred=7300bf0bfacd snap=snp_2ebbaaaf50762d95
+G-M06  결정성 재실행 OMP=1 HASHSEED=0             sw.defect_risk       PASS  다른 항목=없음 pred=9ce7c4880b33 snap=snp_de07c23124f85709
+G-M06  결정성 재실행 OMP=1 HASHSEED=0             sw.print_ood         PASS  다른 항목=없음 pred=5e7847ed60c4 snap=snp_8f05b7d7f614cc0e
+G-M06  결정성 HASHSEED=12345                   ks.remaining_hours   PASS  다른 항목=없음 pred=685d45c93b09 snap=snp_c646471b341f5227
+G-M06  결정성 HASHSEED=12345                   ks.failure_24h       PASS  다른 항목=없음 pred=e90c12f10c80 snap=snp_41eec40894b20733
+G-M06  결정성 HASHSEED=12345                   ks.sensor_ood        PASS  다른 항목=없음 pred=e98953aca8ad snap=snp_6bab7855ce0c2838
+G-M06  결정성 HASHSEED=12345                   sw.delta_e           PASS  다른 항목=없음 pred=7300bf0bfacd snap=snp_2ebbaaaf50762d95
+G-M06  결정성 HASHSEED=12345                   sw.defect_risk       PASS  다른 항목=없음 pred=9ce7c4880b33 snap=snp_de07c23124f85709
+G-M06  결정성 HASHSEED=12345                   sw.print_ood         PASS  다른 항목=없음 pred=5e7847ed60c4 snap=snp_8f05b7d7f614cc0e
+G-M06  결정성 OMP=4 · OPENBLAS=4 · HASHSEED=7  ks.remaining_hours   PASS  다른 항목=없음 pred=685d45c93b09 snap=snp_c646471b341f5227
+G-M06  결정성 OMP=4 · OPENBLAS=4 · HASHSEED=7  ks.failure_24h       PASS  다른 항목=없음 pred=e90c12f10c80 snap=snp_41eec40894b20733
+G-M06  결정성 OMP=4 · OPENBLAS=4 · HASHSEED=7  ks.sensor_ood        PASS  다른 항목=없음 pred=e98953aca8ad snap=snp_6bab7855ce0c2838
+G-M06  결정성 OMP=4 · OPENBLAS=4 · HASHSEED=7  sw.delta_e           PASS  다른 항목=없음 pred=7300bf0bfacd snap=snp_2ebbaaaf50762d95
+G-M06  결정성 OMP=4 · OPENBLAS=4 · HASHSEED=7  sw.defect_risk       PASS  다른 항목=없음 pred=9ce7c4880b33 snap=snp_de07c23124f85709
+G-M06  결정성 OMP=4 · OPENBLAS=4 · HASHSEED=7  sw.print_ood         PASS  다른 항목=없음 pred=5e7847ed60c4 snap=snp_8f05b7d7f614cc0e
+G-M06  결정성 행 섞기 + 열 역순                      ks.remaining_hours   PASS  다른 항목=없음 pred=685d45c93b09 snap=snp_c646471b341f5227
+G-M06  결정성 행 섞기 + 열 역순                      ks.failure_24h       PASS  다른 항목=없음 pred=e90c12f10c80 snap=snp_41eec40894b20733
+G-M06  결정성 행 섞기 + 열 역순                      ks.sensor_ood        PASS  다른 항목=없음 pred=e98953aca8ad snap=snp_6bab7855ce0c2838
+G-M06  결정성 행 섞기 + 열 역순                      sw.delta_e           PASS  다른 항목=없음 pred=7300bf0bfacd snap=snp_2ebbaaaf50762d95
+G-M06  결정성 행 섞기 + 열 역순                      sw.defect_risk       PASS  다른 항목=없음 pred=9ce7c4880b33 snap=snp_de07c23124f85709
+G-M06  결정성 행 섞기 + 열 역순                      sw.print_ood         PASS  다른 항목=없음 pred=5e7847ed60c4 snap=snp_8f05b7d7f614cc0e

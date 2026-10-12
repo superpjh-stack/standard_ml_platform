@@ -7,6 +7,9 @@ Phase 0 아키텍트 공표 — 이후 소유 개발1. `gates/check_leakage.py` 
 - 허용 목적: final_eval(정확히 1회) → 그 뒤 report(순열 중요도 · 잔차 표).
 - 금지 목적(selection · calibration · interval · threshold · baseline · queue) · final_eval 2회째 · final_eval 전 report → 기록 후 TestLeak.
 - 인덱스를 직접 꺼내는 길(__iter__ · __getitem__ · __array__ · tolist)은 TestLeak.
+- 우회 경로(DEF-QA1-006): `__dict__` 없음(`vars()` 불가 · __slots__) · copy / deepcopy / pickle → TestLeak ·
+  final_eval 1회는 **ledger 단위**(같은 ledger 의 다른 래퍼 · 복사본으로도 2회째 거부) · `overlaps()` 는 래퍼당 1회
+  (표본 내 평가 판정용 — 한 행씩 묻는 질의로 인덱스를 복원하지 못하게). 정적 우회 패턴은 `gates/check_leakage.py` 가 본다.
 """
 
 from __future__ import annotations
@@ -59,11 +62,13 @@ def _caller() -> str:
 
 class GuardedTest:
     __test__ = False
+    __slots__ = ("__idx", "_ledger", "_final_done", "_overlap_done")
 
     def __init__(self, idx: Sequence[int], ledger: AccessLedger):
         self.__idx = tuple(int(i) for i in idx)
         self._ledger = ledger
         self._final_done = False
+        self._overlap_done = False
 
     def __len__(self) -> int:  # 길이 조회는 접근이 아니다
         return len(self.__idx)
@@ -84,8 +89,22 @@ class GuardedTest:
     def tolist(self):
         self._deny("tolist")
 
+    def __copy__(self):
+        self._deny("copy")
+
+    def __deepcopy__(self, memo):
+        self._deny("deepcopy")
+
+    def __reduce_ex__(self, protocol):
+        self._deny("pickle")
+
     def overlaps(self, other_idx: Sequence[int]) -> bool:
-        """표본 내 평가 판정용 — 겹침 여부만 알려 주고 인덱스는 내주지 않는다."""
+        """표본 내 평가 판정용(래퍼당 1회) — 겹침 여부만 알려 주고 인덱스는 내주지 않는다.
+        2회째는 질의로 인덱스를 복원하려는 시도로 보고 기록 후 TestLeak."""
+        if self._overlap_done:
+            self._ledger.record("overlaps", len(self.__idx), _caller(), ok=False, reason="overlaps 2회째")
+            raise TestLeak("시험 구간 겹침 질의는 1회만(표본 내 평가 판정)")
+        self._overlap_done = True
         return bool(set(self.__idx) & {int(i) for i in other_idx})
 
     def take(self, frame, purpose: str):
@@ -94,7 +113,7 @@ class GuardedTest:
             self._ledger.record(purpose, len(self.__idx), where, ok=False, reason="금지 목적")
             raise TestLeak(f"시험 구간을 {purpose} 에 쓸 수 없다")
         if purpose == "final_eval":
-            if self._final_done:
+            if self._final_done or self._ledger.final_eval_count():
                 self._ledger.record(purpose, len(self.__idx), where, ok=False, reason="final_eval 2회째")
                 raise TestLeak("시험 구간 평가는 1회만")
             self._final_done = True

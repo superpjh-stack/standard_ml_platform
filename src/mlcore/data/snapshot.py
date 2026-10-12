@@ -1,8 +1,10 @@
 """스냅숏 — 표준 프레임을 Parquet 으로 고정한다 (contracts/interfaces.md §2.2 · spec §4.3).
 
-해시는 Parquet 바이트가 아니라 **정규 CSV 바이트**의 SHA-256 이다:
-열 이름 정렬 → 행 (ts, entity_id) 정렬 → 값 정규화(수치 = float repr, 시각 = UTC ISO, 결측 = 빈칸) → UTF-8.
-열 순서 · 정수/실수 표기 · 행 순서가 달라도 같은 내용이면 같은 해시다.
+해시는 Parquet 바이트가 아니라 **정규 CSV 바이트**의 SHA-256 이다 (규칙 v2 — D-87):
+열 이름 정렬 → 행 정렬(ts, entity_id, 같은 키가 겹치면 나머지 열 전체의 정규화 값) → 값 정규화(수치 = float repr,
+시각 = UTC ISO, 결측 = 빈칸) → 머리줄 `열이름:종류`(num · str · ts · null — 수치와 같은 값의 문자열 열을 구분) → UTF-8.
+열 순서 · 정수/실수 표기 · 행 순서(중복 키 행 포함)가 달라도 같은 내용이면 같은 해시다.
+v1(종류 표지 · 중복 키 정렬 없음)으로 고정된 기존 파일은 규칙 표지가 없고, `load` 가 v1 으로 검증한다.
 """
 
 from __future__ import annotations
@@ -25,6 +27,8 @@ from .frame import META_COLUMNS, TZ
 
 META_KEY = b"mlp_sha256"
 META_INFO = b"mlp_snapshot"
+META_RULE = b"mlp_hash_rule"
+HASH_RULE = "v2"
 
 
 class SnapshotCorrupt(Exception):
@@ -59,11 +63,42 @@ def _base(base_dir: Path | None) -> Path:
     return Path(base_dir) if base_dir is not None else get_settings().snapshot_dir
 
 
+_SORT_KEYS = ("ts", "entity_id")
+
+
+def row_order(frame: pd.DataFrame) -> np.ndarray:
+    """정규 행 순서(위치) — (ts, entity_id) 안정 정렬, 같은 키 행이 있으면 나머지 열 전체(열 이름 정렬)의 정규화 값으로
+    마저 정렬한다. 입력 행 순서와 무관한 전체 순서다(DEF-QA1-007)."""
+    df = frame.reset_index(drop=True)
+    keys = [k for k in _SORT_KEYS if k in df.columns]
+    if keys and not df.duplicated(keys).any():
+        return df.sort_values(keys, kind="mergesort").index.to_numpy()
+    rest = [c for c in sorted(df.columns, key=str) if c not in keys]
+    tb = ["\x1f".join(v) for v in zip(*[_norm_series(df[c]) for c in rest])] if rest else [""] * len(df)
+    return df.assign(__mlp_tb=tb).sort_values(keys + ["__mlp_tb"], kind="mergesort").index.to_numpy()
+
+
 def canonical(frame: pd.DataFrame) -> pd.DataFrame:
-    """정규 순서: 열 이름 정렬 · 행 (ts, entity_id) 안정 정렬."""
-    keys = [k for k in ("ts", "entity_id") if k in frame.columns]
-    df = frame.sort_values(keys, kind="mergesort") if keys else frame
+    """정규 순서: 열 이름 정렬 · 행 row_order."""
+    df = frame.reset_index(drop=True)
+    df = df.iloc[row_order(df)]
     return df[sorted(df.columns)].reset_index(drop=True)
+
+
+def _kind(s: pd.Series) -> str:
+    """해시 머리줄의 열 종류 — 정수/실수 · bool 은 같은 num(값 표기가 같다), 문자열 열과는 다르다."""
+    if pd.api.types.is_datetime64_any_dtype(s):
+        return "ts"
+    if pd.api.types.is_bool_dtype(s) or pd.api.types.is_numeric_dtype(s):
+        return "num"
+    inferred = pd.api.types.infer_dtype(s, skipna=True)
+    if inferred in ("integer", "floating", "mixed-integer-float", "decimal", "boolean"):
+        return "num"
+    if inferred in ("datetime64", "datetime"):
+        return "ts"
+    if inferred == "empty":
+        return "null"
+    return "str"
 
 
 def _norm_series(s: pd.Series) -> list[str]:
@@ -94,14 +129,27 @@ def _quote(v: str) -> str:
     return v
 
 
-def content_sha256(frame: pd.DataFrame) -> str:
-    df = canonical(frame)
+def _csv_sha256(df: pd.DataFrame, header: list[str]) -> str:
     cols = [_norm_series(df[c]) for c in df.columns]
     buf = io.StringIO()
-    buf.write(",".join(_quote(str(c)) for c in df.columns) + "\n")
+    buf.write(",".join(_quote(h) for h in header) + "\n")
     for row in zip(*cols):
         buf.write(",".join(_quote(v) for v in row) + "\n")
     return hashlib.sha256(buf.getvalue().encode("utf-8")).hexdigest()
+
+
+def content_sha256(frame: pd.DataFrame) -> str:
+    """규칙 v2 내용 해시 (모듈 머리 설명)."""
+    df = canonical(frame)
+    return _csv_sha256(df, [f"{c}:{_kind(df[c])}" for c in df.columns])
+
+
+def content_sha256_v1(frame: pd.DataFrame) -> str:
+    """규칙 v1(9d2febc 까지) — 기존 스냅숏 파일 검증용으로만 남긴다. 새 스냅숏은 만들지 않는다."""
+    keys = [k for k in _SORT_KEYS if k in frame.columns]
+    df = frame.sort_values(keys, kind="mergesort") if keys else frame
+    df = df[sorted(df.columns)].reset_index(drop=True)
+    return _csv_sha256(df, [str(c) for c in df.columns])
 
 
 def feature_columns(frame: pd.DataFrame) -> list[str]:
@@ -138,7 +186,7 @@ def freeze(frame: pd.DataFrame, *, tenant_id: str, task, source_ref: dict, synth
         info = json.dumps({"tenant_id": tenant_id, "task_id": task_id, "source_ref": source_ref,
                            "synthetic": bool(synthetic)}, ensure_ascii=False, sort_keys=True, default=str)
         table = table.replace_schema_metadata({**(table.schema.metadata or {}), META_KEY: sha.encode(),
-                                               META_INFO: info.encode()})
+                                               META_INFO: info.encode(), META_RULE: HASH_RULE.encode()})
         tmp = path.with_suffix(".tmp")
         pq.write_table(table, tmp)
         tmp.replace(path)
@@ -170,9 +218,11 @@ def load_info(snapshot_id: str, *, base_dir: Path | None = None) -> dict:
 def load(snapshot_id: str, *, base_dir: Path | None = None) -> pd.DataFrame:
     path = find(snapshot_id, base_dir)
     table = pq.read_table(path)
-    recorded = (table.schema.metadata or {}).get(META_KEY, b"").decode()
+    md = table.schema.metadata or {}
+    recorded = md.get(META_KEY, b"").decode()
     df = table.to_pandas()
-    sha = content_sha256(df)
+    # 규칙 표지가 없는 파일 = v1 으로 고정된 기존 스냅숏 → v1 으로 검증(같은 내용이면 그대로 읽힌다)
+    sha = content_sha256(df) if md.get(META_RULE) else content_sha256_v1(df)
     if sha[:16] != snapshot_id.removeprefix("snp_") or (recorded and recorded != sha):
         raise SnapshotCorrupt(f"{snapshot_id}: 내용 해시 불일치")
     return canonical(df)

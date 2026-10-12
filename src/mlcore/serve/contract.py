@@ -7,9 +7,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal, Optional, Union
+from typing import Any, Iterable, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, model_validator
 
 TaskTypeP1 = Literal["regression", "risk", "anomaly", "optimize"]
 Status = Literal["ok", "watch", "review", "out_of_range", "rejected", "needs_approval"]
@@ -25,13 +25,16 @@ class PredictBody(BaseModel):
     model_config = _STRICT
     inputs: dict[str, InputValue]
     entity_id: Optional[StrictStr] = Field(default=None, max_length=128)
-    explain: bool = False
+    explain: StrictBool = False                                       # "yes" · 1 → 422 (DEF-QA2-007)
     model_version: Optional[StrictStr] = Field(default=None, pattern=r"^v[1-9][0-9]*$")
 
 
 class BatchBody(BaseModel):
+    """건은 여기서 검증하지 않는다 — 한 건의 형식 오류(NaN · 모르는 키 · 형)가 배치 전체를 422 로 만들지 않게
+    라우터가 건마다 `PredictBody` 로 검증해 그 자리에 `{index, error}` 를 둔다(predict-contract §5 · DEF-QA2-003).
+    배치 크기(0 · 501건 이상)만 전체 422."""
     model_config = _STRICT
-    items: list[PredictBody] = Field(min_length=1, max_length=500)    # 501건 이상 → 422 invalid_input
+    items: list[Any] = Field(min_length=1, max_length=500)
 
 
 Number = Union[StrictInt, StrictFloat]
@@ -236,3 +239,48 @@ RESPONSE_KEYS = tuple(PredictResponse.model_fields)
 def to_contract(d: dict) -> dict:
     """dict → 검증 → 18키 dict(키 순서 고정). 계약 위반이면 ValidationError(500 — 숨기지 않는다)."""
     return PredictResponse.model_validate(d).model_dump(mode="json")
+
+
+# ── 오류 위치 (입력값 · 요청 키 되풀이 0 — goal §2.3 · D-75 · DEF-QA3-002) ───────────────────────────
+def _known_fields() -> frozenset[str]:
+    names: set[str] = set()
+    for obj in list(globals().values()):
+        fields = getattr(obj, "model_fields", None)
+        if isinstance(fields, dict) and getattr(obj, "__module__", None) == __name__:
+            names |= set(fields)
+    return frozenset(names)
+
+
+KNOWN_FIELDS = _known_fields()
+
+
+def safe_field(loc: Iterable[Any], *, skip: int = 0) -> str | None:
+    """pydantic 오류 위치 → 되풀이해도 되는 위치. 요청 본문의 **키 이름도 요청자가 보낸 문자열**이다.
+    계약 스키마에 선언된 필드 이름과 배열 색인만 남기고, 그 밖의 첫 조각(모르는 키 · dict 안 임의 키)은 `*` 로 바꾼 뒤
+    끊는다(뒤따르는 형 이름 조각 int · str … 도 버린다). skip = 앞에서 버릴 조각 수(FastAPI 의 body · query)."""
+    out: list[str] = []
+    for p in list(loc)[skip:]:
+        if isinstance(p, int):
+            out.append(str(p))
+        elif isinstance(p, str) and p in KNOWN_FIELDS:
+            out.append(p)
+        else:
+            out.append("*")
+            break
+    return ".".join(out) or None
+
+
+def safe_errors(errors: Iterable[dict], *, skip: int = 0, prefix: str | None = None, limit: int = 20) -> list[dict]:
+    """[{field, rule}] — 중복 제거 · 최대 limit 개. rule 은 pydantic 오류 종류(코드가 정한 짧은 이름)."""
+    seen, out = set(), []
+    for e in errors:
+        f = safe_field(e.get("loc", ()), skip=skip)
+        if prefix:
+            f = prefix if f is None else f"{prefix}.{f}"
+        item = (f, str(e.get("type"))[:40])
+        if item not in seen:
+            seen.add(item)
+            out.append({"field": item[0], "rule": item[1]})
+        if len(out) >= limit:
+            break
+    return out

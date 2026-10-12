@@ -39,6 +39,7 @@ async def compat(rest: str, request: Request):
             p = auth.lookup(request.headers.get("X-API-Key"))
         except auth.AuthRequired:
             raise CompatError(401, {"detail": "API 키가 필요합니다"}) from None
+        request.state.principal = p          # 감사 미들웨어가 쓰기 시도 1행을 이 주체로 남긴다(DEF-QA2-002)
         if p.tenant_id != cmp.catalog.tenant_id:
             raise CompatError(404, {"detail": "찾을 수 없습니다"})
         if not auth.allowed(p.role, AREA[action], write=request.method == "POST"):

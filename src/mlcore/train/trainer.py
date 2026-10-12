@@ -41,7 +41,6 @@ calls = 0                      # 학습 호출 계측 (G-M06: API 기동 후 0)
 TRAINABLE = ("regression", "risk", "anomaly")
 
 
-LAST_VALUE = "__last_value"   # 기준선 열 (std/metrics.yaml baselines.last_value) — 변수 목록에 없으므로 모델이 보지 않는다
 
 
 def beats_band() -> tuple[float, float]:
@@ -50,11 +49,15 @@ def beats_band() -> tuple[float, float]:
     return float(lo), float(hi)
 
 
-def with_last_value(frame: pd.DataFrame) -> pd.DataFrame:
-    """time_key 정렬(ts, entity_id) 직전 행의 목표값. 첫 행은 NaN. 행 순서 · 다른 열은 그대로."""
-    order = frame.sort_values(["ts", "entity_id"], kind="mergesort").index
-    lag = frame.loc[order, "target"].shift(1)
-    return frame.assign(**{LAST_VALUE: lag.reindex(frame.index).to_numpy(dtype=float)})
+def last_value_lag(frame: pd.DataFrame, rows) -> np.ndarray:
+    """기준선 last_value — `rows`(frame 위치) 만 (ts, entity_id) 시각순으로 세웠을 때 바로 앞 행의 목표값.
+    결과는 rows 순서대로, 그 구간의 첫 행은 NaN. **주어진 구간 밖 행은 보지 않는다**(DEF-QA1-001):
+    선정용(검증) 기준선은 재적합 구간(학습+검증)만, 시험 기준선은 final_eval 에서 받은 시험 행 + 재적합 구간으로 만든다."""
+    rows = list(rows)
+    sub = frame.iloc[rows].reset_index(drop=True)
+    order = sub.sort_values(["ts", "entity_id"], kind="mergesort").index
+    lag = sub.loc[order, "target"].shift(1)
+    return lag.reindex(sub.index).to_numpy(dtype=float)
 
 
 def outlier_config(raw: dict) -> dict | None:
@@ -221,10 +224,14 @@ class StandardTrainer:
         except (TestLeak, InSampleEvaluation):
             raise                                   # 누수는 치명 결함 — 실패 결과로 덮지 않는다
         except Exception as e:  # 그 밖의 실패는 failed 로 보인다(숨기지 않는다)
+            code = getattr(e, "code", None) or "train_failed"   # split.SplitRefused 등은 고유 코드(D-85)
+            err = {"type": type(e).__name__, "code": code, "message": str(e)}
+            if getattr(e, "detail", None):
+                err["detail"] = e.detail
+            warns = [_w(code, f"{type(e).__name__}: {e}", **(getattr(e, "detail", None) or {}))]
             return TrainResult(run_id, "failed", None, {}, f"학습 실패: {type(e).__name__}: {e}", {}, False, None,
-                               {"run_id": run_id, "error": {"type": type(e).__name__, "message": str(e)}},
-                               [_w("train_failed", f"{type(e).__name__}: {e}")], ledger.events(),
-                               synthetic=bool(info.get("synthetic")))
+                               {"run_id": run_id, "error": err, "warnings": warns}, warns,
+                               ledger.events(), synthetic=bool(info.get("synthetic")))
 
     # ── 본 절차 ──────────────────────────────────────────
     def _train(self, cfg, run_id, tenant, frame, info, feats, ledger) -> TrainResult:
@@ -257,17 +264,17 @@ class StandardTrainer:
                 return (df["target"].to_numpy(dtype=float) == float(positive)).astype(int)
             return df["target"].to_numpy(dtype=float)
 
-        if ttype == "regression" and raw.get("time_key") and "ts" in frame.columns:
-            frame = with_last_value(frame)          # 기준선 last_value (직전 행 목표) — 모델 입력이 아니다
-        sp, test = split.plan(frame, task, seed, ledger=ledger)
+        use_last_value = ttype == "regression" and bool(raw.get("time_key")) and "ts" in frame.columns
+        sp, test = split.plan(frame, task, seed, ledger=ledger)      # SplitRefused → failed (code 는 보고 · 경고에)
         if not sp.train_idx or not sp.valid_idx or len(test) == 0:
             raise ValueError(f"분할 구간이 비었다: {sp.boundaries.get('sizes')}")
-        if sp.boundaries.get("regrouped"):
-            warnings.append(_w("group_regrouped", "group_key 가 시간상 섞여 그룹 블록 순서로 잘랐다"))
         folds = sp.folds or ((sp.train_idx, sp.valid_idx),)
         X_all = frame[names]
         y_all = y_of(frame) if supervised else None
-        last_vals = frame[LAST_VALUE].to_numpy(dtype=float) if LAST_VALUE in frame.columns else None
+        last_vals = None
+        if use_last_value:      # 기준선 last_value (직전 행 목표) — 재적합 구간(학습+검증) 안에서만 잇는다. 모델 입력이 아니다
+            last_vals = np.full(n, np.nan)
+            last_vals[list(sp.fit_idx)] = last_value_lag(frame, sp.fit_idx)
         clip = raw.get("clip") or {}
 
         def clipped(p: np.ndarray) -> np.ndarray:
@@ -366,7 +373,7 @@ class StandardTrainer:
                 base_y.append(y_all[list(va)])
             bp, by = np.concatenate(base_parts), np.concatenate(base_y)
             base_valid = metrics.regression(by, bp) if ttype == "regression" else metrics.risk(by, bp, threshold)
-            if ttype == "regression" and raw.get("time_key") and "ts" in frame.columns:
+            if use_last_value:
                 lv = np.concatenate([last_vals[list(va)] for _, va in folds])
                 ok = ~np.isnan(lv)
                 if ok.all():
@@ -437,9 +444,14 @@ class StandardTrainer:
             if rate < 0.05 or rate > 0.95:
                 warnings.append(_w("target_imbalance", "목표 불균형(양성률 < 5% 또는 > 95%)", positive_rate=rate))
 
+        def test_last_value(df: pd.DataFrame) -> np.ndarray:
+            """시험 행의 직전 값 — final_eval 로 받은 시험 행 + 재적합 구간만으로 잇는다(시험 1회 평가 안에서만)."""
+            both = pd.concat([frame.iloc[fit_all], df], ignore_index=True)
+            return last_value_lag(both, range(len(both)))[len(fit_all):]
+
         def base_pred(df: pd.DataFrame) -> np.ndarray:
             if baseline_kind == "last_value":
-                return df[LAST_VALUE].to_numpy(dtype=float)
+                return test_last_value(df)
             return np.full(len(df), base_const)
 
         def score(df: pd.DataFrame):
@@ -453,7 +465,7 @@ class StandardTrainer:
                 alt = {}
                 if base_alt:
                     alt = {"train_mean": metrics.regression(y, np.full(len(df), base_const)),
-                           "last_value": metrics.regression(y, df[LAST_VALUE].to_numpy(dtype=float))}
+                           "last_value": metrics.regression(y, test_last_value(df))}
                 return metrics.regression(y, p, lo, hi), bm, p, alt
             if ttype == "risk":
                 y = y_of(df)

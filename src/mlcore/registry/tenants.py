@@ -135,6 +135,11 @@ def all_codes(base: Path | None = None, include_template: bool = False) -> list[
     return [c for c in codes if include_template or not c.startswith("_")]
 
 
+# R1 보강(D-121) — tenant-contract R1 "승인 지점(approver_role)을 바꿀 수 없다" · 목표는 팩 정의(누수 방지).
+# task-contract §4 immutable_on_override 에도 있다(D-121). 여기서는 병합 결과로 비교한다(부분 dict 덮어쓰기 · 지우기 포함).
+FIXED_ON_OVERRIDE = ("approver_role", "target")
+
+
 def _apply_override(name: str, base: dict, over: dict) -> dict:
     """R1 — 덮어쓸 수 없는 키를 바꾸면 거부."""
     sc = task_schema()
@@ -152,7 +157,20 @@ def _apply_override(name: str, base: dict, over: dict) -> dict:
             merged[k] = {**merged[k], **v}
         else:
             merged[k] = v
+    for key in FIXED_ON_OVERRIDE:            # 같은 값을 다시 적는 것은 허용, 값이 달라지면 거부(지우기 포함)
+        if key in over and merged.get(key) != base.get(key):
+            what = "승인 지점" if key == "approver_role" else "목표 — 팩 정의만"
+            raise RegistryRejected("R1", f"{name}: 덮어쓰기로 {key} 를 바꿀 수 없다({what})")
+    _check_target_leak(name, merged)
     return merged
+
+
+def _check_target_leak(name: str, task: dict) -> None:
+    """R1 — 목표 열이 입력(features · fixed · controls)에 있으면 거부(목표 누수, DEF-QA1-004)."""
+    tname = (task.get("target") or {}).get("name") if isinstance(task.get("target"), dict) else None
+    inputs = set(task.get("features") or []) | set(task.get("fixed") or []) | set(task.get("controls") or [])
+    if tname and tname in inputs:
+        raise RegistryRejected("R1", f"{name}: 목표 target {tname!r} 가 입력 변수에 있다(목표 누수)")
 
 
 def merge(pack: Pack, tenant: Tenant,
@@ -194,17 +212,23 @@ def merge(pack: Pack, tenant: Tenant,
                 raise RegistryRejected("R2", f"{full}: 필수 변수 {f} 를 채울 원천이 없다")
             warnings.append(f"{full}: 선택 변수 {f} 미대응 (doctor 경고)")
         # R3 — uses 의존 과제가 켜져 있는가
-        for u in raw.get("uses") or []:
+        for u in list(raw.get("uses") or []) + list(raw.get("warn_with") or []):     # warn_with 도 의존 과제(D-76)
             if u.split(".", 1)[-1] not in short:
                 raise RegistryRejected("R3", f"{full}: 의존 과제 {u} 가 꺼져 있다")
         # R5 — 같은 이름 · 다른 구현의 플러그인
         for fname, module in (raw.get("formulas") or {}).items():
             if module in tenant.formulas and module in pack.formulas and tenant.formulas[module] != pack.formulas[module]:
                 raise RegistryRejected("R5", f"{full}: 비용식 {module} 이 팩과 회사에 다른 구현으로 있다")
-        # R4 — live 인데 production 이 합성 스냅숏이면 그 과제만 끈다
-        if mode == "live" and production_synthetic and production_synthetic(full):
-            disabled[full] = "model_not_ready: live 회사의 합성 스냅숏 모델"
-            continue
+        # R4 — live 인데 production 이 합성 스냅숏이면 그 과제만 끈다. 확인할 수 없으면 켜지 않는다(D-120)
+        if mode == "live" and production_synthetic is not None:
+            try:
+                is_synth = production_synthetic(full)
+            except ProductionUnknown as e:
+                disabled[full] = f"model_not_ready: production 스냅숏을 확인할 수 없다 ({e})"
+                continue
+            if is_synth:
+                disabled[full] = "model_not_ready: live 회사의 합성 스냅숏 모델"
+                continue
         tasks[full] = TaskDef(full, raw["id"], raw["type"], raw, def_hash(raw))
     for module, digest in tenant.formulas.items():
         if module in pack.formulas and pack.formulas[module] != digest:
@@ -216,6 +240,55 @@ def load_and_merge(code: str, *, tenants_base: Path | None = None, packs_base: P
                    production_synthetic: Callable[[str], bool | None] | None = None) -> Merged:
     t = load_tenant(code, tenants_base)
     return merge(load_pack(t.config["pack"], packs_base), t, production_synthetic)
+
+
+# ── R4 실경로 — 등록부 DB 의 production 스냅숏 synthetic (DEF-QA3-001 · D-120) ──────────────────
+
+class ProductionUnknown(Exception):
+    """등록부 DB 에서 production 모델의 스냅숏을 읽을 수 없다 — live 과제는 켜지 않는다(fail closed)."""
+
+
+class ProductionLookup:
+    """`merge(production_synthetic=)` 콜백 — 과제 → production 의 스냅숏이 합성인가(True/False), production 없음 None.
+
+    처음 부를 때 한 번 회사 production 전부를 읽는다(mlp_model_version ⋈ mlp_snapshot, 둘 중 하나라도 synthetic 이면 합성).
+    live 회사가 아니면 merge 가 부르지 않으므로 demo · eval 기동은 DB 를 보지 않는다. `rows` 는 시험 · 게이트용 주입값.
+    """
+
+    SQL = ("SELECT mv.task_id, (mv.synthetic OR coalesce(s.synthetic, true)) AS synthetic "
+           "FROM mlp_model_version mv LEFT JOIN mlp_snapshot s ON s.snapshot_id = mv.snapshot_id "
+           "WHERE mv.tenant_id = %s AND mv.stage = 'production'")
+
+    def __init__(self, tenant_id: str, rows: dict[str, bool] | None = None):
+        self.tenant_id = tenant_id
+        self._rows = dict(rows) if rows is not None else None
+
+    def _load(self) -> dict[str, bool]:
+        if self._rows is None:
+            from ..db.conn import connect          # 지연 import — 등록부 로더가 DB 없이도 import 되게
+            try:
+                with connect() as c:
+                    self._rows = {r["task_id"]: bool(r["synthetic"]) for r in c.execute(self.SQL, (self.tenant_id,))}
+            except Exception as e:  # noqa: BLE001 — DB 없음 · 스키마 없음 모두 '확인 불가'(값은 쓰지 않는다)
+                raise ProductionUnknown(f"등록부 DB {type(e).__name__}") from None
+        return self._rows
+
+    def __call__(self, task_id: str) -> bool | None:
+        return self._load().get(task_id)
+
+
+def db_production_synthetic(tenant_id: str) -> ProductionLookup:
+    """등록부 DB 를 실제로 조회하는 R4 콜백(기동 경로의 기본)."""
+    return ProductionLookup(tenant_id)
+
+
+def load_for_serving(code: str, *, tenants_base: Path | None = None, packs_base: Path = PACKS_DIR,
+                     production_synthetic: Callable[[str], bool | None] | None = None) -> Merged:
+    """API 기동 경로의 병합 — 병합 규칙 5 + R4 를 **DB 조회 콜백을 기본으로** 판정한다(spec §11.3-4 · D-27 · D-120).
+    등록부 루트는 `tenant_base(code)`(= `data.jobs.tenants_base_for`, D-65). 학습 · doctor 는 `load_and_merge` 를 쓴다 —
+    꺼진 과제도 실데이터로 다시 학습해 합성 모델을 교체할 수 있어야 하기 때문."""
+    cb = production_synthetic if production_synthetic is not None else db_production_synthetic(code)
+    return load_and_merge(code, tenants_base=tenants_base, packs_base=packs_base, production_synthetic=cb)
 
 
 # ── 합성 소스 해석 (synthetic 어댑터가 쓴다 — progress-dev3.md §1) ──────────────────────────

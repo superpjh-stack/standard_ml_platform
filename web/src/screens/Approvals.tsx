@@ -22,6 +22,8 @@ export default function Approvals() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [err, setErr] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
+  // 결정 결과 · 409 안내는 카드 밖(목록 위)에 둔다 — 목록을 다시 읽어 카드가 사라져도 안내는 남는다(DEF-QA3-005)
+  const [outcome, setOutcome] = useState<{id: string; text?: string; error?: unknown} | null>(null);
 
   const load = useCallback(async (more?: string | null) => {
     if (!c.tenant || !c.key) { setItems([]); return; }
@@ -47,16 +49,22 @@ export default function Approvals() {
       <button onClick={() => load(null)} disabled={loading}>새로 고침</button>
     </div>
     <ErrorBox error={err}/>
+    {outcome && <div className="outcome" data-testid="approval-outcome" data-approval={outcome.id}>
+      <p className="muted">승인 {outcome.id}</p>
+      {outcome.text && <p className="badge badge-ok">{outcome.text}</p>}
+      <ErrorBox error={outcome.error}/>
+      <button onClick={() => setOutcome(null)}>안내 닫기</button>
+    </div>}
     {!items.length && !loading && !err && <p className="muted">승인 항목이 없습니다</p>}
-    {items.map(a => <ApprovalCard key={a.approval_id} a={a} onDone={() => load(null)}/>)}
+    {items.map(a => <ApprovalCard key={a.approval_id} a={a}
+                                  onDone={o => { setOutcome({id: a.approval_id, ...o}); void load(null); }}/>)}
     {cursor && <button onClick={() => load(cursor)} disabled={loading}>더 보기</button>}
   </section>;
 }
 
-function ApprovalCard({a, onDone}: {a: Approval; onDone: () => void}) {
+function ApprovalCard({a, onDone}: {a: Approval; onDone: (o: {text?: string; error?: unknown}) => void}) {
   const [reason, setReason] = useState('');
   const [err, setErr] = useState<unknown>(null);
-  const [done, setDone] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const needReason = a.action === 'rollback';
 
@@ -65,11 +73,10 @@ function ApprovalCard({a, onDone}: {a: Approval; onDone: () => void}) {
     try {
       const r = await api<{approval_id: string; state: string; production_version: string | null}>(
         'POST', `/approvals/${encodeURIComponent(a.approval_id)}/decide`, {decision, reason: reason.trim() || null});
-      setDone(`${r.state === 'approved' ? '승인' : '반려'}됨${r.production_version ? ` · 운영 버전 ${r.production_version}` : ''}`);
-      onDone();
+      onDone({text: `${r.state === 'approved' ? '승인' : '반려'}됨${r.production_version ? ` · 운영 버전 ${r.production_version}` : ''}`});
     } catch (e) {
-      setErr(e);
-      if (e instanceof ApiError && e.code === 'already_decided') onDone();
+      // 이미 결정 · 만료(409)는 목록을 다시 읽는다 — 안내는 목록 위 상자가 들고 간다. 그 밖의 오류는 카드에 남긴다
+      if (e instanceof ApiError && e.code === 'already_decided') onDone({error: e}); else setErr(e);
     } finally { setBusy(false); }
   };
 
@@ -96,7 +103,6 @@ function ApprovalCard({a, onDone}: {a: Approval; onDone: () => void}) {
         <button className="danger" disabled={busy} onClick={() => decide('reject')}>반려</button>
       </div>
     </div>}
-    {done && <p className="badge badge-ok">{done}</p>}
     <ErrorBox error={err}/>
   </div>;
 }

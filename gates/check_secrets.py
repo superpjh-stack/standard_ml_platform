@@ -32,6 +32,13 @@ SKIP_SUFFIX = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".parquet", ".joblib", "
 SECRET_KEYS = re.compile(r"(password|passwd|secret|token|api_key|apikey|dsn|webhook|url|key)$", re.I)
 
 
+def safe_host(host: str) -> bool:
+    """허용 호스트: 루프백 · 스키마 URL · RFC 2606 / RFC 6761 §6.4 예약 최상위 이름 `.invalid`(DNS 에 존재할 수 없다 —
+    QA 탐침의 가짜 CORS · 원천 URL). `.invalid` 만 — `.test` · `.example` · 그 밖은 그대로 FAIL (D-125)."""
+    host = host.lower().rstrip(".")
+    return host in SAFE_HOSTS or host == "invalid" or host.endswith(".invalid")
+
+
 def _version_like(m: re.Match, txt: str) -> bool:
     """네 마디 버전 문자열은 IP 가 아니다 — 앞 문맥으로 거른다."""
     before = txt[max(0, m.start() - 12): m.start()]
@@ -61,7 +68,7 @@ def run() -> list[Line]:
         is_lock = r.endswith(("uv.lock", "package-lock.json"))
         for m in URL.finditer(txt):
             host = m.group(1).lower()
-            if host in SAFE_HOSTS or (is_lock and host in LOCK_HOSTS):
+            if safe_host(host) or (is_lock and host in LOCK_HOSTS):
                 continue
             problems.append(f"호스트 {host!r}: {r}")
             break

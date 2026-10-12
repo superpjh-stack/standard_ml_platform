@@ -258,3 +258,63 @@ API: `POST …/predict:batch`(operator) · `POST …/optimize`(operator, `{fixed
 - 개발1: `GET /api/v1/runs/{run_id}` (B08 — G-S04 마지막 1묶음). 라우터 파일을 만들면 `api/main.py` 등록은 개발2 가 한다(ops 처럼).
 - 아키텍트: `MLP_TENANTS_DIR` 한 규칙(D-W2-03) · optimize 범위 밖 상태(D-W2-04) · 추천 승인(D-W2-05) · `docker-compose.yml`(G-M11 배포 부분).
 - 개발2 다음: `tests/e2e/` 1024px(D-W2-08, Playwright 의존성) · 호환 records 를 B12 행 함수로(D-W2-09) · anomaly 기여 변수의 batch 속도(행마다 치환 프레임).
+
+## §6 웨이브 C — 결함 수정 (2026-10-12, 기준 커밋 9d2febc + 미커밋 · 커밋 · 이슈 닫기 안 함)
+
+### 6.1 공표 — 호환 응답 회사 값 키 (D-132) · **개발3 에 기입 요청**
+
+`tenants/<code>.yaml compat` 아래. 코어는 키를 읽기만 한다(`serve/compat/__init__.py`). 값은 원천 코드를 읽어 `tests/compat_expected.yaml` 에 옮긴 기대값과 같아야 `tests/test_compat.py` 4건(ks · sw × optimize · overview)이 통과한다.
+
+| 키 | 모양 | ks 값(원천 KwangSung `api/ml_service.py`) | sw 값(원천 SongWol `api/ml_service.py` · `config.py`) |
+|---|---|---|---|
+| `optimize_rename` (있음 + 추가) | {표준 예측 · 비용식 · **묶음 anomaly 과제 짧은 이름**: 옛 행 키} | 그대로 `{maintenance_cost: cost_index}` | 기존 3개 + `print_ood: anomaly` (:184 행 열 anomaly) |
+| `optimize_row` | [옛 행 키 순서] — 있으면 이 키만 낸다 | `[stop_after_hours, cost_index, reserve_hours, violation]` (:138-139) | `[set_temp, set_pressure, line_speed, ink_usage, dwell_time, pred_delta_e, risk_probability, cost_index, violation, anomaly]` (:184) |
+| `optimize_derived` | {옛 키: "표준 이름 식"} (+ − × 만) | `{reserve_hours: "remaining_hours - stop_after_hours"}` (:138 life − times) | 없음 |
+| `optimize_row_round` | {옛 키: 자리} | 없음 (행 반올림 없음) | `{pred_delta_e: 4, risk_probability: 4, violation: 4, cost_index: 2}` (:156 · :186) |
+| `optimize_unmet_text` | {제약 이름: 옛 문구} | `{reserve: 요청한 잔여수명 여유시간 미충족, max_cost: 정비 비용지수 상한 초과}` (:144-145) | `{max_delta_e: 목표 색차(ΔE) 상한 미충족, max_risk: 불량 위험 상한 초과, min_line_speed: 최소 라인속도 미충족}` (:179-181) |
+| `optimize_objective_text` | 문자열 | `제약 충족 후보 중 데모 비용지수 최소화, 동률이면 더 늦은 시점 선택` (:148) | `제약 충족 후보 중 데모 공정 비용지수 최소화, 동률이면 예측 색차가 작은 조건` (:192) |
+| `optimize_anomaly_text` | 문자열(추천 행이 anomaly 면 옛 warnings 맨 앞) | 없음 | `추천 조건이 학습 분포와 다른 조합입니다. 시험 인쇄로 먼저 확인하세요.` (:182) |
+| `overview_values` | {옛 키: 범주 변수} | `{products: product_type}` (:163) | `{print_types: print_type, color_tones: color_tone}` (:212) |
+| `overview_controls` | 옛 키 이름 | 없음 | `controls` (:212) |
+
+미리 확인: 위 값을 임시 회사 사본에만 넣은 스크래치 플러그인(저장소 tenants/ 미변경)으로 `tests/test_compat.py` **35 passed · 3 skipped**. 같이 요청: `packs/textile/tasks/print_setpoint.yaml` 에 `warn_with: [textile.print_ood]`(D-76 · D-131, 선택 — 없어도 호환 행 anomaly 는 묶음 anomaly 과제로 낸다).
+
+### 6.2 결함별 처리 · 회귀 시험 (먼저 실패 확인 → 고침)
+
+| 결함 | 처리 | 회귀 시험 (고치기 전 → 후) |
+|---|---|---|
+| DEF-QA2-001 #14 중대 | 옛 행을 회사 값 키(6.1)로 조립 · 미충족 문구 · objective 문구 · sw current_cost_index 반올림 · sw 행 anomaly(묶음 anomaly production flag) | `test_compat::test_optimize_old_keys[ks·sw]` 행 키 · 순서 · 반올림 · reserve 관계 · 문구 — FAIL → **개발3 값 대기**(시뮬레이션 PASS) |
+| DEF-QA2-002 #15 중대 | 미들웨어가 `/api/` 모든 쓰기 시도 감사(401 · 다른 회사 404 · 호환 포함) | `test_write_attempts_are_audited_*` 2 — FAIL → PASS |
+| DEF-QA3-002 = QA2-004 #16 중대 | `safe_field` — 계약 필드 이름 · 색인만, 나머지 `*` | `test_422_never_echoes_request_keys`(7경로) — FAIL → PASS |
+| DEF-QA3-003 #18 중대 | `compat.entity_prefix` 적용 · 원천 LOT 번호 상세 · 검색 | `test_compat::test_records_old_paging_and_detail[ks·sw]` — FAIL → PASS |
+| DEF-QA2-003 | batch 건별 pydantic 검증 | `test_batch_one_malformed_item_does_not_block_others` — FAIL → PASS |
+| DEF-QA2-005 | 같은 바이트 해시 · 적재 | `test_artifact_bytes_hashed_are_bytes_loaded`(경합 창 5지점) — FAIL(after=3) → PASS |
+| DEF-QA2-006 | 400 → 422 invalid_input | `test_huge_integer_literal_is_422` — FAIL → PASS |
+| DEF-QA2-007 | StrictBool | `test_explain_is_strict_bool` — FAIL → PASS |
+| DEF-QA2-008 | 없는 버전 404 (api-contract §3) | `test_unknown_model_version_is_404` — FAIL → PASS |
+| DEF-QA2-010 | 개요 missing_cells · duplicate_lots · impossible_cells · importance · evaluated · 범주 목록 · controls, 나머지 differs 사유 | `test_compat::test_overview_old_keys` — FAIL → **개발3 값 대기**(overview_values · overview_controls 만 남음) |
+| health 관찰 | 적재 대조 반영 | `test_health_reflects_artifact_check` — FAIL → PASS |
+| X-Request-Id 관찰 | 64자 · 문자 제한 | `test_request_id_is_bounded` — FAIL → PASS |
+| DEF-QA3-004 (#7 · D-73) | D-130 만료 | `test_approval_expiry_*` 2 — FAIL → PASS |
+| DEF-QA3-005 | 결정 결과 · 409 안내를 목록 위 상자로 | `tests/e2e/test_approvals_409.py`(ks · sw 두 탭) — 옛 Approvals.tsx 로 2 failed → 새 코드 PASS |
+| DEF-QA3-006 | current 결정 변수 [min, max\|params] | `test_optimize_current_decision_var_bounds` — FAIL → PASS |
+| D-76 warn_with | `Optimizer.anomaly_flags` · `_warn_with` (경고 코드 D-131) | compat 행 anomaly 로 간접 · 팩 키는 개발3 |
+| D-120a (개발3 요청) | `catalog.require_servable` — 꺼진 과제 503 · live+합성 503 | `test_disabled_task_predict_is_503` · `test_live_tenant_synthetic_production_is_503` · 개발3 `tests/test_r4_live_path.py` 7 passed |
+
+새 D 번호: D-130 ~ D-134(decisions.md 맨 끝). D-81(호환 records 를 B12 행 함수로)은 이번 회전에 하지 않았다 — 지금은 production 스냅숏 행(등록부)으로 낸다.
+
+### 6.3 실측
+
+| 명령 | 결과 |
+|---|---|
+| `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` | **453 passed · 4 failed · 3 skipped**(45.6 s, test_optimize 시험 대역 고친 뒤 재실행 11 passed). 실패 4 = `test_compat::test_optimize_old_keys[ks·sw]` · `test_overview_old_keys[ks·sw]` — 6.1 회사 값(개발3 `tenants/*.yaml`) 미기입. 같은 값을 임시 사본에만 넣으면 35 passed |
+| `uv run pytest -q tests/test_wave_c_dev2.py` | 15 passed |
+| `uv run pytest -q tests/e2e` | **10 passed**(기존 8 + 새 `test_approvals_409.py` ks · sw) |
+| `make gate` | **PASS 22 · FAIL 1 · BLOCKED 1** — G-S04 · G-M09 · G-M11 · G-M13 · G-M14 PASS 유지, G-M04 FAIL = 위 compat 4건(행 키 시험을 새로 조였다 — 개발3 값이 들어오면 PASS 기대). BLOCKED = doctor-live(D-13) |
+| `cd web && npm run build` | 성공 (271.6 kB js) |
+
+### 6.4 요청 · 남은 일
+
+- **개발3**: 6.1 표 값 기입(`tenants/ks.yaml` · `sw.yaml compat`) → G-M04 PASS. 선택 `print_setpoint.yaml warn_with`.
+- **아키텍트**: D-131 경고 코드 enum(`anomaly_flag`) · tenant-contract §1 에 D-132 키 목록 · D-130 만료 기간 확인.
+- 개발2 다음: D-81(호환 records → B12 행 함수) · 원천 records 행 키 순서 대조(`equip_code` 등) · 호환 bundle anomaly 가 rejected 일 때 false 대신 null 검토(QA2 관찰).

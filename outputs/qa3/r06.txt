@@ -1,0 +1,12 @@
+G-M13  sw 공간 크기 = QA 계산(학습 범위 ∩ min/max · step)  PASS  응답 1080 · QA 1080 · 원천 전수 8,400(D-31) · 0.06s
+G-M13  sw 후보 5 전부 학습 범위 ∩ min/max 격자 위  PASS  [{'set_temp': 150.0, 'set_pressure': 4.0, 'line_speed': 18.0, 'ink_usage': 14.0, 'dwell_time': 65.0}, {'set_temp': 150.0, 'set_pressure': 5.0, 'line_speed': 18.0, 'ink_usage': 14.0, 'dwell_time': 65.0}]…
+G-M13  in_train_range_rate = 1.0  PASS  1.0
+G-M13  sw 기본 → needs_approval · 충족 후보만 상위  PASS  status=needs_approval n_feasible=314
+G-M13  sw 원천 끝점 제외 확인(set_temp 140·210, line_speed 24 등)  PASS  QA 축 구간 {'set_temp': (141.195, 209.105), 'set_pressure': (2.02, 5.97), 'line_speed': (6.3275, 23.8425), 'ink_usage': (10.2469, 29.82), 'dwell_time': (20.445, 79.2)}
+G-M13  min_line_speed 24(학습 범위 밖) → 범위 밖 점 추천 0 · review  PASS  status=review feasible=False best.line_speed=21.0 학습구간=(6.3275, 23.8425)
+G-M13  sw 불가능 제약 3개 → feasible false · review · least_violation · ok 0  PASS  review n_feasible=0
+G-M13  current → improvement 계산  PASS  200 {'process_cost': 17.714286}
+G-M13  current 조절 변수 min/max 밖  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  고정 필수(print_type) 누락  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+G-M13  fixed 에 조절 변수 넣기 → 422  PASS  422 invalid_input
+G-M13  sw 1080점 탐색 시간(≤10s 기준은 10,000점)  PASS  최대 0.05s 중앙 0.04s

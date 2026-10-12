@@ -1,6 +1,11 @@
 """읽기 전용 DB 연결 — gateway · mes 어댑터가 같이 쓴다 (interfaces §2 읽기 전용 규칙 · G-S05).
 
 - 연결 직후 `SET default_transaction_read_only = on`(세션) — 이후 모든 문장이 읽기 전용 트랜잭션이다.
+- 이중화(DEF-QA1-009 · D-88): 어댑터의 조회는 세션 설정과 별도로 **명시 트랜잭션 + `SET TRANSACTION READ ONLY`** 안에서 돈다
+  (연결을 쥔 코드가 세션 기본값을 꺼도 어댑터 조회는 쓰기를 못 한다 — SELECT 가 부르는 쓰기 함수 · 뷰 포함).
+  등록부 `read_role`(선택)이 있으면 연결 직후 `SET ROLE` 로 그 읽기 역할로 바꾼다(실패 → SourceDisconnected).
+  `write_privileges()` 는 지금 계정(역할)이 허용목록 테이블에 쓰기 권한을 가졌는지 보고, probe 문구에 경고로 낸다 —
+  권장 구성은 SELECT 권한만 있는 DB 역할이다(실 계정 권한 자체는 사람이 정한다, D-13).
 - 조회는 SELECT 만, 테이블 이름은 식별자로만 넣는다(문자열 이어 붙이기 없음). 허용목록 밖 테이블은 거부한다.
 - DSN 값은 등록부에 없다 — 등록부의 환경변수 **이름**(`dsn_env`)으로 프로세스 환경에서만 읽는다.
   실패 사유 문구에 DSN · 호스트 · 키를 넣지 않는다(예외 종류 이름만).
@@ -28,8 +33,9 @@ def _ident(name: str):
 
 class ReadOnlyDb:
     def __init__(self, kind: str, *, dsn_env: str | None = None, connect: Callable | None = None,
-                 allow: Sequence[str] = (), schema: str | None = None):
+                 allow: Sequence[str] = (), schema: str | None = None, role: str | None = None):
         self.kind = kind
+        self.role = role
         self.dsn_env = dsn_env
         self._connect_fn = connect
         self.allow = tuple(allow)
@@ -53,6 +59,15 @@ class ReadOnlyDb:
             raise
         except Exception as e:  # 연결 실패를 숨기지 않는다 — 사유는 예외 종류만(DSN 값 금지)
             raise SourceDisconnected(self.kind, f"연결 실패: {type(e).__name__}") from e
+        if self.role:
+            from psycopg import sql
+
+            try:
+                conn.autocommit = True
+                conn.execute(sql.SQL("SET ROLE {}").format(sql.Identifier(self.role)))
+            except Exception as e:
+                conn.close()
+                raise SourceDisconnected(self.kind, f"읽기 역할 전환 실패: {type(e).__name__}") from e
         try:
             conn.autocommit = True
             conn.execute("SET default_transaction_read_only = on")
@@ -64,6 +79,47 @@ class ReadOnlyDb:
             conn.close()
             raise SourceDisconnected(self.kind, f"읽기 전용 설정 실패: {type(e).__name__}") from e
         return conn
+
+    @staticmethod
+    def _read_only(conn, q, params=()):
+        """명시 읽기 전용 트랜잭션 안에서 한 문장 → (열 이름, 행). 세션 기본값과 무관하다."""
+        with conn.transaction():
+            conn.execute("SET TRANSACTION READ ONLY")
+            cur = conn.execute(q, params)
+            return [d.name for d in cur.description], cur.fetchall()
+
+    def write_privileges(self, conn=None) -> list[str]:
+        """허용목록 테이블 중 지금 계정(역할)이 쓰기 권한(INSERT · UPDATE · DELETE · TRUNCATE 중 하나)을 가진 것."""
+        from psycopg import sql
+
+        own = conn is None
+        conn = conn or self.connect()
+        try:
+            out = []
+            for t in self.allow:
+                name = _ident(t).as_string(conn)
+                _, rows = self._read_only(conn, "SELECT to_regclass(%s) IS NOT NULL AND "
+                                                "has_table_privilege(to_regclass(%s), %s)",
+                                          (name, name, "INSERT,UPDATE,DELETE,TRUNCATE"))
+                r = rows[0]
+                if (r[0] if not isinstance(r, dict) else next(iter(r.values()))):
+                    out.append(t)
+            return out
+        except SourceDisconnected:
+            raise
+        except Exception as e:
+            raise SourceDisconnected(self.kind, f"권한 조회 실패: {type(e).__name__}") from e
+        finally:
+            if own:
+                conn.close()
+
+    def privilege_note(self, conn=None) -> str:
+        """probe 문구 덧붙임 — 쓰기 권한 계정이면 경고(숨기지 않는다). 확인 실패도 그대로 적는다."""
+        try:
+            w = self.write_privileges(conn)
+        except SourceDisconnected as e:
+            return f" · {e.reason}"
+        return f" · 경고: 쓰기 권한 있는 계정(허용 테이블 {len(w)}개) — 읽기 전용 역할 권장" if w else " · 읽기 전용 계정"
 
     def _check(self, table: str) -> None:
         if self.allow and table not in self.allow:
@@ -93,9 +149,7 @@ class ReadOnlyDb:
         own = conn is None
         conn = conn or self.connect()
         try:
-            cur = conn.execute(q, params)
-            cols = [d.name for d in cur.description]
-            rows = cur.fetchall()
+            cols, rows = self._read_only(conn, q, params)
         except SourceDisconnected:
             raise
         except Exception as e:
@@ -112,7 +166,7 @@ class ReadOnlyDb:
         own = conn is None
         conn = conn or self.connect()
         try:
-            row = conn.execute(sql.SQL("SELECT count(*) FROM {}").format(_ident(table))).fetchone()
+            row = self._read_only(conn, sql.SQL("SELECT count(*) FROM {}").format(_ident(table)))[1][0]
         except Exception as e:
             raise SourceDisconnected(self.kind, f"행 수 조회 실패({table}): {type(e).__name__}") from e
         finally:

@@ -30,7 +30,12 @@ def health(request: Request):
     tasks = []
     if registry is not None:
         for task_id in registry.tasks:
-            tasks.append({"task": task_id, "model_ready": task_id in production, "version": production.get(task_id)})
+            item = {"task": task_id, "model_ready": task_id in production, "version": production.get(task_id)}
+            if task_id in production:
+                err = _artifact_error(registry.tenant.code, task_id)
+                if err is not None:        # 산출물이 등록부와 다르면 predict 가 503 — health 도 준비 안 됨으로 (QA2 관찰)
+                    item.update(model_ready=False, error=err)
+            tasks.append(item)
         for task_id, reason in registry.disabled.items():
             tasks.append({"task": task_id, "model_ready": False, "version": None, "disabled": reason})
     return {
@@ -40,6 +45,18 @@ def health(request: Request):
         "tenant": registry.tenant.code if registry is not None else None,
         "tasks": tasks,
     }
+
+
+def _artifact_error(tenant_id: str, task_id: str) -> str | None:
+    """production 산출물 적재 대조(해시 · env.lock) — predict 와 같은 함수 · 같은 캐시. 통과면 None, 아니면 오류 코드."""
+    from ...registry.artifacts import load_artifacts
+    from ...registry.models import Registry
+    from ...serve.errors import ServeError
+    try:
+        load_artifacts(Registry().get(tenant_id, task_id))
+    except ServeError as e:
+        return e.code
+    return None
 
 
 # ── 2차 유형 경로 — 경로는 두되 501 (goal §2.3) ─────────────────────────────

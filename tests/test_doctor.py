@@ -38,16 +38,38 @@ def test_fixture_sources(code, start, mapped, miss):
     for role in ("train", "gateway", "actuals"):
         x = s[role]
         assert x["status"] == "미연결" and x["rows"] is None and "D-13" in x["message"]
-        assert x["coverage"] == pytest.approx(mapped)                       # 인벤토리 대응률
+    # 대응률은 소스별 — 그 소스의 테이블(tables · table · view)이 채우는 열만 센다 (DEF-QA1-005 · D-122)
+    assert s["actuals"]["coverage"] == pytest.approx(mapped)                # MES 테이블 = 인벤토리 대응률
+    assert s["gateway"]["coverage"] == 0.0                                  # 원장 테이블 열은 대응표에 0개
+    assert s["train"]["coverage"] is None                                   # 뷰 이름 미확인 → 셀 수 없음
 
 
 def test_ks_live_sources_show_no_target():
     s = by_role(dr.doctor("ks"))
     for role in ("train", "gateway", "actuals"):
         assert s[role]["target"] == "목표 없음"                            # D-33: 정비 · 고장 이력 원천 없음
-        assert set(s[role]["unmapped"]) == {"motor_current", "equip_temp", "product_type"}
+    assert set(s["actuals"]["unmapped"]) == {"motor_current", "equip_temp", "product_type"}
+    assert len(s["gateway"]["unmapped"]) == 9                               # 원장은 변수 하나도 대응 안 됨
+
+
+def test_sw_targets_are_per_source():
+    """QA1 재현: sw gateway(PRC_MONITOR_DATA)는 대응표에 열이 없는데 77.8% · 목표=있음으로 나왔다."""
     s = by_role(dr.doctor("sw"))
-    assert s["train"]["target"] == "있음" and set(s["train"]["unmapped"]) == {"dwell_time", "color_tone"}
+    assert s["actuals"]["target"] == "있음" and set(s["actuals"]["unmapped"]) == {"dwell_time", "color_tone"}
+    assert s["gateway"]["target"] == "목표 없음" and s["gateway"]["coverage"] == 0.0
+    assert s["gateway"]["tables"] == ["PRC_MONITOR_DATA"]
+    assert s["train"]["target"] is None and s["train"]["coverage"] is None    # 뷰 미확인 — 지어내지 않는다
+    assert "미확인" in s["train"]["message"]
+    assert set(s["train"]["targets"].values()) == {"미확인"}
+
+
+def test_static_rule_counts_only_source_tables():
+    """테이블이 하나만 겹치는 소스는 그 테이블의 열만 센다."""
+    m = tenants.load_and_merge("sw")
+    one = dr._static_live(m, "x", {"kind": "mes", "tables": ["RCV_MATERIAL_LOTS"]})
+    assert one["coverage"] == pytest.approx(2 / 9) and one["target"] == "목표 없음"
+    view = dr._static_live(m, "x", {"kind": "dataplatform", "view": "PRT_QUALITY_HISTORY"})
+    assert view["coverage"] == 0.0 and view["target"] == "있음"
 
 
 def _tmp_tenant(tmp_path, monkeypatch, eval_path: str) -> str:
@@ -94,4 +116,4 @@ def test_no_secret_values_in_output(monkeypatch, capsys):
     assert {s["status"] for s in rep["sources"]} == {"연결", "미연결"}
     assert dr.main(["--tenant", "sw"]) == 0
     text = capsys.readouterr().out
-    assert "대응률=77.8%" in text and "미연결" in text
+    assert "대응률=77.8%" in text and "대응률=0.0%" in text and "미연결" in text

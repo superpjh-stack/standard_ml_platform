@@ -1,0 +1,107 @@
+{
+ "limits": {
+  "p95_ms": 200.0,
+  "batch500_s": 3.0,
+  "startup_s": 15.0,
+  "rss_mb": 768.0
+ },
+ "mode": "local-uvicorn port 8202",
+ "compose_limited": false,
+ "tenants": [
+  {
+   "tenant_source": "ks",
+   "tasks": [
+    "t64be9b.remaining_hours",
+    "t64be9b.failure_24h",
+    "t64be9b.sensor_ood"
+   ],
+   "train_s": 1.93,
+   "health_s": 0.388,
+   "startup_s": 0.984,
+   "per_task": {
+    "remaining_hours": {
+     "type": "regression",
+     "first_ms": 530.0,
+     "p50_ms": 16.02,
+     "p95_ms": 19.19,
+     "max_ms": 26.22,
+     "batch500_s": 0.073,
+     "batch_items": 500,
+     "n": 200
+    },
+    "failure_24h": {
+     "type": "risk",
+     "first_ms": 31.5,
+     "p50_ms": 16.86,
+     "p95_ms": 20.97,
+     "max_ms": 43.42,
+     "batch500_s": 0.073,
+     "batch_items": 500,
+     "n": 200
+    },
+    "sensor_ood": {
+     "type": "anomaly",
+     "first_ms": 34.5,
+     "p50_ms": 22.18,
+     "p95_ms": 25.81,
+     "max_ms": 28.11,
+     "batch500_s": 0.283,
+     "batch_items": 500,
+     "n": 200
+    }
+   },
+   "rss_mb": 223.2
+  },
+  {
+   "tenant_source": "sw",
+   "tasks": [
+    "t2b3651.delta_e",
+    "t2b3651.defect_risk",
+    "t2b3651.print_ood"
+   ],
+   "train_s": 1.43,
+   "health_s": 0.387,
+   "startup_s": 1.004,
+   "per_task": {
+    "delta_e": {
+     "type": "regression",
+     "first_ms": 551.2,
+     "p50_ms": 17.76,
+     "p95_ms": 21.74,
+     "max_ms": 32.27,
+     "batch500_s": 0.083,
+     "batch_items": 500,
+     "n": 200
+    },
+    "defect_risk": {
+     "type": "risk",
+     "first_ms": 28.2,
+     "p50_ms": 15.89,
+     "p95_ms": 18.64,
+     "max_ms": 39.17,
+     "batch500_s": 0.07,
+     "batch_items": 500,
+     "n": 200
+    },
+    "print_ood": {
+     "type": "anomaly",
+     "first_ms": 36.9,
+     "p50_ms": 22.7,
+     "p95_ms": 26.32,
+     "max_ms": 38.15,
+     "batch500_s": 0.298,
+     "batch_items": 500,
+     "n": 200
+    }
+   },
+   "rss_mb": 220.3
+  }
+ ],
+ "worst": {
+  "p95_ms": 26.32,
+  "batch500_s": 0.298,
+  "startup_s": 1.004,
+  "rss_mb": 223.2
+ },
+ "pass": true
+}

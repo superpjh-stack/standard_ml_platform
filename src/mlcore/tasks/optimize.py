@@ -23,7 +23,7 @@ from typing import Any, Callable
 import numpy as np
 import pandas as pd
 
-from .. import audit
+from .. import approval, audit
 from ..db.conn import connect
 from ..registry.artifacts import load_artifacts
 from ..registry.models import ModelRef, Registry
@@ -177,8 +177,10 @@ class Optimizer:
         for pack_id in spec.task.raw.get("uses") or []:
             dep = by_pack.get(pack_id)
             if dep is None:                    # 병합 규칙 3 이 기동 때 막지만, 여기서도 지어내지 않는다
+                self.catalog.require_servable(spec.tenant_id, f"{spec.tenant_id}.{_short(pack_id)}")   # 꺼진 의존 → 503
                 raise NotFound("의존 과제가 켜져 있지 않습니다")
             ref = self.registry.get(spec.tenant_id, dep.task.id)
+            self.catalog.require_servable(spec.tenant_id, dep.task.id, ref)   # live + 합성 → 503 (D-120a)
             loaded = load_artifacts(ref)
             out.append((dep, ref, loaded))
         if not out:
@@ -217,10 +219,7 @@ class Optimizer:
             if not axes[name]:
                 raise InfeasibleSpace(detail={"rule": "empty_axis", "field": name})
         for name, d in (raw.get("decision_vars") or {}).items():
-            lo = float(d.get("min", 0))
-            hi = d.get("max")
-            if d.get("max_param"):
-                hi = params[d["max_param"]]
+            lo, hi = self._decision_bounds(d, params)
             if hi is None:
                 raise ServeError("결정 변수 상한이 없습니다", {"rule": "decision_max", "field": name})
             axes[name] = _lattice(lo, float(hi), lo, float(d["step"]))
@@ -253,6 +252,12 @@ class Optimizer:
                 pts[n] = pts[n].astype(float)
         return SearchSpace(axes, kinds, ranges, size, strategy, pts)
 
+    @staticmethod
+    def _decision_bounds(d: dict, params: dict) -> tuple[float, float | None]:
+        """결정 변수 [min, max] — max_param 이 있으면 요청 params 의 그 값(task-contract §2 decision_vars)."""
+        hi = params[d["max_param"]] if d.get("max_param") else d.get("max")
+        return float(d.get("min", 0)), (None if hi is None else float(hi))
+
     # ── 요청 검증 ─────────────────────────────────────────────────────────
     def _params(self, task: Any, given: dict | None) -> dict:
         spec = task.raw.get("params") or {}
@@ -276,6 +281,7 @@ class Optimizer:
 
     # ── 실행 ────────────────────────────────────────────────────────────
     def optimize(self, tenant_id: str, task_id: str, req: OptimizeRequest, *, caller: str, channel: str = "api") -> dict:
+        self.catalog.require_servable(tenant_id, task_id)                    # 꺼진 과제 → 503 (D-120a)
         spec = self.catalog.get(tenant_id, task_id)
         task = spec.task
         if task.type != "optimize":
@@ -299,6 +305,11 @@ class Optimizer:
             for k, v in extra.items():
                 if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(float(v)):
                     raise InvalidInput("숫자여야 합니다", {"field": k, "rule": "type"})
+                lo, hi = self._decision_bounds(dvars[k], params)       # 탐색 공간과 같은 [min, max | params[max_param]]
+                if float(v) < lo:
+                    raise OutOfBounds(detail={"field": k, "rule": "min"})
+                if hi is not None and float(v) > hi:
+                    raise OutOfBounds(detail={"field": k, "rule": "max"})   # DEF-QA3-006
             missing = [n for n in controls + list(dvars) if req.current.get(n) is None]
             if missing:
                 raise MissingRequired("현재 조건은 조절 · 결정 변수를 모두 넣어야 합니다", {"field": missing[0], "rule": "required"})
@@ -394,6 +405,7 @@ class Optimizer:
             status = "review"              # 고정 입력이 학습 범위 밖 — 사람이 검토 (optimize 허용 상태 안에서)
         if evals["flags"] is not None and bool(np.asarray(evals["flags"])[int(top[0])]):
             warnings.append(warn("extrapolation", None, "추천 조건이 학습 분포와 다른 조합입니다"))
+        warnings += self._warn_with(spec, req.fixed, cands)                # D-76 — 경고만(목적 · 제약 · 순위 불사용)
         synthetic = any(ref.synthetic for _, ref, _ in uses)
         if synthetic:
             warnings.append(warn("synthetic_model", None, "합성 데이터로 학습한 모델을 썼습니다"))
@@ -414,6 +426,46 @@ class Optimizer:
             "synthetic": synthetic, "notice": spec.notice,
         })
         self._record(spec, out, req, params, caller=caller, channel=channel)
+        return out
+
+    # ── 이상 경고 (task-contract §2 warn_with · D-76) ─────────────────────────────────────
+    def anomaly_flags(self, tenant_id: str, anomaly_task_id: str, fixed: dict, conditions: list[dict]) -> list[bool]:
+        """이상 탐지 과제의 **production** 모델로 후보 조건마다 flag. 고정 입력은 그 모델의 학습 보정값으로 채운다.
+        운영 모델이 없으면 ModelNotReady(503) — 호출자가 숨기지 않고 경고로 보인다."""
+        dep = self.catalog.get(tenant_id, anomaly_task_id)
+        if dep.task.type != "anomaly":
+            raise ServeError("warn_with 는 anomaly 과제만 받습니다", {"rule": "warn_with_type", "field": None})
+        ref = self.registry.get(tenant_id, dep.task.id)
+        self.catalog.require_servable(tenant_id, dep.task.id, ref)
+        ld = load_artifacts(ref)
+        order = list(ld.lock["order"])
+        given = set().union(*(set(c) for c in conditions)) if conditions else set()
+        fdefs = [d for d in dep.defs if d.name not in given]
+        filled, _ = impute({d.name: fixed.get(d.name) for d in fdefs}, fdefs, ld.lock, len(fdefs))
+        frame = pd.DataFrame([{n: (c[n] if n in c else filled.get(n)) for n in order} for c in conditions], columns=order)
+        kind = kind_for("anomaly")
+        vals = np.asarray(kind.values(ld, frame), dtype=float)
+        thr = kind._threshold(ld)
+        return [bool(v >= thr) for v in vals]
+
+    def _warn_with(self, spec, fixed: dict, cands: list[dict]) -> list[dict]:
+        """추천(best) 조건이 warn_with 과제에 걸리면 경고. 계약 §5 경고 코드 enum 에 `anomaly_flag` 가 없어(계약 불일치 —
+        decisions D-131) 같은 뜻의 `extrapolation`(field = 그 과제)을 쓴다. 운영 모델이 없으면 확인 못 했음을 경고로 보인다."""
+        out = []
+        by_pack = {s.task.pack_id: s for s in (self.catalog.get(spec.tenant_id, t) for t in self.catalog.ids())}
+        for pack_id in spec.task.raw.get("warn_with") or []:
+            dep = by_pack.get(pack_id)
+            if dep is None:
+                raise NotFound("warn_with 과제가 켜져 있지 않습니다")
+            try:
+                flags = self.anomaly_flags(spec.tenant_id, dep.task.id, fixed, [c["conditions"] for c in cands])
+            except ServeError as e:
+                if e.status != 503:
+                    raise
+                out.append(warn("extrapolation", dep.task.id, f"이상 탐지 운영 모델을 쓸 수 없어 확인하지 못했습니다 ({e.code})"))
+                continue
+            if flags and flags[0]:
+                out.append(warn("extrapolation", dep.task.id, "추천 조건이 이상 탐지에 걸렸습니다 — 시험으로 먼저 확인하세요"))
         return out
 
     def _evaluate(self, spec, uses, filled_by, pts: pd.DataFrame, cur_row, params: dict) -> dict:
@@ -517,9 +569,10 @@ class Optimizer:
                        json.dumps(stored, ensure_ascii=False), json.dumps(uses_versions), rec["feasible"], caller))
             approval_id = new_id("apr")
             c.execute("INSERT INTO mlp_approval (approval_id, tenant_id, task_id, kind, ref_id, action, approver_role, state, "
-                      "requested_by, evidence) VALUES (%s,%s,%s,'recommendation',%s,'apply',%s,'pending',%s,%s::jsonb)",
+                      "requested_by, evidence, expires_at) VALUES (%s,%s,%s,'recommendation',%s,'apply',%s,'pending',%s,%s::jsonb, "
+                      "now() + make_interval(secs => %s))",
                       (approval_id, spec.tenant_id, spec.task.id, rec["rec_id"], spec.task.raw["approver_role"], caller,
-                       json.dumps(evidence, ensure_ascii=False)))
+                       json.dumps(evidence, ensure_ascii=False), approval.ttl_hours("recommendation") * 3600))   # D-130
             audit.write(tenant_id=spec.tenant_id, actor=caller, role=None, action="recommendation.create",
                         target=f"{spec.task.id}@{rec['rec_id']}",
                         detail={"approval_id": approval_id, "feasible": rec["feasible"], "uses": uses_versions}, conn=c)

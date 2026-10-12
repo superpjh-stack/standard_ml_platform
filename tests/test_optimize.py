@@ -306,6 +306,9 @@ def test_ten_thousand_points_within_ten_seconds_and_random_is_deterministic(sw):
         def ids(self):
             return cat.ids()
 
+        def require_servable(self, *a, **k):
+            return cat.require_servable(*a, **k)
+
     t0 = time.perf_counter()
     out = Optimizer(Cat()).optimize(m.tenant.code, opt_id, OptimizeRequest(fixed=_fixed(sw)), caller="t")
     elapsed = time.perf_counter() - t0

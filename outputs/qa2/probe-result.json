@@ -1,0 +1,4785 @@
+[
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.remaining_hours predict(mid) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.remaining_hours predict(explain) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.remaining_hours predict(imputed3) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [
+    "press_force",
+    "vibration",
+    "motor_current"
+   ],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.remaining_hours predict(oor) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "out_of_range",
+   "imputed": [],
+   "oor": [
+    "press_force"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH",
+  "item": "tbc5c1d.remaining_hours batch 순서 · 건별 422 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "shape": [
+    "ok",
+    "error",
+    "ok",
+    "error"
+   ],
+   "bad_schema": [],
+   "keys": [
+    "items",
+    "next_cursor"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH-NAN",
+  "item": "tbc5c1d.remaining_hours batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"items.1.inputs.press_force.int\",\"rule\":\"int_type\"},{\"field\":\"items.1.inputs.press_force.float\",\"rule\":\"finite"
+  },
+  "expect": "200 + items[1].error invalid_input"
+ },
+ {
+  "id": "C-BATCH-501",
+  "item": "tbc5c1d.remaining_hours batch 501 → 422 invalid_input",
+  "verdict": "PASS",
+  "measured": 422,
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.failure_24h predict(mid) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.failure_24h predict(explain) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.failure_24h predict(imputed3) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [
+    "press_force",
+    "vibration",
+    "motor_current"
+   ],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.failure_24h predict(oor) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "out_of_range",
+   "imputed": [],
+   "oor": [
+    "press_force"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH",
+  "item": "tbc5c1d.failure_24h batch 순서 · 건별 422 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "shape": [
+    "ok",
+    "error",
+    "ok",
+    "error"
+   ],
+   "bad_schema": [],
+   "keys": [
+    "items",
+    "next_cursor"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH-NAN",
+  "item": "tbc5c1d.failure_24h batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"items.1.inputs.press_force.int\",\"rule\":\"int_type\"},{\"field\":\"items.1.inputs.press_force.float\",\"rule\":\"finite"
+  },
+  "expect": "200 + items[1].error invalid_input"
+ },
+ {
+  "id": "C-BATCH-501",
+  "item": "tbc5c1d.failure_24h batch 501 → 422 invalid_input",
+  "verdict": "PASS",
+  "measured": 422,
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.sensor_ood predict(mid) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.sensor_ood predict(explain) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.sensor_ood predict(imputed3) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [
+    "press_force",
+    "vibration",
+    "motor_current"
+   ],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "tbc5c1d.sensor_ood predict(oor) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "out_of_range",
+   "imputed": [],
+   "oor": [
+    "press_force"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH",
+  "item": "tbc5c1d.sensor_ood batch 순서 · 건별 422 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "shape": [
+    "ok",
+    "error",
+    "ok",
+    "error"
+   ],
+   "bad_schema": [],
+   "keys": [
+    "items",
+    "next_cursor"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH-NAN",
+  "item": "tbc5c1d.sensor_ood batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"items.1.inputs.press_force.int\",\"rule\":\"int_type\"},{\"field\":\"items.1.inputs.press_force.float\",\"rule\":\"finite"
+  },
+  "expect": "200 + items[1].error invalid_input"
+ },
+ {
+  "id": "C-BATCH-501",
+  "item": "tbc5c1d.sensor_ood batch 501 → 422 invalid_input",
+  "verdict": "PASS",
+  "measured": 422,
+  "expect": ""
+ },
+ {
+  "id": "C-OPT",
+  "item": "tbc5c1d.maintenance_timing optimize(ok) 18키 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "needs_approval",
+   "feasible": true,
+   "in_range": 1.0
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-OPT",
+  "item": "tbc5c1d.maintenance_timing optimize(infeasible) 18키 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "review",
+   "feasible": false,
+   "in_range": 1.0
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-OPT",
+  "item": "tbc5c1d.maintenance_timing predict 경로 → 404",
+  "verdict": "PASS",
+  "measured": 404,
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.delta_e predict(mid) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.delta_e predict(explain) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.delta_e predict(imputed3) 18키 · 유형 null 규칙",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "keys": 1,
+   "errs": [
+    "http 422 {\"error\":{\"code\":\"missing_required\",\"message\":\"필수 입력이 없습니다\",\"detail\":{\"field\":\"set_temp\",\"rule\":\"required\"}}}"
+   ],
+   "st": null,
+   "imputed": null,
+   "oor": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.delta_e predict(oor) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "out_of_range",
+   "imputed": [],
+   "oor": [
+    "set_temp"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH",
+  "item": "t19119c.delta_e batch 순서 · 건별 422 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "shape": [
+    "ok",
+    "error",
+    "ok",
+    "error"
+   ],
+   "bad_schema": [],
+   "keys": [
+    "items",
+    "next_cursor"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH-NAN",
+  "item": "t19119c.delta_e batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"items.1.inputs.set_temp.int\",\"rule\":\"int_type\"},{\"field\":\"items.1.inputs.set_temp.float\",\"rule\":\"finite_numbe"
+  },
+  "expect": "200 + items[1].error invalid_input"
+ },
+ {
+  "id": "C-BATCH-501",
+  "item": "t19119c.delta_e batch 501 → 422 invalid_input",
+  "verdict": "PASS",
+  "measured": 422,
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.defect_risk predict(mid) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.defect_risk predict(explain) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.defect_risk predict(imputed3) 18키 · 유형 null 규칙",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "keys": 1,
+   "errs": [
+    "http 422 {\"error\":{\"code\":\"missing_required\",\"message\":\"필수 입력이 없습니다\",\"detail\":{\"field\":\"set_temp\",\"rule\":\"required\"}}}"
+   ],
+   "st": null,
+   "imputed": null,
+   "oor": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.defect_risk predict(oor) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "out_of_range",
+   "imputed": [],
+   "oor": [
+    "set_temp"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH",
+  "item": "t19119c.defect_risk batch 순서 · 건별 422 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "shape": [
+    "ok",
+    "error",
+    "ok",
+    "error"
+   ],
+   "bad_schema": [],
+   "keys": [
+    "items",
+    "next_cursor"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH-NAN",
+  "item": "t19119c.defect_risk batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"items.1.inputs.set_temp.int\",\"rule\":\"int_type\"},{\"field\":\"items.1.inputs.set_temp.float\",\"rule\":\"finite_numbe"
+  },
+  "expect": "200 + items[1].error invalid_input"
+ },
+ {
+  "id": "C-BATCH-501",
+  "item": "t19119c.defect_risk batch 501 → 422 invalid_input",
+  "verdict": "PASS",
+  "measured": 422,
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.print_ood predict(mid) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.print_ood predict(explain) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "ok",
+   "imputed": [],
+   "oor": []
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.print_ood predict(imputed3) 18키 · 유형 null 규칙",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "keys": 1,
+   "errs": [
+    "http 422 {\"error\":{\"code\":\"missing_required\",\"message\":\"필수 입력이 없습니다\",\"detail\":{\"field\":\"set_temp\",\"rule\":\"required\"}}}"
+   ],
+   "st": null,
+   "imputed": null,
+   "oor": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-PRED",
+  "item": "t19119c.print_ood predict(oor) 18키 · 유형 null 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "out_of_range",
+   "imputed": [],
+   "oor": [
+    "set_temp"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH",
+  "item": "t19119c.print_ood batch 순서 · 건별 422 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "shape": [
+    "ok",
+    "error",
+    "ok",
+    "error"
+   ],
+   "bad_schema": [],
+   "keys": [
+    "items",
+    "next_cursor"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-BATCH-NAN",
+  "item": "t19119c.print_ood batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"items.1.inputs.set_temp.int\",\"rule\":\"int_type\"},{\"field\":\"items.1.inputs.set_temp.float\",\"rule\":\"finite_numbe"
+  },
+  "expect": "200 + items[1].error invalid_input"
+ },
+ {
+  "id": "C-BATCH-501",
+  "item": "t19119c.print_ood batch 501 → 422 invalid_input",
+  "verdict": "PASS",
+  "measured": 422,
+  "expect": ""
+ },
+ {
+  "id": "C-OPT",
+  "item": "t19119c.print_setpoint optimize(ok) 18키 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "needs_approval",
+   "feasible": true,
+   "in_range": 1.0
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-OPT",
+  "item": "t19119c.print_setpoint optimize(infeasible) 18키 · 스키마",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": 18,
+   "errs": [],
+   "st": "review",
+   "feasible": false,
+   "in_range": 1.0
+  },
+  "expect": ""
+ },
+ {
+  "id": "C-OPT",
+  "item": "t19119c.print_setpoint predict 경로 → 404",
+  "verdict": "PASS",
+  "measured": 404,
+  "expect": ""
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours NaN",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours -Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 1e400(→inf)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 1e308 거대 실수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 10**30 거대 정수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 10**400 거대 정수(float 넘침)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 5000자리 정수(파서 한도)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 400,
+   "code": "http_error",
+   "echo": false,
+   "detail": {}
+  },
+  "expect": "422"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours -0.0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "min"
+   }
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 빈 문자열(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 문자열 숫자 \"1\"",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours true(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 중첩 객체",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 유니코드 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": null,
+    "rule": "unknown_key"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 범주 빈 문자열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "machine_code",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 범주 유니코드 반사",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "machine_code",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 범주 숫자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "machine_code",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 최상위 모르는 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "x",
+      "rule": "extra_forbidden"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours inputs 가 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs",
+      "rule": "dict_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 본문이 JSON 아님",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "1",
+      "rule": "json_invalid"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours entity_id 129자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "entity_id",
+      "rule": "string_too_long"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours model_version 형식 위반",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "model_version",
+      "rule": "string_pattern_mismatch"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours explain 문자열",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 정수 변수에 2.5",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "shot_count",
+    "rule": "integer"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 정수 변수에 65000.0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "200"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.remaining_hours 중복 키(앞=잘못, 뒤=정상)",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "tbc5c1d.remaining_hours 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL<b>키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL<b>키.float\",\"rule\":\"finite_number\"},{\"field\":\"inputs.QA2SENTINEL<b>키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": "field 에 임의 문자열 없음 (D-75: 변수 이름 꼴만)"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "tbc5c1d.remaining_hours 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL키.float\",\"rule\":\"float_type\"},{\"field\":\"inputs.QA2SENTINEL키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.remaining_hours 결측 3개(null) / max_imputed 3",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "imputed": [
+    "press_force",
+    "vibration",
+    "motor_current"
+   ],
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.remaining_hours 결측 4개(null) / max_imputed 3",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "imputed": null,
+   "err": {
+    "code": "missing_required",
+    "message": "보정 한도(3)를 넘었습니다",
+    "detail": {
+     "field": null,
+     "rule": "max_imputed",
+     "count": 4
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.remaining_hours 결측 4개(키 생략)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": {
+    "code": "missing_required",
+    "message": "보정 한도(3)를 넘었습니다",
+    "detail": {
+     "field": null,
+     "rule": "max_imputed",
+     "count": 4
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.remaining_hours 필수 변수 machine_code null → 422 missing_required",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": {
+    "code": "missing_required",
+    "message": "필수 입력이 없습니다",
+    "detail": {
+     "field": "machine_code",
+     "rule": "required"
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours press_force=p1(182.3867618421862)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "press_force"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours press_force=p99(318.21596731098)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "press_force"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours press_force=p1-ε(182.38676184218616)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours press_force=p99+ε(318.21596731098003)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours vibration=p1(0.4343057811816147)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "vibration"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours vibration=p99(7.93829063033766)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "vibration"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours vibration=p1-ε(0.43430578118161467)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours vibration=p99+ε(7.938290630337661)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours motor_current=p1(31.004561237085444)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "motor_current"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours motor_current=p99(84.51882798497745)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "motor_current"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours motor_current=p1-ε(31.00456123708544)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.remaining_hours motor_current=p99+ε(84.51882798497746)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e NaN",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e -Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 1e400(→inf)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 1e308 거대 실수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 10**30 거대 정수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 10**400 거대 정수(float 넘침)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 5000자리 정수(파서 한도)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 400,
+   "code": "http_error",
+   "echo": false,
+   "detail": {}
+  },
+  "expect": "422"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e -0.0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "min"
+   }
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 빈 문자열(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 문자열 숫자 \"1\"",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e true(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 중첩 객체",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 유니코드 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": null,
+    "rule": "unknown_key"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 범주 빈 문자열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "print_type",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 범주 유니코드 반사",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "print_type",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 범주 숫자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "print_type",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 최상위 모르는 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "x",
+      "rule": "extra_forbidden"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e inputs 가 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs",
+      "rule": "dict_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 본문이 JSON 아님",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "1",
+      "rule": "json_invalid"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e entity_id 129자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "entity_id",
+      "rule": "string_too_long"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e model_version 형식 위반",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "model_version",
+      "rule": "string_pattern_mismatch"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e explain 문자열",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.delta_e 중복 키(앞=잘못, 뒤=정상)",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "t19119c.delta_e 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL<b>키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL<b>키.float\",\"rule\":\"finite_number\"},{\"field\":\"inputs.QA2SENTINEL<b>키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": "field 에 임의 문자열 없음 (D-75: 변수 이름 꼴만)"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "t19119c.delta_e 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL키.float\",\"rule\":\"float_type\"},{\"field\":\"inputs.QA2SENTINEL키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.delta_e 결측 3개(null) / max_imputed 3",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "imputed": [
+    "absorb_rate",
+    "fabric_strength"
+   ],
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.delta_e 결측 4개(null) / max_imputed 3",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "imputed": [
+    "absorb_rate",
+    "fabric_strength"
+   ],
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.delta_e 결측 4개(키 생략)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.delta_e 필수 변수 set_temp null → 422 missing_required",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": {
+    "code": "missing_required",
+    "message": "필수 입력이 없습니다",
+    "detail": {
+     "field": "set_temp",
+     "rule": "required"
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_temp=p1(141.195)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "set_temp"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_temp=p99(209.10500000000002)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "review",
+   "near": [
+    "set_temp"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_temp=p1-ε(141.19499999999996)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_temp=p99+ε(209.10500000000005)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_pressure=p1(2.02)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "set_pressure"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_pressure=p99(5.97)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "set_pressure"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_pressure=p1-ε(2.0199999999999996)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e set_pressure=p99+ε(5.970000000000001)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e line_speed=p1(6.327500000000001)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "line_speed"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e line_speed=p99(23.842499999999998)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "line_speed"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e line_speed=p1-ε(6.3275)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.delta_e line_speed=p99+ε(23.8425)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h NaN",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h -Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 1e400(→inf)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 1e308 거대 실수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 10**30 거대 정수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 10**400 거대 정수(float 넘침)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 5000자리 정수(파서 한도)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 400,
+   "code": "http_error",
+   "echo": false,
+   "detail": {}
+  },
+  "expect": "422"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h -0.0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "min"
+   }
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 빈 문자열(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 문자열 숫자 \"1\"",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "press_force",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h true(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 중첩 객체",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.press_force.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.press_force.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.press_force.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 유니코드 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": null,
+    "rule": "unknown_key"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 범주 빈 문자열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "machine_code",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 범주 유니코드 반사",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "machine_code",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 범주 숫자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "machine_code",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 최상위 모르는 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "x",
+      "rule": "extra_forbidden"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h inputs 가 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs",
+      "rule": "dict_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 본문이 JSON 아님",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "1",
+      "rule": "json_invalid"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h entity_id 129자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "entity_id",
+      "rule": "string_too_long"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h model_version 형식 위반",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "model_version",
+      "rule": "string_pattern_mismatch"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h explain 문자열",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 정수 변수에 2.5",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "shot_count",
+    "rule": "integer"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 정수 변수에 65000.0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "200"
+ },
+ {
+  "id": "IN",
+  "item": "tbc5c1d.failure_24h 중복 키(앞=잘못, 뒤=정상)",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "tbc5c1d.failure_24h 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL<b>키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL<b>키.float\",\"rule\":\"finite_number\"},{\"field\":\"inputs.QA2SENTINEL<b>키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": "field 에 임의 문자열 없음 (D-75: 변수 이름 꼴만)"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "tbc5c1d.failure_24h 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL키.float\",\"rule\":\"float_type\"},{\"field\":\"inputs.QA2SENTINEL키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.failure_24h 결측 3개(null) / max_imputed 3",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "imputed": [
+    "press_force",
+    "vibration",
+    "motor_current"
+   ],
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.failure_24h 결측 4개(null) / max_imputed 3",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "imputed": null,
+   "err": {
+    "code": "missing_required",
+    "message": "보정 한도(3)를 넘었습니다",
+    "detail": {
+     "field": null,
+     "rule": "max_imputed",
+     "count": 4
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.failure_24h 결측 4개(키 생략)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": {
+    "code": "missing_required",
+    "message": "보정 한도(3)를 넘었습니다",
+    "detail": {
+     "field": null,
+     "rule": "max_imputed",
+     "count": 4
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "tbc5c1d.failure_24h 필수 변수 machine_code null → 422 missing_required",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": {
+    "code": "missing_required",
+    "message": "필수 입력이 없습니다",
+    "detail": {
+     "field": "machine_code",
+     "rule": "required"
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h press_force=p1(182.3867618421862)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "press_force"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h press_force=p99(318.21596731098)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "press_force"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h press_force=p1-ε(182.38676184218616)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h press_force=p99+ε(318.21596731098003)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h vibration=p1(0.4343057811816147)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "vibration"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h vibration=p99(7.93829063033766)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "vibration"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h vibration=p1-ε(0.43430578118161467)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h vibration=p99+ε(7.938290630337661)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h motor_current=p1(31.004561237085444)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "motor_current"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h motor_current=p99(84.51882798497745)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "watch",
+   "near": [
+    "motor_current"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h motor_current=p1-ε(31.00456123708544)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "tbc5c1d.failure_24h motor_current=p99+ε(84.51882798497746)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood NaN",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood -Infinity",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 1e400(→inf)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "finite_number"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 1e308 거대 실수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 10**30 거대 정수",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 10**400 거대 정수(float 넘침)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "max"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 5000자리 정수(파서 한도)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 400,
+   "code": "http_error",
+   "echo": false,
+   "detail": {}
+  },
+  "expect": "422"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood -0.0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "min"
+   }
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 빈 문자열(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 문자열 숫자 \"1\"",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "set_temp",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood true(수치 자리)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 중첩 객체",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs.set_temp.int",
+      "rule": "int_type"
+     },
+     {
+      "field": "inputs.set_temp.float",
+      "rule": "float_type"
+     },
+     {
+      "field": "inputs.set_temp.str",
+      "rule": "string_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 유니코드 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": null,
+    "rule": "unknown_key"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 범주 빈 문자열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "print_type",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 범주 유니코드 반사",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "echo": false,
+   "detail": {
+    "field": "print_type",
+    "rule": "values"
+   }
+  },
+  "expect": "422 out_of_bounds"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 범주 숫자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "field": "print_type",
+    "rule": "type"
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 최상위 모르는 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "x",
+      "rule": "extra_forbidden"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood inputs 가 배열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "inputs",
+      "rule": "dict_type"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 본문이 JSON 아님",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "1",
+      "rule": "json_invalid"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood entity_id 129자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "entity_id",
+      "rule": "string_too_long"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood model_version 형식 위반",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "echo": false,
+   "detail": {
+    "errors": [
+     {
+      "field": "model_version",
+      "rule": "string_pattern_mismatch"
+     }
+    ]
+   }
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood explain 문자열",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "422 invalid_input"
+ },
+ {
+  "id": "IN",
+  "item": "t19119c.print_ood 중복 키(앞=잘못, 뒤=정상)",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "code": null,
+   "echo": false,
+   "detail": null,
+   "st": "ok",
+   "oor": [],
+   "schema": []
+  },
+  "expect": "None"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "t19119c.print_ood 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL<b>키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL<b>키.float\",\"rule\":\"finite_number\"},{\"field\":\"inputs.QA2SENTINEL<b>키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": "field 에 임의 문자열 없음 (D-75: 변수 이름 꼴만)"
+ },
+ {
+  "id": "IN-ECHO",
+  "item": "t19119c.print_ood 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.QA2SENTINEL키.int\",\"rule\":\"int_type\"},{\"field\":\"inputs.QA2SENTINEL키.float\",\"rule\":\"float_type\"},{\"field\":\"inputs.QA2SENTINEL키.str\",\"rule\":\"string_type\"}]}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.print_ood 결측 3개(null) / max_imputed 3",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "imputed": [
+    "absorb_rate",
+    "fabric_strength"
+   ],
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.print_ood 결측 4개(null) / max_imputed 3",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "imputed": [
+    "absorb_rate",
+    "fabric_strength"
+   ],
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.print_ood 결측 4개(키 생략)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "err": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "IMP",
+  "item": "t19119c.print_ood 필수 변수 set_temp null → 422 missing_required",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": {
+    "code": "missing_required",
+    "message": "필수 입력이 없습니다",
+    "detail": {
+     "field": "set_temp",
+     "rule": "required"
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_temp=p1(141.195)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "ok",
+   "near": [
+    "set_temp"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_temp=p99(209.10500000000002)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "ok",
+   "near": [
+    "set_temp"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_temp=p1-ε(141.19499999999996)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_temp=p99+ε(209.10500000000005)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_pressure=p1(2.02)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "ok",
+   "near": [
+    "set_pressure"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_pressure=p99(5.97)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "ok",
+   "near": [
+    "set_pressure"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_pressure=p1-ε(2.0199999999999996)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood set_pressure=p99+ε(5.970000000000001)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood line_speed=p1(6.327500000000001)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "ok",
+   "near": [
+    "line_speed"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood line_speed=p99(23.842499999999998)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": false,
+   "st": "ok",
+   "near": [
+    "line_speed"
+   ]
+  },
+  "expect": "out_of_range=False"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood line_speed=p1-ε(6.3275)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "RNG",
+  "item": "t19119c.print_ood line_speed=p99+ε(23.8425)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "oor": true,
+   "st": "out_of_range",
+   "near": []
+  },
+  "expect": "out_of_range=True"
+ },
+ {
+  "id": "ART",
+  "item": "model.joblib 바꿔치기 → 503 model_artifact_mismatch · 기록 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_artifact_mismatch",
+     "message": "모델 산출물이 등록부와 다릅니다 (해시 · 패키지 버전 불일치)",
+     "detail": {
+      "rule": "sha256",
+      "field": null
+     }
+    }
+   },
+   "pred_rows_added": 0
+  },
+  "expect": ""
+ },
+ {
+  "id": "ART",
+  "item": "env.lock 위조(파일) → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "detail": {
+    "rule": "sha256",
+    "field": null
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "ART",
+  "item": "features.lock.json 범위 위조 → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503
+  },
+  "expect": ""
+ },
+ {
+  "id": "ART",
+  "item": "제자리 바꿔치기(크기 · mtime · inode 같음) — 캐시 적중",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "note": "캐시는 이미 검증한 메모리 모델로 답한다(디스크 변조본은 읽지 않음). 재기동 뒤에는 해시 재측정"
+  },
+  "expect": "검증된 모델만 쓴다"
+ },
+ {
+  "id": "ART",
+  "item": "제자리 바꿔치기 후 캐시 비움(재기동 모사) → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503
+  },
+  "expect": ""
+ },
+ {
+  "id": "ART-TOCTOU",
+  "item": "해시 측정 ↔ joblib.load 사이 바꿔치기 → 검증 안 된 모델로 200 응답",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 200,
+   "value_before": 103.086277,
+   "value_after": 0.0,
+   "note": "load_artifacts: artifact_sha256(d) 뒤 joblib.load(d/'model.joblib') 를 다시 연다(같은 바이트 검증 아님)"
+  },
+  "expect": "해시를 잰 바이트에서 적재하거나 적재 뒤 재검증 → 503"
+ },
+ {
+  "id": "ART-TOCTOU",
+  "item": "바꿔치기 다음 요청",
+  "verdict": "WARN",
+  "measured": {
+   "status": 503,
+   "code": "model_artifact_mismatch"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ART",
+  "item": "산출물 폴더 없음 → 503 · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_artifact_mismatch",
+     "message": "모델 산출물이 등록부와 다릅니다 (해시 · 패키지 버전 불일치)",
+     "detail": {
+      "rule": "dir_missing",
+      "field": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 predict 키 = 원천 ml_service 반환 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "got": [
+    "remaining_hours",
+    "risk_probability",
+    "anomaly",
+    "status",
+    "warnings",
+    "imputed_fields",
+    "model",
+    "risk_model",
+    "version",
+    "notice"
+   ],
+   "want": [
+    "remaining_hours",
+    "risk_probability",
+    "anomaly",
+    "status",
+    "warnings",
+    "imputed_fields",
+    "model",
+    "risk_model",
+    "version",
+    "notice"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "AUD",
+  "item": "ks 호환 POST predict 감사 1행 (예측 3행 기록)",
+  "verdict": "FAIL",
+  "measured": {
+   "audit_added": 0,
+   "pred_added": 3
+  },
+  "expect": "쓰기 요청(POST) → mlp_audit 1행 (api-contract · middleware docstring)"
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 optimize 최상위 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "got": [
+    "feasible",
+    "prediction",
+    "candidate_count",
+    "feasible_count",
+    "recommendation",
+    "alternatives",
+    "unmet_constraints",
+    "objective",
+    "notice"
+   ],
+   "want": [
+    "feasible",
+    "prediction",
+    "candidate_count",
+    "feasible_count",
+    "recommendation",
+    "alternatives",
+    "unmet_constraints",
+    "objective",
+    "notice"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "AUD",
+  "item": "ks 호환 POST optimize(추천 · 승인 행 생성) 감사",
+  "verdict": "PASS",
+  "measured": {
+   "audit_added": 1
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 optimize recommendation 행 키 · unmet_constraints 값",
+  "verdict": "WARN",
+  "measured": {
+   "rec_keys": [
+    "stop_after_hours",
+    "remaining_hours",
+    "maintenance_cost",
+    "violation"
+   ],
+   "unmet": [],
+   "objective": "제약 충족 후보 중 maintenance_cost 최소화, 동률이면 stop_after_hours 최대"
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 optimize(불가능) unmet_constraints 값 — 원천은 한국어 문구",
+  "verdict": "WARN",
+  "measured": {
+   "feasible": false,
+   "unmet": [
+    "reserve",
+    "max_cost"
+   ],
+   "rec_keys": [
+    "stop_after_hours",
+    "remaining_hours",
+    "maintenance_cost",
+    "violation"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 overview 키(원천 전체 대비)",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "got": [
+    "data_mode",
+    "version",
+    "rows",
+    "champion",
+    "risk_champion",
+    "metrics",
+    "risk_metrics",
+    "test_metrics",
+    "risk_test_metrics",
+    "split",
+    "features",
+    "risk_threshold",
+    "warning"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 records 키 · total",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": [
+    "total",
+    "limit",
+    "offset",
+    "records"
+   ],
+   "total": 720,
+   "rec0_keys": [
+    "lot_id",
+    "recorded_at",
+    "press_force",
+    "vibration",
+    "motor_current",
+    "equip_temp",
+    "mold_temp",
+    "cycle_time",
+    "shot_count",
+    "machine",
+    "product",
+    "remaining_hours",
+    "failure_24h"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 422 모양 · 입력값 되풀이 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{\"detail\":[{\"loc\":[\"body\",\"press_force\"],\"msg\":\"숫자여야 합니다\",\"type\":\"invalid_input\"}]}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 경로 NaN → 422",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{\"detail\":[{\"loc\":[\"body\"],\"msg\":\"JSON 형식이 아니거나 NaN · Infinity 가 있습니다\",\"type\":\"json_invalid\"}]}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 predict 다른 회사 키 → 404",
+  "verdict": "PASS",
+  "measured": 404,
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "ks 옛 predict viewer → 403",
+  "verdict": "PASS",
+  "measured": 403,
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 predict 키 = 원천 ml_service 반환 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "got": [
+    "delta_e",
+    "risk_probability",
+    "anomaly",
+    "status",
+    "warnings",
+    "imputed_fields",
+    "equipment",
+    "model",
+    "risk_model",
+    "version",
+    "notice"
+   ],
+   "want": [
+    "delta_e",
+    "risk_probability",
+    "anomaly",
+    "status",
+    "warnings",
+    "imputed_fields",
+    "equipment",
+    "model",
+    "risk_model",
+    "version",
+    "notice"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "AUD",
+  "item": "sw 호환 POST predict 감사 1행 (예측 3행 기록)",
+  "verdict": "FAIL",
+  "measured": {
+   "audit_added": 0,
+   "pred_added": 3
+  },
+  "expect": "쓰기 요청(POST) → mlp_audit 1행 (api-contract · middleware docstring)"
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 optimize 최상위 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "got": [
+    "feasible",
+    "current",
+    "current_cost_index",
+    "candidate_count",
+    "feasible_count",
+    "recommendation",
+    "alternatives",
+    "unmet_constraints",
+    "warnings",
+    "objective",
+    "notice"
+   ],
+   "want": [
+    "feasible",
+    "current",
+    "current_cost_index",
+    "candidate_count",
+    "feasible_count",
+    "recommendation",
+    "alternatives",
+    "unmet_constraints",
+    "warnings",
+    "objective",
+    "notice"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "AUD",
+  "item": "sw 호환 POST optimize(추천 · 승인 행 생성) 감사",
+  "verdict": "PASS",
+  "measured": {
+   "audit_added": 1
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 optimize recommendation 행 키 · unmet_constraints 값",
+  "verdict": "WARN",
+  "measured": {
+   "rec_keys": [
+    "set_temp",
+    "set_pressure",
+    "line_speed",
+    "ink_usage",
+    "dwell_time",
+    "delta_e",
+    "defect_risk",
+    "process_cost",
+    "violation"
+   ],
+   "unmet": [],
+   "objective": "제약 충족 후보 중 process_cost 최소화, 동률이면 delta_e 최소"
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 optimize(불가능) unmet_constraints 값 — 원천은 한국어 문구",
+  "verdict": "WARN",
+  "measured": {
+   "feasible": false,
+   "unmet": [
+    "max_delta_e",
+    "max_risk",
+    "min_line_speed"
+   ],
+   "rec_keys": [
+    "set_temp",
+    "set_pressure",
+    "line_speed",
+    "ink_usage",
+    "dwell_time",
+    "delta_e",
+    "defect_risk",
+    "process_cost",
+    "violation"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 overview 키(원천 전체 대비)",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "got": [
+    "data_mode",
+    "version",
+    "rows",
+    "champion",
+    "risk_champion",
+    "metrics",
+    "risk_metrics",
+    "test_metrics",
+    "risk_test_metrics",
+    "split",
+    "features",
+    "risk_threshold",
+    "warning"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 records 키 · total",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": [
+    "total",
+    "limit",
+    "offset",
+    "records"
+   ],
+   "total": 720,
+   "rec0_keys": [
+    "lot_id",
+    "recorded_at",
+    "set_temp",
+    "set_pressure",
+    "line_speed",
+    "ink_usage",
+    "dwell_time",
+    "absorb_rate",
+    "fabric_strength",
+    "print_type",
+    "color_tone",
+    "delta_e",
+    "defect"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 422 모양 · 입력값 되풀이 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{\"detail\":[{\"loc\":[\"body\",\"set_temp\"],\"msg\":\"숫자여야 합니다\",\"type\":\"invalid_input\"}]}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 경로 NaN → 422",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{\"detail\":[{\"loc\":[\"body\"],\"msg\":\"JSON 형식이 아니거나 NaN · Infinity 가 있습니다\",\"type\":\"json_invalid\"}]}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 predict 다른 회사 키 → 404",
+  "verdict": "PASS",
+  "measured": 404,
+  "expect": ""
+ },
+ {
+  "id": "CMP",
+  "item": "sw 옛 predict viewer → 403",
+  "verdict": "PASS",
+  "measured": 403,
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks/remaining_hours/models",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/predict",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/predict:batch",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/actuals",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/predictions/<prd>/trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"예측을 찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/runs/<run>",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"run\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/tenants/<A>/approvals",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 POST /api/v1/approvals/<apr>/decide",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"승인을 찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/models/v2/promote",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks/remaining_hours/monitor",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/tenants/<A>/doctor",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks/remaining_hours/records",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사 · 없는 ID 응답 동일 predictions",
+  "verdict": "PASS",
+  "measured": {
+   "other": [
+    404,
+    {
+     "error": {
+      "code": "not_found",
+      "message": "예측을 찾을 수 없습니다",
+      "detail": {}
+     }
+    }
+   ],
+   "none": [
+    404,
+    {
+     "error": {
+      "code": "not_found",
+      "message": "예측을 찾을 수 없습니다",
+      "detail": {}
+     }
+    }
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사 · 없는 ID 응답 동일 runs",
+  "verdict": "PASS",
+  "measured": {
+   "other": [
+    404,
+    {
+     "error": {
+      "code": "not_found",
+      "message": "run",
+      "detail": {}
+     }
+    }
+   ],
+   "none": [
+    404,
+    {
+     "error": {
+      "code": "not_found",
+      "message": "run",
+      "detail": {}
+     }
+    }
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "다른 회사 · 없는 승인 decide 응답 동일",
+  "verdict": "PASS",
+  "measured": {
+   "other": {
+    "error": {
+     "code": "not_found",
+     "message": "승인을 찾을 수 없습니다",
+     "detail": {}
+    }
+   },
+   "none": {
+    "error": {
+     "code": "not_found",
+     "message": "승인을 찾을 수 없습니다",
+     "detail": {}
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "AUD",
+  "item": "다른 회사 키의 쓰기 시도(404)가 감사에 남는가",
+  "verdict": "FAIL",
+  "measured": {
+   "audit_rows_added_tenantA": 0,
+   "sw_rows": 4
+  },
+  "expect": "거부된 회사 밖 쓰기 시도 기록(권장)"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer POST /api/v1/tenants/<t>/tasks/remaining_hours/predict",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer POST /api/v1/tenants/<t>/tasks/remaining_hours/predict:batch",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer POST /api/v1/tenants/<t>/tasks/remaining_hours/actuals",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer POST /api/v1/tenants/<t>/tasks/maintenance_timing/optimize",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer GET /api/v1/tenants/<t>/tasks/remaining_hours/models",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer GET /api/v1/tenants/<t>/approvals",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer GET /api/v1/tenants/<t>/tasks/remaining_hours/monitor",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer GET /api/v1/tenants/<t>/doctor",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer GET /api/v1/tenants/<t>/tasks",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "code": null
+  },
+  "expect": "[200]"
+ },
+ {
+  "id": "ROLE",
+  "item": "viewer GET /api/v1/predictions/<prd>/trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator POST /api/v1/tenants/<t>/tasks/remaining_hours/train",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/stage",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/promote",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator POST /api/v1/approvals/<apr>/decide",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator GET /api/v1/tenants/<t>/approvals",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "code": null
+  },
+  "expect": "[200]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator GET /api/v1/tenants/<t>/tasks/remaining_hours/models",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator GET /api/v1/predictions/<prd>/trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "operator POST /api/v1/tenants/<t>/tasks/remaining_hours/predict",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver POST /api/v1/tenants/<t>/tasks/remaining_hours/train",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/stage",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver GET /api/v1/tenants/<t>/tasks/remaining_hours/models",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "code": null
+  },
+  "expect": "[200]"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver GET /api/v1/predictions/<prd>/trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver_other POST /api/v1/approvals/<apr>/decide",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver_other POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/promote",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403,
+   "code": "forbidden"
+  },
+  "expect": "[403]"
+ },
+ {
+  "id": "ROLE",
+  "item": "admin GET /api/v1/predictions/<prd>/trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "code": null
+  },
+  "expect": "[200]"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver(다른 과제 담당)가 승인 목록에서 남의 과제 승인을 본다",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "n_items": 8,
+   "roles_in_items": [
+    "maintenance_lead"
+   ]
+  },
+  "expect": "goal §6: approver 는 자기 approver_role 과제만 — 목록 필터 여부"
+ },
+ {
+  "id": "ROLE",
+  "item": "approver(담당) decide approve → 200 · production 교체",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "body": {
+    "approval_id": "apr_01M4R6QWV91P7PXFBQEQZ2RTFN",
+    "state": "approved",
+    "production_version": "v2"
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "ROLE",
+  "item": "같은 승인 재결정 → 409 already_decided",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409
+  },
+  "expect": ""
+ },
+ {
+  "id": "AUTH",
+  "item": "키 없음 → 401",
+  "verdict": "PASS",
+  "measured": 401,
+  "expect": ""
+ },
+ {
+  "id": "AUTH",
+  "item": "틀린 키 → 401",
+  "verdict": "PASS",
+  "measured": 401,
+  "expect": ""
+ },
+ {
+  "id": "AUTH",
+  "item": "폐기한 키 → 401",
+  "verdict": "PASS",
+  "measured": 401,
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "경로 꼴 우회 /api/v1/tenants/<B>/tasks/<A>.remaining_hours/predict",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "경로 꼴 우회 /api/v1//tenants/<A>/tasks/remaining_hours/predict",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "경로 꼴 우회 /api/v1/tenants/TBC5C1D/tasks/remaining_hours/predict",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expect": ""
+ },
+ {
+  "id": "ISO",
+  "item": "경로 꼴 우회 /api/v1/tenants/<A>%2F/tasks/remaining_hours/predict",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expect": ""
+ },
+ {
+  "id": "APPEND",
+  "item": "UPDATE mlp_prediction SET status='ok' WHERE prediction_id IN",
+  "verdict": "PASS",
+  "measured": "InsufficientPrivilege: append_only: mlp_prediction 은(는) 추가만 할 수 있습니다 (UPDATE)",
+  "expect": ""
+ },
+ {
+  "id": "APPEND",
+  "item": "DELETE FROM mlp_prediction WHERE prediction_id IN (SELECT pr",
+  "verdict": "PASS",
+  "measured": "InsufficientPrivilege: append_only: mlp_prediction 은(는) 추가만 할 수 있습니다 (DELETE)",
+  "expect": ""
+ },
+ {
+  "id": "APPEND",
+  "item": "TRUNCATE mlp_prediction",
+  "verdict": "PASS",
+  "measured": "InsufficientPrivilege: append_only: mlp_prediction 은(는) 추가만 할 수 있습니다 (TRUNCATE)",
+  "expect": ""
+ },
+ {
+  "id": "APPEND",
+  "item": "UPDATE mlp_audit SET actor='x' WHERE audit_id IN (SELECT aud",
+  "verdict": "PASS",
+  "measured": "InsufficientPrivilege: append_only: mlp_audit 은(는) 추가만 할 수 있습니다 (UPDATE)",
+  "expect": ""
+ },
+ {
+  "id": "APPEND",
+  "item": "DELETE FROM mlp_audit WHERE audit_id IN (SELECT audit_id FRO",
+  "verdict": "PASS",
+  "measured": "InsufficientPrivilege: append_only: mlp_audit 은(는) 추가만 할 수 있습니다 (DELETE)",
+  "expect": ""
+ },
+ {
+  "id": "APPEND",
+  "item": "INSERT INTO mlp_api_key (tenant_id, key_hash, key_prefix, ro",
+  "verdict": "PASS",
+  "measured": "CheckViolation: new row for relation \"mlp_api_key\" violates check constraint \"mlp_api_key_no_plain\"",
+  "expect": ""
+ },
+ {
+  "id": "KEY",
+  "item": "API 키 저장 형태 = sha256$<64hex> · 평문 0",
+  "verdict": "PASS",
+  "measured": {
+   "n": 5,
+   "prefix_len": [
+    8
+   ],
+   "sample": "sha256$b4de7…"
+  },
+  "expect": ""
+ },
+ {
+  "id": "CORS",
+  "item": "MLP_CORS_ORIGINS=http://localhost:5190",
+  "verdict": "PASS",
+  "measured": {
+   "http://localhost:5190": [
+    200,
+    "http://localhost:5190",
+    "http://localhost:5190",
+    null
+   ],
+   "http://evil.invalid": [
+    400,
+    null,
+    null,
+    null
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CORS",
+  "item": "MLP_CORS_ORIGINS=*",
+  "verdict": "PASS",
+  "measured": {
+   "http://localhost:5190": [
+    405,
+    null,
+    null,
+    null
+   ],
+   "http://evil.invalid": [
+    405,
+    null,
+    null,
+    null
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "CORS",
+  "item": "MLP_CORS_ORIGINS=(빈 값)",
+  "verdict": "PASS",
+  "measured": {
+   "http://localhost:5190": [
+    405,
+    null,
+    null,
+    null
+   ],
+   "http://evil.invalid": [
+    405,
+    null,
+    null,
+    null
+   ]
+  },
+  "expect": ""
+ }
+]

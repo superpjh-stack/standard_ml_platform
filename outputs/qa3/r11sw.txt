@@ -1,0 +1,8 @@
+G-M02  SW-E1 GET /api/health  PASS  HTTP 200 
+G-M02  SW-E2 GET /api/ml/overview  PASS  HTTP 200 
+G-M02  SW-E5 GET /api/data/records?limit=2  PASS  HTTP 200 
+G-M02  SW-E6 GET /api/data/records/SW-DEMO-0001  FAIL(DEF-QA3-003)  HTTP 404 {'detail': 'LOT를 찾을 수 없습니다'} — 원천 SW-DEMO-0001(ml_service.py:50), 호환 목록은 DEMO-0001
+G-M02  SW-E6 GET /api/data/records/SW-DEMO-9999  PASS  HTTP 404 {'detail': 'LOT를 찾을 수 없습니다'}
+G-M02  SW-E7 GET /  PASS  HTTP 404 — 표준은 /app/* (task-map 명시), /app/overview 200; {'error': {'code': 'not_found', 'message': '찾을 수 없습니다', 'detail': {}}}
+G-M02  SW-E7 GET /app/overview  PASS  HTTP 200 
+G-M02  SW-E1(std) GET /api/v1/health  PASS  HTTP 200 

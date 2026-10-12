@@ -122,3 +122,37 @@ def synth_call(merged: Merged, task_id: str, role: str = "demo") -> SynthCall
 - D-W3-01 이 정해지면 `print_setpoint.yaml` 에 이상 경고 키.
 
 
+
+## §2.2 웨이브 C 실측 — 결함 수정 (2026-10-12, 기준 커밋 9d2febc, 커밋 안 함 · 이번 회전 아키텍트 권한 포함)
+
+결함마다 회귀 시험을 먼저 써서 실패를 확인한 뒤 고쳤다(빨강 → 초록). 결정은 `decisions.md` D-120 ~ D-126.
+
+| 결함 | 수정 전(시험 실패) | 수정 후 | 명령 |
+|---|---|---|---|
+| DEF-QA3-001 #17 R4 실경로 | `health` delta_e model_ready **True** · predict **200**(QA3 재현 그대로) | live 기동 → delta_e disabled · predict 404(503 은 개발2 요청 D-120a) · defect_risk(CSV 학습) 200 synthetic=false · DB 없음 → live 과제 전부 끔 · demo 는 DB 안 봄 · **7 passed** | `OMP_NUM_THREADS=1 uv run pytest -q tests/test_r4_live_path.py` |
+| G-S02 R4 판정 | `lambda tid: True` 주입 | 실기동 경로 시험 통과로만 셈(건너뜀 = FAIL) · 5/5 PASS | `uv run python gates/check_registry.py` |
+| DEF-QA1-003 · 004 #10 #11 | approver_role 변경 · target 변경 · 목표 ∈ 입력 **8 failed** | R1 거부 · **10 passed** · G-M03 변형 4 → **7/7** | `uv run pytest -q tests/test_override_rules.py` · `gates/check_tasks.py` |
+| DEF-QA1-005 #12 doctor | 소스별 기대 **6 failed** | sw gateway 0.0% 목표 없음 · actuals 77.8% 있음 · train null(미확인) / ks gateway 0.0% · actuals 66.7% · 목표 없음 · **9 passed** | `uv run pytest -q tests/test_doctor.py` · `make doctor TENANT=sw` |
+| DEF-QA2-009 #16 append-only | replica 우회 · mlp_app DELETE 보유 **4 failed** | ENABLE ALWAYS · mlp_app 최소 권한 · 보호 구간 2회 재적용 데이터 유지 · **7 passed**(기존 DB `ml_grants_check_db` · 새 DB `ml_grants_fresh_db` 둘 다) · ml_db · ml_test_db 에 `make db-grants`(ml_test_db mlp_audit 행 유지) | `uv run pytest -q tests/test_schema_grants.py` · `MLP_GRANTS_DB=ml_grants_fresh_db …` |
+| #7 Makefile | `make db-reset` 즉시 삭제 | `db-schema` · `db-reset` · `gate-full` CONFIRM=1 없으면 exit 2(실측 3/3) · `setup` 비파괴 · `db-grants` 추가 | `make db-reset` → rc 2 |
+| G-S06 outputs 위생 | FAIL 3건(`.invalid`) | `.invalid` 만 허용 · 실 호스트는 그대로 FAIL(시험) · **13 passed** · G-S06 PASS | `uv run pytest -q tests/test_check_secrets_hosts.py` |
+| compat.optimize_rename | 없음 | ks · sw 기입(원천 줄 근거) — test_compat ks 행 키에 `cost_index` 반영 | `tenants/{ks,sw}.yaml` |
+
+- 전체 시험: **456 passed · 3 skipped · 0 failed** (45 s, 이 시점 개발1 · 2 작업 트리 포함) — `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e`.
+- `make gate`: **PASS 21 · FAIL 2 · BLOCKED 1**. 개발3 몫 G-S02 · G-S06(2행) · G-M03 · G-M08 · G-M09 · G-M10 · G-M12 PASS 유지. FAIL 2 = 남의 몫 진행 중: G-M04(`tests/test_compat.py` 개발2 가 새로 쓴 DEF-QA2-001 · 010 회귀 시험 4 — 행 키 `reserve_hours` · `anomaly` · overview 키) · G-M14(bench docker 네트워크 포트 설정 실패 — 환경).
+
+### 요청 (웨이브 C)
+- **개발2 (D-120a)**: ① live 회사 + `ref.synthetic` production → 503 `model_not_ready`(predict · batch · optimize uses · 호환) — 기동 뒤 승인된 합성 모델은 병합이 못 본다. ② `catalog.get` 이 `merged.disabled` 과제면 503 `model_not_ready`(지금 404). 들어오면 `tests/test_r4_live_path.py::test_live_boot_refuses_synthetic_prediction` 를 503 만 받게 좁힌다. ③ 호환 optimize 의 ks `reserve_hours` · sw `anomaly` · 미충족 · objective 문구를 회사 값으로 두려면 키 이름을 알려 달라 — 원천을 읽어 기입한다.
+- **오케스트레이터 · 아키텍트**: task-contract §3 표 · §4 `immutable_on_override` 에 approver_role · target 추가(D-121, 계약 파일은 이번 내 파일 목록 밖). compose 앱 계정을 `mlp_app` 구성원 LOGIN 역할로(D-123). `make image` 는 커밋 뒤 다시.
+- 시험 DB 2개를 새로 만들었다(`ml_grants_check_db` 상시 · `ml_grants_fresh_db` 1회 확인용) — 지우지 않았다(DB 삭제 금지).
+
+## §2.3 웨이브 C 마무리 (2026-10-12, 개발3 + 아키텍트 권한, 커밋 안 함)
+
+| 항목 | 실측 | 명령 |
+|---|---|---|
+| 호환 회사 값(D-132) | ks: optimize_row · optimize_derived(reserve_hours) · unmet · objective 문구 · overview_values(products) / sw: optimize_rename + `print_ood: anomaly` · optimize_row · row_round · unmet · objective · anomaly 문구 · overview_values(print_types · color_tones) · overview_controls — 원천 `api/ml_service.py` 파일:줄 주석. 기대값 파일 수정 0 | `uv run pytest -q tests/test_compat.py` 35 passed · 3 skipped |
+| warn_with | `print_setpoint.yaml warn_with: [textile.print_ood]` · 병합 규칙 3 이 warn_with 도 본다(시험 1) · 불량 픽스처 r5 에 print_ood 켬(R5 만 어기게) | `tests/test_override_rules.py` 11 passed |
+| R4 503 | 개발2 D-120a 반영 → 회귀 시험을 503 `model_not_ready` 만 받게 좁힘 | `tests/test_r4_live_path.py` 7 passed |
+| 계약 | task-contract §1 group_key(D-85) · §2 warn_with = `extrapolation`(D-131) · §3 · §4 approver_role · target(D-121) / tenant-contract §1 D-132 키 · read_role(D-88) / interfaces §2.2 해시 v2(D-87) | — |
+| 정리 | `ml_grants_check_db` · `ml_grants_fresh_db` dropdb(내가 만든 것만). `tests/test_schema_grants.py` 는 다음 실행 때 `ml_grants_check_db` 를 새로 만든다(새 DB 확인 경로) | — |
+| 전체 | pytest 459 passed · 3 skipped · e2e 10 passed · make gate 2회 PASS 23 · BLOCKED 1 | — |

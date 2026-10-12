@@ -11,24 +11,37 @@ PACK   ?= _template
 CSV    ?=
 GIT_SHA = $(shell git rev-parse --short HEAD)
 need    = @test -n "$($(1))" || { echo "$(1)= 가 필요하다 — $(2)"; exit 2; }
+# DB 를 지우는 대상은 CONFIRM=1 이 있어야 돈다 (#7 · D-124). 예: make db-reset CONFIRM=1
+confirm = @test "$(CONFIRM)" = 1 || { echo "$@: ml_db · ml_test_db 의 mlp 데이터를 전부 지운다 — 정말이면 'make $@ CONFIRM=1'"; exit 2; }
+GRANTS  = sed -n '/^-- @grants-begin/,$$p' src/mlcore/db/schema.sql
 
-.PHONY: setup db-schema db-seed db-reset run web build test gate gate-full doctor doctor-live train train-live \
+.PHONY: setup db-schema db-grants db-seed db-reset run web build test gate gate-full doctor doctor-live train train-live \
         worker tenant monitor bench bench-local bench-compose e2e image compose-config \
         check-routes check-schema check-registry check-deploy check-security check-leakage
 
-setup:            ## DB 생성 · 스키마 · 표준 시드 · Python/웹 의존성
+setup:            ## DB 생성 · 스키마(없는 DB 만) · 보호 구간 · 표준 시드 · Python/웹 의존성 — 기존 데이터는 지우지 않는다
 	@for db in ml_db ml_test_db; do createdb -h /tmp $$db 2>/dev/null || true; done
 	uv sync -q
-	$(MAKE) db-schema db-seed
+	@for db in ml_db ml_test_db; do \
+	  if [ "$$($(PSQL) -d $$db -tAc "SELECT to_regclass('public.mlp_tenant') IS NOT NULL")" = t ]; then \
+	    echo "$$db: mlp 스키마 있음 — 지우지 않고 보호 구간만 적용"; $(GRANTS) | $(PSQL) -d $$db; \
+	  else $(PSQL) -d $$db -f src/mlcore/db/schema.sql; fi; done
+	$(MAKE) db-seed
 	cd web && npm ci --no-audit --no-fund --loglevel=error
 
-db-schema:        ## 두 DB 의 mlp 스키마 재생성 — 데이터를 전부 지운다
+db-schema:        ## 두 DB 의 mlp 스키마 재생성 — 데이터를 전부 지운다 (CONFIRM=1 필수)
+	$(confirm)
 	@for db in ml_db ml_test_db; do $(PSQL) -d $$db -f src/mlcore/db/schema.sql; done
+
+db-grants:        ## 기존 두 DB 에 추가만 트리거(ALWAYS) · mlp_app 권한만 다시 적용 — 비파괴 (D-123)
+	@for db in ml_db ml_test_db; do $(GRANTS) | $(PSQL) -d $$db && echo "$$db: 보호 구간 적용"; done
 
 db-seed:          ## tenants/*.yaml → mlp_tenant · mlp_task (멱등)
 	$(UV) python -m mlcore.db.seed_std && $(UV) python -m mlcore.db.seed_std --test
 
-db-reset: db-schema db-seed
+db-reset:         ## 스키마 재생성 + 시드 — 데이터를 전부 지운다 (CONFIRM=1 필수)
+	$(confirm)
+	$(MAKE) db-schema db-seed CONFIRM=1
 
 run:              ## API 8200 (+ web/dist 가 있으면 /app/*). 기동 시 학습하지 않는다
 	MLP_TENANT=$(TENANT) $(UV) uvicorn mlcore.api.main:app --host 127.0.0.1 --port 8200
@@ -45,7 +58,9 @@ test:
 gate:             ## 판정표 → outputs/gate-latest.md (goal §2)
 	$(UV) python gates/gate.py
 
-gate-full: db-reset build   ## 스키마 재생성 + (A) 과제 8 재학습 2회 · 이관 대조 · 새 회사 · 승인 경합 · bench → 판정
+gate-full:        ## 스키마 재생성(데이터 삭제 — CONFIRM=1 필수) + (A) 과제 8 재학습 2회 · 이관 대조 · 새 회사 · 승인 경합 · bench → 판정
+	$(confirm)
+	$(MAKE) db-reset build CONFIRM=1
 	$(UV) python gates/gate.py
 
 doctor:           ## make doctor TENANT=<code> — fixture 소스 점검(연결 · 대응률 · 미연결 · 목표 없음) (D-W3-07)

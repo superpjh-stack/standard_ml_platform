@@ -305,3 +305,8 @@ def mid_inputs(lock: dict, names) -> dict:
         v = item["fill"]
         out[n] = int(round(v)) if item["dtype"] == "int" else v
     return out
+
+
+def secrets_hex(n: int = 6) -> str:
+    """시험마다 겹치지 않는 짧은 꼬리(요청 ID 등)."""
+    return secrets.token_hex(n)

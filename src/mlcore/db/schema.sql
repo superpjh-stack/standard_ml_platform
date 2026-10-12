@@ -1,8 +1,9 @@
 -- 표준 ML 플랫폼 — mlp_* 테이블 16 (spec §10.1 · §10.2, contracts/db-schema.md 가 정본)
--- 적용: psql -h /tmp -d ml_db -f src/mlcore/db/schema.sql   (make db-schema — 데이터를 전부 지운다)
+-- 적용: psql -h /tmp -d ml_db -f src/mlcore/db/schema.sql   (make db-schema CONFIRM=1 — 데이터를 전부 지운다)
+-- 기존 DB 의 보호 · 권한만 다시: make db-grants (아래 `-- @grants-begin` 구간만, 비파괴)
 -- 불변 규칙
 --   1. 모든 테이블에 tenant_id (회사당 배포여도 둔다, D-01)
---   2. mlp_prediction · mlp_audit · mlp_quote 는 추가만 — UPDATE · DELETE · TRUNCATE 트리거 거부 + 권한 회수
+--   2. mlp_prediction · mlp_audit · mlp_quote 는 추가만 — UPDATE · DELETE · TRUNCATE 트리거(ENABLE ALWAYS) 거부 + mlp_app 권한 회수
 --   3. 과제마다 stage='production' 은 하나 — 부분 고유 색인
 --   4. mode=live 회사의 synthetic 모델은 staging · production 불가 — 검사 제약(tenant_mode 비정규화 + 동기화 트리거)
 
@@ -11,12 +12,6 @@ SET client_min_messages = warning;
 DROP TABLE IF EXISTS mlp_api_key, mlp_audit, mlp_approval, mlp_monitor_daily, mlp_quote, mlp_document,
     mlp_review_item, mlp_recommendation, mlp_actual, mlp_prediction, mlp_model_version, mlp_train_run,
     mlp_snapshot, mlp_source, mlp_task, mlp_tenant CASCADE;
-
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'mlp_app') THEN
-        CREATE ROLE mlp_app NOLOGIN;
-    END IF;
-END $$;
 
 -- 1 회사
 CREATE TABLE mlp_tenant (
@@ -327,25 +322,44 @@ CREATE TABLE mlp_api_key (
     CONSTRAINT mlp_api_key_no_plain CHECK (key_hash ~ '^(pbkdf2_sha256\$|sha256\$)')
 );
 
--- ── 추가만 테이블: UPDATE · DELETE · TRUNCATE 거부 (spec §10.2-2) ──────────────────────
+-- @grants-begin ── 보호 구간: 추가만 트리거 + 권한 분리 (DEF-QA2-009 · decisions.md D-123) ──────────────────────
+-- 이 아래는 **멱등 · 비파괴**다(DROP · TRUNCATE 0). 기존 DB 에는 `make db-grants` 가 이 구간만 다시 적용한다.
+-- 앱은 DB 소유자가 아니라 `mlp_app` 의 구성원(LOGIN 역할, 비밀번호는 배포 비밀)으로 붙는다 — 소유자 · 슈퍼유저는
+-- 트리거를 DDL 로 끌 수 있으므로 보호의 둘째 겹은 권한이다.
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'mlp_app') THEN
+        CREATE ROLE mlp_app NOLOGIN;
+    END IF;
+END $$;
+
+-- 추가만 테이블: UPDATE · DELETE · TRUNCATE 거부 (spec §10.2-2)
 CREATE OR REPLACE FUNCTION mlp_append_only() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
     RAISE EXCEPTION 'append_only: % 은(는) 추가만 할 수 있습니다 (%)', TG_TABLE_NAME, TG_OP
         USING ERRCODE = 'insufficient_privilege';
 END $$;
 
-CREATE TRIGGER mlp_prediction_append_only BEFORE UPDATE OR DELETE ON mlp_prediction FOR EACH ROW EXECUTE FUNCTION mlp_append_only();
-CREATE TRIGGER mlp_prediction_no_truncate BEFORE TRUNCATE ON mlp_prediction FOR EACH STATEMENT EXECUTE FUNCTION mlp_append_only();
-CREATE TRIGGER mlp_audit_append_only      BEFORE UPDATE OR DELETE ON mlp_audit      FOR EACH ROW EXECUTE FUNCTION mlp_append_only();
-CREATE TRIGGER mlp_audit_no_truncate      BEFORE TRUNCATE ON mlp_audit      FOR EACH STATEMENT EXECUTE FUNCTION mlp_append_only();
-CREATE TRIGGER mlp_quote_append_only      BEFORE UPDATE OR DELETE ON mlp_quote      FOR EACH ROW EXECUTE FUNCTION mlp_append_only();
-CREATE TRIGGER mlp_quote_no_truncate      BEFORE TRUNCATE ON mlp_quote      FOR EACH STATEMENT EXECUTE FUNCTION mlp_append_only();
+CREATE OR REPLACE TRIGGER mlp_prediction_append_only BEFORE UPDATE OR DELETE ON mlp_prediction FOR EACH ROW EXECUTE FUNCTION mlp_append_only();
+CREATE OR REPLACE TRIGGER mlp_prediction_no_truncate BEFORE TRUNCATE ON mlp_prediction FOR EACH STATEMENT EXECUTE FUNCTION mlp_append_only();
+CREATE OR REPLACE TRIGGER mlp_audit_append_only      BEFORE UPDATE OR DELETE ON mlp_audit      FOR EACH ROW EXECUTE FUNCTION mlp_append_only();
+CREATE OR REPLACE TRIGGER mlp_audit_no_truncate      BEFORE TRUNCATE ON mlp_audit      FOR EACH STATEMENT EXECUTE FUNCTION mlp_append_only();
+CREATE OR REPLACE TRIGGER mlp_quote_append_only      BEFORE UPDATE OR DELETE ON mlp_quote      FOR EACH ROW EXECUTE FUNCTION mlp_append_only();
+CREATE OR REPLACE TRIGGER mlp_quote_no_truncate      BEFORE TRUNCATE ON mlp_quote      FOR EACH STATEMENT EXECUTE FUNCTION mlp_append_only();
+-- session_replication_role = replica 에서도 돈다 (QA2 재현: replica 로 UPDATE 성공했다)
+ALTER TABLE mlp_prediction ENABLE ALWAYS TRIGGER mlp_prediction_append_only;
+ALTER TABLE mlp_prediction ENABLE ALWAYS TRIGGER mlp_prediction_no_truncate;
+ALTER TABLE mlp_audit      ENABLE ALWAYS TRIGGER mlp_audit_append_only;
+ALTER TABLE mlp_audit      ENABLE ALWAYS TRIGGER mlp_audit_no_truncate;
+ALTER TABLE mlp_quote      ENABLE ALWAYS TRIGGER mlp_quote_append_only;
+ALTER TABLE mlp_quote      ENABLE ALWAYS TRIGGER mlp_quote_no_truncate;
 
--- 권한: 앱 역할은 추가만 테이블에 SELECT · INSERT 만
+-- 권한: 먼저 전부 회수한 뒤 필요한 것만 (앱 코드의 DML = SELECT · INSERT · UPDATE · ON CONFLICT DO UPDATE, DELETE 0)
 REVOKE ALL ON mlp_tenant, mlp_task, mlp_source, mlp_snapshot, mlp_train_run, mlp_model_version, mlp_prediction,
     mlp_actual, mlp_recommendation, mlp_review_item, mlp_document, mlp_quote, mlp_monitor_daily, mlp_approval,
-    mlp_audit, mlp_api_key FROM PUBLIC;
-GRANT SELECT, INSERT, UPDATE, DELETE ON mlp_tenant, mlp_task, mlp_source, mlp_snapshot, mlp_train_run, mlp_model_version,
+    mlp_audit, mlp_api_key FROM PUBLIC, mlp_app;
+GRANT USAGE ON SCHEMA public TO mlp_app;
+GRANT SELECT, INSERT, UPDATE ON mlp_tenant, mlp_task, mlp_source, mlp_snapshot, mlp_train_run, mlp_model_version,
     mlp_actual, mlp_recommendation, mlp_review_item, mlp_document, mlp_monitor_daily, mlp_approval, mlp_api_key TO mlp_app;
 GRANT SELECT, INSERT ON mlp_prediction, mlp_audit, mlp_quote TO mlp_app;
-GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO mlp_app;
+REVOKE UPDATE, DELETE, TRUNCATE ON mlp_prediction, mlp_audit, mlp_quote FROM mlp_app;    -- 명시(위 REVOKE ALL 과 같은 뜻)
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO mlp_app;

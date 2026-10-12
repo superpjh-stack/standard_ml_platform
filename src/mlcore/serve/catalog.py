@@ -55,5 +55,15 @@ class TaskCatalog:
             raise NotFound("과제를 찾을 수 없습니다")
         return spec
 
+    def require_servable(self, tenant_id: str, task_id: str, ref: Any = None) -> None:
+        """예측 시점 방어 (D-120a · DEF-QA3-001 #17, 개발3 요청).
+        1) 병합에서 꺼진 과제(R4 등) → 503 model_not_ready (404 아님 — 과제는 있으나 운영 모델을 쓸 수 없다).
+        2) live 회사인데 production 이 합성 스냅숏 모델 → 503 model_not_ready (기동 뒤 승인된 합성 모델은 기동 병합이 못 본다)."""
+        from ..registry.models import ModelNotReady
+        if tenant_id == self.tenant_id and task_id in (getattr(self.merged, "disabled", None) or {}):
+            raise ModelNotReady("이 과제는 꺼져 있어 운영 모델을 쓸 수 없습니다", {"task": task_id, "rule": "disabled"})
+        if ref is not None and self.merged.tenant.config.get("mode") == "live" and getattr(ref, "synthetic", False):
+            raise ModelNotReady("live 회사에서 합성 스냅숏 모델로 답하지 않습니다", {"task": task_id, "rule": "live_synthetic"})
+
     def ids(self) -> list[str]:
         return list(self._specs)

@@ -185,7 +185,8 @@ def run_view(run_id: str, *, tenant_id: str | None = None, test: bool = False) -
         "test_metrics": rep.get("test_metrics") or {}, "beats_baseline": rep.get("beats_baseline"),
         "version": v["version"] if v else None, "stage": v["stage"] if v else None,
         "warnings": rep.get("warnings") or ([] if r["status"] != "failed" else
-                                            [{"code": "train_failed", "message": "학습 실패", "detail": r["error"] or {}}]),
+                                            [{"code": (r["error"] or {}).get("code") or "train_failed", "message": "학습 실패",
+                                              "detail": r["error"] or {}}]),
         "seed": r["seed"], "code_version": r["code_version"], "config_hash": r["config_hash"],
         "created_at": _iso(r["created_at"]), "started_at": _iso(r["started_at"]), "finished_at": _iso(r["finished_at"]),
         "error": r["error"],

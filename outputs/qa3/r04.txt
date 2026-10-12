@@ -1,0 +1,31 @@
+G-M13  기본 params → needs_approval · 후보 5  PASS  200 status=needs_approval n_candidates=97 n_feasible=89 0.05s
+G-M13  결정 변수 점 수 = 0..48 step 0.5 = 97  PASS  n_candidates=97
+G-M13  후보 결정 변수 ∈ [0, max_delay_hours]  PASS  [48.0, 47.5, 47.0, 46.5, 46.0]
+G-M13  후보 전부 제약 충족  PASS  [[True, True], [True, True], [True, True], [True, True], [True, True]]
+G-M13  응답 키 18 · prediction/model/prediction_id null · uses 배열  PASS  keys=18 uses=[{'task': 'ks.remaining_hours', 'version': 'v1', 'synthetic': True}]
+G-M13  mlp_recommendation needs_approval + 승인 요청(kind=recommendation)  PASS  rec=[{'status': 'needs_approval', 'feasible': True}] approval=[{'approval_id': 'apr_01M4R6KN11D3QPGVWRHF8NENW2', 'state': 'pending', 'kind': 'recommendation', 'approver_role': 'maintenance_lead'}]
+G-M13  불가능 제약 → feasible=false · status review · least_violation  PASS  200 status=review feasible=False on_infeasible=least_violation n_feasible=0
+G-M13  불가능 제약에서 ok/needs_approval 0  PASS  status=review
+G-M13  least_violation best 의 미충족 제약 표시  PASS  unmet=['reserve', 'max_cost']
+G-M13  least_violation 후보 위반 오름차순  PASS  [59.3537773428, 59.3571106761, 59.3604440095, 59.3637773428, 59.3671106761]
+G-M13  불가능 추천도 needs_approval 로 기록(설비 미적용)  PASS  [{'status': 'needs_approval', 'feasible': False}]
+G-M13  reserve 150h(예측 잔여수명보다 큼) → review  PASS  200 review best={'stop_after_hours': 4.0}
+G-M13  decision_vars 경계 {'max_delay_hours': 72}  PASS  200 n=145 max=72.0
+G-M13  decision_vars 경계 {'max_delay_hours': 0}  PASS  200 n=1 max=0.0
+G-M13  decision_vars 경계 {'max_delay_hours': 0.4}  PASS  200 n=1 max=0.0
+G-M13  params 경계 {'max_delay_hours': 72.5}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'max_delay_hours': -0.5}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'reserve_hours': 0}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'max_cost_index': 501}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'zz_param': 1}  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+G-M13  params 경계 {'reserve_hours': '12'}  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+G-M13  params 경계 {'reserve_hours': True}  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+G-M13  current.stop_after_hours=1000(결정 변수 max 72 밖) 거부  WARN  200 status=needs_approval current={'stop_after_hours': 1000.0}
+G-M13  current.stop_after_hours=-5 거부  WARN  200
+G-M13  고정 입력 학습 범위 밖 → review + out_of_range 경고  PASS  200 review ['press_force']
+G-M13  고정 입력 min/max 밖  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+§6  viewer optimize  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+G-M13  추천 승인 → production 불변 · rec approved · production_version null  PASS  200 {'approval_id': 'apr_01M4R6KN11D3QPGVWRHF8NENW2', 'state': 'approved', 'production_version': None} rec=approved production 변화=set()
+2.3  추천 승인 재결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+G-M13  추천 결정 감사 1행  PASS  recommendation.approved 1 · recommendation.create 1 (psql 재확인)
+G-M13  추천 승인 두 탭 동시 → 200 1 · 409 1  PASS  {'B': 200, 'A': 409}

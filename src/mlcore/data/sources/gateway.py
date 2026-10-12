@@ -1,6 +1,6 @@
 """gateway 어댑터 — Data Gateway 원장 DB 를 읽기 계정 SELECT 로 읽는다 (spec §4.1). 읽기 전용(G-S05).
 
-등록부 `sources.<name>`: `{kind: gateway, table, dsn_env, ts_column?, entity_column?, pivot?, window?, agg?}`
+등록부 `sources.<name>`: `{kind: gateway, table, dsn_env, ts_column?, entity_column?, pivot?, window?, agg?, read_role?}`
 - `table` 한 개만 읽는다(허용목록 = 그 테이블). 열 대응은 회사 `feature_map`(ReadSpec.columns_map).
 - `pivot: {key, value}` — 원장이 (태그, 값) 세로 형식이면 태그별 열로 편다(같은 시각 · 설비의 중복은 평균).
 - `window: "1h"` + `entity_column` — 시간 창 집계(spec §4.1 "평균 · 최대 · 표준편차"). `agg` 기본 mean
@@ -27,11 +27,12 @@ class GatewaySource:
 
     def __init__(self, table: str | None, *, dsn_env: str | None = None, connect: Callable | None = None,
                  schema: str | None = None, ts_column: str | None = None, entity_column: str | None = None,
-                 pivot: dict | None = None, window: str | None = None, agg: str = "mean", agg_by: dict | None = None):
+                 pivot: dict | None = None, window: str | None = None, agg: str = "mean", agg_by: dict | None = None,
+                 read_role: str | None = None):
         if not table:
             raise SourceDisconnected(self.kind, "table 없음 (등록부 미확인)")
         self.table = table
-        self.db = ReadOnlyDb(self.kind, dsn_env=dsn_env, connect=connect, allow=(table,), schema=schema)
+        self.db = ReadOnlyDb(self.kind, dsn_env=dsn_env, connect=connect, allow=(table,), schema=schema, role=read_role)
         self.ts_column, self.entity_column = ts_column, entity_column
         self.pivot = dict(pivot or {}) or None
         self.window = window
@@ -45,6 +46,7 @@ class GatewaySource:
     def from_config(cls, cfg: dict, *, connect: Callable | None = None) -> "GatewaySource":
         return cls(cfg.get("table"), dsn_env=cfg.get("dsn_env"), connect=connect, schema=cfg.get("schema"),
                    ts_column=cfg.get("ts_column"), entity_column=cfg.get("entity_column"), pivot=cfg.get("pivot"),
+                   read_role=cfg.get("read_role"),
                    window=cfg.get("window"), agg=cfg.get("agg", "mean"), agg_by=cfg.get("agg_by"))
 
     def source_ref(self) -> dict:
@@ -87,9 +89,15 @@ class GatewaySource:
     def probe(self, spec: ReadSpec | None = None) -> SourceHealth:
         try:
             if spec is None:
-                n = self.db.count(self.table)
-                return SourceHealth(self.kind, True, n, None, None, None, None, {}, None, "Gateway 원장 연결")
+                conn = self.db.connect()
+                try:
+                    n = self.db.count(self.table, conn=conn)
+                    note = self.db.privilege_note(conn)
+                finally:
+                    conn.close()
+                return SourceHealth(self.kind, True, n, None, None, None, None, {}, None, "Gateway 원장 연결" + note)
             frame = self.read(spec)
+            note = self.db.privilege_note()
         except SourceDisconnected as e:
             return SourceHealth(self.kind, False, None, None, None, None, None, {}, None, e.reason)
-        return health_from_frame(self.kind, frame, spec, "Gateway 원장 연결")
+        return health_from_frame(self.kind, frame, spec, "Gateway 원장 연결" + note)

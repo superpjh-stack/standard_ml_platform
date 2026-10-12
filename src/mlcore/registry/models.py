@@ -201,13 +201,16 @@ class Registry:
             evidence = {"target": {"version": version, "metrics": row["metrics"], "synthetic": row["synthetic"]},
                         "production": ({"version": cur["version"], "metrics": cur["metrics"]} if cur else None),
                         "shadow": shadow_diff(c, tenant_id, task_id, version, cur["version"] if cur else None)}
+            from ..approval import expire_due, ttl_hours     # 지연 import — approval 은 등록부를 import 하지 않는다
+            expire_due(tenant_id=tenant_id, conn=c)          # 만료 대기 건을 먼저 닫아야 같은 대상 재요청이 새 승인이 된다(D-130)
             approval_id = new_id("apr")
             got = c.execute(
                 "INSERT INTO mlp_approval (approval_id, tenant_id, task_id, kind, ref_id, action, approver_role, state, "
-                "requested_by, reason, evidence) VALUES (%s,%s,%s,'model',%s,%s,%s,'pending',%s,%s,%s::jsonb) "
+                "requested_by, reason, evidence, expires_at) VALUES (%s,%s,%s,'model',%s,%s,%s,'pending',%s,%s,%s::jsonb, "
+                "now() + make_interval(secs => %s)) "
                 "ON CONFLICT (tenant_id, kind, ref_id, task_id) WHERE state = 'pending' DO NOTHING RETURNING approval_id",
                 (approval_id, tenant_id, task_id, version, action, row["approver_role"], actor, reason,
-                 json.dumps(evidence, default=str))).fetchone()
+                 json.dumps(evidence, default=str), ttl_hours("model") * 3600)).fetchone()
             if not got:                                # 같은 대상의 대기 승인이 이미 있다 → 그것을 돌려준다
                 return c.execute("SELECT approval_id FROM mlp_approval WHERE tenant_id=%s AND task_id=%s AND kind='model' "
                                  "AND ref_id=%s AND state='pending'", (tenant_id, task_id, version)).fetchone()["approval_id"]

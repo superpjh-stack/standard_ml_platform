@@ -1,0 +1,18 @@
+G-M12  행 일치 ks demo_data ↔ 팩 synth          PASS  행 720/720 · 비교 열 10 · 셀 7200 · 불일치 0 · 시각 일치 True
+G-M12  행 일치 sw demo_data ↔ 팩 synth          PASS  행 720/720 · 비교 열 10 · 셀 7200 · 불일치 0 · 시각 일치 True
+G-M12  ks.remaining_hours mae               PASS  QA 원천 재계산 5.5683 · 보고서 표준 5.5683 (Δ +0.00%) · 원천 문서 5.568 (Δ -0.01%)
+G-M12  ks.remaining_hours rmse              PASS  QA 원천 재계산 6.9793 · 보고서 표준 6.9793 (Δ +0.00%) · 원천 문서 6.979 (Δ -0.00%)
+G-M12  ks.remaining_hours r2                PASS  QA 원천 재계산 0.9199 · 보고서 표준 0.9199 (Δ +0.00%) · 원천 문서 0.9199 (Δ +0.00%)
+G-M12  ks.failure_24h roc_auc               PASS  QA 원천 재계산 0.6444 · 보고서 표준 0.6444 (Δ -0.01%) · 원천 문서 0.6444 (Δ -0.01%)
+G-M12  ks.failure_24h pr_auc                PASS  QA 원천 재계산 0.1426 · 보고서 표준 0.1426 (Δ +0.02%) · 원천 문서 0.1426 (Δ +0.02%)
+G-M12  ks.failure_24h brier                 PASS  QA 원천 재계산 0.0576 · 보고서 표준 0.0576 (Δ +0.00%) · 원천 문서 0.0576 (Δ +0.00%)
+G-M12  sw.delta_e mae                       PASS  QA 원천 재계산 0.5569 · 보고서 표준 0.5569 (Δ +0.00%) · 원천 문서 0.557 (Δ +0.02%)
+G-M12  sw.delta_e rmse                      PASS  QA 원천 재계산 0.7088 · 보고서 표준 0.7088 (Δ +0.00%) · 원천 문서 0.709 (Δ +0.03%)
+G-M12  sw.delta_e r2                        PASS  QA 원천 재계산 0.7222 · 보고서 표준 0.7222 (Δ +0.01%) · 원천 문서 0.722 (Δ -0.02%)
+G-M12  sw.defect_risk roc_auc               PASS  QA 원천 재계산 0.8686 · 보고서 표준 0.8686 (Δ +0.00%) · 원천 문서 0.868 (Δ -0.07%)
+G-M12  sw.defect_risk pr_auc                PASS  QA 원천 재계산 0.7823 · 보고서 표준 0.7823 (Δ -0.00%) · 원천 문서 0.781 (Δ -0.17%)
+G-M12  sw.defect_risk brier                 PASS  QA 원천 재계산 0.1261 · 보고서 표준 0.1261 (Δ +0.03%) · 원천 문서 0.127 (Δ +0.75%)
+G-M12  ks 챔피언                               PASS  QA 재계산 회귀 Gradient Boosting · 위험 Random Forest (보고서 gbr · rf_clf) · 검증 MAE 5.2126
+G-M12  sw 챔피언                               PASS  QA 재계산 회귀 Extra Trees · 위험 Gradient Boosting (보고서 extra_trees · gbc) · 검증 MAE 0.5204
+G-M12  sw.defect_risk 반올림 전 확률              INFO  원천은 시험 확률을 4자리 반올림 후 채점(ml_service.py:117) — 반올림 전 AUC 0.8686 · AP 0.7823 · Brier 0.1261
+G-M12  이상 탐지 원천 규칙 flag_rate                INFO  원천 규칙(재적합 표본 내 contamination) 시험 flag ks 0.1597 · sw 0.1667 (보고서 §4 D-50: 0.160 · 0.167)

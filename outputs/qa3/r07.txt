@@ -1,0 +1,6 @@
+G-M09  드리프트 fixture → 재학습 접수 · production 불변  PASS  사유=['psi:vibration'] psi.vibration=(5.5979, 'retrain') production ['v4']→['v4']
+G-M09  작업자 등록 → candidate · production 불변  PASS  v5 candidate · v4 production
+G-M09  감시 → staging + 승인 요청(pending, monitor) · production 불변  PASS  v5 staging · apr pending requested_by=monitor · production v4
+G-M09  감시 두 번째 실행 → 새 요청 없음  PASS  []
+G-M09  기준선 미달 후보 → stage 0 · 승인 요청 0  PASS  v6=candidate [{'task_id': 'ks.remaining_hours', 'version': 'v6', 'run_id': 'run_74af41b615acd7b3', 'approval_id': None, 'skipped': '기준선 미달 — candidate 로 둔다'}] production=['v4']
+G-M09  기준선 미달 후보의 mlp_approval 0  PASS  0

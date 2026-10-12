@@ -18,7 +18,7 @@ sources:                      # role → 어댑터 설정. 값이 아니라 위�
   demo:    {kind: synthetic, seed: 42}
   eval:    {kind: csv, path: tests/fixtures/<code>/snapshot.csv}
   train:   {kind: dataplatform, view: <뷰 이름 # 미확인>, url_env: MLP_<CODE>_DP_URL, key_env: MLP_<CODE>_DP_KEY}
-  actuals: {kind: mes, tables: [<허용목록>], dsn_env: MLP_<CODE>_MES_RO_DSN}
+  actuals: {kind: mes, tables: [<허용목록>], dsn_env: MLP_<CODE>_MES_RO_DSN, read_role: <SELECT 전용 DB 역할 # 선택>}   # read_role(gateway · mes 선택) — 연결 직후 SET ROLE, 실패 → source_disconnected (D-88)
 feature_map:                  # 원천 열 → 팩 변수. 원천 이름은 여기에만 (G-M01)
   <TABLE>.<COLUMN>: <팩 변수>
 target_map: {<TABLE>.<COLUMN>: <과제 target>}
@@ -29,7 +29,16 @@ compat:                       # 호환 라우터(D-18)만 쓰는 회사 고유 �
   entity_prefix: "SW-DEMO-"
   routes: [/api/quality/predict, /api/ml/optimize, /api/ml/overview, /api/data/records]
   round: {delta_e: 3, risk_probability: 4}           # 옛 응답 반올림 자리(D-71 · D-W2-02). 없으면 반올림 안 함(위험 확률만 기본 4)
-  optimize_rename: {delta_e: pred_delta_e}           # 선택 — 표준 예측 · 비용식 이름 → 옛 행 키
+  optimize_rename: {delta_e: pred_delta_e}           # 선택 — 표준 예측 · 비용식 · 묶음 anomaly 과제 짧은 이름 → 옛 행 키 (anomaly 값 = production flag, 모델 없으면 null — D-132)
+  # 아래는 모두 선택(D-132) — 원천 코드를 읽어 파일:줄 주석과 함께 적는다. 없으면 표준 이름 · 문구 그대로
+  optimize_row: [set_temp, ..., cost_index, violation]   # 옛 추천 행 키 순서 — 있으면 이 키만 낸다
+  optimize_derived: {reserve_hours: "remaining_hours - stop_after_hours"}   # 옛 키: 표준 이름 식(+ − × 만, 제약 식 검사기)
+  optimize_row_round: {pred_delta_e: 4}               # 옛 행 키: 반올림 자리
+  optimize_unmet_text: {max_delta_e: "<옛 문구>"}      # 제약 이름 → 옛 미충족 문구
+  optimize_objective_text: "<옛 objective 문구>"
+  optimize_anomaly_text: "<추천 행 anomaly 일 때 옛 경고 — warnings 맨 앞>"
+  overview_values: {print_types: print_type}           # 옛 개요 키: 범주 변수(값 목록 = 팩 values 또는 회사 categories)
+  overview_controls: controls                          # 옛 개요 키 이름: 조절 변수 목록
 labels: {}                    # 회사 문구 덮어쓰기
 ```
 

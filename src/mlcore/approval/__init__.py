@@ -7,17 +7,64 @@ decide() 한 트랜잭션:
   4. mlp_audit INSERT (같은 연결 — 실패하면 전부 롤백)
 동시에 같은 승인을 두 번 결정하면 행 잠금 뒤 두 번째 UPDATE 가 0행이 되어 409 다.
 감시(monitor)는 Registry.request_promotion 까지만 부른다.
+
+만료(D-130, D-73 후속): 승인 요청은 `expires_at = 요청 시각 + TTL`(모델 168h · 추천 24h — 환경변수
+`MLP_APPROVAL_TTL_HOURS_MODEL` · `MLP_APPROVAL_TTL_HOURS_RECOMMENDATION` 로 바꾼다)을 넣는다. 지난 대기 건은
+`expire_due()` 가 state='expired'(decided_by='system') + 감사 `approval.expired` 로 닫는다 — 목록 조회 · 재요청 · decide 직전에
+부른다(스케줄러 없이 늦은 판정). 닫힌 건은 부분 고유 색인(`state='pending'`)에서 빠지므로 같은 대상 재요청은 새 승인을 만든다.
 """
 
 from __future__ import annotations
+
+import os
 
 from .. import audit
 from ..db.conn import connect
 from ..serve.errors import NotFound, ServeError
 
-__all__ = ["decide", "AlreadyDecided", "get"]
+__all__ = ["decide", "AlreadyDecided", "get", "expire_due", "ttl_hours"]
 
 DECIDERS = ("approver", "admin")
+TTL_HOURS = {"model": 168, "recommendation": 24, "quote": 168}      # D-130 제안값(사람 확인 전 가설)
+
+
+def ttl_hours(kind: str) -> float:
+    """승인 종류별 만료 시간(시간). 환경변수 MLP_APPROVAL_TTL_HOURS_<KIND> 가 있으면 그 값(양수만)."""
+    raw = os.environ.get(f"MLP_APPROVAL_TTL_HOURS_{kind.upper()}")
+    if raw:
+        try:
+            v = float(raw)
+            if v > 0:
+                return v
+        except ValueError:
+            pass
+    return float(TTL_HOURS.get(kind, TTL_HOURS["model"]))
+
+
+def expire_due(*, tenant_id: str | None = None, approval_id: str | None = None, conn=None) -> list[str]:
+    """만료 시각이 지난 대기 승인을 expired 로 닫는다(+ 감사 1행씩, 추천은 dismissed). → 닫은 approval_id 목록."""
+    if conn is None:
+        with connect() as c:
+            return expire_due(tenant_id=tenant_id, approval_id=approval_id, conn=c)
+    sql = ("UPDATE mlp_approval SET state = 'expired', decided_by = 'system', decided_at = now() "
+           "WHERE state = 'pending' AND expires_at IS NOT NULL AND expires_at <= now()")
+    params: list = []
+    if tenant_id is not None:
+        sql += " AND tenant_id = %s"
+        params.append(tenant_id)
+    if approval_id is not None:
+        sql += " AND approval_id = %s"
+        params.append(approval_id)
+    rows = conn.execute(sql + " RETURNING approval_id, tenant_id, task_id, kind, ref_id, action, expires_at", params).fetchall()
+    for r in rows:
+        if r["kind"] == "recommendation":
+            conn.execute("UPDATE mlp_recommendation SET status = 'dismissed' WHERE tenant_id = %s AND rec_id = %s "
+                         "AND status = 'needs_approval'", (r["tenant_id"], r["ref_id"]))
+        audit.write(tenant_id=r["tenant_id"], actor="system", role="system", action="approval.expired",
+                    target=f"{r['task_id']}@{r['ref_id']}",
+                    detail={"approval_id": r["approval_id"], "kind": r["kind"], "action": r["action"],
+                            "expires_at": r["expires_at"]}, conn=conn)
+    return [r["approval_id"] for r in rows]
 
 
 class AlreadyDecided(ServeError):
@@ -42,6 +89,7 @@ def decide(approval_id: str, *, actor: str, actor_role: str, approve: bool, reas
     if actor_role not in DECIDERS:
         raise Forbidden("승인 · 반려는 approver 또는 admin 만 할 수 있습니다")
     state = "approved" if approve else "rejected"
+    expire_due(approval_id=approval_id)            # 만료 건은 먼저 닫는다(별도 트랜잭션) — 아래 조건부 UPDATE 는 0행 → 409
     with connect() as c:
         appr = c.execute(
             "UPDATE mlp_approval SET state = %s, decided_by = %s, decided_at = now(), "

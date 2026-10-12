@@ -1,0 +1,7 @@
+2.3  production 없음 predict ks.remaining_hours  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 predict ks.failure_24h  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 predict ks.sensor_ood  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 predict:batch  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 optimize(uses 미운영)  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  health model_ready 전부 false  PASS  200 [False, False, False, False]
+2.3  overview production null  PASS  200 production=None

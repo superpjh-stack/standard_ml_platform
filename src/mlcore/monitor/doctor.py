@@ -5,8 +5,8 @@
 
 소스(등록부 `sources.<role>`)마다 `연결`/`미연결` · 행 수 · 기간 · 변수 대응률 · 결측률 · `목표 없음` 을 낸다.
 - synthetic · csv: 어댑터 `probe(spec)` 로 실제로 읽는다(개발1 어댑터).
-- gateway · dataplatform · mes: fixture 모드에서는 **부르지 않는다**(D-13) → `미연결` + 사유. 대응률은 등록부
-  `feature_map` 으로, 목표는 `target_map` 으로 정적으로 센다(실연결 확인은 사람이 `doctor-live`).
+- gateway · dataplatform · mes: fixture 모드에서는 **부르지 않는다**(D-13) → `미연결` + 사유. 대응률 · 목표는 그 소스의
+  테이블(`tables` · `table` · `view`)에 속한 `feature_map` · `target_map` 열로 소스별로 센다(D-122). 실연결 확인은 사람이 `doctor-live`.
 실패는 숨기지 않는다 — 예외는 `미연결` + message 로 보인다(키 · 호스트 · DSN 값은 쓰지 않는다).
 """
 
@@ -79,24 +79,56 @@ def _probe_fixture(merged: tenants.Merged, role: str, cfg: dict) -> dict:
             "targets": targets, "message": first.message}
 
 
+def _source_tables(cfg: dict) -> list[str]:
+    """소스가 읽는 원천 테이블 · 뷰 이름(등록부 `tables` · `table` · `view`). 비어 있으면 미확인."""
+    out = list(cfg.get("tables") or [])
+    for key in ("table", "view"):
+        if cfg.get(key):
+            out.append(cfg[key])
+    return list(dict.fromkeys(str(t) for t in out))
+
+
 def _static_live(merged: tenants.Merged, role: str, cfg: dict) -> dict:
-    """원천을 부르지 않고 등록부만으로: 대응률 = feature_map 이 채우는 변수 / 켜진 과제 변수, 목표 = target_map."""
+    """원천을 부르지 않고 등록부만으로 **소스별로** 센다(DEF-QA1-005 · D-122).
+
+    - 대응률 = 이 소스의 테이블(`tables` · `table` · `view`)에 속한 `feature_map` 열이 채우는 변수 / 켜진 과제 변수.
+    - 목표 = 이 소스의 테이블에 속한 `target_map` 열이 과제 목표를 채우는가.
+    - 소스 테이블이 등록부에 없으면(뷰 이름 미확인 등) 대응률 null · 목표 null(과제별 `미확인`) — 지어내지 않는다.
+      단 `target_map` 어디에도 목표가 없으면 어느 소스든 `목표 없음` 이다.
+    """
     tcfg = merged.tenant.config
     feats = _features(merged)
-    mapped = set((tcfg.get("feature_map") or {}).values())
-    covered = [f for f in feats if f in mapped]
-    tmap = set((tcfg.get("target_map") or {}).values())
+    tables = _source_tables(cfg)
+    known = bool(tables)
+
+    def of_source(cmap: dict) -> set[str]:
+        return {v for k, v in (cmap or {}).items() if str(k).split(".", 1)[0] in tables}
+
+    fmap_all = set((tcfg.get("feature_map") or {}).values())
+    tmap_all = set((tcfg.get("target_map") or {}).values())
+    mapped = of_source(tcfg.get("feature_map")) if known else set()
+    tmap = of_source(tcfg.get("target_map")) if known else set()
     targets = {}
     for t in _learned(merged):
         name = (t.raw.get("target") or {}).get("name")
-        if name:
+        if not name:
+            continue
+        if name not in tmap_all:
+            targets[t.id] = "목표 없음"
+        elif not known:
+            targets[t.id] = "미확인"
+        else:
             targets[t.id] = "있음" if name in tmap else "목표 없음"
-    unmapped = [f for f in feats if f not in mapped]
+    vals = set(targets.values())
+    target = "목표 없음" if "목표 없음" in vals else ("있음" if vals == {"있음"} else None)
+    unmapped = [f for f in feats if f not in (mapped if known else fmap_all)]
+    msg = "fixture 모드 — 실연결은 doctor-live 에서 사람이 확인 (D-13)"
+    if not known:
+        msg += " · 소스 테이블 · 뷰 미확인 — 대응률 · 목표를 셀 수 없다"
     return {"status": "미연결", "rows": None, "ts_from": None, "ts_to": None,
-            "coverage": len(covered) / len(feats) if feats else None, "missing_rates": {},
-            "target": "목표 없음" if "목표 없음" in targets.values() else ("있음" if targets else None),
-            "targets": targets, "unmapped": unmapped,
-            "message": "fixture 모드 — 실연결은 doctor-live 에서 사람이 확인 (D-13)"}
+            "coverage": (len([f for f in feats if f in mapped]) / len(feats) if feats else None) if known else None,
+            "missing_rates": {}, "target": target, "targets": targets, "unmapped": unmapped, "tables": tables,
+            "message": msg}
 
 
 def doctor(tenant_id: str, *, merged: tenants.Merged | None = None, live: bool = False) -> dict:

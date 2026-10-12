@@ -145,6 +145,24 @@ def test_optimize_old_keys(world):
     assert inf["feasible"] is False and inf["feasible_count"] == 0 and inf["unmet_constraints"]
     ranked = [a["violation"] for a in inf["alternatives"]]
     assert ranked == sorted(ranked) and ranked[0] > 0
+    # 행 안 키 · 문구 · 목적 — 원천 api/ml_service.py 를 읽은 기대값 (DEF-QA2-001)
+    for res in (d, inf):
+        for row in [res["recommendation"], *res["alternatives"]]:
+            assert list(row) == e["optimize_row_keys"], list(row)              # 옛 행 키 · 순서 그대로
+            for key, nd in e["optimize_row_round"].items():
+                assert row[key] == round(row[key], nd), (key, row[key])
+            for key, (left, op, right) in e["optimize_row_relation"].items():
+                lv = res["prediction"][left.split(".", 1)[1]] if left.startswith("prediction.") else row[left]
+                assert op == "minus" and abs(row[key] - (lv - row[right])) <= 0.011, (key, row)
+            if "anomaly" in row:
+                assert isinstance(row["anomaly"], bool)
+        assert res["objective"] == e["optimize_objective"]
+    texts = e["optimize_unmet_text"]
+    assert inf["unmet_constraints"] and set(inf["unmet_constraints"]) <= set(texts.values()), inf["unmet_constraints"]
+    assert [x for x in texts.values() if x in inf["unmet_constraints"]] == inf["unmet_constraints"]   # 제약 순서
+    if "optimize_anomaly_warning" in e:
+        flagged = d["recommendation"].get("anomaly")
+        assert (e["optimize_anomaly_warning"] in d["warnings"]) is bool(flagged)
 
 
 @pytest.mark.parametrize("i", range(4))
@@ -163,6 +181,21 @@ def test_overview_old_keys(world):
     assert r.status_code == 200, r.text
     d = r.json()
     assert set(e["overview_keys"]) <= set(d)
+    # 원천 키 전부 — 내지 않는 키는 differs 에 사유와 함께 (DEF-QA2-010)
+    omitted = set(e["differs"].get("overview_omitted") or [])
+    assert omitted and e["differs"].get("overview")
+    missing = [x for x in e["overview_source_keys"] if x not in d and x not in omitted]
+    assert not missing, missing
+    assert not omitted & set(d), omitted & set(d)                            # 사유를 단 키는 정말로 빠진다
+    for key, values in e["overview_values"].items():
+        assert d[key] == values, (key, d[key])
+    if "overview_controls" in e:
+        assert d["controls"] == e["overview_controls"]
+    assert isinstance(d["missing_cells"], int) and isinstance(d["duplicate_lots"], int) and d["impossible_cells"] == 0
+    assert d["duplicate_lots"] == 0 and d["missing_cells"] > 0                # 원천 합성 생성기: 결측 주입 · LOT 중복 0
+    assert d["evaluated"] == e["split"]["test"]
+    assert d["importance"] and all(list(x) == ["feature", "label", "mae_increase"] and x["mae_increase"] >= 0
+                                   for x in d["importance"])
     assert d["rows"] == 720 and {kk: d["split"][kk] for kk in ("train", "validation", "test")} == e["split"]
     assert d["metrics"] and all(list(x) == e["overview_metric_keys"] for x in d["metrics"])
     assert d["risk_metrics"] and all(list(x) == e["overview_risk_metric_keys"] for x in d["risk_metrics"])
@@ -192,6 +225,13 @@ def test_records_old_paging_and_detail(world):
     row = p1["records"][0]
     d = tc.get(f"{url}/{row['lot_id']}", headers=h.hdr(k["viewer"])).json()
     assert list(d) == e["record_detail_keys"] and d["record"] == row
+    # 옛 LOT 번호 형식(compat.entity_prefix) · 원천 LOT 번호로 상세 조회 (DEF-QA3-003)
+    assert all(r["lot_id"].startswith(e["lot_id_prefix"]) for r in p1["records"] + p2["records"]), p1["records"][0]["lot_id"]
+    first = tc.get(f"{url}/{e['lot_id_first']}", headers=h.hdr(k["viewer"]))
+    assert first.status_code == 200, first.text[:200]
+    assert first.json()["record"]["lot_id"] == e["lot_id_first"]
+    found = tc.get(url, headers=h.hdr(k["viewer"]), params={"search": e["lot_id_first"]}).json()
+    assert [r["lot_id"] for r in found["records"]] == [e["lot_id_first"]]
     nf = tc.get(f"{url}/DOES-NOT-EXIST", headers=h.hdr(k["viewer"]))
     assert nf.status_code == 404 and set(nf.json()) == {"detail"}
 

@@ -19,6 +19,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .. import auth
 from ..db.conn import DbUnavailable
+from ..serve.contract import safe_errors
 from ..serve.errors import ServeError
 from ..settings import ROOT, get_settings
 from .errors import ApiError
@@ -33,10 +34,12 @@ VERSION = "0.1.0"
 async def lifespan(app: FastAPI):
     code = get_settings().tenant
     # 등록부 병합만 한다. 학습 함수는 여기서 부르지 않는다. 등록부 루트는 학습 작업자와 같은 규칙
-    # (mlcore.data.jobs.tenants_base_for: 환경변수 MLP_TENANTS_DIR → 기본 tenants/) — 데이터 모듈이라 학습 코드를 끌어오지 않는다.
+    # (mlcore.data.jobs.tenants_base_for = registry.tenants.tenant_base: MLP_TENANTS_DIR → 기본 tenants/, D-65).
+    # R4: live 회사는 등록부 DB 의 production 스냅숏 synthetic 을 읽어 합성 모델 과제를 끈다(DEF-QA3-001 · D-120).
     if code:
-        from ..data.jobs import load_merged
-        app.state.registry = load_merged(code)
+        from ..data.jobs import tenants_base_for
+        from ..registry.tenants import load_for_serving
+        app.state.registry = load_for_serving(code, tenants_base=tenants_base_for(code))
     else:
         app.state.registry = None
     yield
@@ -74,13 +77,16 @@ async def _auth_required(request: Request, exc):
 
 @app.exception_handler(RequestValidationError)
 async def _validation(request: Request, exc: RequestValidationError):
-    # 입력값을 되풀이하지 않는다 — 위치와 규칙 이름만 (goal §2.3)
-    detail = [{"field": ".".join(str(p) for p in e.get("loc", [])[1:]), "rule": e.get("type")} for e in exc.errors()]
-    return _err(422, "invalid_input", "입력 값이 올바르지 않습니다", {"errors": detail})
+    # 입력값 · 요청 키 문자열을 되풀이하지 않는다 — 계약 필드 위치와 규칙 이름만 (goal §2.3)
+    return _err(422, "invalid_input", "입력 값이 올바르지 않습니다", {"errors": safe_errors(exc.errors(), skip=1)})
 
 
 @app.exception_handler(StarletteHTTPException)
 async def _http(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 400:
+        # FastAPI 는 JSON 해석 중 JSONDecodeError 밖의 오류(예: 4300자리 넘는 정수 리터럴)를 400 으로 낸다 —
+        # 오류 계약에는 400 이 없다. 형식 오류이므로 422 invalid_input (DEF-QA2-006)
+        return _err(422, "invalid_input", "입력 값이 올바르지 않습니다", {"errors": [{"field": None, "rule": "json_invalid"}]})
     code = {404: "not_found", 405: "method_not_allowed"}.get(exc.status_code, "http_error")
     message = {404: "찾을 수 없습니다", 405: "허용되지 않는 메서드입니다"}.get(exc.status_code, "요청을 처리할 수 없습니다")
     return _err(exc.status_code, code, message)

@@ -22,6 +22,8 @@ import json
 import math
 from typing import Any
 
+import pandas as pd
+
 from ...registry.artifacts import load_artifacts
 from ...registry.models import ModelNotReady, Registry
 from ..errors import ServeError
@@ -222,32 +224,90 @@ class Compat:
                 raise CompatError(503, {"detail": e.message, "code": e.code}) from None
             raise
         rec = out["recommendation"]
-        rename = dict(self.cfg.get("optimize_rename") or {})          # 표준 이름 → 옛 행 키 (회사 값)
-
-        def row(c: dict) -> dict:
-            r = {self.back.get(k, k): v for k, v in c["conditions"].items()}
-            for k, v in c["predictions"].items():
-                r[rename.get(k, k)] = v
-            r["violation"] = c["violation"]
-            return r
-
-        unmet = [x["name"] for x in rec["best"]["constraints"] if not x["satisfied"]]
-        tb = ", ".join(f"{t['name']} {'최소' if t['direction'] == 'minimize' else '최대'}" for t in rec["objective"]["tiebreak"])
-        objective = (f"제약 충족 후보 중 {rec['objective']['name']} "
-                     f"{'최소화' if rec['objective']['direction'] == 'minimize' else '최대화'}" + (f", 동률이면 {tb}" if tb else ""))
+        cands = [rec["best"], *rec["candidates"]]
+        flags = self._row_flags(fixed, [c["conditions"] for c in cands]) if self._needs_flags() else None
+        best_flag = flags[0] if flags else None
+        unmet_text = dict(self.cfg.get("optimize_unmet_text") or {})
+        unmet = [unmet_text.get(x["name"], x["name"]) for x in rec["best"]["constraints"] if not x["satisfied"]]
+        objective = self.cfg.get("optimize_objective_text") or self._objective_text(rec["objective"])
         res = {"feasible": rec["feasible"]}
         if current is not None:
             res["current"] = old_pred
-            res["current_cost_index"] = rec["current"]["objective_value"] if rec["current"] else None
+            res["current_cost_index"] = self._row_round("cost", rec["current"]["objective_value"]) if rec["current"] else None
         else:
             res["prediction"] = old_pred
         res.update({"candidate_count": rec["n_candidates"], "feasible_count": rec["n_feasible"],
-                    "recommendation": row(rec["best"]), "alternatives": [row(c) for c in rec["candidates"]],
+                    "recommendation": self._row(rec["best"], best_flag),
+                    "alternatives": [self._row(c, flags[i + 1] if flags else None) for i, c in enumerate(rec["candidates"])],
                     "unmet_constraints": unmet})
         if current is not None:
-            res["warnings"] = [w["message"] for w in out["warnings"] if w["code"] != "synthetic_model"]
+            ano_text = self.cfg.get("optimize_anomaly_text")
+            ano_task = self.bundle["anomaly"].task.id if "anomaly" in self.bundle else None
+            msgs = [ano_text] if ano_text and best_flag else []
+            msgs += [w["message"] for w in out["warnings"]
+                     if w["code"] != "synthetic_model" and not (ano_text and w["code"] == "extrapolation" and w["field"] == ano_task)]
+            res["warnings"] = msgs
         res.update({"objective": objective, "notice": out["notice"]})
         return res
+
+    # 옛 추천 행 — 회사 등록부 compat 값(tenant-contract §1):
+    #   optimize_rename {표준 예측 · 비용식 · 이상 과제 짧은 이름: 옛 키} · optimize_row [옛 키 순서] ·
+    #   optimize_derived {옛 키: 표준 이름 식(+ − × 만)} · optimize_row_round {옛 키: 자리}
+    def _row(self, c: dict, flag: bool | None) -> dict:
+        from ...tasks.optimize import _compile, _eval
+        rename = dict(self.cfg.get("optimize_rename") or {})
+        vals: dict[str, Any] = {self.back.get(k, k): v for k, v in c["conditions"].items()}
+        for k, v in c["predictions"].items():
+            vals[rename.get(k, k)] = v
+        env = {**c["conditions"], **c["predictions"]}
+        for key, expr in (self.cfg.get("optimize_derived") or {}).items():
+            vals[key] = round(float(_eval(_compile(str(expr)), env)), 6)
+        vals["violation"] = c["violation"]
+        ano_key = self._anomaly_key()
+        if ano_key is not None and (ano_key in (self.cfg.get("optimize_row") or [])):
+            vals[ano_key] = flag                                       # 운영 모델이 없으면 None — false 로 꾸미지 않는다
+        for key, nd in (self.cfg.get("optimize_row_round") or {}).items():
+            if isinstance(vals.get(key), (int, float)) and not isinstance(vals.get(key), bool):
+                vals[key] = float(round(float(vals[key]), int(nd)))
+        order = list(self.cfg.get("optimize_row") or [])
+        return {k: vals.get(k) for k in order} if order else vals
+
+    def _row_round(self, kind: str, v: float | None) -> float | None:
+        if v is None:
+            return None
+        rename = dict(self.cfg.get("optimize_rename") or {})
+        obj = (self.optimizer_spec.task.raw.get("objective") or {}) if self.optimizer_spec else {}
+        key = rename.get(obj.get("minimize") or obj.get("maximize"))
+        nd = (self.cfg.get("optimize_row_round") or {}).get(key)
+        return float(round(float(v), int(nd))) if nd is not None else v
+
+    def _anomaly_key(self) -> str | None:
+        ano = self.bundle.get("anomaly")
+        if ano is None:
+            return None
+        short = ano.task.id.split(".", 1)[1]
+        return dict(self.cfg.get("optimize_rename") or {}).get(short, short)
+
+    def _needs_flags(self) -> bool:
+        key = self._anomaly_key()
+        return key is not None and (key in (self.cfg.get("optimize_row") or []) or bool(self.cfg.get("optimize_anomaly_text")))
+
+    def _row_flags(self, fixed: dict, conditions: list[dict]) -> list[bool] | None:
+        """옛 행의 anomaly — 묶음 anomaly 과제의 production 모델로 후보 조건마다 flag(D-76 과 같은 함수). 모델이 없으면 None."""
+        from ...tasks.optimize import Optimizer
+        try:
+            return Optimizer(self.catalog, self.registry).anomaly_flags(
+                self.catalog.tenant_id, self.bundle["anomaly"].task.id, fixed, conditions)
+        except ServeError as e:
+            if e.status == 503:
+                return None
+            raise
+
+    @staticmethod
+    def _objective_text(o: dict) -> str:
+        tb = ", ".join(f"{t['name']} {'최소' if t['direction'] == 'minimize' else '최대'}" for t in o["tiebreak"])
+        return (f"제약 충족 후보 중 {o['name']} {'최소화' if o['direction'] == 'minimize' else '최대화'}"
+                + (f", 동률이면 {tb}" if tb else ""))
 
     # ── 옛 개요 ───────────────────────────────────────────────────────────
     def _prod(self, ttype: str):
@@ -294,6 +354,38 @@ class Compat:
                             for f in rs.defs if f.dtype != "category"},
                "risk_threshold": (ks_.task.raw.get("thresholds") or {}).get("review_prob") if ks_ else None,
                "warning": "표준 ML 플랫폼 호환 응답입니다. 지표는 등록부 운영 모델의 학습 보고서(시험 1회)입니다."}
+        out.update(self._overview_data(rs, rref, rld))
+        return out
+
+    def _overview_data(self, rs, rref, rld) -> dict:
+        """옛 개요의 데이터 품질 · 중요도 · 범주 목록 (DEF-QA2-010). 시험 구간을 다시 채점하지 않는다 — 운영 모델의
+        학습 스냅숏(등록부) · 학습 보고서만 읽는다. 행 단위 시험 예측 키는 내지 않는다(tests/compat_expected.yaml differs)."""
+        from ...data import snapshot
+        base = snapshot.load(rref.snapshot_id)
+        names = [f.name for f in rs.defs if f.name in base.columns]
+        nums = [f for f in rs.defs if f.dtype != "category" and f.name in base.columns]
+        impossible = 0
+        for f in nums:
+            x = pd.to_numeric(base[f.name], errors="coerce")
+            impossible += int((x < f.min).sum()) if f.min is not None else 0
+            impossible += int((x > f.max).sum()) if f.max is not None else 0
+        labels = {f.name: f.label for f in rs.defs}
+        imp = ((rld.report.get("test") or {}).get("permutation_importance") or [])
+        importance = sorted(({"feature": self.back.get(x["feature"], x["feature"]), "label": labels.get(x["feature"], x["feature"]),
+                              "mae_increase": round(max(0.0, float(x.get("mean") or 0.0)), 3)} for x in imp),
+                            key=lambda r: -r["mae_increase"])
+        sizes = ((rld.report.get("split") or {}).get("boundaries") or {}).get("sizes") or {}
+        out = {"missing_cells": int(base[names].isna().sum().sum()),
+               "duplicate_lots": int(base["entity_id"].duplicated().sum()),
+               "impossible_cells": impossible, "importance": importance,
+               "evaluated": (rld.report.get("test") or {}).get("rows", sizes.get("test"))}
+        defs = {f.name: f for f in rs.defs}
+        for key, var in (self.cfg.get("overview_values") or {}).items():          # {옛 키: 범주 변수} — 회사 값 목록
+            f = defs.get(var)
+            out[key] = list(f.values or []) if f is not None else None
+        ck = self.cfg.get("overview_controls")                                     # 옛 키 이름 — 조절 변수 목록
+        if ck and self.optimizer_spec is not None:
+            out[ck] = [self.back.get(n, n) for n in self.optimizer_spec.task.raw.get("controls") or []]
         return out
 
     # ── 옛 기록 목록 ──────────────────────────────────────────────────────
@@ -316,7 +408,20 @@ class Compat:
             other = snapshot.load(kref.snapshot_id)
             m = dict(zip(other["entity_id"].astype(str), other["target"]))
             df[self._target_key(ks_)] = df["lot_id"].map(m)
+        df["lot_id"] = df["lot_id"].map(self.lot_id)                 # 옛 LOT 번호 형식 (DEF-QA3-003)
         return df
+
+    def lot_id(self, entity_id: str) -> str:
+        """팩 중립 엔티티 ID → 옛 LOT 번호(compat.entity_prefix, pack-contract §4). 접두어의 꼬리가 ID 앞과 겹치면
+        그 부분을 바꾸고(`DEMO-0001` + `KS-DEMO-` → `KS-DEMO-0001`), 이미 접두어가 있으면 그대로, 없으면 앞에 붙인다."""
+        prefix = self.cfg.get("entity_prefix")
+        if not prefix or entity_id.startswith(prefix):
+            return entity_id
+        for i in range(len(prefix)):
+            tail = prefix[i:]
+            if entity_id.startswith(tail):
+                return prefix + entity_id[len(tail):]
+        return prefix + entity_id
 
     @staticmethod
     def _json_rows(frame) -> list[dict]:

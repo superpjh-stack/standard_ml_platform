@@ -138,6 +138,9 @@ def validate_task(name: str, task: dict, pack_code: str, features: dict, all_tas
         for f in task.get("features") or []:
             if f not in features:
                 p.append(f"F5 {name}: 변수 {f!r} 가 features.yaml 에 없다")
+        tname = (task.get("target") or {}).get("name") if isinstance(task.get("target"), dict) else None
+        if tname and tname in (task.get("features") or []):
+            p.append(f"{name}: 목표 {tname!r} 가 입력 변수에 있다(목표 누수, D-121)")
         if task.get("split") not in splits:
             p.append(f"{name}: split {task.get('split')!r}")
         if task.get("time_key") and task.get("split") not in sc["time_split_policies"]:

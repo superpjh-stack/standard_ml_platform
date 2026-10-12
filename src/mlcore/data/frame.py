@@ -53,10 +53,8 @@ def standardize(raw: pd.DataFrame, spec: "ReadSpec", *, kind: str, source_ref: s
     out["tenant_id"] = spec.tenant_id
     out["task_id"] = spec.task.id
     raw = raw.reset_index(drop=True)
-    if "entity_id" in raw.columns:
-        out["entity_id"] = raw["entity_id"].astype(str)
-    else:
-        out["entity_id"] = [f"ROW-{i + 1:06d}" for i in range(n)]
+    has_entity = "entity_id" in raw.columns
+    out["entity_id"] = raw["entity_id"].astype(str) if has_entity else ""
     time_key = task.get("time_key")
     if "ts" in raw.columns:
         out["ts"] = to_kst(raw["ts"])
@@ -84,6 +82,14 @@ def standardize(raw: pd.DataFrame, spec: "ReadSpec", *, kind: str, source_ref: s
         out["target"] = pd.to_numeric(raw[target], errors="coerce").astype(float)
     out["_source"] = kind
     out["_source_ref"] = source_ref
+    if not has_entity:
+        # entity_id 없는 원천: ROW-n 을 원천 행 순서가 아니라 내용 순서(시각 → 나머지 열 값)로 붙인다 —
+        # 같은 행을 다른 순서로 받아도 같은 스냅숏(DEF-QA1-007)
+        from .snapshot import row_order
+
+        ids = np.empty(n, dtype=object)
+        ids[row_order(out)] = [f"ROW-{i + 1:06d}" for i in range(n)]
+        out["entity_id"] = ids
     if spec.ts_from is not None:
         out = out[out["ts"] >= _kst_ts(spec.ts_from)]
     if spec.ts_to is not None:

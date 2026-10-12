@@ -1,0 +1,2 @@
+원본: 바뀐 시험행 0 · 검증 MAE train_mean 13.4560 last_value 1.1961 → 기준선 last_value · 시험 MAE 14.0966 기준선 1.3081 · beats False
+시험목표만 교란: 바뀐 시험행 44 · 검증 MAE train_mean 13.4560 last_value 212.4968 → 기준선 train_mean · 시험 MAE 231.7425 기준선 231.7695 · beats True

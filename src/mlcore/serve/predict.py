@@ -13,7 +13,7 @@ from typing import Any, Sequence
 import pandas as pd
 
 from ..registry.artifacts import ArtifactMismatch, load_artifacts
-from ..registry.models import ModelRef, Registry
+from ..registry.models import ModelNotReady, ModelRef, Registry
 from ..tasks.base import kind_for, warn
 from .catalog import TaskCatalog, TaskSpec
 from .contract import to_contract
@@ -37,6 +37,13 @@ class PredictRequest:
     model_version: str | None = None
 
 
+@dataclass(frozen=True)
+class BatchItemError:
+    """배치 한 건이 요청 모양 단계(라우터의 pydantic 검증)에서 이미 422 인 자리 — 다른 건은 그대로 채점한다."""
+    index: int
+    error: ServeError
+
+
 def _iso(ts) -> str:
     return ts.astimezone(KST).isoformat(timespec="seconds")
 
@@ -48,9 +55,15 @@ class Predictor:
 
     # ── 모델 ────────────────────────────────────────────────────────────────
     def _model(self, spec: TaskSpec, version: str | None) -> tuple[ModelRef, Any]:
-        ref = self.registry.get(spec.tenant_id, spec.task.id, version)      # 없으면 ModelNotReady
-        if version is not None and ref.stage not in ("production", "staging"):
+        try:
+            ref = self.registry.get(spec.tenant_id, spec.task.id, version)  # production 없음 → ModelNotReady(503)
+        except ModelNotReady:
+            if version is None:
+                raise
+            ref = None                     # 지정한 버전이 없다 = 쓸 수 없는 버전 → candidate 와 같은 404 (DEF-QA2-008)
+        if version is not None and (ref is None or ref.stage not in ("production", "staging")):
             raise NotFound("예측에 쓸 수 있는 모델 버전이 아닙니다")
+        self.catalog.require_servable(spec.tenant_id, spec.task.id, ref)
         loaded = load_artifacts(ref)                                        # 해시 · env.lock 불일치 → ArtifactMismatch
         order = list(loaded.lock.get("order") or [])
         if sorted(order) != sorted(spec.features):
@@ -137,6 +150,7 @@ class Predictor:
                    status=out["status"], caller=caller, channel=channel, synthetic=ref.synthetic, conn=conn)
 
     def predict(self, tenant_id: str, task_id: str, req: PredictRequest, *, caller: str, channel: str = "api") -> dict:
+        self.catalog.require_servable(tenant_id, task_id)                    # 꺼진 과제 → 503 (D-120a)
         spec = self.catalog.get(tenant_id, task_id)                          # 없는 과제 → 404
         if spec.task.type == "optimize":
             raise NotFound("최적화 과제는 predict 가 아니라 optimize 로 부릅니다")
@@ -153,6 +167,7 @@ class Predictor:
         순서 = 요청 순서. 같은 model_version 끼리 한 번에 채점하고, 기록은 한 트랜잭션."""
         if not 1 <= len(reqs) <= BATCH_MAX:
             raise InvalidInput(f"한 번에 1~{BATCH_MAX}건입니다", {"field": "items", "rule": "batch_size"})
+        self.catalog.require_servable(tenant_id, task_id)
         spec = self.catalog.get(tenant_id, task_id)
         if spec.task.type == "optimize":
             raise NotFound("최적화 과제는 predict 가 아니라 optimize 로 부릅니다")
@@ -160,6 +175,9 @@ class Predictor:
         items: list[dict | None] = [None] * len(reqs)
         groups: dict[str | None, list[int]] = {}
         for i, req in enumerate(reqs):
+            if isinstance(req, BatchItemError):
+                items[i] = {"index": i, "error": req.error.body()["error"]}
+                continue
             try:
                 self._check(spec, req)
             except ServeError as e:

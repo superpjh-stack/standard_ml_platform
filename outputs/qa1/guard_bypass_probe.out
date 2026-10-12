@@ -1,0 +1,10 @@
+G-M05  guard 우회 여집합(전체 − 학습 − 검증)                  WARN  시험 인덱스 복원=True · ledger 기록 0건
+G-M05  guard 우회 vars(test) 이름 맹글링 속성               WARN  시험 인덱스 복원=True · ledger 기록 0건
+G-M05  guard 우회 overlaps() 질의로 한 행씩                WARN  시험 인덱스 복원=True · ledger 기록 0건
+G-M05  guard 우회 boundaries.test_ts 로 시각 자르기        WARN  시험 인덱스 복원=True · ledger 기록 0건
+G-M05  guard 우회 copy.copy 로 final_eval 2회          WARN  2회째 허용=True · ledger final_eval 2회(위반 기록 0)
+G-M05  guard 우회 final_eval 뒤 report 무제한            INFO  report 5회 허용(설계상 허용 목적)
+G-M05  guard 우회 src/mlcore 의 우회 패턴 사용처             INFO  3건
+        src/mlcore/train/split.py:105: bounds["test_ts"] = [str(ts[b]), str(ts[n - 1])] if n > b else None
+        src/mlcore/train/guard.py:110: if test.overlaps(fit_idx):
+        src/mlcore/registry/tenants.py:149: merged = copy.deepcopy(base)

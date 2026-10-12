@@ -78,16 +78,16 @@ def test_group_key_never_crosses_boundary(groups):
     assert f["ts"].iloc[list(sp.train_idx)].max() < f["ts"].iloc[_test_idx(f, sp)].min()
 
 
-def test_interleaved_groups_still_disjoint():
+def test_interleaved_groups_refuse_instead_of_losing_time_order():
+    """시간상 완전히 섞인 그룹 — 예전에는 그룹 블록 순서로 다시 줄 세워 시간순을 잃었다(DEF-QA1-002).
+    이제 시간순 · 그룹 경계를 함께 지킬 수 없으면 분할을 거부한다(D-85)."""
     t = task(group_key="lot")
     raw = raw_rows(600, 4)
     raw["lot"] = [f"G{i % 25:02d}" for i in range(600)]      # 시간상 완전히 섞인 그룹
     f = std_frame(t, raw)
-    sp, _ = split.plan(f, t, seed=1)
-    g = f["group"]
-    sets = [set(g.iloc[list(sp.train_idx)]), set(g.iloc[list(sp.valid_idx)]), set(g.iloc[_test_idx(f, sp)])]
-    assert not sets[0] & sets[1] and not sets[1] & sets[2] and not sets[0] & sets[2]
-    assert sp.boundaries.get("regrouped") is True
+    with pytest.raises(split.SplitRefused) as e:
+        split.plan(f, t, seed=1)
+    assert e.value.code == "split_time_group_conflict"
 
 
 def test_plan_does_not_expose_test_indices():
@@ -120,7 +120,10 @@ def test_in_sample_evaluation_fixture_is_rejected():
     _, test = split.plan(f, t, seed=1)
     with pytest.raises(guard.InSampleEvaluation):
         final_evaluation(f, test, list(range(len(f))), lambda df: None)
-    assert test.overlaps(range(len(f)))
+    with pytest.raises(guard.TestLeak):                     # 겹침 질의는 래퍼당 1회(DEF-QA1-006)
+        test.overlaps(range(len(f)))
+    _, fresh = split.plan(f, t, seed=1)
+    assert fresh.overlaps(range(len(f)))
 
 
 # ── 학습기 계측 (C) ───────────────────────────────────

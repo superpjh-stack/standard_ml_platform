@@ -1,6 +1,6 @@
 """G-M03 — 과제 정의. 팩마다 features.yaml · 과제 ≥ 2 · synth/*.py · baselines.yaml.
 과제 YAML 은 스키마 · 변수 존재 · uses 존재 · 누수 규칙(time_key → 시간순) · approver_role 을 갖춘다(로더가 검사).
-회사 덮어쓰기로 type · 분할 · 승인 지점을 바꾸면 거부(불량 픽스처 R1 + 추가 변형 시험). 코드 안 FEATURE_META dict 0."""
+회사 덮어쓰기로 type · 분할 · 승인 지점 · 목표를 바꾸면 거부(불량 픽스처 R1 + 추가 변형 시험). 코드 안 FEATURE_META dict 0."""
 import copy
 import re
 
@@ -35,7 +35,11 @@ def run() -> list[Line]:
     base = packs.load_pack("textile")
     t = tenants.load_tenant("sw")
     rejected = 0
-    for key, val in (("type", "risk"), ("split", "random_60_20_20"), ("time_key", None), ("approver_role", None)):
+    variants = (("type", "risk"), ("split", "random_60_20_20"), ("time_key", None), ("approver_role", None),
+                ("approver_role", "line_lead"),                       # 승인 지점 바꾸기 (DEF-QA1-003 · D-121)
+                ("target", {"name": "set_temp"}),                     # 목표를 입력 변수로 (DEF-QA1-004 · D-121)
+                ("target", {"name": "delta_e", "unit": "dE00"}))      # 목표 정의 바꾸기
+    for key, val in variants:
         tt = copy.deepcopy(t)
         tt.overrides = {"delta_e": {key: val}}
         try:
@@ -47,7 +51,7 @@ def run() -> list[Line]:
     for f in (ROOT / "src").rglob("*.py"):
         if re.search(r"FEATURE_META\s*=|CONTROL_META\s*=", read(f)):
             problems.append(f"{f.relative_to(ROOT)}: 코드 안 변수 사전")
-    msg = f"팩 {len(PACKS)} · 과제 YAML {ok_tasks} 스키마 통과 · 덮어쓰기 불변 {rejected}/4 거부"
+    msg = f"팩 {len(PACKS)} · 과제 YAML {ok_tasks} 스키마 통과 · 덮어쓰기 불변 {rejected}/{len(variants)} 거부"
     if problems:
         return [Line("G-M03", "과제 정의", "FAIL", msg + f" · 위반 {len(problems)}: " + "; ".join(problems[:4]))]
     return [Line("G-M03", "과제 정의", "PASS", msg + " · synth · baselines 있음")]

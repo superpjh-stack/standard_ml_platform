@@ -31,10 +31,22 @@ ks:
   records_total: 720
   health_keys: [status, model_ready, data_mode, version]                             # api/main.py:73
   error_shape: detail_list                                                           # api/main.py:25-31 {"detail": [{loc, msg, type}]}
+  optimize_row_keys: [stop_after_hours, cost_index, reserve_hours, violation]       # api/ml_service.py:138-139 · :147 (json_rows(ranked) 열 순서)
+  optimize_row_relation: {reserve_hours: [prediction.remaining_hours, minus, stop_after_hours]}   # api/ml_service.py:136-138 (life - times)
+  optimize_row_round: {}                                                              # api/ml_service.py:147 (행은 반올림하지 않음)
+  optimize_unmet_text: {reserve: 요청한 잔여수명 여유시간 미충족, max_cost: 정비 비용지수 상한 초과}   # api/ml_service.py:144-145 (제약 이름 ← packs/press/tasks/maintenance_timing.yaml)
+  optimize_objective: 제약 충족 후보 중 데모 비용지수 최소화, 동률이면 더 늦은 시점 선택      # api/ml_service.py:148
+  lot_id_prefix: KS-DEMO-                                                             # api/ml_service.py:34 f"KS-DEMO-{i+1:04d}"
+  lot_id_first: KS-DEMO-0001
+  overview_source_keys: [data_mode, version, rows, missing_cells, duplicate_lots, impossible_cells, champion, risk_champion, metrics, risk_metrics, test_metrics, risk_test_metrics, features, machines, products, split, importance, review_count, evaluated, risk_threshold, trend, priority_queue, warning]   # api/ml_service.py:160-169 (전부)
+  overview_values: {products: [FRONT SHELL, CENTER PLATE, DIAPHRAGM PLATE]}            # api/config.py:5 PRODUCTS · ml_service.py:163
   differs:
     model: "옛 응답은 표시 이름(Gradient Boosting), 표준은 후보 코드(gbr) — std/candidates.yaml"
     version: "옛 MODEL_VERSION 상수(api/config.py:3), 표준은 등록부 버전(v<n>) — 코드 안 버전 상수 금지"
     warnings: "문구는 표준 경고 메시지(+ 변수 라벨). 보정 한 줄 문구만 옛 형식"
+    overview: "옛 개요 중 시험 구간 행 단위 예측에서 만든 키(machines · review_count · trend · priority_queue)는 내지 않는다 — 원천은 기동 때 시험 구간을 다시 채점했지만 표준 API 는 시험 구간을 다시 보지 않는다(goal §8 시험 구간 1회 · 등록부 학습 보고서만). 같은 정보의 표준 자리 = 화면 4 학습 보고서(report.test · 잔차 · 범주별 오차)와 화면 1 개요(B06)"
+    overview_omitted: [machines, review_count, trend, priority_queue]
+    importance: "옛 importance 는 검증 구간 순열 중요도(api/ml_service.py:104), 표준은 시험 구간 순열 중요도(spec 학습 보고서 · report.test.permutation_importance). 키 모양 {feature, label, mae_increase} 는 같다"
 sw:
   source_repo: "../SongWol ML AI"
   routes:                                        # api/main.py:71,76,81,86,91,102
@@ -67,7 +79,21 @@ sw:
   records_total: 720
   health_keys: [status, model_ready, data_mode, version]                             # api/main.py:73
   error_shape: detail_list
+  optimize_row_keys: [set_temp, set_pressure, line_speed, ink_usage, dwell_time, pred_delta_e, risk_probability, cost_index, violation, anomaly]   # api/ml_service.py:184
+  optimize_row_relation: {}
+  optimize_row_round: {pred_delta_e: 4, risk_probability: 4, violation: 4, cost_index: 2}   # api/ml_service.py:156 (cost_index .round(2)) · :186
+  optimize_unmet_text: {max_delta_e: 목표 색차(ΔE) 상한 미충족, max_risk: 불량 위험 상한 초과, min_line_speed: 최소 라인속도 미충족}   # api/ml_service.py:179-181 (제약 이름 ← packs/textile/tasks/print_setpoint.yaml)
+  optimize_objective: 제약 충족 후보 중 데모 공정 비용지수 최소화, 동률이면 예측 색차가 작은 조건   # api/ml_service.py:192
+  optimize_anomaly_warning: 추천 조건이 학습 분포와 다른 조합입니다. 시험 인쇄로 먼저 확인하세요.   # api/ml_service.py:182 (추천 행 anomaly 일 때)
+  lot_id_prefix: SW-DEMO-                                                             # api/ml_service.py:50
+  lot_id_first: SW-DEMO-0001
+  overview_source_keys: [data_mode, version, rows, missing_cells, duplicate_lots, impossible_cells, defect_rate, champion, risk_champion, metrics, risk_metrics, test_metrics, risk_test_metrics, features, controls, print_types, color_tones, equipment, split, importance, review_count, evaluated, delta_e_review, risk_threshold, trend, priority_queue, warning]   # api/ml_service.py:206-218 (전부)
+  overview_values: {print_types: [나염, 승화, DTF], color_tones: [연한 색상, 중간 색상, 진한 색상]}   # api/config.py:5 · :8
+  overview_controls: [set_temp, set_pressure, line_speed, ink_usage, dwell_time]       # api/config.py:9-15 CONTROLS · ml_service.py:212
   differs:
     optimize_candidate_count: "원천 전수 8,400점(학습 범위 무시) ↔ 표준 학습 범위 ∩ min/max (D-31) — 이관 보고서 사유"
     model: "표시 이름 ↔ 후보 코드"
     version: "옛 상수 ↔ 등록부 버전"
+    overview: "시험 구간 행 단위 예측에서 만든 키(equipment 의 LOT별 예측 · review_count · trend · priority_queue)와 데모 검토 기준 상수(delta_e_review · defect_rate 는 합성 라벨 비율)는 내지 않는다 — 표준 API 는 시험 구간을 다시 채점하지 않고(goal §8), 검토 기준은 과제 thresholds(B02 tasks) 가 정본이다. 표준 자리 = 화면 4 학습 보고서 · 화면 1 개요(B06) · B02 과제 정의"
+    overview_omitted: [equipment, review_count, trend, priority_queue, delta_e_review, defect_rate]
+    importance: "옛 importance 는 검증 구간, 표준은 시험 구간 순열 중요도(report.test.permutation_importance)"

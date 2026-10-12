@@ -32,6 +32,12 @@ approvers: {maintenance_lead: []}   # 미확인 — 사람 확인 필요 (D-04)
 notify: {webhook_env: null}         # 미확인
 compat:
   round: {remaining_hours: 2, risk_probability: 4}   # 원천 api/ml_service.py 반올림 자리 (tests/compat_expected.yaml)
+  optimize_rename: {maintenance_cost: cost_index}   # 원천 api/ml_service.py:138 행 열 cost_index (표준 비용식 이름 → 옛 행 키, D-71)
+  optimize_row: [stop_after_hours, cost_index, reserve_hours, violation]   # 원천 api/ml_service.py:138-139 (json_rows 열 순서)
+  optimize_derived: {reserve_hours: "remaining_hours - stop_after_hours"}   # :138 reserve_hours = life - times
+  optimize_unmet_text: {reserve: 요청한 잔여수명 여유시간 미충족, max_cost: 정비 비용지수 상한 초과}   # :144-145
+  optimize_objective_text: 제약 충족 후보 중 데모 비용지수 최소화, 동률이면 더 늦은 시점 선택   # :148
+  overview_values: {products: product_type}   # :163 "products": PRODUCTS (config.py:5 = categories.product_type)
   entity_prefix: "KS-DEMO-"
   model_version_label: null         # 원천 MODEL_VERSION 상수는 옮기지 않는다 — 호환 응답의 version 은 등록부 버전
   routes: [/api/health, /api/maintenance/predict, /api/ml/optimize, /api/ml/overview, /api/data/records]

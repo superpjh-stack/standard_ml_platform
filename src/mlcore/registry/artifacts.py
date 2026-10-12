@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import platform
 import threading
@@ -73,6 +74,25 @@ def artifact_sha256(version_dir: str | Path) -> str:
         if not p.is_file():
             raise ArtifactMismatch(detail={"rule": "file_missing", "field": name})
         h.update(f"{name}\0{_sha_file(p)}\n".encode())
+    return h.hexdigest()
+
+
+def _read_all(d: Path) -> dict[str, bytes]:
+    """4개 파일을 **한 번씩** 메모리로 읽는다 — 해시를 잰 바이트가 곧 적재하는 바이트다(TOCTOU 0, DEF-QA2-005)."""
+    out = {}
+    for name in FILES:
+        try:
+            out[name] = (d / name).read_bytes()
+        except (FileNotFoundError, IsADirectoryError):
+            raise ArtifactMismatch(detail={"rule": "file_missing", "field": name}) from None
+    return out
+
+
+def bytes_sha256(blobs: Mapping[str, bytes]) -> str:
+    """artifact_sha256 과 같은 규칙(파일 이름순 "<이름>\0<sha256>\n")을 메모리 바이트에 적용."""
+    h = hashlib.sha256()
+    for name in FILES:
+        h.update(f"{name}\0{hashlib.sha256(blobs[name]).hexdigest()}\n".encode())
     return h.hexdigest()
 
 
@@ -151,15 +171,16 @@ def load_artifacts(ref) -> LoadedModel:
     if hit is not None:
         _check_env(hit.env_lock, getattr(ref, "env_lock", None))
         return hit
-    digest = artifact_sha256(d)
+    blobs = _read_all(d)                         # 해시 · 적재가 같은 바이트 — 그 사이 파일이 바뀌어도 검증한 바이트만 쓴다
+    digest = bytes_sha256(blobs)
     if digest != ref.artifact_sha256:
         raise ArtifactMismatch(detail={"rule": "sha256", "field": None})
-    env_file = json.loads((d / "env.lock").read_text(encoding="utf-8"))
+    env_file = json.loads(blobs["env.lock"].decode("utf-8"))
     _check_env(env_file, getattr(ref, "env_lock", None))
     loaded = LoadedModel(
-        model=joblib.load(d / "model.joblib"),
-        report=json.loads((d / "report.json").read_text(encoding="utf-8")),
-        lock=json.loads((d / "features.lock.json").read_text(encoding="utf-8")),
+        model=joblib.load(io.BytesIO(blobs["model.joblib"])),
+        report=json.loads(blobs["report.json"].decode("utf-8")),
+        lock=json.loads(blobs["features.lock.json"].decode("utf-8")),
         env_lock=env_file, sha256=digest, version=ref.version, algo=ref.algo)
     with _LOCK:
         _CACHE.clear() if len(_CACHE) > 64 else None

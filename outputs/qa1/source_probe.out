@@ -1,0 +1,14 @@
+G-S05  허용 테이블 SELECT                                        PASS  막지 않음 → 50
+G-S05  허용목록 밖 테이블                                           PASS  SourceDisconnected: 허용목록 밖 테이블 qa_src.secret
+G-S05  시스템 카탈로그                                             PASS  SourceDisconnected: 허용목록 밖 테이블 pg_catalog.pg_user
+G-S05  다문장(허용목록에 있어도)                                       PASS  SourceDisconnected: 테이블 이름 형식이 올바르지 않다
+G-S05  인용부호 탈출 테이블명                                         PASS  SourceDisconnected: 조회 실패(readings" ; DELETE FROM "secret): UndefinedTable
+G-S05  ts_column 주입                                         PASS  SourceDisconnected: 조회 실패(qa_src.readings): UndefinedColumn
+G-S05  ts_from 값 주입                                         PASS  SourceDisconnected: 조회 실패(qa_src.readings): InvalidDatetimeFormat
+G-S05  연결 객체로 INSERT                                        PASS  ReadOnlySqlTransaction: cannot execute INSERT in a read-only transaction
+G-S05  세션 read_only 끄고 INSERT (연결 객체 직접 — 어댑터 API 밖)        FAIL  막지 않음 → 쓰기 성공
+G-S05  Gateway 허용목록 = table 하나                              PASS  SourceDisconnected: 허용목록 밖 테이블 qa_src.secret
+G-S05  Mes 대응표가 허용목록 밖 테이블                                  PASS  SourceDisconnected: 대응표가 허용목록 밖 테이블을 가리킨다: ['secret']
+G-S05  원천 행 수 diff                                          FAIL  전 (50, 2) 후 (50, 3) (98 행이 생겼다면 어댑터 밖 우회)
+G-S05  dataplatform 기본 전송 메서드                               PASS  막지 않음 → [('GET', None)]
+G-S05  dataplatform 요청 메서드 · 본문                             PASS  관찰 [('GET', None)]

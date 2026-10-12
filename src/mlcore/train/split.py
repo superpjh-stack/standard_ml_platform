@@ -59,51 +59,80 @@ def _time_order(frame: pd.DataFrame) -> np.ndarray:
     return frame.reset_index(drop=True).sort_values(keys, kind="mergesort").index.to_numpy()
 
 
-def _group_cut(groups: np.ndarray, target: int) -> int:
-    """target 에서 가장 가까운, 양쪽 그룹 교집합이 0 인 자르는 위치."""
-    n = len(groups)
-    first, last = {}, {}
-    for i, g in enumerate(groups):
-        first.setdefault(g, i)
-        last[g] = i
-    ok = np.zeros(n + 1, dtype=bool)
-    # 위치 c 에서 자를 수 있다 ⇔ [0, c) 의 어떤 그룹도 c 이후에 나오지 않는다
-    reach = -1
-    ok[0] = True
-    for i in range(n):
-        reach = max(reach, last[groups[i]])
-        ok[i + 1] = reach <= i
+class SplitRefused(ValueError):
+    """누수 규칙을 함께 지킬 수 없어 분할을 거부한다 — 학습은 failed 로 끝나고 `code` 가 보고 · 경고에 남는다 (D-85).
+
+    code `split_time_group_conflict`: time_key 과제에서 시간순(학습 < 검증 < 시험, 같은 시각 묶음 불가분)과
+    group_key 경계(같은 그룹이 양쪽에 없다)를 둘 다 지키는 자르는 위치가 없다 — 그룹이 시간상 섞여 있다.
+    """
+
+    def __init__(self, code: str, message: str, **detail):
+        super().__init__(message)
+        self.code, self.detail = code, detail
+
+
+def _cut_ok(ts: np.ndarray | None, groups: np.ndarray | None, n: int) -> np.ndarray:
+    """시간순 배열에서 위치 c(앞 c 행 | 뒤 n-c 행)로 자를 수 있는가.
+    (1) 같은 시각 행 묶음이 갈리지 않는다(ts[c-1] != ts[c], DEF-QA1-008) (2) group_key 가 있으면
+    [0, c) 의 어떤 그룹도 c 이후에 나오지 않는다. 양 끝(0 · n)은 늘 자를 수 있다."""
+    ok = np.ones(n + 1, dtype=bool)
+    if ts is not None and n > 1:
+        t = pd.Series(ts)
+        same = (t.iloc[1:].to_numpy() == t.iloc[:-1].to_numpy()) & t.iloc[1:].notna().to_numpy()
+        ok[1:n] &= ~same
+    if groups is not None and n:
+        last = {}
+        for i, g in enumerate(groups):
+            last[g] = i
+        reach = -1
+        for i in range(n - 1):
+            reach = max(reach, last[groups[i]])
+            ok[i + 1] &= reach <= i
+    return ok
+
+
+def _nearest_cut(ok: np.ndarray, target: int, lo: int = 0) -> int:
+    """target 에서 가장 가까운(동률이면 앞쪽) 자를 수 있는 위치 ≥ lo."""
     cands = np.flatnonzero(ok)
+    cands = cands[cands >= lo]
     return int(cands[np.argmin(np.abs(cands - target))])
 
 
 def _time_split(frame: pd.DataFrame, task, fr: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict]:
+    """시간순으로만 자른다(그룹 블록으로 다시 줄 세우지 않는다 — DEF-QA1-002). 자르는 위치는
+    같은 시각 묶음 · 그룹 경계를 넘지 않는 위치 중 비율 목표에 가장 가까운 곳. 그런 위치로 학습 · 시험 구간을
+    만들 수 없으면 SplitRefused(split_time_group_conflict)."""
     order = _time_order(frame)
     n = len(order)
-    a = int(round(n * fr["train"]))
-    b = int(round(n * (fr["train"] + fr["valid"])))
+    a0 = int(round(n * fr["train"]))
+    b0 = int(round(n * (fr["train"] + fr["valid"])))
     bounds: dict = {"order": "time"}
-    if task.raw.get("group_key") and "group" in frame.columns:
-        groups = frame["group"].astype(str).to_numpy()[order]
-        if len(set(groups)) < n:
-            # 같은 그룹이 시간상 섞여 있으면 그룹 블록 순서(첫 등장 시각)로 다시 줄 세운다
-            first = {}
-            for i, g in enumerate(groups):
-                first.setdefault(g, i)
-            regroup = np.array(sorted(range(n), key=lambda i: (first[groups[i]], i)))
-            if not np.array_equal(regroup, np.arange(n)):
-                bounds["regrouped"] = True
-            order = order[regroup]
-            groups = groups[regroup]
-            a = _group_cut(groups, a)
-            b = _group_cut(groups, max(b, a))
-        bounds["group_key"] = task.raw["group_key"]
     ts = frame["ts"].to_numpy()[order] if "ts" in frame.columns else None
+    grouped = bool(task.raw.get("group_key")) and "group" in frame.columns
+    groups = frame["group"].astype(str).to_numpy()[order] if grouped else None
+    ok = _cut_ok(ts, groups, n)
+    a = _nearest_cut(ok, a0)
+    b = _nearest_cut(ok, max(b0, a), lo=a)
+    if fr["valid"] > 0 and b == a and a < n:            # 검증이 비면 다음 자르는 위치까지
+        nxt = np.flatnonzero(ok[a + 1:])
+        b = a + 1 + int(nxt[0]) if len(nxt) else n
+    if grouped:
+        bounds["group_key"] = task.raw["group_key"]
+        if a == 0 or b >= n or (fr["valid"] > 0 and b == a):
+            raise SplitRefused(
+                "split_time_group_conflict",
+                f"group_key {task.raw['group_key']!r} 가 시간상 섞여 시간순과 그룹 경계를 함께 지키는 분할이 없다 "
+                f"(가능한 자르는 위치 {int(ok[1:n].sum())}곳 — 학습 {a} · 검증 {b - a} · 시험 {n - b} 행)",
+                group_key=task.raw["group_key"], rows=n, feasible_cuts=int(ok[1:n].sum()),
+                sizes={"train": a, "valid": b - a, "test": n - b})
+    if (a, b) != (a0, b0):
+        bounds["cut_moved"] = {"train": a - a0, "valid_end": b - b0}
     if ts is not None and n:
         bounds["train_ts"] = [str(ts[0]), str(ts[a - 1])] if a else None
         bounds["valid_ts"] = [str(ts[a]), str(ts[b - 1])] if b > a else None
         bounds["test_ts"] = [str(ts[b]), str(ts[n - 1])] if n > b else None
     bounds["sizes"] = {"train": a, "valid": b - a, "test": n - b}
+    bounds["_ok"] = ok
     return order[:a], order[a:b], order[b:], bounds
 
 
@@ -142,19 +171,20 @@ def plan(frame: pd.DataFrame, task, seed: int, *, ledger: AccessLedger | None = 
     folds: tuple = ()
     if policy == "time_60_20_20":
         tr, va, te, bounds = _time_split(frame, task, pol["fractions"])
+        bounds.pop("_ok")
     elif policy == "time_cv5":
         tf = float(pol["test_fraction"])
         tr_all, _, te, bounds = _time_split(frame, task, {"train": 1 - tf, "valid": 0.0})
+        ok = bounds.pop("_ok")
         k = int(pol["folds"])
         m = len(tr_all)
-        edges = [int(round(m * (i + 1) / (k + 1))) for i in range(k + 1)]
-        if task.raw.get("group_key") and "group" in frame.columns:
-            # 폴드 경계도 그룹을 넘지 않게(시험 경계와 같은 규칙) — 끝 경계(m)는 그대로
-            gtr = frame["group"].astype(str).to_numpy()[tr_all]
-            cut = [_group_cut(gtr, e) for e in edges[:-1]] + [m]
-            edges = sorted({c for c in cut if c > 0})
-            if len(edges) < k + 1:
-                raise ValueError(f"time_cv5: 그룹이 적어 폴드 {k} 개를 만들 수 없다(경계 {len(edges)})")
+        # 폴드 경계도 시험 경계와 같은 규칙(같은 시각 묶음 · 그룹을 넘지 않는다) — tr_all 은 시간순 앞부분이다
+        cut = [_nearest_cut(ok[:m + 1], int(round(m * (i + 1) / (k + 1)))) for i in range(k)] + [m]
+        edges = sorted({c for c in cut if c > 0})
+        if len(edges) < k + 1:
+            raise SplitRefused("split_time_group_conflict",
+                               f"time_cv5: 같은 시각 묶음 · 그룹 경계를 지키며 폴드 {k} 개를 만들 수 없다(경계 {len(edges)})",
+                               group_key=task.raw.get("group_key"), rows=n, folds=k)
         folds = tuple((tuple(int(i) for i in tr_all[:edges[i]]), tuple(int(i) for i in tr_all[edges[i]:edges[i + 1]]))
                       for i in range(k))
         # train/valid = 마지막 폴드 (검증 구간 잔차 · 선정은 폴드 전체로)

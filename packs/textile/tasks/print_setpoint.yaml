@@ -3,6 +3,7 @@ type: optimize
 title: 인쇄 조건 추천
 entity: lot
 uses: [textile.delta_e, textile.defect_risk]
+warn_with: [textile.print_ood]   # D-76 · D-131 — 추천 조건이 이상 탐지에 걸리면 "시험으로 먼저 확인" 경고만(목적 · 제약 · 순위 불사용)
 controls: [set_temp, set_pressure, line_speed, ink_usage, dwell_time]
 fixed: [absorb_rate, fabric_strength, print_type, color_tone]
 params:

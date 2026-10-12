@@ -12,7 +12,7 @@
 | `title` | ○ | string | 화면 제목 |
 | `entity` | ○ | enum | `lot` · `equipment_window` · `job` · `drawing` |
 | `time_key` | 시계열이면 ○ | string \| null | 있으면 `split` 은 `time_*` 만 허용(누수 규칙). **덮어쓰기로 지울 수 없다** |
-| `group_key` | | string \| null | 같은 그룹은 분할 경계를 넘지 않는다. **덮어쓰기로 지울 수 없다** |
+| `group_key` | | string \| null | 같은 그룹은 분할 경계를 넘지 않는다. **덮어쓰기로 지울 수 없다**. 시간순 분할에서 시간순 · 같은 시각 묶음 · 그룹 경계를 함께 지키는 자르기 위치가 없으면 **학습 거부** `split_time_group_conflict`(다시 줄 세우지 않는다 — D-85) |
 | `features` | 지도 · anomaly ○ | list[str] | 전부 `features.yaml` 에 있어야 한다 |
 | `split` | 학습 과제 ○ | enum | `std/split_policies.yaml`. `time_key` 가 있으면 `time_60_20_20` 또는 `time_cv5` |
 | `candidates` | 학습 과제 ○ | list[str] | `std/candidates.yaml` 이름, 그 후보의 `types` 에 이 과제 `type` 이 있어야 한다 |
@@ -51,14 +51,14 @@
 | | `constraints: [{name, expr}]` ○ | `expr` = `<lhs> (<=|>=|<|>) <rhs>` 한 줄. lhs · rhs 는 uses 과제의 짧은 이름 · formula · decision_var · controls · `params` 이름 · 숫자 · 단순 `+ - *` |
 | | `search: {strategy: grid \| random \| auto, max_points}` ○ | auto = 공간 ≤ max_points 면 grid |
 | | `on_infeasible: least_violation` ○ | violation = Σ max(0, 위반량) / max(\|rhs\|, 1e-9) |
-| | `warn_with: [<pack>.<anomaly 과제>]` | 선택(D-76, 원천 sw "시험 인쇄로 먼저 확인" 이관). 후보마다 그 과제 **production** 모델의 flag 를 `warnings`(`anomaly_flag`, field = 과제)에 넣는다. 목적 · 제약 · 순위에는 쓰지 않는다. production 이 없으면 경고 `model_not_ready`(숨기지 않는다). 의존 과제 규칙(병합 규칙 3)을 같이 받는다 |
+| | `warn_with: [<pack>.<anomaly 과제>]` | 선택(D-76, 원천 sw "시험 인쇄로 먼저 확인" 이관). 추천(best) 조건이 그 과제 **production** 모델의 flag 에 걸리면 `warnings` 에 `extrapolation`(field = 그 과제 id — predict-contract §3 코드, D-131)을 넣는다. 목적 · 제약 · 순위에는 쓰지 않는다. production 이 없으면 같은 코드 `extrapolation` 에 문구 `… (model_not_ready)` 로 확인하지 못했음을 보인다(숨기지 않는다). 의존 과제 규칙(병합 규칙 3)을 같이 받는다 |
 | | 고정 입력 범위 밖 (D-72) | optimize 의 허용 상태는 `needs_approval` · `review` 뿐 — 고정 입력이 학습 범위 밖이면 경고 `out_of_range`(field = 고정 변수) + `out_of_range_fields` + status `review` |
 
 ## 3. 덮어쓰기 (`tenants/<code>/tasks/<task>.yaml`, spec §3.3)
 
 | 바꿀 수 있다 | 바꿀 수 없다 (어기면 기동 거부 — 병합 규칙 1) |
 |---|---|
-| `thresholds` · `features` 추가/제외(필수 아닌 것) · `candidates` · `candidate_params` · `constraints` 의 값 · `params` 기본값 · `monitor` · `approver_role` 값 · `notice` · `title` | `type` · `split`(시간순 → 비시간순) · `time_key` · `group_key` 삭제 · `approver_role` 삭제 · `uses` 의 과제 바꾸기 · `on_infeasible` 끄기 · `interval` 끄기 |
+| `thresholds` · `features` 추가/제외(필수 아닌 것) · `candidates` · `candidate_params` · `constraints` 의 값 · `params` 기본값 · `monitor` · `notice` · `title` | `type` · `split`(시간순 → 비시간순) · `time_key` · `group_key` 삭제 · `approver_role` 바꾸기 · 지우기(승인 지점 — tenant-contract R1, D-121) · `target` 바꾸기(목표는 팩 정의만 — D-121) · 목표 열을 입력 변수에 넣기(목표 누수 — D-121) · `uses` 의 과제 바꾸기 · `on_infeasible` 끄기 · `interval` 끄기 |
 
 ## 4. 기계 판독 스키마 (`check_tasks.py` 가 이 블록을 읽는다)
 
@@ -76,7 +76,7 @@ enums:
   direction: [lower_is_better, higher_is_better, target_band]
   on_infeasible: [least_violation]
   search_strategy: [grid, random, auto]
-immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval]
+immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval, approver_role, target]   # approver_role · target — D-121
 not_removable_on_override: [approver_role]
 time_split_policies: [time_60_20_20, time_cv5]
 ```

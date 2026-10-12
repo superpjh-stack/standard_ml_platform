@@ -1,0 +1,59 @@
+INFO:     Started server process [22311]
+INFO:     Waiting for application startup.
+ERROR:    Traceback (most recent call last):
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/starlette/routing.py", line 654, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 247, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 247, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 247, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 247, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 247, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 247, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/src/mlcore/api/main.py", line 39, in lifespan
+    app.state.registry = load_merged(code)
+                         ^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/src/mlcore/data/jobs.py", line 51, in load_merged
+    return tenants.load_and_merge(tenant_id, tenants_base=base) if base is not None else tenants.load_and_merge(tenant_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/src/mlcore/registry/tenants.py", line 218, in load_and_merge
+    return merge(load_pack(t.config["pack"], packs_base), t, production_synthetic)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gerardo92/Desktop/AI Coding/Standard ML Platform/src/mlcore/registry/tenants.py", line 194, in merge
+    raise RegistryRejected("R2", f"{full}: 필수 변수 {f} 를 채울 원천이 없다")
+mlcore.registry.tenants.RegistryRejected: R2: ks.remaining_hours: 필수 변수 product_type 를 채울 원천이 없다
+
+ERROR:    Application startup failed. Exiting.

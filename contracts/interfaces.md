@@ -93,6 +93,9 @@ class Snapshot:
     tenant_id: str; task_id: str
     path: str                           # var/snapshots/<tenant>/<task>/<snapshot_id>.parquet
     sha256: str                         # 열 이름 정렬 · 행은 (ts, entity_id) 정렬 · 값 정규화 후 Parquet 바이트가 아니라 정규 CSV 바이트의 해시
+                                        # 해시 규칙 v2 (D-87): 같은 (ts, entity_id) 가 겹치면 나머지 열 전체(열 이름 정렬)의 정규화 값으로 이어 정렬
+                                        # (입력 행 순서 무관) · 머리줄 = `열이름:종류`(num · str · ts · null) · entity_id 없으면 ROW-n 을 내용 순서로.
+                                        # Parquet 표지 mlp_hash_rule=v2, 표지 없는 기존 파일은 v1 로 검증해 읽는다
     rows: int; ts_from: datetime | None; ts_to: datetime | None
     columns: tuple[str, ...]
     missing_rates: dict[str, float]

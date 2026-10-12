@@ -1,0 +1,2 @@
+G-M03  덮어쓰기 학습 목표 열을 변수로              PASS 거부 KeyError: "변수 'remaining_hours' 가 변수 사전에 없다"
+G-M03  덮어쓰기 학습 목표를 변수 shot_count 로    FAIL status=succeeded 시험 MAE=149.93452430555988 기준선=41673.42573302469 사유=검증 구간 mae 최소: extra_trees 234.357 (검증 기준선 train_mean 38870.5) — 후보 4개, 분할 time_60_20_20

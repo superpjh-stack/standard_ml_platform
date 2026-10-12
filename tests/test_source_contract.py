@@ -2,10 +2,9 @@
 
 - 어댑터 5(synthetic · csv · gateway · dataplatform · mes)가 DataSource 모양(kind · probe · read)을 따른다.
 - 어댑터 코드에 쓰기 SQL · 비 GET HTTP · 쓰기 모드 파일 0(gates/check_sources.py 와 같은 패턴).
-- **fixture 원천 DB 사본**: tests/fixtures/<회사>/ 에 DB 사본이 아직 없어서(개발3 요청 기록) 이 시험이
-  ml_test_db 안에 임시 스키마를 만들고 회사 fixture CSV(tests/fixtures/<회사>/snapshot.csv)를 회사 등록부
-  `feature_map` · `target_map` 의 원천 테이블 · 열 모양으로 옮겨 사본을 만든다(테이블 · 열 이름은 등록부에서 읽는다).
-  어댑터로 읽은 뒤 원천 행 수 diff = 0, 읽은 행 수 = 원천 행 수, 값 = fixture 값.
+- **fixture 원천 DB 사본**(D-68): 개발3 의 `tests/fixtures/<회사>/source_db.sql`(합성 · 익명, 생성기 출력 그대로)을
+  ml_test_db 안 임시 스키마에 적재해 원천으로 쓴다. 결합 키 `FX_KEY` · 시각 `FX_AT` 는 사본 정의다(원천 미확인).
+  어댑터로 읽은 뒤 원천 행 수 diff = 0, 읽은 행 수 = 원천 행 수, 값 = fixture snapshot 값.
 - DB 세션은 읽기 전용이다(쓰기 시도 → ReadOnlySqlTransaction). 허용목록 밖 테이블은 거부한다.
 - dataplatform 은 **가짜 전송**으로만 시험한다(실제 호출 0): GET 만 · 커서 페이지 · 5 req/s · 5,000/일.
 - 실패는 `source_disconnected` 봉투로 낸다(POST …/train → 503), 예외를 삼키지 않는다(probe 는 connected=False + 사유).
@@ -111,6 +110,14 @@ class SourceCopy:
         with self.admin.cursor() as cur:
             cur.executemany(ins, rows)
 
+    def load_sql(self, path: Path) -> None:
+        """원천 DB 사본 SQL(스키마 이름 없음)을 이 임시 스키마에 적재한다."""
+        self.admin.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(self.schema)))
+        try:
+            self.admin.execute(path.read_text(encoding="utf-8"))
+        finally:
+            self.admin.execute("RESET search_path")
+
     def counts(self) -> dict[str, int]:
         names = [r[0] for r in self.admin.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = %s ORDER BY 1", (self.schema,))]
@@ -137,24 +144,21 @@ def _fixture_csv(code: str) -> pd.DataFrame:
 
 
 def _mes_copy(copy: SourceCopy, code: str) -> tuple[dict, dict, pd.DataFrame, str]:
-    """회사 fixture CSV → 등록부 대응표 모양의 MES 사본. 결합 키 · 시각 열은 사본 정의(원천 미확인 — D-32 · D-33)."""
+    """개발3 원천 DB 사본 `tests/fixtures/<회사>/source_db.sql` → 임시 스키마(D-68). 결합 키 · 시각 열은 사본 정의
+    (원천 미확인 — D-32 · D-33). 기대값은 같은 행의 fixture CSV."""
     cfg = _tenant_cfg(code)
     cmap = {**(cfg.get("feature_map") or {}), **(cfg.get("target_map") or {})}
     allow = list(cfg["sources"]["actuals"]["tables"])
     csv = _fixture_csv(code)
     key, at = "FX_KEY", "FX_AT"
-    used = []
-    for t in allow:
-        mine = {src.split(".", 1)[1]: dst for src, dst in cmap.items() if src.startswith(t + ".") and dst in csv.columns}
-        if not mine:
-            continue
-        df = pd.DataFrame({key: csv["entity_id"].astype(str)})
-        if not used:
-            df[at] = pd.to_datetime(csv["ts"])
-        for col, dst in mine.items():
-            df[col] = csv[dst]
-        copy.table(t, df)
-        used.append(t)
+    copy.load_sql(ROOT / "tests" / "fixtures" / code / "source_db.sql")
+    loaded = set(copy.counts())
+    used = [t for t in allow if t in loaded]
+    assert used, f"{code}: source_db.sql 에 허용목록 테이블이 없다"
+    first = [t for t in used if at in [r[0] for r in copy.admin.execute(
+        "SELECT column_name FROM information_schema.columns WHERE table_schema=%s AND table_name=%s",
+        (copy.schema, t))]]
+    used = first[:1] + [t for t in used if t not in first[:1]]
     src_cfg = {"kind": "mes", "tables": allow, "dsn_env": "MLP_FX_RO_DSN", "schema": copy.schema,
                "join_on": key, "ts_column": at, "entity_column": key}
     return src_cfg, cmap, csv, used[0]

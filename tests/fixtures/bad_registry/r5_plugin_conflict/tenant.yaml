@@ -2,5 +2,5 @@ code: zz5
 name: 불량픽스처5
 pack: textile
 mode: demo
-tasks: {enable: [zz5.delta_e, zz5.defect_risk, zz5.print_setpoint]}
+tasks: {enable: [zz5.delta_e, zz5.defect_risk, zz5.print_ood, zz5.print_setpoint]}   # print_ood = warn_with 의존(R3) — R5 만 어긴다
 sources: {demo: {kind: synthetic, seed: 42}}
