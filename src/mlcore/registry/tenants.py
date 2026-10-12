@@ -7,6 +7,7 @@ R4(live + 합성 production)만은 spec §11.3-4 대로 "그 과제만 끈다" (
 from __future__ import annotations
 
 import copy
+import hashlib
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import Callable
 import yaml
 
 from ..settings import ROOT
-from .packs import PACKS_DIR, Pack, def_hash, load_pack, sha256_file, task_schema
+from .packs import PACKS_DIR, Pack, SynthSpec, def_hash, load_pack, load_synth, sha256_file, synth_spec, task_schema
 
 TENANTS_DIR = ROOT / "tenants"
 CODE_RE = re.compile(r"^[a-z][a-z0-9]{1,7}$")
@@ -187,3 +188,51 @@ def load_and_merge(code: str, *, tenants_base: Path = TENANTS_DIR, packs_base: P
                    production_synthetic: Callable[[str], bool | None] | None = None) -> Merged:
     t = load_tenant(code, tenants_base)
     return merge(load_pack(t.config["pack"], packs_base), t, production_synthetic)
+
+
+# ── 합성 소스 해석 (synthetic 어댑터가 쓴다 — progress-dev3.md §1) ──────────────────────────
+
+@dataclass(frozen=True)
+class SynthCall:
+    """회사 · 과제 하나의 합성 생성 호출. 시드는 회사 sources.<role>.seed > pack.yaml synth.seed."""
+    tenant_id: str
+    task_id: str                          # <tenant>.<task>
+    spec: SynthSpec
+    seed: int
+    rows: int
+    categories: dict[str, list[str]]      # 회사 등록부 categories (values_from: tenant 범주)
+    target: str | None                    # 과제 target.name — 생성 프레임의 목표 열 이름(anomaly 는 None)
+    source_ref: dict                      # 스냅숏 source_ref 에 그대로 넣을 값(경로는 저장소 상대)
+    pack: Pack = field(repr=False, compare=False, hash=False, default=None)  # type: ignore[assignment]
+
+    def generate(self, rows: int | None = None, seed: int | None = None):
+        """pandas.DataFrame — entity_id · ts · 변수 · 목표 열(들). 표준 프레임 열 추가는 어댑터 몫."""
+        fn = load_synth(self.pack, self.spec.task)
+        return fn(rows if rows is not None else self.rows, seed if seed is not None else self.seed,
+                  categories=self.categories or None)
+
+
+def synth_call(merged: Merged, task_id: str, role: str = "demo") -> SynthCall:
+    """켜진 과제 task_id 의 합성 생성 호출을 만든다. role 소스가 synthetic 이 아니면 ValueError."""
+    if task_id not in merged.tasks:
+        raise KeyError(f"{task_id}: 켜진 과제가 아니다")
+    src = (merged.tenant.config.get("sources") or {}).get(role) or {}
+    if src.get("kind") != "synthetic":
+        raise ValueError(f"{merged.tenant.code}: sources.{role} 가 synthetic 이 아니다")
+    task = merged.tasks[task_id]
+    short = task.pack_id.split(".", 1)[1]
+    spec = synth_spec(merged.pack, short)
+    seed = int(src["seed"]) if src.get("seed") is not None else spec.seed
+    rows = int(src["rows"]) if src.get("rows") is not None else spec.rows
+    cats = {k: list(v) for k, v in (merged.tenant.config.get("categories") or {}).items()}
+    target = ((task.raw.get("target") or {}).get("name"))
+    try:
+        rel_path = str(spec.path.resolve().relative_to(ROOT))
+    except ValueError:
+        rel_path = str(spec.path)
+    digest = hashlib.sha256()
+    for f in sorted((spec.path.parent).glob("*.py")):          # 진입점 + 공용 모듈 전부
+        digest.update(f.name.encode() + b"\0" + f.read_bytes())
+    ref = {"kind": "synthetic", "role": role, "module": rel_path, "seed": seed, "rows": rows,
+           "synth_sha256": digest.hexdigest()}
+    return SynthCall(merged.tenant.code, task_id, spec, seed, rows, cats, target, ref, merged.pack)

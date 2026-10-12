@@ -12,7 +12,7 @@ categories:                     # values_from: tenant 범주 (원천 config.py:4
   product_type: [FRONT SHELL, CENTER PLATE, DIAPHRAGM PLATE]
 sources:
   demo:    {kind: synthetic, seed: 42}
-  eval:    {kind: csv, path: tests/fixtures/ks/snapshot.csv}          # TODO(개발3): fixture 생성
+  eval:    {kind: csv, path: tests/fixtures/ks/snapshot.csv}          # migration/make_fixtures.py 생성 (demo 와 같은 행)
   train:   {kind: dataplatform, view: null, url_env: MLP_KS_DP_URL, key_env: MLP_KS_DP_KEY}   # 뷰 이름 미확인
   gateway: {kind: gateway, table: EIF_PLC_RAW, dsn_env: MLP_KS_GW_RO_DSN}
   actuals: {kind: mes, tables: [PRS_PROCESS_DATA, PRS_MOLD_SHOTS, BAS_EQUIPMENTS], dsn_env: MLP_KS_MES_RO_DSN}   # 목표(정비 · 고장 이력) 테이블 미확인 — D-33

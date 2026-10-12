@@ -7,10 +7,14 @@ Phase 0 아키텍트 초안 — 이후 소유는 개발3. 코어는 팩 내용(�
 from __future__ import annotations
 
 import hashlib
+import importlib
+import importlib.util
 import json
 import re
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, Callable
 
 import yaml
 
@@ -189,6 +193,7 @@ def load_pack(code: str, base: Path = PACKS_DIR) -> Pack:
     for n, t in tasks.items():
         problems += validate_task(n, t, code, raw_features, tasks)
     formulas = {p.stem: sha256_file(p) for p in sorted((path / "formulas").glob("*.py")) if p.stem != "__init__"}
+    problems += _validate_synth(path, meta)
     if problems:
         raise PackInvalid(code, problems)
     return Pack(code, path, meta, raw_features, std_name, tasks, formulas)
@@ -207,3 +212,63 @@ def terms(pack: Pack) -> set[str]:
             words.add(tgt["name"])
         words |= set((t.get("formulas") or {}).keys()) | set((t.get("decision_vars") or {}).keys())
     return words
+
+
+# ── 합성 생성기 (contracts/pack-contract.md §4 · spec §4.2) ─────────────────────────────────
+# 해석 순서: 과제 진입점 synth/<task>.py 가 있으면 그것, 없으면 pack.yaml synth.module (팩 공용 모듈).
+# 생성 함수 모양: generate(rows: int, seed: int, *, categories: dict[str, list[str]] | None = None) -> DataFrame
+# 반환 열: entity_id · ts(KST tz) · features.yaml 변수 · 목표 열(과제 target.name 이름 그대로, 여러 개일 수 있다).
+
+@dataclass(frozen=True)
+class SynthSpec:
+    pack: str
+    task: str | None            # 과제 짧은 이름(None = 팩 공용)
+    path: Path                  # 실제로 읽는 .py
+    seed: int                   # pack.yaml synth.seed
+    rows: int                   # pack.yaml synth.rows
+
+
+def _validate_synth(path: Path, meta: dict) -> list[str]:
+    s = meta.get("synth") or {}
+    mod, problems = s.get("module"), []
+    if not mod:
+        return ["pack.yaml synth.module 없음"]
+    if not (path / mod).is_file():
+        problems.append(f"synth.module {mod} 파일 없음")
+    if not isinstance(s.get("seed"), int) or not isinstance(s.get("rows"), int) or s["rows"] <= 0:
+        problems.append("pack.yaml synth.seed · rows 는 정수")
+    return problems
+
+
+def synth_spec(pack: Pack, task: str | None = None) -> SynthSpec:
+    s = pack.meta.get("synth") or {}
+    if task is not None and task not in pack.tasks:
+        raise KeyError(f"{pack.code}: 과제 {task!r} 없음")
+    own = pack.path / "synth" / f"{task}.py" if task else None
+    path = own if own is not None and own.is_file() else pack.path / s["module"]
+    return SynthSpec(pack.code, task, path, int(s["seed"]), int(s["rows"]))
+
+
+def _synth_package(pack: Pack) -> str:
+    """팩 synth/ 폴더를 고유 이름의 패키지로 올린다(과제 진입점이 공용 모듈을 상대 import 한다)."""
+    synth_dir = pack.path / "synth"
+    name = "mlcore_pack_synth_" + hashlib.sha256(str(synth_dir.resolve()).encode()).hexdigest()[:12]
+    if name not in sys.modules:
+        init = synth_dir / "__init__.py"
+        spec = importlib.util.spec_from_file_location(name, init, submodule_search_locations=[str(synth_dir)])
+        if spec is None or spec.loader is None:
+            raise ImportError(f"{pack.code}: synth/__init__.py 를 읽을 수 없다")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+    return name
+
+
+def load_synth(pack: Pack, task: str | None = None) -> Callable[..., Any]:
+    """합성 생성 함수 `generate` 를 돌려준다. 원천 코드를 부르지 않는다 — 팩 안의 이관본만."""
+    spec = synth_spec(pack, task)
+    module = importlib.import_module(f"{_synth_package(pack)}.{spec.path.stem}")
+    fn = getattr(module, "generate", None)
+    if not callable(fn):
+        raise ImportError(f"{spec.path}: generate() 없음")
+    return fn

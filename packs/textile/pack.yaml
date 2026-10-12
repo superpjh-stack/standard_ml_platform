@@ -3,7 +3,7 @@ code: textile
 name: 섬유 · 날염
 version: 0.1.0
 core_min: 0.1.0
-synth: {module: synth/print_lots.py, seed: 42, rows: 720}   # TODO(개발3, A0): 원천 demo_data() 이관 — source_inventory §2.2
+synth: {module: synth/print_lots.py, seed: 42, rows: 720}   # 원천 demo_data() 이관(A0) — 공용 모듈, 과제 진입점 synth/<task>.py. 행 일치 시험 tests/test_synth.py
 notice: "예측값은 참고용이며 인쇄 조건 변경과 합격 · 불합격 판정은 시험 인쇄와 품질 담당자 승인 후 결정합니다."
 status_labels: {}
 monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}

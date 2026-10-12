@@ -3,7 +3,7 @@ code: _template
 name: 빈 팩
 version: 0.1.0
 core_min: 0.1.0
-synth: {module: synth/template_rows.py, seed: 42, rows: 600}   # TODO(개발3): 단순 선형 합성 생성기
+synth: {module: synth/template_rows.py, seed: 42, rows: 600}   # 단순 선형 자리표시 생성기 — 새 팩은 원천 이관으로 바꾼다
 notice: "예측값은 참고용이며 공정 변경은 담당자 확인 후 진행합니다."
 status_labels: {}
 monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}

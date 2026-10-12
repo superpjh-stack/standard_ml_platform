@@ -17,12 +17,14 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from .. import auth
 from ..db.conn import DbUnavailable
 from ..registry import tenants
+from ..serve.errors import ServeError
 from ..settings import ROOT, get_settings
 from .errors import ApiError
 from .middleware import AuthAuditMiddleware
-from .routers import v1
+from .routers import models, predict, train, v1
 
 log = logging.getLogger("mlcore.api")
 VERSION = "0.1.0"
@@ -55,6 +57,17 @@ async def _api_error(request: Request, exc: ApiError):
     return JSONResponse(exc.body(), status_code=exc.status)
 
 
+@app.exception_handler(ServeError)
+async def _serve_error(request: Request, exc: ServeError):
+    # 추론 · 등록부 · 승인 오류 — model_not_ready · model_artifact_mismatch · invalid_input · already_decided …
+    return JSONResponse(exc.body(), status_code=exc.status)
+
+
+@app.exception_handler(auth.AuthRequired)
+async def _auth_required(request: Request, exc):
+    return _err(401, "auth_required", "API 키가 필요합니다")
+
+
 @app.exception_handler(RequestValidationError)
 async def _validation(request: Request, exc: RequestValidationError):
     # 입력값을 되풀이하지 않는다 — 위치와 규칙 이름만 (goal §2.3)
@@ -75,6 +88,9 @@ async def _db_down(request: Request, exc):
 
 
 app.include_router(v1.router)
+app.include_router(predict.router)
+app.include_router(models.router)
+app.include_router(train.router)
 
 # 콘솔 — web/dist 가 있으면 /app/* 로 제공 (contracts/screen-map.md)
 DIST: Path = ROOT / "web" / "dist"
