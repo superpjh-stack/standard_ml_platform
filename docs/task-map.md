@@ -59,7 +59,7 @@
 | KRS-E4 | `POST /api/ml/optimize` (목표 강도 · 최대 비용 · 공급사) | `krs.recipe_optimize` | `/api/v1/tenants/{t}/tasks/{task}/optimize` (B04) | 화면 3 | `/api/ml/optimize` | 추천 1 → 상위 5 · least_violation(K2) · 시드 고정 |
 | KRS-E5 | `GET /api/quality/overview` (\|잔차\| ≥ 4 주의 LOT) | `krs.residual_review` | `/api/v1/tenants/{t}/tasks/{task}/review` (B09) | 화면 8 | `/api/quality/overview` | 시험 · 운영 잔차만(원천 표본 내 K4, G2-R01) |
 | KRS-E6 | `POST /api/quality/predict` (조성 합 100 ± 0.1) | `krs.joint_strength` | `/api/v1/tenants/{t}/tasks/{task}/predict` (B03) | 화면 2 | `/api/quality/predict` | 조성 합 = 과제 `input_rules` 422 · 35 MPa 주의 = `thresholds.review_below` |
-| KRS-E7 | `GET /api/data/records` (검색 · 공급사 · 상태) | `krs.joint_strength` | `/api/v1/tenants/{t}/tasks/{task}/records` (B12) | 화면 7 | `/api/data/records` | 상태(정상 · 결측 · 이상) 필터는 호환 쪽 |
+| KRS-E7 | `GET /api/data/records` (검색 · 공급사 · 상태) | `krs.joint_strength` | `/api/v1/tenants/{t}/tasks/{task}/records` (B12) | 화면 7 | `/api/data/records` | 상태(정상 · 결측 · 이상) 필터 · summary · 옛 공급사 표기 · 기본 20 은 호환 훅(parse_records · records_frame, D2-A2-05) |
 | KRS-E8 | `GET /{path}` SPA 콘솔 | 회사 전체 | `/app/*` | 화면 1 ~ 화면 10 | — | 회사 화면 코드 0 |
 | KRS-M1 | 접합강도 회귀 (후보 5 · IQR · RobustScaler) | `krs.joint_strength` (regression) | `/api/v1/tenants/{t}/tasks/{task}/train` (B08) · `GET /api/v1/runs/{run_id}` | 화면 4 | — | IQR 학습 구간만(D2-03) · 표준 전처리 · random_60_20_20 (이관 보고서 K1 · K6) |
 | KRS-O1 | 배합 무작위 5,000 (sn = 100 − 합) | `krs.recipe_optimize` (optimize) | `/api/v1/tenants/{t}/tasks/{task}/optimize` (B04) | 화면 3 | `/api/ml/optimize` | `derived` · 수락 표집 · `max_cost` optional (D2-45) |
@@ -96,7 +96,7 @@
 |---|---|---|---|---|---|---|
 | OT-E1 | `GET /api/health` (`api/main.py:47-49`) | 회사 전체 | `GET /api/v1/health` (B01) | — | `/api/health` | 원천 버전 상수(C1) — 표준은 등록부 |
 | OT-E2 | `GET /api/ml/overview` (회귀 4 · 분류 3 · 혼동행렬 · 추세) | `ot.machining_minutes` · `ot.cad_objects` | `/api/v1/tenants/{t}/tasks/{task}/overview` (B06) · `/api/v1/tenants/{t}/tasks/{task}/models` (B07) · B08 runs | 화면 1 · 화면 4 | `/api/ml/overview` | 혼동행렬 = run 보고서 `extract_metrics` |
-| OT-E3 | `GET /api/data/demo` (manifest · 후보 20 · 견적 20) | `ot.quote` | `/api/v1/tenants/{t}/tasks/{task}/quotes` (B11) · `/api/v1/tenants/{t}/tasks/{task}/documents` (B10) | 화면 9 | `/api/data/demo` | 원천 샘플 20행은 짝수 반올림(O3) · 실도면 출처 이름 포함 → 옮기지 않는다(대조 fixture 아님, D2-07a). 표준은 등록된 견적 · 문서 목록 |
+| OT-E3 | `GET /api/data/demo` (manifest · 후보 20 · 견적 20) | `ot.quote` | `/api/v1/tenants/{t}/tasks/{task}/quotes` (B11) · `/api/v1/tenants/{t}/tasks/{task}/documents` (B10) | 화면 9 | `/api/data/demo` (pack_file — `tenants/ot/samples/demo.json`) | 원천 샘플 20행의 **가린 사본**(원본 도면 이름 · 제품명 · 모델 코드 '비공개', D2-65 · D2-70) — 짝수 반올림(O3)이라 대조 fixture 아님(D2-07a). 표준 자리는 등록된 견적 · 문서 목록 |
 | OT-E4 | `GET /api/cad/sample.dxf` | `ot.cad_objects` | 팩 파일 `packs/rollform-quote/samples/sample.dxf` | 화면 9 | `/api/cad/sample.dxf` (pack_file) | `synth/sample_dxf.py` 로 생성(원천 sample_bytes 같은 도형) |
 | OT-E5 | `POST /api/cad/demo` | `ot.cad_objects` | `POST /api/v1/tenants/{t}/tasks/{task}/documents` (B10) | 화면 9 | `/api/cad/demo` (document_demo) | 샘플 도면을 표준 업로드로 |
 | OT-E6 | `POST /api/cad/analyze` (415 · 413 · 422) | `ot.cad_objects` (extract) | `POST /api/v1/tenants/{t}/tasks/{task}/documents` (B10) | 화면 9 | `/api/cad/analyze` | 표준 422 invalid_document · 413 document_too_large(요소 2,000 · 꼭짓점 · 점) · 415 는 호환만 |
@@ -121,8 +121,8 @@
 |---|---|---|---|---|---|---|
 | KD-E1 | `GET /api/health` | 회사 전체 | `GET /api/v1/health` (B01) | — | `/api/health` | |
 | KD-E2 | `GET /api/ml/overview` (지표 · recognition measured_accuracy null) | `kd.labor_hours` · `kd.drawing_regions` | B06 · B07 | 화면 1 · 화면 4 | `/api/ml/overview` | labels none — 지표 없음(D-160) |
-| KD-E3 | `GET /api/cad/sample.dxf` | `kd.drawing_regions` | 팩 `synth/sample_dxf.py`(시험) | 화면 9 | `/api/cad/sample.dxf` | 팩 `samples/` 파일은 재질이 회사 값이라 아직 없음 — 회사 재질로 생성하는 경로는 호환 쪽(개발2 요청 확인) |
-| KD-E4 | `POST /api/cad/demo` | `kd.drawing_regions` | `POST /api/v1/tenants/{t}/tasks/{task}/documents` (B10) | 화면 9 | `/api/cad/demo` | |
+| KD-E3 | `GET /api/cad/sample.dxf` | `kd.drawing_regions` | 회사 파일 `tenants/kd/samples/KD-demo-reactor.dxf`(팩 생성기 + 회사 재질 · 도면 번호 — `migration/make_tenant_samples.py`) | 화면 9 | `/api/cad/sample.dxf` (pack_file) | 회사 값이 든 샘플은 회사 폴더(D2-A2-04 · D2-70) |
+| KD-E4 | `POST /api/cad/demo` | `kd.drawing_regions` | `POST /api/v1/tenants/{t}/tasks/{task}/documents` (B10) | 화면 9 | `/api/cad/demo` (document_demo) | 회사 샘플을 표준 업로드로 — 영역 3 · BOM 4 · 650 kg (원천 tests/test_api.py:30-35) |
 | KD-E5 | `POST /api/cad/analyze` | `kd.drawing_regions` (extract) | `POST /api/v1/tenants/{t}/tasks/{task}/documents` (B10) | 화면 9 | `/api/cad/analyze` | 요소 20,000 · 꼭짓점 4,000 = 413 vertices (원천 422) |
 | KD-E6 | `GET /api/cad/{drawing_id}` | `kd.drawing_regions` | `GET /api/v1/tenants/{t}/tasks/{task}/documents/{doc_id}` (B10) | 화면 9 | `/api/cad/{drawing_id}` | |
 | KD-E7 | `POST /api/quotes` (BOM 1~100 · 검토) | `kd.quote` (quote) | `POST /api/v1/tenants/{t}/tasks/{task}/quotes` (B11) | 화면 9 | `/api/quotes` (draft) | 확정 · 잠금 · overrides(원천 D2 없음) |

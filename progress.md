@@ -1,5 +1,31 @@
 # progress.md — 검증된 현황의 유일한 진실
 
+## 2차 — 웨이브 P 재진입 (아키텍트, 2026-10-13, 기준 커밋 780e960 · 태그 core-freeze-2 = 5a51d2f) — 다음: 오케스트레이터 `core-freeze-2` 재태그
+
+### 지금 해야 할 것
+
+1. **오케스트레이터:** 이 커밋에 `core-freeze-2` 를 재태그(로컬, 메시지에 `retag` — 사유 decisions D2-70). 그 뒤 G2-C01 이 PASS 로 돌아온다(지금 FAIL = 옛 태그 대비 코어 diff, 정상).
+2. 재태그 뒤 `make gate2` 1회로 PASS 39 · BLOCKED 2 확인 → 웨이브 B2(QA 3) 로.
+3. 이슈 #24(코어 결함 4건) · #23(D2-02 문구 · 기준선 확인) 닫기 — 이 커밋에서 해결.
+4. 사람 확인 대기(그대로): D-27 · D-30 · D-32 · D-33 · D-04 · D-82 · D-130 · D2-07a · D2-16 · D2-17 · D2-60 · 옛 시험 DB `ml_grants_check_db` 삭제(D2-35).
+
+### 실측
+
+| 항목 | 실측 | 검증 방법 |
+|---|---|---|
+| D2-A2-01 견적 CSV | `to_csv` 과제 `csv` = 품목 열 순서 · 요약(합계 · 구성 금액) 늘 전부 — strict xfail 걷음 → PASS | `tests/test_vertical_slice_2.py::test_kd_quote_csv_has_total` · `tests/test_reentry_p.py` |
+| D2-A2-03 견적 입력 | 과제 `input_limits` — kd 수량 0 · 1.5 · 1001 · 시간 단가 0 · 1,000,001 · 외주비 −1 → 422 · ot 수량 0 · 1.5 · 10001 · −3 → 422 · 경계값 201 | `tests/test_kd_quote_flow.py` · `tests/test_ot_quote_flow.py` · `tests/test_reentry_p.py`(로더 모양 11) |
+| D2-A2-02 호환 최적화 | `Compat.optimize_fixed` → pc · krs `/api/ml/optimize`(옛 키 · 기본값 · 422 · 예측 행 0 증가 · 표준 best 와 같은 값) | `tests/test_compat.py::test_{pc,krs}_optimize_fixed_only_old_shape` |
+| D2-A2-05 호환 기록 | `parse_records` · `records_frame` → krs supplier · q · state · summary · 기본 20 / pc 기본 25 · 검색 30자 | `tests/test_compat.py` krs · pc records |
+| D2-A2-04 예시 파일 | `tenants/<code>/samples/` 먼저 → kd sample.dxf · demo(영역 3 · BOM 4 · 650 kg) · ot `/api/data/demo`(20 · 20, 원본 이름 '비공개') · `pending_routes` 4사 전부 `{}` | `tests/test_compat_phase2.py` · `tests/test_compat.py` · `migration/make_tenant_samples.py --check` |
+| D2-63 허브 | extract `model.features` · `model.target` · quote `inputs`(변수만) 내보냄 · 모델 extract state | `tests/test_export_hub.py`(13) |
+| 정리 | #23 kimchi `time_cv5` 문구 · solder · rollform-quote 기준선 재현 일치(D2-71) · G2-S01 에 ot e2e · bench 프로젝트 고유 접미(D2-72) | `migration/reproduce.py --phase2` · `migration/reproduce_quote.py` |
+| pytest | **980 passed · 3 skipped · 0 failed · xfail 0** | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| e2e | **23 passed** | `uv run pytest -q tests/e2e` |
+| make gate | **PASS 23 · BLOCKED 1**(G-M08 doctor-live D-13) | `make gate` |
+| make gate2 | 41행 **PASS 38 · FAIL 1 · BLOCKED 2** — FAIL = G2-C01(옛 태그 대비 동결 경로 177줄 — 재태그 대기, 정상) · BLOCKED = G-M08 · G2-L01(D-13). C01 밖 FAIL 0 | `make gate2` |
+
+
 ## 2차 — 웨이브 P 마감 · 동결 준비 (아키텍트, 2026-10-13, 기준 커밋 21a39bc) — 다음: 오케스트레이터 `git tag core-freeze-2`
 
 ### 지금 해야 할 것

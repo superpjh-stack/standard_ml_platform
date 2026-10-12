@@ -155,6 +155,8 @@ class QuoteContext:
         names = [n for n in self.input_names if n in pack_feats]
         self.defs = tuple(feature_defs(pack_feats, names, cats))
         self.extra = [n for n in self.input_names if n not in pack_feats]      # 단가 · 수량 입력(features.yaml 밖)
+        # features.yaml 밖 입력의 범위(task-contract §6.3 input_limits — D2-A2-03): {이름: {min, max, integer}}. 없으면 0 이상 숫자
+        self.limits = {str(n): dict(v) for n, v in (raw.get("input_limits") or {}).items()}
         by_pack = {s.task.pack_id: s for s in (catalog.get(self.tenant_id, t) for t in catalog.ids())}
         self.uses = []
         for pack_id in raw.get("uses") or []:
@@ -186,9 +188,21 @@ class QuoteContext:
             v = inputs.get(n)
             if v is None:
                 raise MissingRequired("필수 입력이 없습니다", {"field": n, "rule": "required"})
-            if not _is_num(v) or v < 0:
-                raise InvalidInput("0 이상 숫자여야 합니다", {"field": n, "rule": "number"})
+            if not _is_num(v):
+                raise InvalidInput("숫자여야 합니다", {"field": n, "rule": "number"})
+            self._check_limit(n, Decimal(v))
         return inputs
+
+    def _check_limit(self, name: str, v: Decimal) -> None:
+        """과제 input_limits — 범위 · 정수. 입력값은 되풀이하지 않는다(범위만 알린다)."""
+        lim = self.limits.get(name) or {}
+        lo = Decimal(str(lim.get("min", 0)))
+        hi = Decimal(str(lim["max"])) if lim.get("max") is not None else None
+        if lim.get("integer") and v != v.to_integral_value():
+            raise InvalidInput("정수여야 합니다", {"field": name, "rule": "integer"})
+        if v < lo or (hi is not None and v > hi):
+            text = f"{lo} 이상" + (f" {hi} 이하" if hi is not None else "")
+            raise InvalidInput(f"허용 범위({text}) 밖입니다", {"field": name, "rule": "range"})
 
     def _recognized_values(self, doc_id: str | None) -> dict:
         if not doc_id:
@@ -536,7 +550,9 @@ def list_quotes(tenant_id: str, task_id: str, notice: str, *, search: str | None
 
 
 def to_csv(q: dict, columns: list[str] | None = None) -> bytes:
-    """UTF-8 BOM CSV — 요약(항목 · 값) + 품목 행. 금액은 응답 문자열 그대로. 모든 칸에 수식 주입 방지."""
+    """UTF-8 BOM CSV — 요약(항목 · 값, 늘 전부) + 품목 행. 금액은 응답 문자열 그대로. 모든 칸에 수식 주입 방지.
+    `columns` = 과제 `csv`(task-contract §6.3 "내보내기 열 순서") — **품목 열 순서**다. 없는 열은 빈 칸, 품목에만 있는 열은
+    뒤에 붙지 않는다(정한 순서 그대로). 요약 행을 거르지 않는다(D2-A2-01 — 합계 · 구성 금액 행이 빠지던 결함)."""
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\r\n")
     summary = [("quote_id", q["quote_id"]), ("task", q["task"]), ("status", q["status"]), ("revision", q["revision"]),
@@ -547,14 +563,11 @@ def to_csv(q: dict, columns: list[str] | None = None) -> bytes:
                *[(f"predictions.{p['task']}", p["value"]) for p in q["predictions"]],
                ("reviewed", q["reviewed"]), ("review_note", q["review_note"]), ("confirmed_by", q["confirmed_by"]),
                ("confirmed_at", q["confirmed_at"]), ("overrides", len(q["overrides"])), ("notice", q["notice"])]
-    if columns:
-        by = dict(summary)
-        summary = [(k, by.get(k)) for k in columns]
     w.writerow(["항목", "값"])
     for k, v in summary:
         w.writerow([safe_cell(k), safe_cell(dumps(v) if isinstance(v, bool) else v)])
     if q["lines"]:
-        keys = list(dict.fromkeys(k for ln in q["lines"] for k in ln))
+        keys = list(columns) if columns else list(dict.fromkeys(k for ln in q["lines"] for k in ln))
         w.writerow([])
         w.writerow([safe_cell(k) for k in keys])
         for ln in q["lines"]:

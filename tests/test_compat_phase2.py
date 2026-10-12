@@ -332,3 +332,26 @@ def test_unchecked_bad_config_still_visible_503(world):
     assert tc.get("/api/health").status_code == 200
     r = tc.get("/api/x", headers=h.hdr(k["admin"]))
     assert r.status_code == 503 and r.json()["code"] == "compat_config_error"
+
+
+def test_tenant_samples_come_before_pack_samples(world):
+    """D2-A2-04 (웨이브 P 재진입 D2-70): 예시 파일은 회사 폴더 `tenants/<code>/samples/` 가 먼저, 없으면 팩 `samples/`.
+    회사 폴더 밖으로 나가는 심볼릭 링크는 404 (지어내지 않는다 — 없는 파일은 없다)."""
+    m, k, ref = world
+    tc = _tc(m)
+    d = m.tenant.path.parent / m.tenant.code / "samples"
+    d.mkdir(exist_ok=True)
+    try:
+        (d / "demo.json").write_text('{"manifest": {"rows": 20}, "from": "tenant"}', encoding="utf-8")
+        j = tc.get("/api/data/demo", headers=h.hdr(k["viewer"]))
+        assert j.status_code == 200 and j.json() == {"manifest": {"rows": 20}, "from": "tenant"}
+        f = tc.get("/api/cad/sample.dxf", headers=h.hdr(k["viewer"]))           # 회사에 없으면 팩 것
+        assert f.status_code == 200 and f.content == p2.sample_dxf()
+        outside = d.parent.parent.parent / "secret.json"
+        (d / "leak.json").symlink_to(outside if outside.exists() else d.parent.parent / "nope.json")
+        assert tc.get("/api/files/leak.json", headers=h.hdr(k["viewer"])).status_code == 404
+    finally:
+        for p in d.iterdir():
+            p.unlink()
+        d.rmdir()
+    assert tc.get("/api/data/demo", headers=h.hdr(k["viewer"])).json() == {"manifest": {"rows": 2}, "cad": [1, 2]}

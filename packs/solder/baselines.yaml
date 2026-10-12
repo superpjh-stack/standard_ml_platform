@@ -1,5 +1,5 @@
 # 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (pack-contract §3). 값 = 표준 학습기 시험 구간 실측(합성 seed 20260917 · 720 행 ·
-# random_60_20_20 · IQR 학습 구간만 · 시험 1회, 2026-10-13 웨이브 A2 개발1 실측 — 아키텍트 확인 요청). measured_by = 재현 명령.
+# random_60_20_20 · IQR 학습 구간만 · 시험 1회, 2026-10-13 웨이브 A2 개발1 실측 — 재진입 D2-70 아키텍트 확인: reproduce.py --phase2 재실행 MAE 2.0935 · 774/5000 · 대기열 16 일치). measured_by = 재현 명령.
 # source_reported = 원천 문서값(없음 — D2-12). 원천 절차 재현값은 migration/reproduce.py --phase2 출력 (원천 시험 구간 선정 — 대조값일 뿐 기준 아님).
 # optimize 의 constraint_satisfaction_rate = 원천 시험 요청(목표 47 MPa · 공급사 첫 값 · 비용 상한 없음)에서 충족 점 / 수락 점.
 joint_strength:  {metric: mae,        value: 2.0935, baseline: 6.9701, measured_by: "migration/reproduce.py --phase2 (champion gbr · 학습 구간 이상치 5행 제거)", source_reported: null}

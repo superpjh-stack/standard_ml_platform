@@ -11,6 +11,8 @@
 회사 고유 모양은 `tenants/<code>/compat.py`(있으면)의 함수:
   `parse_<동작>(old_body, info) -> 표준 본문` · `shape_<동작>(표준 결과, info) -> 옛 본문` (route.shape 가 있으면 `shape_<shape>`)
   · `shape_error(status, body, info) -> (status, body)` — 없으면 표준 결과 그대로(+ compat.input_rename 은 요청 입력에 적용).
+  재진입 보강(D2-70): `parse_optimize` 가 `{fixed, params}` 를 돌려주면 현재값 없는 표준 최적화(D2-A2-02) ·
+  `parse_records(query, info)` · `records_frame(frame, n_all, info)` (D2-A2-05) · 예시 파일은 `tenants/<code>/samples/` 먼저(D2-A2-04).
   info = {tenant, action, method, path, args, query, task, params}. 플러그인은 `CompatError` 를 올려 옛 오류를 낼 수 있다.
 플러그인 파일은 회사 등록부 폴더(`tenants/`) 안의 것만, 내용 해시로 한 번만 읽는다. 읽기 · 실행 실패는 숨기지 않고
 503 `compat_plugin_error`(사유 포함)로 돌려준다 — 표준 결과로 조용히 대신하지 않는다.
@@ -114,6 +116,20 @@ class Phase2:
         found, out = self._call(f"parse_{route.shape or route.action}", body, info)
         return out if found else body
 
+    def _frame_hook(self, info: dict):
+        """플러그인 `records_frame(frame, n_all, info) -> frame`(있으면) — 옛 행 상태 열 · 옛 필터(D2-A2-05)."""
+        mod = load_plugin(self.merged)
+        if mod is None or not callable(getattr(mod, "records_frame", None)):
+            return None
+
+        def hook(df, n_all):
+            import pandas as pd
+            _, out = self._call("records_frame", df, n_all, info)
+            if not isinstance(out, pd.DataFrame):
+                raise PluginError("호환 플러그인 records_frame 은 프레임을 돌려줘야 합니다")
+            return out
+        return hook
+
     def shape(self, route: Route, result: Any, info: dict) -> Any:
         found, out = self._call(f"shape_{route.shape or route.action}", result, info)
         return out if found else result
@@ -161,7 +177,10 @@ class Phase2:
             elif act == "optimize":
                 res = cmp.optimize(self.parse(route, parse_body(body), info), caller=caller)
             elif act == "records":
-                res = cmp.records(dict(query))
+                q = self.parse(route, dict(query), info)            # parse_records(query, info) — 옛 쿼리 → 표준 쿼리
+                if not isinstance(q, dict):
+                    raise PluginError("호환 플러그인 parse_records 는 쿼리 dict 를 돌려줘야 합니다")
+                res = cmp.records(q, frame_hook=self._frame_hook(info))
             else:
                 res = cmp.record(next(iter(args.values()), ""))
             return self.shape(route, res, info)
@@ -258,13 +277,17 @@ class Phase2:
         return self._upload(spec, f["filename"], f["data"], unit_override or None, caller)
 
     def _sample_file(self, name: Any) -> Path:
+        """예시 파일 — 회사 폴더 `tenants/<code>/samples/` 가 먼저(회사 값이 든 샘플 — 회사 재질 · 회사 참조 데이터, D2-A2-04),
+        없으면 팩 `samples/`. 두 폴더 밖(경로 탈출 · 심볼릭 링크)은 404."""
         if not isinstance(name, str) or not SAFE_FILE.match(name) or ".." in name:
             raise self.CompatError(404, {"detail": "파일을 찾을 수 없습니다"})
-        base = (self.merged.pack.path / "samples").resolve()
-        p = (base / name).resolve()
-        if base not in p.parents or not p.is_file():
-            raise self.CompatError(404, {"detail": "파일을 찾을 수 없습니다"})
-        return p
+        tbase = self.merged.tenant.path.parent
+        for base in (tbase / self.merged.tenant.code / "samples", self.merged.pack.path / "samples"):
+            base = base.resolve()
+            p = (base / name).resolve()
+            if base in p.parents and p.is_file():
+                return p
+        raise self.CompatError(404, {"detail": "파일을 찾을 수 없습니다"})
 
     def _document_demo(self, spec, route, args, query, body, ctype, caller, info):
         p = self._sample_file(route.params.get("file"))

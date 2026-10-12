@@ -103,3 +103,26 @@ def test_task_detail_exposes_quote_and_extract_keys(world):
     assert {f["name"] for f in q["features"]} <= set(q["inputs"])
     d = tc.get(f"/api/v1/tenants/{code}/tasks/{code}.drawing_regions", headers=h.hdr(k["viewer"])).json()
     assert d["document"]["max_entities"] == 20000 and d["labels"] == "none" and len(d["extractors"]) == 2
+
+
+@pytest.mark.parametrize("field,value", [("quantity", 0), ("quantity", 1.5), ("quantity", 1001), ("labor_rate", 0),
+                                         ("labor_rate", 1000001), ("outsource_cost", -1)])
+def test_quote_extra_inputs_follow_task_input_limits(world, field, value):
+    """D2-A2-03 (웨이브 P 재진입 D2-70): features.yaml 밖 견적 입력도 과제 `input_limits` 범위 — 원천 QuoteInput
+    (`KyungDong ML AI/api/main.py:52,57,58` quantity 1~1000 정수 · labor_rate 1~1,000,000 · outsource_cost 0~1e9). 밖이면 422."""
+    m, k, tc, doc = world
+    code = m.tenant.code
+    r = tc.post(f"/api/v1/tenants/{code}/tasks/{code}.quote/quotes", headers={**h.hdr(k["operator"]),
+                "Content-Type": "application/json"}, content=json.dumps(_body(doc, _lines(doc), **{field: value})))
+    assert r.status_code == 422, r.text
+    e = r.json()["error"]
+    assert e["code"] == "invalid_input" and e["detail"]["field"] == field, e
+    assert str(value) not in json.dumps(e["detail"])                       # 입력값을 되풀이하지 않는다
+
+
+def test_quote_extra_inputs_at_limits_are_accepted(world):
+    m, k, tc, doc = world
+    code = m.tenant.code
+    r = tc.post(f"/api/v1/tenants/{code}/tasks/{code}.quote/quotes", headers={**h.hdr(k["operator"]),
+                "Content-Type": "application/json"}, content=json.dumps(_body(doc, _lines(doc), quantity=1000, labor_rate=1)))
+    assert r.status_code == 201, r.text

@@ -103,6 +103,7 @@
 | 항목 | 규칙 |
 |---|---|
 | 과제 consumer | 켜진 과제마다 `MODEL` 1행 `code = ML:<tenant>.<task>` · `name` = 과제 title · `state` = production 버전 또는 "운영 모델 없음" · `synthetic` = production 이 합성이거나 mode ≠ live · `source_ref = packs/<pack>/tasks/<task>.yaml:1` |
+| 변수(features) | 과제가 읽는 변수마다 1행 — 학습 유형은 `features` · `controls` · `fixed` · `target.name`, extract 는 `model.features` · `model.target`(모델 없는 규칙 추출은 0행), quote 는 `inputs` 중 features.yaml 변수(수량 · 단가 같은 견적 고유 입력은 변수가 아니라 내지 않는다). 모델을 갖는 extract 의 과제 consumer `state` 는 학습 과제와 같다(버전 또는 "운영 모델 없음") — D2-63 · 재진입 D2-70 |
 | 화면 consumer | 화면 1~10 중 그 회사 과제가 쓰는 것 `SCREEN` · `code = ML-S<n>` · `source_ref = contracts/screen-map.md:<줄>` |
 | Agent 도구 consumer | `TOOL` · `code = tool:ml.calculate_prediction` 등 4 · `source_ref = contracts/agent-tools.md:<줄>` (허브 H7 의 `tool:<name>` 관례 — h07_consumers.py:218) |
 | datasets | `feature_map` · `target_map` 키의 TABLE, `sources.*.tables` · `table` · `view` — 미확인 뷰(`# 미확인`)는 내지 않는다. layer 는 원천 그대로 모르면 `L5`(ML 학습 입력 — 허브 spec.md:98) |

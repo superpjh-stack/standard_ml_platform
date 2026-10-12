@@ -235,7 +235,7 @@ def _dc(proj: str, override: Path, *args, check=True, timeout=600, env=None) -> 
 
 def bench_compose(source: str, work: Path) -> dict:
     """같은 docker-compose.yml(768MB · CPU 1 · OMP 1) 로 app · db 를 띄우고, 컨테이너 안에서 학습 · 승인 → 호스트에서 잰다.
-    프로젝트 이름은 mlpbench-<회사> (운영 볼륨과 섞이지 않게), 끝나면 down -v."""
+    프로젝트 이름은 mlpbench-<회사>-<실행별 고유 접미>(운영 볼륨 · 동시 실행과 섞이지 않게 — D2-70), 끝나면 down -v."""
     import secrets as _s
 
     import httpx
@@ -256,7 +256,9 @@ def bench_compose(source: str, work: Path) -> dict:
     override = work / f"bench-{source}.override.yml"
     override.write_text(f"services:\n  db:\n    env_file: [{envf}]\n  app:\n    env_file: [{envf}]\n"
                         f"    ports: !override\n      - \"127.0.0.1:{port}:8200\"\n")
-    proj = f"mlpbench-{source}"
+    # 실행별 고유 접미(pid + 난수) — 동시에 두 번 돌아도 컨테이너 · 네트워크 · 볼륨 이름이 겹치지 않는다(D2-70). 앞의 `down -v` 는
+    # 같은 이름만 내리므로 다른 실행의 프로젝트를 건드리지 않는다. 남은 잔여물(비정상 종료)은 빈 포트라 다음 실행을 막지 않는다.
+    proj = f"mlpbench-{source}-{os.getpid()}-{_s.token_hex(3)}"
     tag, dirty = image_tag(sha)
     env = {**os.environ, "MLP_GIT_SHA": tag}
     out: dict = {"tenant_source": source, "image": f"mlp-app:{tag}", "dirty_tree": dirty, "host_port": port}

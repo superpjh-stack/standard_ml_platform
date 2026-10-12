@@ -19,6 +19,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from ..data.taskview import has_model, learn_view
 from ..registry import packs, tenants
 from ..settings import ROOT, get_settings
 
@@ -79,7 +80,7 @@ def consumers(m: tenants.Merged, production: dict[str, dict]) -> list[dict]:
         short = td.id.split(".", 1)[1]
         prod = production.get(td.id)
         out.append({"kind": "MODEL", "code": f"ML:{td.id}", "name": str(td.raw.get("title") or short)[:120],
-                    "state": prod["version"] if prod else ("운영 모델 없음" if td.type in LEARNED else None),
+                    "state": prod["version"] if prod else ("운영 모델 없음" if _learned(td) else None),
                     "synthetic": bool(prod["synthetic"]) if prod else mode != "live",
                     "origin": "MLP", "source_ref": f"packs/{m.pack.code}/tasks/{short}.yaml:1"})
     types = _types(m)
@@ -130,8 +131,18 @@ def datasets(m: tenants.Merged) -> list[dict]:
             for t in _tables(m.tenant.config)]
 
 
-def task_inputs(td: tenants.TaskDef) -> list[tuple[str, str]]:
-    raw = td.raw
+def _learned(td: tenants.TaskDef) -> bool:
+    """학습 모델을 갖는 과제 — 1차 학습 유형 + `model:` 블록이 있는 extract(객체 분류, D2-63)."""
+    return td.type in LEARNED or has_model(td)
+
+
+def task_inputs(td: tenants.TaskDef, pack_features: dict | None = None) -> list[tuple[str, str]]:
+    """과제가 읽는 변수 (이름, 역할). extract 는 `model.features` · `model.target`(learn_view), quote 는 `inputs` 중
+    features.yaml 변수(수량 · 단가 같은 견적 고유 입력은 변수가 아니라 내지 않는다) — D2-63."""
+    raw = learn_view(td).raw
+    if td.type == "quote":
+        feats = pack_features or {}
+        return [(f, "feature") for f in raw.get("inputs") or [] if f in feats]
     out = [(f, "feature") for f in raw.get("features") or []]
     out += [(f, "control") for f in raw.get("controls") or []]
     out += [(f, "fixed") for f in raw.get("fixed") or []]
@@ -147,7 +158,7 @@ def usages(m: tenants.Merged) -> list[dict]:
     tmap = cfg.get("target_map") or {}
     out = []
     for td in m.tasks.values():
-        names = {f for f, _ in task_inputs(td)}
+        names = {f for f, _ in task_inputs(td, m.pack.features)}
         tables = sorted({str(k).split(".", 1)[0] for k, v in fmap.items() if v in names}
                         | {str(k).split(".", 1)[0] for k, v in tmap.items() if v in names})
         ap = api_path(m.tenant.code, td)
@@ -169,7 +180,7 @@ def features(m: tenants.Merged) -> list[dict]:
     std_names = m.pack.std_name or {}
     out = []
     for td in m.tasks.values():
-        for name, role in task_inputs(td):
+        for name, role in task_inputs(td, m.pack.features):
             col = rev.get(name)
             out.append({"task": td.id, "std_name": str(std_names.get(name) or f"{m.pack.code}.{name}"), "role": role,
                         "source_column": col, "mapped": col is not None})

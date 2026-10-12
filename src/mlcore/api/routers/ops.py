@@ -105,7 +105,8 @@ def get_task(t: str, task: str, request: Request):
             # 2차 유형 (개발2 요청 — 화면 9 가 인식값 · 단가 · 상한을 폼에 채운다). 단가는 10진 문자열 그대로
             "rule", "quantile_from", "origins", "max_items", "reason", "schedule",                       # review_queue
             "document", "extractors", "labels", "outputs", "model",                                     # extract
-            "from_extract", "recognized", "inputs", "rates", "rate_tables", "rounding", "currency", "confirm", "csv")   # quote
+            "from_extract", "recognized", "inputs", "rates", "rate_tables", "rounding", "currency", "confirm", "csv",
+            "input_limits")   # quote
     out = {"task": td.id, "pack_task": td.pack_id, "type": td.type, "title": raw.get("title"), "entity": raw.get("entity"),
            "features": _feature_meta(m, names), "notice": spec.notice,
            "uses": [f"{t}.{u.split('.', 1)[1]}" for u in raw.get("uses") or []] or None,

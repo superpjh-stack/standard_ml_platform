@@ -263,12 +263,19 @@ def test_compat_auth_scope_and_unknown_routes(world):
 # ═══════════════════════ 2차 4개사 — 객체 경로 + 회사 모양 플러그인 (api-contract §5 · §6.3 · predict-contract §7.1) ═══════════════════════
 # 기대값 = tests/compat_expected.yaml kd · pc (원천 파일:줄). 플러그인 = tenants/<code>/compat.py (등록부 폴더 안 파일 — 시험은 임시 등록부에 복사).
 
-def _with_plugin(source: str, tmp):
+def _copy_tenant_files(source: str, m) -> None:
+    """회사 폴더의 플러그인 · 예시 파일(samples/ — D2-A2-04)을 시험 회사 폴더로."""
     import shutil
-    m = h.make_tenant(source, tmp)
     d = h.tenants_base(m) / m.tenant.code
     d.mkdir(exist_ok=True)
     shutil.copy(h.ROOT / "tenants" / source / "compat.py", d / "compat.py")
+    if (h.ROOT / "tenants" / source / "samples").is_dir():
+        shutil.copytree(h.ROOT / "tenants" / source / "samples", d / "samples", dirs_exist_ok=True)
+
+
+def _with_plugin(source: str, tmp):
+    m = h.make_tenant(source, tmp)
+    _copy_tenant_files(source, m)
     return m
 
 
@@ -416,6 +423,27 @@ def test_kd_quote_old_route_never_confirms(kd):
     assert n == 0 and a == 0
 
 
+def test_kd_sample_dxf_and_demo_from_tenant_samples(kd):
+    """D2-A2-04: 회사 샘플(`tenants/kd/samples/` — 회사 재질 · 도면 번호)을 옛 `/api/cad/sample.dxf` · `/api/cad/demo` 로.
+    원천 tests/test_api.py:30-35 — 영역 3종 각 1 · BOM 4행 · Σ 수량×kg 650 · mode synthetic_demo · sha256 64자."""
+    m, k, tc, ref, raw, e = kd
+    s = tc.get(e["routes"]["sample_dxf"], headers=h.hdr(k["viewer"]))
+    assert s.status_code == 200 and s.headers["content-type"].startswith(e["sample_media_type"])
+    assert e["sample_filename"] in s.headers.get("content-disposition", "")
+    assert e["demo_drawing_no"].encode() in s.content
+    assert tc.get(e["routes"]["sample_dxf"]).status_code == 401                    # 옛 health 만 키 없이(D-59)
+    r = tc.post(e["routes"]["demo"], headers=h.hdr(k["operator"]))
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert list(d) == e["drawing_keys"] and d["mode"] == e["demo_mode"] and len(d["sha256"]) == 64
+    assert d["filename"] == e["sample_filename"] and d["counts"] == e["demo_counts"]
+    assert len(d["bom"]) == e["demo_bom_rows"] and sum(b["quantity"] * b["mass_kg"] for b in d["bom"]) == e["demo_bom_mass"]
+    assert [[b["name"], b["material"], b["quantity"], b["mass_kg"]] for b in d["bom"]] == e["demo_bom"]
+    g = tc.get(e["routes"]["drawing"].replace("{id}", d["id"]), headers=h.hdr(k["operator"])).json()
+    assert g == {**d, "mode": "uploaded_dxf"}                                      # differs.demo_get_mode
+    assert tc.post(e["routes"]["demo"], headers=h.hdr(k["viewer"])).status_code == 403
+
+
 @pytest.fixture(scope="module")
 def pc(tmp_path_factory):
     m = _with_plugin("pc", tmp_path_factory.mktemp("compat-pc"))
@@ -510,14 +538,66 @@ def test_pc_records_old_keys_filters(pc):
         _old_422(tc.get(f"{url}?{q}", headers=h.hdr(k["viewer"])))               # :23
 
 
+def test_pc_optimize_fixed_only_old_shape(pc):
+    """D2-A2-02: 옛 `/api/ml/optimize` 는 고정 변수 + params 만(현재 배합 없음). 원천 tests/test_api.py:16-19 · ml_service.py:104-106."""
+    m, k, tc, ref, before, e = pc
+    url = e["routes"]["optimize"]
+    with connect() as c:
+        n0 = c.execute("SELECT count(*) AS n FROM mlp_prediction WHERE tenant_id=%s", (m.tenant.code,)).fetchone()["n"]
+    r = tc.post(url, headers=h.hdr(k["operator"]), json=e["optimize_payload"])
+    assert r.status_code == 200, r.text
+    b = r.json()
+    assert list(b) == e["optimize_keys"] and list(b["settings"]) == e["optimize_settings_keys"]
+    assert abs(sum(b["settings"][kk] for kk in e["optimize_composition"]) - 100) < .01         # :18
+    assert b["context"] == {"cabbage_origin": e["optimize_payload"]["cabbage_origin"], "line": e["optimize_payload"]["line"]}
+    assert b["notice"] == e["optimize_notice"] and b["model"] == ref.algo
+    assert all(v == round(v, e["optimize_round"]["settings"]) for v in b["settings"].values())
+    assert b["prediction_score"] == round(b["prediction_score"], 2) and b["material_cost_index"] == round(b["material_cost_index"], 2)
+    if b["feasible"]:
+        assert b["unmet_constraints"] == [] and b["prediction_score"] >= e["optimize_payload"]["target_score"]
+    else:
+        assert b["unmet_constraints"]                                                     # :19
+    with connect() as c:                                                                  # 현재 배합 예측 행을 지어내지 않는다
+        n1 = c.execute("SELECT count(*) AS n FROM mlp_prediction WHERE tenant_id=%s", (m.tenant.code,)).fetchone()["n"]
+    assert n1 == n0
+    std = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.recipe_optimize/optimize", headers=h.hdr(k["operator"]),
+                  json={"fixed": {"cabbage_origin": "평창", "prod_line": "K2"},
+                        "params": {kk: e["optimize_payload"][kk] for kk in ("target_score", "max_material_cost")}}).json()
+    best = std["recommendation"]["best"]                                                  # 같은 요청의 표준 추천 best 와 같다
+    assert b["settings"] == {kk: round(best["conditions"][kk], 3) for kk in e["optimize_settings_keys"]}
+    assert b["prediction_score"] == round(best["predictions"]["sensory_score"], 2)
+    d = tc.post(url, headers=h.hdr(k["operator"]), json={kk: v for kk, v in e["optimize_payload"].items()
+                                                         if kk in ("target_score", "max_material_cost")}).json()
+    assert d["context"] == e["optimize_defaults"]                                         # main.py:25 기본값
+    hard = tc.post(url, headers=h.hdr(k["operator"]), json=e["optimize_infeasible"]).json()
+    if not hard["feasible"]:
+        txt = e["optimize_unmet_text"]
+        assert set(hard["unmet_constraints"]) <= {txt["target_score"].format(target=e["optimize_infeasible"]["target_score"]),
+                                                  txt["max_material_cost"]} and hard["unmet_constraints"]
+    for field, v in e["optimize_invalid_422"]:
+        body = _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["optimize_payload"], field: v}))
+        assert body["detail"][0]["loc"] == ["body", field]
+    for field in e["optimize_missing_422"]:
+        _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={kk: v for kk, v in e["optimize_payload"].items() if kk != field}))
+    assert tc.post(url, headers=h.hdr(k["viewer"]), json=e["optimize_payload"]).status_code == 403
+
+
+def test_pc_records_old_default_limit_and_search_max(pc):
+    """D2-A2-05: 옛 기본 limit 25 · search 30자(main.py:50-51) — 쿼리 훅(parse_records)."""
+    m, k, tc, ref, before, e = pc
+    url = e["routes"]["records"]
+    b = tc.get(url, headers=h.hdr(k["viewer"])).json()
+    assert b["limit"] == e["records_default_limit"] and len(b["records"]) == e["records_default_limit"]
+    _old_422(tc.get(url, headers=h.hdr(k["viewer"]), params={"search": "x" * (e["records_search_max"] + 1)}))
+    assert tc.get(url, headers=h.hdr(k["viewer"]), params={"search": "x" * e["records_search_max"]}).status_code == 200
+
+
 @pytest.fixture(scope="module")
 def ot(tmp_path_factory):
-    import shutil
     overrides = {p.stem: yaml.safe_load(p.read_text(encoding="utf-8"))
                  for p in sorted((h.ROOT / "tenants" / "ot" / "tasks").glob("*.yaml"))}
     m = h.make_tenant("ot", tmp_path_factory.mktemp("compat-ot"), overrides=overrides)
-    d = h.tenants_base(m) / m.tenant.code
-    shutil.copy(h.ROOT / "tenants" / "ot" / "compat.py", d / "compat.py")
+    _copy_tenant_files("ot", m)
     with h.use_tenants_dir(m):
         ref, _ = h.real_production(m, f"{m.tenant.code}.machining_minutes")
         h.real_production(m, f"{m.tenant.code}.cad_objects")
@@ -625,6 +705,22 @@ def test_ot_quote_nonfinite_paging_and_404(ot):
     assert r.status_code == 404 and r.json() == {"detail": "먼저 CAD 도면을 분석하세요."}   # main.py:104
 
 
+def test_ot_data_demo_from_tenant_samples(ot):
+    """D2-A2-04: 옛 `/api/data/demo`(main.py:56-67) — 회사 `tenants/ot/samples/demo.json`(원천 20행 참조 데이터의 가린 사본)."""
+    m, k, tc, ref, e = ot
+    r = tc.get(e["routes"]["data_demo"], headers=h.hdr(k["viewer"]))
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert list(d) == e["data_demo_keys"]
+    assert {kk: len(d[kk]) for kk in ("cad", "quotes")} == e["data_demo_counts"] == {
+        "cad": d["manifest"]["counts"]["cad_object_candidates"], "quotes": d["manifest"]["counts"]["quote_candidates"]}
+    assert all(list(x) == e["data_demo_cad_keys"] for x in d["cad"])
+    assert {kk: d["quotes"][0][kk] for kk in e["data_demo_first_quote"]} == e["data_demo_first_quote"]
+    assert all(x["synthetic_reference"] is True for x in d["cad"] + d["quotes"])
+    assert {x["source_pdf"] for x in d["cad"]} == {"비공개"} and d["manifest"]["source"]["product"] == "비공개"   # differs.data_demo
+    assert tc.get(e["routes"]["data_demo"]).status_code == 401
+
+
 @pytest.fixture(scope="module")
 def krs(tmp_path_factory):
     m = _with_plugin("krs", tmp_path_factory.mktemp("compat-krs"))
@@ -706,3 +802,53 @@ def test_krs_records_old_keys(krs):
     assert {x["supplier"] for x in b["items"]} <= set(e["old_suppliers"])
     for q in e["records_bad_queries"]:
         _old_422(tc.get(f"{e['routes']['records']}?{q}", headers=h.hdr(k["viewer"])))
+
+
+def test_krs_optimize_fixed_only_old_shape(krs):
+    """D2-A2-02: 옛 `/api/ml/optimize`(main.py:54-59 · ml_service.py:125-146) — 목표 강도 · 비용 상한 · 공급사만. 원천
+    tests/test_api.py:16-23 — 조성 합 100(±0.01) · 예측 강도 > 0 · 목표 500 은 422."""
+    m, k, tc, ref, before, e = krs
+    url = e["routes"]["optimize"]
+    r = tc.post(url, headers=h.hdr(k["operator"]), json=e["optimize_payload"])
+    assert r.status_code == 200, r.text
+    b = r.json()
+    assert list(b) == e["optimize_keys"] and list(b["composition"]) == e["optimize_composition_keys"]
+    assert list(b["process"]) == e["optimize_process_keys"] and b["process"]["supplier"] == e["optimize_payload"]["supplier"]
+    assert abs(sum(b["composition"].values()) - 100) < .01 and b["predicted_strength"] > 0           # :18-19
+    assert b["target_strength"] == e["optimize_payload"]["target_strength"] and b["model"] == ref.algo
+    assert b["notice"] == e["optimize_notice"]
+    if b["feasible"]:
+        assert b["predicted_strength"] >= e["optimize_payload"]["target_strength"] - 0.005
+    d = tc.post(url, headers=h.hdr(k["operator"]), json={}).json()
+    assert d["target_strength"] == e["optimize_defaults"]["target_strength"]
+    assert d["process"]["supplier"] == e["optimize_defaults"]["supplier"]
+    c = tc.post(url, headers=h.hdr(k["operator"]), json={**e["optimize_payload"], "max_cost": e["optimize_max_cost"]}).json()
+    if c["feasible"]:
+        assert c["cost_index"] <= e["optimize_max_cost"] + 0.005
+    for field, v in e["optimize_invalid_422"]:
+        body = _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["optimize_payload"], field: v}))
+        assert body["detail"][0]["loc"] == ["body", field]
+    assert tc.post(url, headers=h.hdr(k["viewer"]), json=e["optimize_payload"]).status_code == 403
+
+
+def test_krs_records_old_filters_state_and_summary(krs):
+    """D2-A2-05: 옛 `/api/data/records`(main.py:76-82 · ml_service.py:198-229) — supplier(A · B · C) · q · state 필터 ·
+    summary · 행 상태 열 · 기본 limit 20. 원천 tests/test_api.py:44-48."""
+    m, k, tc, ref, before, e = krs
+    url = e["routes"]["records"]
+    b = tc.get(url, headers=h.hdr(k["viewer"])).json()
+    assert list(b) == e["records_keys"] and b["limit"] == e["records_default_limit"] == len(b["items"])
+    assert list(b["summary"]) == e["records_summary_keys"] and b["summary"]["all"] == e["samples_total"]
+    assert sum(b["summary"][kk] for kk in ("normal", "missing", "outlier")) == b["total"] == e["samples_total"]
+    assert b["summary"]["missing"] > 0 and b["summary"]["outlier"] > 0                  # 원천 생성기의 결측 · 센서 이상치(ml_service.py:52-55)
+    assert all(list(x) == e["records_item_keys"] for x in b["items"])
+    f = tc.get(url, headers=h.hdr(k["viewer"]), params=e["records_filter"]).json()
+    assert len(f["items"]) == e["records_filter"]["limit"] and all(x["supplier"] == e["records_filter"]["supplier"] for x in f["items"])
+    for st in e["records_states"]:
+        s = tc.get(url, headers=h.hdr(k["viewer"]), params={"state": st, "limit": 100}).json()
+        assert s["total"] > 0 and all(x["data_status"] == st for x in s["items"])
+        assert all((x["missing_fields"] > 0) == (st == "결측") for x in s["items"])
+    lot = b["items"][0]["lot_id"]
+    q = tc.get(url, headers=h.hdr(k["viewer"]), params={"q": f"  {lot}  "}).json()
+    assert q["total"] == 1 and q["items"][0]["lot_id"] == lot                            # q 앞뒤 공백 제거(main.py:82)
+    _old_422(tc.get(url, headers=h.hdr(k["viewer"]), params={"q": "x" * (e["records_q_max"] + 1)}))

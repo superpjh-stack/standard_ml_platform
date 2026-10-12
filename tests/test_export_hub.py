@@ -278,3 +278,26 @@ def test_six_companies_exported_with_tasks_features_and_usage(doc):
     assert any(f["std_name"] == "rollform-quote.machining_minutes" and f["role"] == "target" for f in ot["features"])
     assert {x["code"] for x in ot["consumers"] if x["kind"] == "SCREEN"} >= {"ML-S9"}             # 도면 · 견적 화면
     assert {x["code"] for x in by["krs"]["consumers"] if x["kind"] == "SCREEN"} >= {"ML-S8"}      # 검토 대기열 화면
+
+
+def test_extract_model_features_and_quote_inputs_exported(doc):
+    """D2-63 (웨이브 P 재진입 D2-70): extract 의 `model.features` · `model.target` 과 quote 의 `inputs`(features.yaml 변수만)가
+    features 에 나가고, 모델을 갖는 extract(ot.cad_objects)의 소비자 state 는 학습 과제처럼 버전 | '운영 모델 없음'(null 아님)."""
+    from mlcore.registry import tenants
+
+    by = {c["company"]: c for c in doc["doc"]["companies"]}
+    for code in ("ot", "kd"):
+        m = tenants.load_and_merge(code)
+        c = by[code]
+        std = lambda n: str((m.pack.std_name or {}).get(n) or f"{m.pack.code}.{n}")   # noqa: E731
+        for td in m.tasks.values():
+            got = {(f["std_name"], f["role"]) for f in c["features"] if f["task"] == td.id}
+            if td.type == "extract" and isinstance(td.raw.get("model"), dict):
+                mdl = td.raw["model"]
+                want = {(std(n), "feature") for n in mdl["features"]} | {(std(mdl.get("target", "label")), "target")}
+                assert want <= got, (td.id, sorted(want - got))
+                cons = next(x for x in c["consumers"] if x["code"] == f"ML:{td.id}")
+                assert cons["state"] is not None
+            if td.type == "quote":
+                want = {(std(n), "feature") for n in td.raw["inputs"] if n in m.pack.features}
+                assert want and want == got, (td.id, sorted(want ^ got))     # 견적 고유 입력(수량 · 단가)은 변수가 아니다

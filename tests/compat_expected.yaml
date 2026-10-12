@@ -112,9 +112,17 @@ kd:
     export_csv: /api/quotes/export/csv
     quote: "/api/quotes/{id}"
     quote_csv: "/api/quotes/{id}/csv"
-  pending_routes:                                # 팩 eto samples/sample.dxf 가 생기면 (개발3 요청 — 팩에 회사 재질 이름을 둘 수 없어 원천 데모와 같지 않다)
-    sample_dxf: /api/cad/sample.dxf              # main.py:78
+    sample_dxf: /api/cad/sample.dxf              # main.py:78 — 회사 tenants/kd/samples/ (D2-A2-04 · 재진입 D2-70)
     demo: /api/cad/demo                          # main.py:82
+  pending_routes: {}                             # 원천 경로 전부 붙음
+  sample_filename: KD-demo-reactor.dxf           # main.py:79 (Content-Disposition) · :84 (분석 파일 이름)
+  sample_media_type: application/dxf             # main.py:79
+  demo_mode: synthetic_demo                      # main.py:84
+  demo_drawing_no: KD-DEMO-R1000                 # cad.py:27
+  demo_bom: [[SHELL, STS316L, 1, 320], [HEAD, STS316L, 2, 90], [JACKET, STS304, 1, 110], [SUPPORT, SS400, 4, 10]]   # cad.py:29
+  demo_counts: {title_block: 1, bom_table: 1, rev_table: 1, other: 0}   # tests/test_api.py:31
+  demo_bom_rows: 4                                                     # tests/test_api.py:32
+  demo_bom_mass: 650                                                   # tests/test_api.py:33 (Σ 수량 × kg)
   health_keys: [status, model_ready, version, mode]                                    # main.py:71
   overview_keys: [version, mode, job_rows, missing_cells, champion, metrics, test_metrics, split, features, products, recognition, warning]   # ml_service.py:59-66 (부분)
   overview_source_keys: [version, mode, job_rows, missing_cells, duplicates, champion, metrics, test_metrics, split, seed, trend, features, materials, products, cost, recognition, warning]   # ml_service.py:59-66 (전부)
@@ -180,6 +188,8 @@ kd:
     quote_status: "원천은 초안만(검토용 초안). 표준은 확정을 승인 경로로 하므로 상태 3(검토용 초안 · 확정 대기 · 확정)"
     quote_search: "옛 검색은 파일 이름 · id, 표준 목록 검색은 견적 id · 검토 메모 · 문서 id"
     quote_rule_material_in_bom: "대표 재질 ∈ BOM 재질(main.py:66)은 표준 입력 검증에 없다 — 이관 보고서 사유"
+    demo_get_mode: "원천은 데모 분석을 저장한 그대로 다시 읽어 mode synthetic_demo(tests/test_api.py:36), 표준 도면 조회는 업로드 문서 하나로 다뤄 mode uploaded_dxf — 나머지 키 · 값은 같다(ot 와 같은 규칙)"
+    demo_drawing_no: "팩 생성기의 중립 도면 번호 DEMO-R1000 을 회사 샘플에서는 원천 값 KD-DEMO-R1000 으로(회사 값은 회사 폴더 — D2-A2-04)"
     rounding: "원천 float + round(짝수), 표준 Decimal · HALF_UP — .5 경계에서 1원 다를 수 있다(D2-07a, tests/test_formula_eto_quote.py)"
 pc:
   source_repo: "../PyoungChang ML AI"
@@ -189,8 +199,21 @@ pc:
     predict: /api/quality/predict
     queue: /api/quality/overview
     records: /api/data/records
-  pending_routes:
-    optimize: /api/ml/optimize                   # main.py:36 — pc.recipe_optimize 가 켜지면 (웨이브 A2 개발1)
+    optimize: /api/ml/optimize                   # main.py:36 — 고정 변수 + params 만(D2-A2-02 · 재진입 D2-70)
+  pending_routes: {}
+  optimize_payload: {target_score: 80, max_material_cost: 85, cabbage_origin: 평창, line: K2}   # tests/test_api.py:17
+  optimize_keys: [feasible, prediction_score, material_cost_index, settings, context, unmet_constraints, model, notice]   # ml_service.py:104-106
+  optimize_settings_keys: [cabbage_pct, radish_pct, seasoning_pct, salt_pct, brine_salinity_pct, brining_hours, fermentation_temp_c, fermentation_hours, storage_temp_c]   # ml_service.py:22,105
+  optimize_composition: [cabbage_pct, radish_pct, seasoning_pct, salt_pct]   # tests/test_api.py:18 (합 100 ± 0.01)
+  optimize_round: {prediction_score: 2, material_cost_index: 2, settings: 3}  # ml_service.py:104-105
+  optimize_unmet_text: {target_score: "목표 품질점수 {target:.1f}점 미달", max_material_cost: 원재료비 지수 상한 초과}   # ml_service.py:102-103
+  optimize_notice: 데모 탐색 결과이며 승인 배합표 확인과 시험 생산 후 적용해야 합니다.   # ml_service.py:106
+  optimize_defaults: {cabbage_origin: 평창, line: K1}                                # main.py:25
+  optimize_invalid_422: [[target_score, 64], [target_score, 96], [max_material_cost, 44], [max_material_cost, 101], [cabbage_origin, 서울], [line, K3]]   # main.py:24-25
+  optimize_missing_422: [target_score, max_material_cost]                            # main.py:24 (기본값 없음)
+  optimize_infeasible: {target_score: 95, max_material_cost: 45}                   # main.py:24 경계 — 미충족이면 unmet_constraints 비지 않음(tests/test_api.py:19)
+  records_default_limit: 25                                                          # main.py:50
+  records_search_max: 30                                                             # main.py:51
   health_keys: [status, model_ready, data_mode, product]                              # main.py:28
   health_data_mode: demo
   overview_keys: [data_mode, rows, missing_cells, duplicate_lots, features, target, champion, metrics, warning]   # main.py:32-34 (부분)
@@ -226,7 +249,7 @@ pc:
     queue_omitted: [evaluated, demo_review_score]
     model: "옛 표시 이름(릿지 회귀 …) ↔ 후보 코드(ridge …)"
     lot_id: "표준 엔티티 DEMO-0001 → 옛 LOT 번호 PC-K-DEMO-0001 (compat.entity_prefix 겹침 규칙, 원천 PC-K-0001)"
-    records_default_limit: "옛 기본 limit 25 · 검색 30자, 1차 호환 records 장치는 기본 15 · 60자 — limit 를 주면 같다(코어 동결)"
+    optimize: "원천은 요청 의존 시드(target·cost, ml_service.py:91) · 고정 균등 범위(LIMITS) 3,500 · 추천 1. 표준은 과제 seed 고정 · 학습 범위 ∩ min/max · least_violation · 상위 5 중 best 를 옛 키로. model 은 후보 코드"
 ot:
   source_repo: "../OneTouch ML AI"
   routes:                                        # api/main.py:47,52,69,74,82,94,101,109,114,126
@@ -239,8 +262,12 @@ ot:
     quotes: /api/quotes
     quote: "/api/quotes/{id}"
     quote_csv: "/api/quotes/{id}/csv"
-  pending_routes:
-    data_demo: /api/data/demo                    # main.py:56 — 20행 참조 데이터(data/demo/*.json)를 팩 samples/ 에 두면 (개발3 요청)
+    data_demo: /api/data/demo                    # main.py:56 — 회사 tenants/ot/samples/demo.json(가린 사본, D2-65 · D2-A2-04)
+  pending_routes: {}
+  data_demo_keys: [manifest, cad, quotes]                                             # main.py:67
+  data_demo_counts: {cad: 20, quotes: 20}                                             # data/demo/manifest.json counts
+  data_demo_cad_keys: [sample_id, source_pdf, source_cad, source_product, source_type, component_type, material, profile, length_mm, width_mm, thickness_mm, holes, slots, bends, model_confidence, recognition_status, review_reason, synthetic_reference]   # data/demo/cad_object_candidates_20.json
+  data_demo_first_quote: {quantity: 10, total_krw: 109144, status: 검토용 초안}           # data/demo/quote_candidates_20.json (첫 행)
   health_keys: [status, model_ready, version, mode]                                    # main.py:49
   overview_keys: [version, mode, job_rows, missing_cells, champion, metrics, test_metrics, split, features, profiles, warning]
   overview_source_keys: [version, mode, job_rows, object_rows, missing_cells, champion, metrics, test_metrics, recognition_champion, recognition_metrics, recognition_test, split, trend, features, materials, profiles, cost, warning]   # ml_service.py:28-38
@@ -272,6 +299,7 @@ ot:
     model: "옛 champion 은 표시 이름, 표준은 후보 코드. 견적의 model · test_mae 키와 CSV 의 '모델' 행은 내지 않는다(표준 견적 스냅숏은 모델 버전만)"
     ids: "도면 doc_<ULID> · 견적 qte_<ULID> (원천 CAD- · QT-<hex12>)"
     sample_name: "옛 /api/cad/sample.dxf 의 내려받기 이름 OT-demo-1200x160.dxf ↔ 팩 samples/sample.dxf"
+    data_demo: "원본 도면 파일 이름 · 제품명 · 제품 모델 코드(source_pdf · source_cad · source_product · manifest.source, id 토막)는 공개 저장소에 옮기지 않는다 — 값 '비공개'(D2-65). 수치 · 문구는 원천 그대로(migration/make_tenant_samples.py)"
     quote_status: "원천은 초안만. 표준은 확정을 승인 경로로 — 상태 3"
     quote_search: "옛 검색은 파일 이름 · id(tests/test_api.py:139 search=OT-demo), 표준 목록 검색은 견적 id · 검토 메모 · 문서 id"
 krs:
@@ -283,8 +311,17 @@ krs:
     queue: /api/quality/overview
     predict: /api/quality/predict
     records: /api/data/records
-  pending_routes:
-    optimize: /api/ml/optimize                   # main.py:54 — 코어 결함(2차) D2-A2-02 (고정 변수 + params 만 받는 옛 최적화 동작 없음)
+    optimize: /api/ml/optimize                   # main.py:54 — 고정 변수 + params 만(D2-A2-02 · 재진입 D2-70)
+  pending_routes: {}
+  optimize_payload: {target_strength: 47, supplier: A}                               # tests/test_api.py:17
+  optimize_keys: [feasible, model, target_strength, predicted_strength, cost_index, composition, process, notice]   # ml_service.py:139-146
+  optimize_composition_keys: [sn_pct, ag_pct, cu_pct, sb_pct, flux_pct]              # ml_service.py:143
+  optimize_process_keys: [temperature_c, mixing_min, supplier]                       # ml_service.py:144
+  optimize_round: {predicted_strength: 2, cost_index: 2, composition: 3, process: 1}  # ml_service.py:141-144
+  optimize_notice: 샘플 데이터 기반 추천입니다. 현장 적용 전 품질 승인과 시험 생산이 필요합니다.   # ml_service.py:145
+  optimize_defaults: {target_strength: 48, supplier: A}                              # main.py:20,22
+  optimize_invalid_422: [[target_strength, 500], [target_strength, 29], [max_cost, -1], [max_cost, 201], [supplier, D]]   # main.py:20-22 · tests/test_api.py:23
+  optimize_max_cost: 40                                                              # main.py:21 (선택 상한 — 있으면 cost_index ≤ 상한 또는 미충족)
   health_keys: [status, model_ready]                                                   # main.py:38
   overview_keys: [quality, models, champion, features, target, data_mode]             # main.py:44 · ml_service.py:121 (부분)
   overview_source_keys: [quality, models, champion, statistics, features, target, data_mode]
@@ -308,9 +345,14 @@ krs:
   queue_source_keys: [model, evaluated_lots, normal_lots, flagged_lots, mean_absolute_error, review_threshold, flagged, notice]   # ml_service.py:187-195
   queue_row_keys: [lot_id, actual_strength, predicted_strength, absolute_error, status]
   queue_threshold: 4.0                                                                # ml_service.py:193
-  records_keys: [total, offset, limit, items]                                         # ml_service.py:220-222 (summary 뺌)
-  records_item_keys: [lot_id, sn_pct, ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min, supplier, joint_strength_mpa]
-  records_bad_queries: ["limit=0", "limit=101", "offset=-1"]                           # main.py:78
+  records_keys: [total, offset, limit, items, summary]                                # ml_service.py:220-229
+  records_item_keys: [lot_id, sn_pct, ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min, supplier, joint_strength_mpa, missing_fields, data_status]   # ml_service.py:205-206 (열 추가 순서)
+  records_summary_keys: [all, normal, missing, outlier]                              # ml_service.py:224-229
+  records_default_limit: 20                                                          # main.py:78
+  records_filter: {limit: 5, supplier: B}                                            # tests/test_api.py:45-47
+  records_states: [정상, 결측, 이상]                                                   # main.py:80 · ml_service.py:207
+  records_bad_queries: ["limit=0", "limit=101", "offset=-1", "state=unknown", "supplier=D"]   # main.py:78-80 · tests/test_api.py:48
+  records_q_max: 40                                                                  # main.py:79
   differs:
     overview: "statistics(정제 후 기술통계) · training_rows · outlier_rows_removed · outliers_by_column 은 원천이 분할 전 전체 데이터로 쟀다(ml_service.py:59-73, 원천 결함 — 표준은 학습 구간 IQR, D2-03). 지표는 시험 1회 · 검증 선정(원천은 시험 구간 RMSE 선정)"
     overview_omitted: [statistics]
@@ -319,4 +361,5 @@ krs:
     queue_omitted: [model, evaluated_lots, normal_lots, mean_absolute_error]
     model: "옛 표시 이름(Gradient Boosting …) ↔ 후보 코드(gbr …)"
     lot_id: "표준 엔티티 DEMO-0001 → KS-DEMO-0001 (compat.entity_prefix 겹침 규칙, 원천 KS-20240000)"
-    records: "옛 q(LOT 검색) · supplier(A · B · C) · state(정상 · 결측 · 이상) 필터와 summary · missing_fields · data_status 는 1차 호환 records 장치에 없다 — 코어 결함(2차) D2-A2-05(쿼리 값 변환 훅 없음). 기본 limit 20 ↔ 15"
+    records_order: "원천은 생성 순서(정렬 없음, ml_service.py:217), 표준 records 는 기록 시각 ↓ · LOT ↑(1차 장치 · B12 와 같은 순서)"
+    optimize: "원천은 미충족이면 위반량을 보지 않고 최저 비용 후보(ml_service.py:137 — 원천 결함 §13) · 요청 의존 시드(:127) · 고정 균등 범위(:130-131). 표준은 least_violation · 과제 seed 고정 · 학습 범위 ∩ min/max · 상위 5 중 best. model 은 후보 코드"

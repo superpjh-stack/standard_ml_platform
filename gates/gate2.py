@@ -71,7 +71,8 @@ def _g2_p01() -> list[Line]:
 def _g2_s01() -> list[Line]:
     rows = [ln for ln in read(ROOT / "contracts" / "screen-map.md").splitlines() if re.match(r"^\| (7|8|9|10) \|", ln)]
     on = [ln for ln in rows if re.search(r"\| ○[^|]*\|$", ln)]
-    e2e_files = ["tests/e2e/test_console_sources.py", "tests/e2e/test_console_phase2.py"]   # 화면 7 · 8~10 (1024px)
+    e2e_files = ["tests/e2e/test_console_sources.py", "tests/e2e/test_console_phase2.py",   # 화면 7 · 8~10 (1024px)
+                 "tests/e2e/test_console_ot_quote.py"]                                       # 화면 9 ot 견적(회사 데이터) — 조이기만(D2-70)
     runs = [pytest_gate("G2-S01", "", f) for f in e2e_files]
     e2e = next((r for r in runs if r.status != "PASS"), None) or Line("G2-S01", "", "PASS", " · ".join(r.measured for r in runs))
     probs = []

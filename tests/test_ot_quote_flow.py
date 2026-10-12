@@ -126,3 +126,24 @@ def test_entity_limit_is_pack_2000(world):
                 files={"file": ("big.dxf", SD.dxf_bytes(ents), "application/dxf")})
     assert r.status_code == 413 and r.json()["error"]["code"] == "document_too_large"
     assert r.json()["error"]["detail"]["rule"] == "entities"
+
+
+@pytest.mark.parametrize("value", [0, 1.5, 10001, -3])
+def test_quote_quantity_follows_task_input_limits(world, value):
+    """D2-A2-03 (웨이브 P 재진입 D2-70): 견적 수량은 과제 `input_limits` — 원천 QuoteInput
+    (`OneTouch ML AI/api/main.py:43` quantity 1~10,000 정수). 밖이면 422 invalid_input(field quantity)."""
+    m, k, tc, doc, *_ = world
+    code = m.tenant.code
+    r = tc.post(f"/api/v1/tenants/{code}/tasks/{code}.quote/quotes", headers={**h.hdr(k["operator"]),
+                "Content-Type": "application/json"}, content=json.dumps(_body(doc, quantity=value)))
+    assert r.status_code == 422, r.text
+    e = r.json()["error"]
+    assert e["code"] == "invalid_input" and e["detail"]["field"] == "quantity", e
+
+
+def test_quote_quantity_upper_limit_accepted(world):
+    m, k, tc, doc, *_ = world
+    code = m.tenant.code
+    r = tc.post(f"/api/v1/tenants/{code}/tasks/{code}.quote/quotes", headers={**h.hdr(k["operator"]),
+                "Content-Type": "application/json"}, content=json.dumps(_body(doc, quantity=10000)))
+    assert r.status_code == 201, r.text

@@ -256,10 +256,9 @@ def test_kd_quote_end_to_end(kd):
     assert audit == 1
 
 
-@pytest.mark.xfail(strict=True, reason="코어 결함(2차) D2-A2-01 — serve/quotes.to_csv 가 과제 csv(내보내기 열 순서, task-contract §6.3)를 "
-                   "요약 행 이름 거르개로 써서 kd 견적 CSV 에 합계 · 구성 금액 행이 없다(동결 — 코어 수정 보류)")
 def test_kd_quote_csv_has_total(kd):
-    """원천 CSV(`KyungDong ML AI/api/main.py:142-150`)는 소재비 · 가공비 · … · 합계(원) 행을 낸다. 표준 CSV 도 확정 합계를 내야 한다."""
+    """원천 CSV(`KyungDong ML AI/api/main.py:142-150`)는 소재비 · 가공비 · … · 합계(원) 행을 낸다. 표준 CSV 도 확정 합계를 내야 한다.
+    D2-A2-01(웨이브 P 재진입 D2-70): 과제 `csv` 는 품목 열 순서 — 요약 행을 거르지 않는다."""
     m, t, k, tc = kd.m, kd.t, kd.k, kd.tc
     qbase = f"/api/v1/tenants/{t}/tasks/{t}.quote"
     items = tc.get(f"{qbase}/quotes", headers=h.hdr(k["operator"]), params={"status": "confirmed"}).json()["items"]
@@ -269,6 +268,9 @@ def test_kd_quote_csv_has_total(kd):
     rows = list(csv.reader(io.StringIO(r.content.decode("utf-8-sig"))))
     summary = {row[0]: row[1] for row in rows if len(row) == 2}
     assert summary.get("total") == q["total"]
+    assert all(summary.get(f"costs.{c}") == v for c, v in q["costs"].items())          # 구성 금액 행도 다 있다
+    head = next(row for row in rows if row and row[0] == "name")                        # 품목 머리 = 과제 csv 순서
+    assert head == kd.m.tasks[f"{kd.t}.quote"].raw["csv"]
 
 
 # ═══════════════════════════════════════ (b) pc.residual_review ═══════════════════════════════════════

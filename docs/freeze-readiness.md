@@ -79,3 +79,39 @@
 8. 견적 예측 채널 `quote` · 과제 상세 2차 키 · 모델 추출기 감시 · G-M01 std 어휘 규칙.
 
 남는 차이(코어 변경 없이 이관 보고서 사유): 요청 의존 시드 · 연속 균등 표집(표준은 격자 step 위 표집 — 팩이 step 을 잘게) · 추천 1 vs 상위 5 · RobustScaler · 분할 정책(D2-21) · 원천 짝수 반올림(D2-07a).
+
+## 6. 웨이브 P 재진입 (2026-10-13 · 아키텍트 · decisions D2-70) — 태그 `core-freeze-2`(5a51d2f) 뒤 코어 결함
+
+### 6.1 재진입 사유
+
+웨이브 A2 가 §1~§5 표 밖의 코어 결함을 6건 올렸다(이슈 #24 · decisions D2-A2-01~05 · D2-63). 팩 · 회사 데이터로는 못 고친다 —
+코어가 그 설정을 읽지 않거나(01 · 03 · 63), 옛 경로가 요구하는 모양을 받을 장치가 없었다(02 · 04 · 05). 그대로 두면 돈 결함
+(표준 견적 CSV 합계 행 없음) · 입력 결함(수량 0 · 1.5 초안) · 6 경로 미이관(task-map 100% 거짓) · 허브 변수 누락이 남는다.
+
+### 6.2 고친 것 (먼저 실패하는 시험 → 코어 수정)
+
+| # | 결함 | 코어 수정 | 데이터(코어 밖) | 시험 |
+|---|---|---|---|---|
+| D2-A2-01 | 견적 CSV 합계 · 구성 금액 행 없음 | `serve/quotes.to_csv` — 과제 `csv` = 품목 열 순서, 요약은 늘 전부(계약 문구대로) | — | `test_vertical_slice_2.py::test_kd_quote_csv_has_total`(strict xfail 걷음) · `test_reentry_p.py` |
+| D2-A2-03 | 견적 수량 0 · 소수 수용 | 과제 키 `input_limits {min, max, integer}`(quote · features.yaml 밖 입력 · 덮어쓰기 불가 · 로더 모양 검사) | eto: 수량 1~1000 정수 · 시간 단가 1~1e6 · 외주비 0~1e9 / rollform-quote: 수량 1~10000 정수(원천 QuoteInput) | `test_kd_quote_flow.py` · `test_ot_quote_flow.py` · `test_reentry_p.py` |
+| D2-A2-02 | 호환 optimize 가 현재 배합 필수 | `Compat.optimize_fixed` — 플러그인 `parse_optimize` 가 `{fixed, params}` 를 주면 현재값 없는 표준 Optimizer 1회(예측 행을 지어내지 않음) | pc · krs `/api/ml/optimize` + `parse/shape_optimize` | `test_compat.py::test_{pc,krs}_optimize_fixed_only_old_shape` |
+| D2-A2-05 | 호환 records 쿼리 변환 불가 | `parse_records(query, info)` 쿼리 훅 · `records_frame(frame, n_all, info)` 행 훅 | krs supplier(A · B · C) · q · state · summary · 기본 20 / pc 기본 25 · 검색 30자 | `test_compat.py::test_krs_records_old_filters_state_and_summary` · `test_pc_records_old_default_limit_and_search_max` |
+| D2-63 | 허브 내보내기 extract · quote 변수 누락 | `monitor/hub_export.task_inputs` — `learn_view` 로 extract `model.features` · `model.target`, quote `inputs` 중 features.yaml 변수 · 모델 있는 extract 의 consumer state | — | `test_export_hub.py::test_extract_model_features_and_quote_inputs_exported` |
+| D2-A2-04 | 회사 값이 든 예시 파일 자리 없음 | 예시 파일 = `tenants/<code>/samples/` 먼저, 없으면 팩 `samples/`(경로 탈출 · 링크 404) | kd `KD-demo-reactor.dxf` · ot `demo.json`(원본 도면 이름 · 제품명 '비공개' — D2-65) ← `migration/make_tenant_samples.py` | `test_compat_phase2.py::test_tenant_samples_come_before_pack_samples` · `test_compat.py::test_kd_sample_dxf_and_demo_from_tenant_samples` · `test_ot_data_demo_from_tenant_samples` |
+
+계약: task-contract §4(`immutable_on_override` + `input_limits`) · §6.3(`input_limits` · `csv` 뜻) · predict-contract §7.1(훅 3) ·
+api-contract §5(예시 파일 순서) · hub-export §3(변수 규칙). 정리(코어 밖): #23 · D2-62 기준선 확인(D2-71), G2-S01 에 ot e2e,
+bench 프로젝트 이름 고유 접미(D2-72).
+
+### 6.3 이후 코어 0줄 근거
+
+1. **원천 경로 미이관 0.** `tests/compat_expected.yaml` 4개사 `pending_routes: {}` — 원천 `api/main.py` 의 경로 전부가
+   `compat.routes` 에 있고 시험이 원천 기대값(파일:줄)으로 확인한다. 2차 6개사 task-map 행 전부가 표준 과제 · 경로에 대응한다(G-M02).
+2. **열린 코어 결함 0.** decisions 의 `코어 결함(2차)` 행은 전부 `해결 (재진입 D2-70)`. pytest 에 xfail 0 · skip 은 1차부터의 3건(환경).
+3. **남은 원천 차이는 설계 결정이다** — `compat_expected.yaml differs` 와 이관 보고서 사유(시험 구간 재채점 금지 · 표본 내 지표 ·
+   요청 의존 시드 · 추천 1 vs 상위 5 · 원천 짝수 반올림 · 기록 정렬 · 도면 조회 mode). 이것을 원천과 같게 만드는 일은 goal §8 위반이라
+   코어를 다시 열 사유가 되지 않는다.
+4. **새 모양은 데이터로 받는다.** 회사 옛 응답 · 요청 · 쿼리 · 행 상태 · 예시 파일은 `tenants/<code>/compat.py` · `samples/` ·
+   `compat.routes`, 팩 견적 입력 범위는 `input_limits`, 단가는 `rates` · `rate_tables` — 7번째 회사도 이 자리만 쓴다(`make tenant` · G-M10).
+5. 그래도 코어가 모자라면 고치지 않고 `코어 결함(2차)` 로 올리고 멈춘다(goal2 §3.2) — 이번이 마지막 재진입이 되도록 위 6건 외의
+   A2 보고(개발1 「코어 결함 없음」 · 개발3 D2-60~65)를 다시 읽어 남은 요청이 없음을 확인했다.

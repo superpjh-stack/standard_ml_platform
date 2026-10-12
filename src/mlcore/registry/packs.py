@@ -10,6 +10,7 @@ import hashlib
 import importlib
 import importlib.util
 import json
+import math
 import re
 import sys
 from dataclasses import dataclass, field
@@ -163,7 +164,7 @@ def validate_task(name: str, task: dict, pack_code: str, features: dict, all_tas
         if ttype == "extract":
             return p + _validate_extract(name, task, features, pack_path, sc, cands, splits)
         if ttype == "quote":
-            return p + _validate_quote(name, task, pack_code, all_tasks, pack_path, sc)
+            return p + _validate_quote(name, task, pack_code, all_tasks, pack_path, sc, features)
         for f in (task.get("controls") or []) + (task.get("fixed") or []):
             if f not in features:
                 p.append(f"{name}: 변수 {f!r} 가 features.yaml 에 없다")
@@ -453,7 +454,7 @@ def validate_rates(name: str, rates, tables=()) -> list[str]:
 
 
 def _validate_quote(name: str, task: dict, pack_code: str, all_tasks: dict, pack_path: Path | None,
-                    sc: dict) -> list[str]:
+                    sc: dict, features: dict | None = None) -> list[str]:
     p = _uses_types(name, task, all_tasks, phase2_rule(sc, "quote_uses_types"), "quote")
     fx = task.get("from_extract")
     if fx is not None:
@@ -491,6 +492,37 @@ def _validate_quote(name: str, task: dict, pack_code: str, all_tasks: dict, pack
             p.append(f"{name}: confirm.approver_role 없음(확정 = approver 이상, D2-04)")
     if "csv" in task and not (isinstance(task["csv"], list) and all(isinstance(x, str) for x in task["csv"])):
         p.append(f"{name}: csv 는 열 이름 목록")
+    p += _validate_input_limits(name, task.get("input_limits"), inputs if isinstance(inputs, list) else [], features or {})
+    return p
+
+
+def _num(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def _validate_input_limits(name: str, limits, inputs: list, features: dict) -> list[str]:
+    """quote `input_limits: {<inputs 의 features.yaml 밖 이름>: {min?, max?, integer?}}` (task-contract §6.3 · D2-A2-03).
+    features.yaml 변수의 범위는 features.yaml 이 정본이라 여기 두지 않는다(한 곳)."""
+    if limits is None:
+        return []
+    if not isinstance(limits, dict):
+        return [f"{name}: input_limits 는 {{입력 이름: {{min, max, integer}}}} map"]
+    p = []
+    for n, lim in limits.items():
+        if n not in inputs or n in features:
+            p.append(f"{name}: input_limits {n!r} 는 inputs 중 features.yaml 밖 이름만(변수 범위는 features.yaml)")
+            continue
+        if not isinstance(lim, dict) or not lim or set(lim) - {"min", "max", "integer"}:
+            p.append(f"{name}: input_limits.{n} 는 min · max · integer 만")
+            continue
+        lo, hi = lim.get("min"), lim.get("max")
+        if (lo is not None and not _num(lo)) or (hi is not None and not _num(hi)) or \
+                ("integer" in lim and not isinstance(lim["integer"], bool)):
+            p.append(f"{name}: input_limits.{n} 값 모양(min · max 숫자, integer true/false)")
+        elif lo is not None and hi is not None and lo > hi:
+            p.append(f"{name}: input_limits.{n} min > max")
+        elif lo is not None and lo < 0:
+            p.append(f"{name}: input_limits.{n} min 은 0 이상(견적 입력은 음수가 없다)")
     return p
 
 

@@ -9,6 +9,10 @@ uses: [eto.labor_hours]
 from_extract: eto.drawing_regions
 recognized: {bom: bom_rows}            # 도면 BOM(인식) 과 확정 BOM(lines) 이 다르면 overrides — 원천은 source_bom 을 따로 저장(:19)
 inputs: [cut_m, weld_m, thickness_mm, complexity, main_material, product_family, quantity, labor_rate, outsource_cost]
+input_limits:                          # features.yaml 밖 입력 범위 — 원천 QuoteInput(api/main.py:52,57,58) (D2-A2-03)
+  quantity:       {min: 1, max: 1000, integer: true}
+  labor_rate:     {min: 1, max: 1000000}
+  outsource_cost: {min: 0, max: 1000000000}
 formula: formulas/quote.py             # prepare: Σ BOM 중량 → total_mass_kg (회귀 입력)
 rates: {labor_per_hour: "45000", scrap_rate: "0.08", markup: "0.15", vat_rate: "0.10"}   # 원천 config.py COST (예시 단가) — 문자열
 rounding: ROUND_HALF_UP

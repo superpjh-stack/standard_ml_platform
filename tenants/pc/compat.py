@@ -10,12 +10,21 @@ from __future__ import annotations
 
 from typing import Any
 
+from mlcore.serve.compat import CompatError
+
 COMPOSITION = ["cabbage_pct", "radish_pct", "seasoning_pct", "salt_pct"]          # ml_service.py:21
 WARN_BAND = (99.7, 100.3)                                                         # ml_service.py:84 (데모 경고 — 거부는 input_rules)
 TEXT = {"review": "검토 필요", "ok": "예측 범위 양호",                              # ml_service.py:86
         "below": "예측 점수가 데모 검토 기준보다 낮아 관능·이화학 검사가 필요합니다.",     # ml_service.py:85
         "queue": "잔차 우선순위는 불량 판정이 아니라 데이터/모델 검토 순서입니다."}      # main.py:47
 QUEUE_TOP = 8                                                                     # main.py:44 [:8]
+NUMERIC = [*COMPOSITION, "brine_salinity_pct", "brining_hours", "fermentation_temp_c", "fermentation_hours",
+           "storage_temp_c"]                                                       # ml_service.py:22 (settings 키 순서 :105)
+OPT_PARAMS = {"target_score": (65, 95), "max_material_cost": (45, 100)}           # main.py:24 OptimizeInput
+OPT_NOTICE = "데모 탐색 결과이며 승인 배합표 확인과 시험 생산 후 적용해야 합니다."           # ml_service.py:106
+OPT_UNMET = {"target_score": "목표 품질점수 {target:.1f}점 미달",                     # ml_service.py:102
+             "max_material_cost": "원재료비 지수 상한 초과"}                           # ml_service.py:103
+RECORDS_LIMIT, RECORDS_SEARCH_MAX = 25, 30                                       # main.py:50-51
 OLD_KEYS = ["lot_id", "produced_at", *COMPOSITION, "brine_salinity_pct", "brining_hours", "fermentation_temp_c",
             "fermentation_hours", "storage_temp_c", "cabbage_origin", "line", "sensory_score"]   # ml_service.py:50-53 열 순서
 
@@ -114,3 +123,69 @@ def shape_records(out: dict, info: dict) -> dict:
         row = {**r, "produced_at": r.get("recorded_at")}
         rows.append({k: row.get(k) for k in OLD_KEYS})
     return {"total": out["total"], "limit": out["limit"], "offset": out["offset"], "records": rows}
+
+
+# ── 최적화 ───────────────────────────────────────────────────────────────────────────────
+def _num(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _e(field: str, msg: str, typ: str) -> CompatError:
+    return CompatError(422, {"detail": [{"loc": ["body", field], "msg": msg, "type": typ}]})
+
+
+def parse_optimize(old: Any, info: dict) -> dict:
+    """옛 OptimizeInput(main.py:23-25) — 목표 점수 · 원재료비 상한(필수) + 산지 · 라인(기본 = 회사 범주 첫 값 = 원천 기본
+    평창 · K1). 현재 배합은 받지 않는다 → 표준 본문 `{fixed, params}`(현재값 없는 최적화, D2-A2-02). 모르는 키는 무시(원천 그대로)."""
+    if not isinstance(old, dict):
+        raise CompatError(422, {"detail": [{"loc": ["body"], "msg": "객체여야 합니다", "type": "model_attributes_type"}]})
+    params = {}
+    for k, (lo, hi) in OPT_PARAMS.items():
+        v = old.get(k)
+        if v is None:
+            raise _e(k, "필수 항목입니다", "missing")
+        if not _num(v):
+            raise _e(k, "숫자여야 합니다", "float_parsing")
+        if not lo <= v <= hi:
+            raise _e(k, f"{lo} 이상 {hi} 이하", "greater_than_equal" if v < lo else "less_than_equal")
+        params[k] = v
+    cats = _cfg(info).get("categories") or {}
+    back = {v: k for k, v in ((_cfg(info).get("compat") or {}).get("input_rename") or {}).items()}
+    fixed = {}
+    for var, allowed in cats.items():
+        old_key = back.get(var, var)
+        v = old.get(old_key, allowed[0] if allowed else None)
+        if v not in allowed:
+            raise _e(old_key, "허용된 값이 아닙니다", "literal_error")
+        fixed[old_key] = v
+    info["_opt"] = {"target": float(params["target_score"]), "context": dict(fixed)}
+    return {"fixed": fixed, "params": params}
+
+
+def shape_optimize(out: dict, info: dict) -> dict:
+    """ml_service.py:104-106 — feasible · prediction_score · material_cost_index(소수 2) · settings(공정 9, 소수 3) · context ·
+    unmet_constraints(원천 문구) · model(운영 모델 후보 코드) · notice. 추천 1개(표준 상위 5 중 best)."""
+    from mlcore.registry.models import Registry
+    rec = out["recommendation"]
+    best = rec["best"]
+    cond, pred = best["conditions"], best["predictions"]
+    score_name = rec["objective"]["tiebreak"][0]["name"]
+    opt = info.get("_opt") or {}
+    unmet = [OPT_UNMET[c["name"]].format(target=opt.get("target", 0.0)) for c in best["constraints"]
+             if not c["satisfied"] and c["name"] in OPT_UNMET]
+    uses = out.get("uses") or []
+    model = Registry().get(info["tenant"], uses[0]["task"]).algo if uses else None
+    return {"feasible": rec["feasible"], "prediction_score": _r(pred.get(score_name), 2),
+            "material_cost_index": _r(pred.get(rec["objective"]["name"]), 2),
+            "settings": {k: _r(cond.get(k), 3) for k in NUMERIC}, "context": opt.get("context"),
+            "unmet_constraints": unmet, "model": model, "notice": OPT_NOTICE}
+
+
+def parse_records(query: dict, info: dict) -> dict:
+    """옛 records 쿼리(main.py:50-51) — 기본 limit 25 · search 30자. line · cabbage_origin 필터는 표준 범주 거르개(옛 키 이름)."""
+    q = dict(query)
+    q.setdefault("limit", str(RECORDS_LIMIT))
+    if len(q.get("search") or "") > RECORDS_SEARCH_MAX:
+        raise CompatError(422, {"detail": [{"loc": ["query", "search"], "msg": f"{RECORDS_SEARCH_MAX}자 이하",
+                                            "type": "string_too_long"}]})
+    return q

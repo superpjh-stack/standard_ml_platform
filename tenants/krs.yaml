@@ -28,5 +28,5 @@ compat:
     - {path: /api/quality/overview, action: review_list, task: residual_review, params: {limit: 12, max_limit: 50}}   # :62
     - {path: /api/quality/predict, method: POST, action: predict_one, task: joint_strength}       # :67
     - {path: /api/data/records, action: records}                                                   # :76
-    # /api/ml/optimize (:54) 는 코어 결함(2차) D2-A2-02 — 고정 변수 + params 만 받는 옛 최적화 동작이 없다(멈춤)
+    - {path: /api/ml/optimize, method: POST, action: optimize}                                     # :54 (고정 변수 + params 만 — D2-A2-02)
 labels: {}

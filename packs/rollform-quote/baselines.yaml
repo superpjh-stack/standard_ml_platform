@@ -1,6 +1,6 @@
 # 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (pack-contract §3). 값 = 표준 학습기 시험 구간 실측(합성 seed 42 · 작업 900 행 ·
 # random_60_20_20 · 설명자 1,600 행 · stratified_60_20_20 · 시험 1회, 2026-10-13 웨이브 A2 개발3 — migration/reproduce_quote.py,
-# 아키텍트 확인 요청 D2-62). measured_by = 재현 경로. source_reported = 원천 기록값(원천 문서에 수치 없음 — 저장 견적의 test_mae 만).
+# D2-62 — 재진입 D2-70 아키텍트 확인: reproduce_quote.py 재실행 MAE 0.2956(기준선 1.9377) · macro-F1 1.0(기준선 0.1) 일치). measured_by = 재현 경로. source_reported = 원천 기록값(원천 문서에 수치 없음 — 저장 견적의 test_mae 만).
 machining_minutes: {metric: mae, value: 0.2956, baseline: 1.9377, measured_by: "표준 학습기 StandardTrainer (회사 demo 합성 소스, champion ridge) — migration/reproduce_quote.py", source_reported: 0.3166}   # 원천 저장 견적 test_mae — 원천 절차는 행 순서 540/180/180(D2-21 사유)
 cad_objects:       {metric: macro_f1, value: 1.0, baseline: 0.1, measured_by: "표준 학습기 StandardTrainer (합성 설명자 1,600 · labels synthetic, champion logreg) — migration/reproduce_quote.py", source_reported: null}   # 기준선 majority_class · 합성 설명자의 생성 라벨 — 실도면 인식률이 아니다
 quote:             {metric: null, value: null, measured_by: null, source_reported: null, reason: "견적 — 학습 지표 없음, 원천 저장 견적 원 단위 대조는 tests/test_rollform_quote_pack.py"}

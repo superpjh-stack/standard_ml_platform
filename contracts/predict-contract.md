@@ -392,7 +392,7 @@ candidate = {
 
 ### 7.1 회사 모양 플러그인 (웨이브 P 마감 — 2차 4개사 옛 응답, D2-45)
 
-`tenants/<code>/compat.py`(선택, 등록부 폴더 안 파일만 · 내용 해시로 한 번 읽음): `parse_<동작|shape>(old_body, info) -> 표준 본문` · `shape_<동작|shape>(표준 결과, info) -> 옛 본문` · `shape_error(status, body, info) -> (status, body)`. `info = {tenant, action, method, path, args, query, task, params}`. 플러그인은 `mlcore.serve.compat.CompatError(status, body)` 로 옛 오류를 낼 수 있다. 플러그인이 없으면 표준 결과를 그대로 내고 `compat.input_rename` 만 요청 입력에 적용한다. **계산 · 저장 · 승인은 표준 서비스 그대로다 — 플러그인은 모양만 바꾼다**(금액은 표준 Decimal 견적식 결과 · 대기열은 표준 규칙 · 추출은 팩 추출기). 동작 목록은 `api-contract.md` §5.
+`tenants/<code>/compat.py`(선택, 등록부 폴더 안 파일만 · 내용 해시로 한 번 읽음): `parse_<동작|shape>(old_body, info) -> 표준 본문` · `shape_<동작|shape>(표준 결과, info) -> 옛 본문` · `shape_error(status, body, info) -> (status, body)`. `info = {tenant, action, method, path, args, query, task, params}`. 플러그인은 `mlcore.serve.compat.CompatError(status, body)` 로 옛 오류를 낼 수 있다. 플러그인이 없으면 표준 결과를 그대로 내고 `compat.input_rename` 만 요청 입력에 적용한다. **재진입 보강(D2-70):** ① `optimize` — `parse_optimize` 가 `{fixed: {...}, params: {...}}`(record 없음)를 돌려주면 현재값 없이 표준 Optimizer 1회(현재 배합을 지어내지 않는다 — 묶음 predict 0), 결과는 표준 optimize 응답 그대로 `shape_optimize` 로 간다(D2-A2-02). ② `records` — `parse_records(query, info) -> query`(옛 필터 이름 · 옛 범주 표기 · 옛 기본 limit) · `records_frame(frame, n_all, info) -> frame`(표준 필터 뒤 · 정렬 · 쪽 나누기 전 — 옛 행 상태 열 · 옛 상태 필터, D2-A2-05). ③ 예시 파일(`pack_file` · `document_demo`)은 회사 폴더 `tenants/<code>/samples/` 가 먼저, 없으면 팩 `samples/`(회사 값이 든 샘플은 회사 쪽, D2-A2-04). **계산 · 저장 · 승인은 표준 서비스 그대로다 — 플러그인은 모양만 바꾼다**(금액은 표준 Decimal 견적식 결과 · 대기열은 표준 규칙 · 추출은 팩 추출기). 동작 목록은 `api-contract.md` §5.
 
 ## 8. 2차 유형 응답 — 대기열 · 추출 · 견적 (Phase P0 아키텍트, goal2 G2-T01)
 

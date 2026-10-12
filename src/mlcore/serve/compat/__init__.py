@@ -207,6 +207,8 @@ class Compat:
         spec = self.optimizer_spec
         if spec is None:
             raise CompatError(404, {"detail": "이 회사에는 최적화 과제가 켜져 있지 않습니다"})
+        if isinstance(body, dict) and "record" not in body and isinstance(body.get("fixed"), dict):
+            return self.optimize_fixed(body, caller=caller)
         if not isinstance(body, dict) or not isinstance(body.get("record"), dict):
             raise CompatError(422, {"detail": [{"loc": ["body", "record"], "msg": "필수 항목입니다", "type": "missing"}]})
         task = spec.task.raw
@@ -263,6 +265,38 @@ class Compat:
             res["warnings"] = msgs
         res.update({"objective": objective, "notice": out["notice"]})
         return res
+
+    def optimize_fixed(self, body: dict, *, caller: str) -> dict:
+        """2차 옛 최적화 모양(D2-A2-02): 현재 배합 없이 **고정 변수 + params 만** 받는 옛 경로. 회사 플러그인
+        `parse_optimize` 가 옛 본문을 표준 본문 `{fixed: {...}, params: {...}}`(키 = 옛 이름이어도 compat.input_rename 적용)로
+        바꿔 돌려주면 여기로 온다 — 현재값(current)을 지어내지 않고 표준 Optimizer 를 1회 부른다(묶음 predict 없음 →
+        현재 배합 예측 행 0). 결과는 **표준 optimize 응답 그대로**이고 옛 키 모양은 `shape_optimize` 가 만든다."""
+        from ...tasks.optimize import OptimizeRequest, Optimizer
+        spec = self.optimizer_spec
+        unknown = [k for k in body if k not in ("fixed", "params")]
+        if unknown:
+            raise CompatError(422, {"detail": [{"loc": ["body", k if isinstance(k, str) and k.isidentifier() else "?"],
+                                                "msg": "알 수 없는 입력입니다", "type": "extra_forbidden"} for k in unknown]})
+        params = body.get("params") or {}
+        if not isinstance(params, dict):
+            raise CompatError(422, {"detail": [{"loc": ["body", "params"], "msg": "객체여야 합니다", "type": "model_attributes_type"}]})
+        names = list(spec.task.raw.get("fixed") or [])
+        fixed_in = {self.rename.get(k, k): v for k, v in body["fixed"].items()}
+        extra = [self.back.get(k, k) for k in fixed_in if k not in names]
+        missing = [self.back.get(n, n) for n in names if n not in fixed_in]
+        if extra or missing:
+            raise CompatError(422, {"detail": [{"loc": ["body", k], "msg": "알 수 없는 입력입니다", "type": "extra_forbidden"} for k in extra]
+                              + [{"loc": ["body", k], "msg": "필수 항목입니다", "type": "missing"} for k in missing]})
+        try:
+            return Optimizer(self.catalog, self.registry).optimize(
+                self.catalog.tenant_id, spec.task.id, OptimizeRequest(fixed=fixed_in, current=None, params=dict(params)),
+                caller=caller, channel="compat")
+        except ServeError as e:
+            if e.status == 422:
+                raise old_422(e, self.back) from None
+            if e.status == 503:
+                raise CompatError(503, {"detail": e.message, "code": e.code}) from None
+            raise
 
     # 옛 추천 행 — 회사 등록부 compat 값(tenant-contract §1):
     #   optimize_rename {표준 예측 · 비용식 · 이상 과제 짧은 이름: 옛 키} · optimize_row [옛 키 순서] ·
@@ -451,7 +485,9 @@ class Compat:
     def _json_rows(frame) -> list[dict]:
         return json.loads(frame.to_json(orient="records", force_ascii=False))
 
-    def records(self, query: dict) -> dict:
+    def records(self, query: dict, frame_hook=None) -> dict:
+        """옛 기록 목록. 2차(D2-A2-05): 회사 플러그인이 쿼리를 바꾸고(`parse_records` — 옛 필터 이름 · 옛 범주 표기 · 기본
+        limit) 행 거르개를 줄 수 있다 — `frame_hook(표준 필터 뒤 프레임, 전체 행 수) -> 프레임`(정렬 · 쪽 나누기 전)."""
         rs = self._need("regression")
         errs = []
 
@@ -486,10 +522,13 @@ class Compat:
         if errs:
             raise CompatError(422, {"detail": errs})
         df = self._frame()
+        n_all = int(len(df))
         for k, v in filters.items():
             df = df[df[k] == v]
         if search:
             df = df[df["lot_id"].str.contains(search, case=False, regex=False)]
+        if frame_hook is not None:
+            df = frame_hook(df, n_all)
         df = df.sort_values(["recorded_at", "lot_id"], ascending=[False, True])
         return {"total": int(len(df)), "limit": limit, "offset": offset,
                 "records": self._json_rows(df.iloc[offset:offset + limit])}

@@ -14,6 +14,8 @@ recognized:                            # 도면 인식값 ↔ 확정 입력이 0
   blank_width_mm: dimensions.width
   tolerance: "0.001"
 inputs: [part_length_mm, blank_width_mm, sheet_thickness_mm, hole_count, slot_count, bend_count, steel_grade, section_profile, quantity]
+input_limits:                          # features.yaml 밖 입력 범위 — 원천 QuoteInput(api/main.py:43 quantity 1~10000 정수) (D2-A2-03)
+  quantity: {min: 1, max: 10000, integer: true}
 formula: formulas/quote.py
 rates:                                 # 원천 config.py COST (예시 단가 — 승인 단가 아님) · 문자열
   machine_per_min: "900"

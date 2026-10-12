@@ -126,7 +126,7 @@ def check_params(params: dict) -> None:
     if "status" in params and not (isinstance(params["status"], int) and 200 <= params["status"] <= 299):
         raise CompatConfigError("compat.routes params.status 는 2xx 정수")
     if "file" in params and not (isinstance(params["file"], str) and SAFE_FILE.match(params["file"]) and ".." not in params["file"]):
-        raise CompatConfigError(f"compat.routes params.file {params['file']!r} — 팩 samples/ 의 파일 이름만")
+        raise CompatConfigError(f"compat.routes params.file {params['file']!r} — 회사 · 팩 samples/ 의 파일 이름만")
     if "columns" in params and not (isinstance(params["columns"], list) and params["columns"]
                                     and all(isinstance(c, str) and re.match(r"^[a-z_][a-z0-9_.]{0,60}$", c) for c in params["columns"])):
         raise CompatConfigError("compat.routes params.columns 는 이름 목록")

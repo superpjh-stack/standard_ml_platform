@@ -35,5 +35,5 @@ compat:
     - {path: /api/quotes, method: GET, action: quote_list, task: quote, params: {limit: 10, max_limit: 100, search_max: 80}}   # :109
     - {path: "/api/quotes/{quote_id}", action: quote_get, task: quote}                             # :114
     - {path: "/api/quotes/{quote_id}/csv", action: quote_get, task: quote, shape: old_quote_csv}  # :126
-    # /api/data/demo (:56) 는 팩 rollform-quote samples/ 에 20행 참조 데이터(demo.json)가 생기면 pack_file 로 (개발3 요청)
+    - {path: /api/data/demo, action: pack_file, params: {file: demo.json}}                         # :56 (회사 samples/demo.json — 가린 사본, D2-65 · D2-A2-04)
 labels: {}

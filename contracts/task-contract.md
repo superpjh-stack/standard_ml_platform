@@ -86,7 +86,7 @@ enums:
   labels: [none, synthetic, provided]                 # none → 지표 null + labels: none (G2-E01)
   rounding: [ROUND_HALF_UP]                           # 2차 — 견적은 Decimal · ROUND_HALF_UP 만 (G2-Q01)
   currency: [KRW]
-immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval, approver_role, target, origins, rounding, currency, formula, extractors, labels, derived, input_rules]   # approver_role · target — D-121 · 2차 6키 — §6.4 · derived · input_rules — §1 · §2(웨이브 P 마감)
+immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval, approver_role, target, origins, rounding, currency, formula, extractors, labels, derived, input_rules, input_limits]   # approver_role · target — D-121 · 2차 6키 — §6.4 · derived · input_rules — §1 · §2(웨이브 P 마감) · input_limits — §6.3(재진입 D2-70)
 not_removable_on_override: [approver_role]
 time_split_policies: [time_60_20_20, time_cv5]
 # 웨이브 P 마감(D2-30 요청 반영) — 로더(registry/{packs,tenants}.py)는 이 값을 먼저 읽고, 없을 때만 코드 기본표를 쓴다
@@ -180,7 +180,8 @@ def extract(raw: bytes, filename: str, *, unit: str | None, limits: dict, model=
 | `rounding` | ○ | `ROUND_HALF_UP` (덮어쓰기 불가) |
 | `currency` | ○ | `KRW` · 원 단위(덮어쓰기 불가) |
 | `confirm` | ○ | `{requires: [reviewed, review_note], review_note_min: 5, approver_role: <역할>}` — 확정은 approver 이상(D2-04), 확정 뒤 수정 409 `quote_locked` |
-| `csv` | | 내보내기 열 순서. 수식 주입 방지(`= + - @ \t \r` 앞 `'`) · UTF-8 BOM 은 코어가 강제 |
+| `input_limits` | | `{<inputs 중 features.yaml 밖 이름>: {min?, max?, integer?}}` — 수량 · 시간 단가 · 외주비 같은 견적 고유 입력의 범위(원천 QuoteInput 이관 — kd 수량 1~1000 정수 · ot 1~10000 정수). 밖이면 422 `invalid_input`(detail `field` = 입력 이름, `rule` = `range` · `integer` — 입력값 되풀이 없음). 없는 이름은 0 이상 숫자만 본다. features.yaml 변수는 여기 두지 않는다(범위 정본 = features.yaml). **덮어쓰기 불가** (D2-A2-03 · 재진입 D2-70) |
+| `csv` | | **품목 행** 내보내기 열 순서(없는 열은 빈 칸). 요약(항목 · 값) 행은 늘 전부 낸다 — 합계 · 구성 금액 · 입력 · 단가 · 예측 · 검토(D2-A2-01). 수식 주입 방지(`= + - @ \t \r` 앞 `'`) · UTF-8 BOM 은 코어가 강제 |
 
 견적 금액은 확정 때 `mlp_quote` 스냅숏(입력 · 단가 · 예측 ID · 모델 버전 · 구성 금액)으로 고정된다 — 이후 모델 · 단가가 바뀌어도 확정 금액은 바뀌지 않는다(G2-Q01).
 
@@ -197,7 +198,7 @@ def extract(raw: bytes, filename: str, *, unit: str | None, limits: dict, model=
 | `krs.joint_strength` | `solder.joint_strength` | regression (`random_60_20_20`, outlier iqr 학습 구간) | §8.3 |
 | `krs.recipe_optimize` | `solder.recipe_optimize` | optimize (`random`, uses joint_strength) | §8.5 |
 | `krs.residual_review` | `solder.residual_review` | review_queue (`abs_residual_ge: 4.0`) | §8.6 |
-| `pc.sensory_score` | `kimchi.sensory_score` | regression (`time_60_20_20`, time_key = 생산 시각) | §9.3 |
+| `pc.sensory_score` | `kimchi.sensory_score` | regression (`time_60_20_20` → 행 420 < 500 이라 실제 `time_cv5`, time_key = 생산 시각) | §9.3 |
 | `pc.recipe_optimize` | `kimchi.recipe_optimize` | optimize (`random`) | §9.5 |
 | `pc.residual_review` | `kimchi.residual_review` | review_queue (`top_quantile: 0.10`) | §9.6 |
 | `ot.machining_minutes` | `rollform-quote.machining_minutes` | regression (`random_60_20_20`) | §10.3 |
