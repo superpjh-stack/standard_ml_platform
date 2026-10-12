@@ -8,10 +8,13 @@ TENANT ?=
 TASK   ?=
 NEW    ?=
 PACK   ?= _template
-NOTYET  = @echo "미구현 — $@ (웨이브 A0/A, goal.md §3.2)"; exit 1
+CSV    ?=
+GIT_SHA = $(shell git rev-parse --short HEAD)
+need    = @test -n "$($(1))" || { echo "$(1)= 가 필요하다 — $(2)"; exit 2; }
 
 .PHONY: setup db-schema db-seed db-reset run web build test gate gate-full doctor doctor-live train train-live \
-        tenant bench check-routes check-schema check-registry check-security check-leakage
+        worker tenant monitor bench bench-local bench-compose e2e image compose-config \
+        check-routes check-schema check-registry check-deploy check-security check-leakage
 
 setup:            ## DB 생성 · 스키마 · 표준 시드 · Python/웹 의존성
 	@for db in ml_db ml_test_db; do createdb -h /tmp $$db 2>/dev/null || true; done
@@ -45,26 +48,49 @@ gate:             ## 판정표 → outputs/gate-latest.md (goal §2)
 gate-full: db-reset build   ## 스키마 재생성 + (A) 과제 8 재학습 2회 · 이관 대조 · 새 회사 · 승인 경합 · bench → 판정
 	$(UV) python gates/gate.py
 
-doctor:           ## make doctor TENANT=<code> — fixture 소스 점검 (개발3)
-	$(NOTYET)
+doctor:           ## make doctor TENANT=<code> — fixture 소스 점검(연결 · 대응률 · 미연결 · 목표 없음) (D-W3-07)
+	$(call need,TENANT,make doctor TENANT=ks)
+	$(UV) python -m mlcore.monitor.doctor --tenant $(TENANT)
 
 doctor-live:      ## 실연결 — 사람이 .env 에 MLP_<CODE>_* 를 넣은 뒤 사람만 돌린다
 	@echo "BLOCKED (D-13) — 실 Data Platform · MES · Gateway 연결은 루프에서 돌리지 않는다"; exit 2
 
-train:            ## make train TENANT=<code> TASK=<code>.<task> (개발1)
-	$(NOTYET)
+train:            ## make train TENANT=<code> TASK=<code>.<task> — 접수 → 같은 프로세스에서 run_and_register → candidate (D-57 · D-W1-12)
+	$(call need,TENANT,make train TENANT=ks TASK=ks.remaining_hours)
+	$(call need,TASK,make train TENANT=ks TASK=ks.remaining_hours)
+	$(UV) python -m mlcore.train.jobs --submit $(TENANT) $(TASK)
+
+worker:           ## API 밖 작업자 — queued 학습 실행 전부를 run_and_register (D-57). API 는 학습하지 않는다
+	$(UV) python -m mlcore.train.jobs --pending
 
 train-live:
 	@echo "BLOCKED (D-13) — 실데이터 학습은 사람이 키를 넣은 뒤 돌린다"; exit 2
 
-tenant:           ## make tenant NEW=<code> PACK=<pack> — tenants/<code>.yaml 만 만든다 (개발3)
-	$(NOTYET)
+tenant:           ## make tenant NEW=<code> PACK=<pack> [CSV=<path>] — 등록부 <code>.yaml 만 만든다(코드 수정 0, D-51 · D-W3-07)
+	$(call need,NEW,make tenant NEW=yn PACK=_template CSV=<path>)
+	$(UV) python migration/make_tenant.py --new $(NEW) --pack $(PACK) $(if $(CSV),--csv $(CSV))
 
-bench:            ## G-M14 — 768MB · CPU 1 아래 p95 · batch · 기동 · RSS
-	$(NOTYET)
+monitor:          ## make monitor TENANT=<code> — 감시 1회(어제 KST, 후보까지만 — production 은 승인으로만). 상주는 --once 빼고 직접
+	$(call need,TENANT,make monitor TENANT=ks)
+	$(UV) python -m mlcore.monitor.scheduler --tenant $(TENANT) --once
+
+bench:            ## G-M14 — docker 데몬이 있으면 compose 제한(768MB · CPU 1) 아래, 없으면 로컬(그 사실을 실측란에) → outputs/bench*-latest.json
+	$(UV) python gates/bench.py
+bench-local:    ; $(UV) python gates/bench.py --local
+bench-compose:  ; $(UV) python gates/bench.py --compose
+
+e2e:              ## G-S03 — Playwright(1.63.0) 화면 1~6 · 1024px · features.yaml 폼 (브라우저 없으면: uv run playwright install chromium)
+	$(UV) pytest -q tests/e2e
+
+compose-config:   ## G-M11 — docker compose config (이미지 태그 = 커밋 SHA)
+	MLP_GIT_SHA=$(GIT_SHA) docker compose config
+
+image:            ## 앱 이미지 빌드(태그 = 커밋 SHA). 배포 · push 는 하지 않는다
+	MLP_GIT_SHA=$(GIT_SHA) docker compose build app
 
 check-routes:   ; $(UV) python gates/check_routes.py
 check-schema:   ; $(UV) python gates/check_schema.py
 check-registry: ; $(UV) python gates/check_registry.py
+check-deploy:   ; $(UV) python gates/check_deploy.py
 check-leakage:  ; $(UV) python gates/check_leakage.py
 check-security: ; $(UV) python gates/check_secrets.py && $(UV) python gates/check_tenant_bleed.py && $(UV) python gates/check_core_terms.py

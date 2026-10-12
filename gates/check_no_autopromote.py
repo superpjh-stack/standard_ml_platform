@@ -1,5 +1,6 @@
 """G-M09 — 자동 승격 경로 0. `production` 을 쓰는 코드 경로는 `approval.decide()` 하나뿐 (spec §6.1 · contracts/interfaces.md §6).
 정적: src/mlcore 의 SQL · 파이썬에서 stage 를 'production' 으로 쓰는 곳을 찾아 approval/ 의 decide 안에만 있는지 본다.
+호출처: `decide(` 호출은 src/mlcore · migration 에서 api/routers/models.py 1곳뿐(D-56, 시험 제외).
 동작: 감시 → 후보 → 승인 대기 · production 불변 · 동시 승인 2건 중 하나만 성공(409) — tests/test_monitor.py · tests/test_approval.py."""
 import ast
 import re
@@ -28,6 +29,23 @@ def _enclosing(tree: ast.AST, lineno: int) -> str | None:
     return best.name if best else None
 
 
+DECIDE_CALLER = "src/mlcore/api/routers/models.py"   # D-56: decide 호출처는 API 승인 경로 하나(시험 제외)
+
+
+def decide_calls() -> list[tuple[str, int]]:
+    """src/mlcore · migration 의 `decide(...)` · `approval.decide(...)` 호출(AST). 시험 · 게이트는 세지 않는다."""
+    out = []
+    for base in (ROOT / "src" / "mlcore", ROOT / "migration"):
+        for p in base.rglob("*.py"):
+            for node in ast.walk(ast.parse(read(p))):
+                if isinstance(node, ast.Call):
+                    f = node.func
+                    name = f.attr if isinstance(f, ast.Attribute) else f.id if isinstance(f, ast.Name) else None
+                    if name == "decide":
+                        out.append((rel(p), node.lineno))
+    return out
+
+
 def run() -> list[Line]:
     writers = []
     for p in (ROOT / "src" / "mlcore").rglob("*.py"):
@@ -44,6 +62,11 @@ def run() -> list[Line]:
     has_decide = (ROOT / "src" / "mlcore" / "approval").is_dir() and any(
         re.search(r"^def decide\(", read(p), re.M) for p in (ROOT / "src" / "mlcore" / "approval").glob("*.py"))
     msg = f"production 쓰기 경로 {len(writers)} (decide 안 {len(allowed)} · 밖 {len(others)})"
+    calls = decide_calls()
+    bad_calls = [c for c in calls if c[0] != DECIDE_CALLER]
+    msg += f" · decide 호출처 {len(calls)} ({DECIDE_CALLER.rsplit('/', 1)[1]} {len(calls) - len(bad_calls)})"
+    if bad_calls or len(calls) != 1:
+        return [Line("G-M09", "감시·승인", "FAIL", msg + f" — 호출처는 API 승인 경로 1곳이어야 한다(D-56): {calls[:4]}")]
     if others:
         return [Line("G-M09", "감시·승인", "FAIL", msg + f": {others[:3]}")]
     if not has_decide:

@@ -299,8 +299,14 @@ def formula(row: dict, params: dict) -> float: ...   # 팩 formulas/<name>.py �
 
 ```python
 def psi(expected: pd.Series, actual: pd.Series, *, bins: int = 10, categorical: bool = False) -> float: ...  # 수치 10분위(학습 스냅숏 기준 경계), 범주 빈도, 0 빈도는 1e-6 바닥
-def run_daily(tenant_id: str, day: "date") -> list[dict]: ...   # mlp_monitor_daily 행. 재학습 후보 조건이면 data.jobs.submit(작업자가 run_and_register → candidate) → registry.request_promotion
+def run_daily(tenant_id: str, day: "date", *, retrain_source: str | None = None) -> list[dict]: ...
+# mlp_monitor_daily 행. 재학습 후보 조건이면 data.jobs.submit(작업자가 run_and_register → candidate) →
+# (D-77) 기준선을 이긴 candidate 만 registry.stage(actor="monitor", 감사 기록) → registry.request_promotion(action=promote, actor="monitor").
+# 기준선 미달은 candidate 로 둔다. 감시가 할 수 있는 전이는 candidate→staging 과 승인 **요청**까지 — production 은 approval.decide() 만(G-M09).
+# retrain_source 기본 = 회사 mode(D-80 가설). 같은 스냅숏이면 run_id 재사용 → 새 candidate 없음(지어내지 않는다).
 ```
+
+PSI 세부(D-79): 경계 = 기대 분포(production 모델의 학습 스냅숏 전체) 10분위(선형 보간 · 결측 제외 · 중복 경계 제거) · 구간 (a, b] · 비율 바닥 1e-6 후 재정규화하지 않음 · 결측은 PSI 에서 빼고 결측률(기대 대비 %p)로 따로 · 운영 값 0건이면 nan(0 으로 꾸미지 않음) · 범위 밖 = 산출물 `features.lock.json` p1/p99.
 
 ## 10. 로더 — `mlcore/registry/packs.py` · `tenants.py`
 
@@ -309,3 +315,8 @@ def load_pack(code: str) -> "Pack": ...            # pack.yaml · features.yaml 
 def load_tenant(code: str) -> "Tenant": ...        # tenants/<code>.yaml + tenants/<code>/tasks/*.yaml 덮어쓰기 병합
 def merge(pack: "Pack", tenant: "Tenant") -> dict[str, TaskDef]: ...   # 병합 규칙 5 위반 → RegistryRejected(rule, detail) — 기동 거부
 ```
+
+**등록부 루트 `MLP_TENANTS_DIR` — 한 규칙(D-65).** 값 = 폴더 경로, `os.pathsep` 로 여러 개(호출 시점에 읽는다).
+- 회사 하나를 읽을 때: 목록 중 `<code>.yaml` 이 있는 **첫 폴더**, 없으면 저장소 `tenants/`. 구현은 `registry.tenants.tenant_base(code)` = `data.jobs.tenants_base_for(code)`(같은 규칙, API · 작업자 · 감시 · 시험 공용).
+- 새 회사를 만들 때 · 회사 목록(`all_codes`, seed): 목록의 **첫 폴더**(없으면 `tenants/`).
+- 시험은 환경변수를 블록 안에서만 바꾸고 되돌린다(`monkeypatch.setenv` · `tests/_dev2.use_tenants_dir`) — 프로세스에 남기지 않는다.

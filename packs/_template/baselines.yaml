@@ -1,2 +1,4 @@
-target_value: {metric: mae,   value: null, measured_by: null, source_reported: null}
-target_risk:  {metric: brier, value: null, measured_by: null, source_reported: null}
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (goal §4.1). 값 = 자리표시 생성기(synth/template_rows.py, 시드 42, 600행) 시험 구간 실측.
+# 측정: 등록부 틀(tenants/_template.yaml)을 임시 코드로 복사 → demo 소스 → StandardTrainer (reproduce.py 와 같은 절차). 원천 없음.
+target_value: {metric: mae,   value: 2.3458, baseline: 10.6553, measured_by: "StandardTrainer on _template demo (seed 42)", source_reported: null}
+target_risk:  {metric: brier, value: 0.1352, baseline: 0.2456,  measured_by: "StandardTrainer on _template demo (seed 42)", source_reported: null}

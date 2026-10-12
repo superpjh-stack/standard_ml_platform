@@ -29,7 +29,7 @@ def _iso(ts):
 def list_models(t: str, task: str, request: Request):
     auth.require(principal(request), "train", write=False)
     spec = catalog(request).get(t, task_id(t, task))
-    items = [{"version": m.version, "stage": m.stage, "algo": m.algo, "metrics": m.metrics,
+    items = [{"version": m.version, "run_id": m.run_id, "stage": m.stage, "algo": m.algo, "metrics": m.metrics,
               "beats_baseline": m.beats_baseline, "synthetic": m.synthetic, "snapshot_id": m.snapshot_id,
               "created_at": _iso(m.created_at), "promoted_at": _iso(m.promoted_at), "promoted_by": m.promoted_by}
              for m in Registry().list(t, spec.task.id)]

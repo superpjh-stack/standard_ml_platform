@@ -1,0 +1,98 @@
+{
+ "limits": {
+  "p95_ms": 200.0,
+  "batch500_s": 3.0,
+  "startup_s": 15.0,
+  "rss_mb": 768.0
+ },
+ "mode": "compose",
+ "compose_limited": true,
+ "note": "docker compose 제한 아래(app 768MB · CPU 1 · OMP_NUM_THREADS=1, 이미지 = 커밋 SHA)",
+ "platform": "darwin",
+ "tenants": [
+  {
+   "tenant_source": "ks",
+   "image": "mlp-app:be24075",
+   "train_in_container_s": 2.54,
+   "health_s": 1.284,
+   "startup_s": 1.683,
+   "per_task": {
+    "remaining_hours": {
+     "type": "regression",
+     "p50_ms": 22.61,
+     "p95_ms": 32.6,
+     "max_ms": 91.79,
+     "batch500_s": 0.099,
+     "n": 200
+    },
+    "failure_24h": {
+     "type": "risk",
+     "p50_ms": 24.74,
+     "p95_ms": 27.49,
+     "max_ms": 32.03,
+     "batch500_s": 0.145,
+     "n": 200
+    },
+    "sensor_ood": {
+     "type": "anomaly",
+     "p50_ms": 27.86,
+     "p95_ms": 31.51,
+     "max_ms": 33.78,
+     "batch500_s": 0.316,
+     "n": 200
+    }
+   },
+   "rss_mb": 246.6,
+   "cgroup_memory_max": "805306368",
+   "cgroup_cpu_max": "100000 100000"
+  },
+  {
+   "tenant_source": "sw",
+   "image": "mlp-app:be24075",
+   "train_in_container_s": 2.55,
+   "health_s": 1.271,
+   "startup_s": 1.665,
+   "per_task": {
+    "delta_e": {
+     "type": "regression",
+     "p50_ms": 22.9,
+     "p95_ms": 24.76,
+     "max_ms": 67.08,
+     "batch500_s": 0.092,
+     "n": 200
+    },
+    "defect_risk": {
+     "type": "risk",
+     "p50_ms": 21.03,
+     "p95_ms": 22.17,
+     "max_ms": 23.24,
+     "batch500_s": 0.11,
+     "n": 200
+    },
+    "print_ood": {
+     "type": "anomaly",
+     "p50_ms": 28.68,
+     "p95_ms": 29.89,
+     "max_ms": 35.43,
+     "batch500_s": 0.314,
+     "n": 200
+    }
+   },
+   "rss_mb": 247.8,
+   "cgroup_memory_max": "805306368",
+   "cgroup_cpu_max": "100000 100000"
+  }
+ ],
+ "worst": {
+  "p95_ms": 32.6,
+  "batch500_s": 0.316,
+  "startup_s": 1.683,
+  "rss_mb": 247.8
+ },
+ "pass": {
+  "p95_ms": true,
+  "batch500_s": true,
+  "startup_s": true,
+  "rss_mb": true
+ }
+}

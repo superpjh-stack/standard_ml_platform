@@ -70,9 +70,9 @@
 |---|---|---|
 | `predict` · `predict:batch` · `optimize` | `contracts/predict-contract.md` §1 | 같은 문서 §5 |
 | `actuals` | `{entity_id, value, observed_at}` | `{actual_id, linked_prediction_ids: [...]}` |
-| `train` | `{source_role: "demo"\|"eval"\|"train", seed?: int}` | 202 `{run_id, status: "queued"}` · 멱등이면 200 `{run_id, status, reused: true}`. 접수만 한다 — 실행 · candidate 등록은 API 밖 작업자(`interfaces.md` §4.1, D-57). 등록부에 없는 `source_role` 은 503 `source_disconnected` |
-| `runs/{id}` | — | `{run_id, status, task, snapshot: {snapshot_id, rows, ts_from, ts_to, sha256}, champion, valid_metrics, test_metrics: {name: {value, baseline, delta_vs_baseline}}, beats_baseline, version, warnings}` |
-| `models` | — | `{items: [{version, stage, algo, metrics, beats_baseline, synthetic, snapshot_id, created_at, promoted_at, promoted_by}], next_cursor}` |
+| `train` | `{source_role: "demo"\|"eval"\|"train", seed?: int}` | 202 `{run_id, status: "queued"}` · 멱등이면 200 `{run_id, status, reused: true}` — 단 같은 run_id 의 **failed** 실행 재접수는 새 실행(학습기가 queued 로 되돌림 · 감사 `train.retry`)이라 202 (D-64). 접수만 한다 — 실행 · candidate 등록은 API 밖 작업자(`interfaces.md` §4.1, D-57). 등록부에 없는 `source_role` 은 503 `source_disconnected` |
+| `runs/{id}` | — | `{run_id, status, task, snapshot: {snapshot_id, rows, ts_from, ts_to, sha256}, champion, valid_metrics, test_metrics: {name: {value, baseline, delta_vs_baseline}}, beats_baseline, version, warnings}` + 덧붙임(D-63): `stage · seed · code_version · config_hash · created_at · started_at · finished_at · error · report{선정 사유 · 기준선 종류 · 구간 · 보정 · 임계값 · 중요도 · 잔차 · 보정 곡선 …}`. 다른 회사 · 없음 → 404 |
+| `models` | — | `{items: [{version, run_id, stage, algo, metrics, beats_baseline, synthetic, snapshot_id, created_at, promoted_at, promoted_by}], next_cursor}` |
 | `models/{v}/promote` · `rollback` | promote `{reason?}` · rollback `{reason}`(필수 — 없으면 422 `missing_required`) | 202 `{approval_id, state: "pending"}` — production 은 바뀌지 않는다 |
 | `approvals/{id}/decide` | `{decision: "approve"\|"reject", reason}` | 200 `{approval_id, state, production_version}` · 409 `already_decided` |
 | `overview` | — | `{task, type, production: {version, algo, trained_at, synthetic} \| null, test_metrics, baseline, predictions_yesterday, monitor: {level, alerts}}` |
@@ -82,6 +82,14 @@
 | `trace` | — | `{prediction: {...}, model: {version, stage, algo, artifact_sha256}, run: {run_id, config_hash, seed, code_version}, snapshot: {snapshot_id, sha256, rows, ts_from, ts_to, synthetic}, sources: [{kind, ref}], actuals: [...]}` |
 | `health` | — | `{status: "ok"\|"degraded", db: bool, version, tasks: [{task, model_ready: bool, version \| null}]}` |
 
+**덧붙인 키(D-78).** 위 표의 키는 전부 필수다(빼거나 선택으로 바꾸지 않는다). 아래 키는 화면이 쓰는 **덧붙임**으로 계약에 올린다 — 이름 · 뜻을 바꾸려면 계약 절차.
+- `doctor`: 응답 `mode` · `warnings`, `sources[]` 에 `targets`(과제별 목표 판정) · `unmapped`(정적 대응 밖 변수).
+- `monitor`: `total` · `last_day` · `retrain_candidates`(화면 6 재학습 후보 링크) · 요청 `?metric=`(psi · oor_rate · missing_rate · live_perf · volume · error_rate · source_health).
+- `tasks` 목록: 응답 `tenant` · `disabled`, 항목 `production` · `uses`.
+- `overview`: 항목 `title` · `model_ready` · `uses` · `pending_approvals`, `monitor.day` · `monitor.note`.
+
 ## 5. 호환 라우터 (D-18 — `/api/v1` 밖)
 
 `MLP_TENANT` 가 켠 회사의 `tenants/<code>.yaml: compat.routes` 만 붙는다. 옛 키 대응은 `contracts/predict-contract.md` §7. 1차 대상: `/api/maintenance/predict`(ks) · `/api/quality/predict`(sw) · `/api/ml/optimize` · `/api/ml/overview` · `/api/data/records` · `/api/data/records/{lot_id}` · `/api/health`(옛 모양).
+
+**인증(D-59 확정 — 사람 결정 2026-10-12).** 옛 health 꼴(`/api/health`)만 키 없이 연다. 나머지 호환 경로는 표준과 같이 `X-API-Key` + `std/roles.yaml` 역할 판정 · 다른 회사 키 404. 키 없는 옛 클라이언트는 401(옛 오류 모양 `{"detail": …}`) — 열어 두지 않는다. 회사 고유 값: `tenants/<code>.yaml compat.round`(옛 응답 반올림 자리, 없으면 반올림 안 함 · 위험 확률만 기본 4) · `compat.optimize_rename`(선택, D-71).

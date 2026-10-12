@@ -1,0 +1,115 @@
+{
+ "limits": {
+  "p95_ms": 200.0,
+  "batch500_s": 3.0,
+  "startup_s": 15.0,
+  "rss_mb": 768.0
+ },
+ "mode": "local-uvicorn",
+ "compose_limited": false,
+ "note": "compose 제한(768MB · CPU 1) 아래 측정 아님 — 로컬 uvicorn 1 프로세스 · OMP_NUM_THREADS=1",
+ "docker_daemon": true,
+ "platform": "darwin",
+ "tenants": [
+  {
+   "tenant_source": "ks",
+   "tasks": [
+    "te1d841.remaining_hours",
+    "te1d841.failure_24h",
+    "te1d841.sensor_ood"
+   ],
+   "train_s": 2.23,
+   "health_s": 0.425,
+   "startup_s": 1.066,
+   "per_task": {
+    "remaining_hours": {
+     "type": "regression",
+     "first_ms": 561.8,
+     "p50_ms": 17.13,
+     "p95_ms": 22.04,
+     "max_ms": 30.64,
+     "batch500_s": 0.086,
+     "batch_items": 500,
+     "n": 200
+    },
+    "failure_24h": {
+     "type": "risk",
+     "first_ms": 34.6,
+     "p50_ms": 18.87,
+     "p95_ms": 24.83,
+     "max_ms": 59.49,
+     "batch500_s": 0.076,
+     "batch_items": 500,
+     "n": 200
+    },
+    "sensor_ood": {
+     "type": "anomaly",
+     "first_ms": 45.1,
+     "p50_ms": 22.72,
+     "p95_ms": 37.52,
+     "max_ms": 125.98,
+     "batch500_s": 0.295,
+     "batch_items": 500,
+     "n": 200
+    }
+   },
+   "rss_mb": 215.2
+  },
+  {
+   "tenant_source": "sw",
+   "tasks": [
+    "t841fe5.delta_e",
+    "t841fe5.defect_risk",
+    "t841fe5.print_ood"
+   ],
+   "train_s": 1.52,
+   "health_s": 0.508,
+   "startup_s": 1.224,
+   "per_task": {
+    "delta_e": {
+     "type": "regression",
+     "first_ms": 651.4,
+     "p50_ms": 17.85,
+     "p95_ms": 19.86,
+     "max_ms": 22.23,
+     "batch500_s": 0.08,
+     "batch_items": 500,
+     "n": 200
+    },
+    "defect_risk": {
+     "type": "risk",
+     "first_ms": 25.9,
+     "p50_ms": 15.16,
+     "p95_ms": 17.86,
+     "max_ms": 36.35,
+     "batch500_s": 0.073,
+     "batch_items": 500,
+     "n": 200
+    },
+    "print_ood": {
+     "type": "anomaly",
+     "first_ms": 38.9,
+     "p50_ms": 22.39,
+     "p95_ms": 26.67,
+     "max_ms": 32.13,
+     "batch500_s": 0.295,
+     "batch_items": 500,
+     "n": 200
+    }
+   },
+   "rss_mb": 226.5
+  }
+ ],
+ "worst": {
+  "p95_ms": 37.52,
+  "batch500_s": 0.295,
+  "startup_s": 1.224,
+  "rss_mb": 226.5
+ },
+ "pass": {
+  "p95_ms": true,
+  "batch500_s": true,
+  "startup_s": true,
+  "rss_mb": true
+ }
+}

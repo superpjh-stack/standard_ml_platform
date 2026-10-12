@@ -23,6 +23,8 @@
 | `monitor` | | map | `psi_warn` · `psi_retrain` · `oor_warn` · `missing_warn_pp` · `perf_drop` · `perf_window_days` (D-06 기본) |
 | `notice` | | string | 없으면 `pack.yaml` 기본 문구 |
 | `seed` | | int | 학습 · 무작위 탐색 시드. 기본 = 팩 `synth` 시드 |
+| `outlier` | | `iqr` \| `{method: iqr, k: 1.5, columns: [...]}` | 기본 꺼짐(D-60). 경계는 **그 학습 구간(폴드 학습 · 재적합 학습)에서만** 재고 그 구간 행만 뺀다 — 검증 · 시험 행은 그대로. 모르는 방법은 학습 failed |
+| `candidate_search` | | `{<후보>: {<파라미터>: [값, ...]}}` | 기본 꺼짐(D-60, spec §5.2). 후보당 최대 `std/candidates.yaml` 탐색 횟수(20)회 무작위(시드 = 과제 `seed`), 첫 시도 = `candidate_params` 기본값, 선정은 검증 지표만. 비지도(anomaly)는 탐색하지 않고 경고 `search_skipped` |
 
 ## 2. 유형별 키
 
@@ -32,6 +34,7 @@
 | | `thresholds: {review_above?, review_below?, watch_band?}` | 상태 판정 (predict-contract §2.2) |
 | | `interval: {method: split_conformal, alpha}` ○ | 검증 구간 잔차로만 보정 |
 | | `clip: {min?, max?}` | 출력 하한 · 상한(원천 `max(0, …)` 이관) |
+| | 기준선 선택 (D-61) | `time_key` 가 있으면 `train_mean` · `last_value`(`std/metrics.yaml baselines`) 중 **검증 구간 선정 지표가 더 나은 쪽**(동률 `train_mean`). 시험 구간은 고르는 데 쓰지 않는다. 두 기준선의 검증 · 시험 지표는 `report.baselines_compared`, 산출물 lock 에 `baseline_kind` |
 | `risk` | `target: {name, positive}` ○ | 이진 |
 | | `thresholds: {review_prob, watch_prob?}` ○ | 등급 high ≥ review_prob · watch ≥ watch_prob |
 | | `calibration: {method: none \| sigmoid \| isotonic}` | 검증 구간으로만 |
@@ -48,6 +51,8 @@
 | | `constraints: [{name, expr}]` ○ | `expr` = `<lhs> (<=|>=|<|>) <rhs>` 한 줄. lhs · rhs 는 uses 과제의 짧은 이름 · formula · decision_var · controls · `params` 이름 · 숫자 · 단순 `+ - *` |
 | | `search: {strategy: grid \| random \| auto, max_points}` ○ | auto = 공간 ≤ max_points 면 grid |
 | | `on_infeasible: least_violation` ○ | violation = Σ max(0, 위반량) / max(\|rhs\|, 1e-9) |
+| | `warn_with: [<pack>.<anomaly 과제>]` | 선택(D-76, 원천 sw "시험 인쇄로 먼저 확인" 이관). 후보마다 그 과제 **production** 모델의 flag 를 `warnings`(`anomaly_flag`, field = 과제)에 넣는다. 목적 · 제약 · 순위에는 쓰지 않는다. production 이 없으면 경고 `model_not_ready`(숨기지 않는다). 의존 과제 규칙(병합 규칙 3)을 같이 받는다 |
+| | 고정 입력 범위 밖 (D-72) | optimize 의 허용 상태는 `needs_approval` · `review` 뿐 — 고정 입력이 학습 범위 밖이면 경고 `out_of_range`(field = 고정 변수) + `out_of_range_fields` + status `review` |
 
 ## 3. 덮어쓰기 (`tenants/<code>/tasks/<task>.yaml`, spec §3.3)
 

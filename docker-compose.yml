@@ -1,0 +1,64 @@
+# 표준 ML 플랫폼 — 회사당 한 벌(D-01): app + db (spec §17 배포 · goal G-M11).
+# 규약(gates/check_deploy.py 가 `docker compose config` 로 검사):
+#   - DB 포트는 밖으로 열지 않는다(ports 없음 — compose 내부 네트워크만).
+#   - 앱 포트는 하나(8200, 루프백에만 묶는다 — 밖은 HTTPS 프록시 뒤, spec §17 보안).
+#   - 헬스체크 필수(app · db). app 은 db 가 healthy 일 때 뜬다.
+#   - app 메모리 768MB · CPU 1(spec §17 자원 [기준: ks 배포]) · OMP_NUM_THREADS=1.
+#   - 이미지 태그 = 커밋 SHA: MLP_GIT_SHA 가 없으면 compose 가 실패한다(기본값을 두지 않는다).
+#     예) MLP_GIT_SHA=$(git rev-parse --short HEAD) docker compose build
+#   - 비밀값은 env 파일(.env.deploy, 커밋 금지 — 틀은 docker/deploy.env.example) 참조만. 이 파일에는 값이 없다.
+# 기동은 학습하지 않는다(G-M06). 모델은 볼륨 mlp_var 의 등록부 산출물에서만 읽는다.
+# 스키마는 첫 기동 때 db 가 schema.sql 을 실행하고, 표준 시드는 사람이 한 번:
+#   docker compose run --rm app /app/.venv/bin/python -m mlcore.db.seed_std
+name: mlp
+
+services:
+  db:
+    image: postgres:17.10-bookworm
+    restart: unless-stopped
+    env_file:
+      - path: .env.deploy
+        required: false
+    volumes:
+      - mlp_pg:/var/lib/postgresql/data
+      - ./src/mlcore/db/schema.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER:-postgres}\" -d \"$${POSTGRES_DB:-postgres}\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  app:
+    image: mlp-app:${MLP_GIT_SHA:?MLP_GIT_SHA 를 커밋 SHA 로 지정하세요}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env.deploy
+        required: false
+    environment:
+      OMP_NUM_THREADS: "1"
+      MLP_API_PORT: "8200"
+      MLP_ARTIFACT_DIR: /app/var/artifacts
+      MLP_SNAPSHOT_DIR: /app/var/snapshots
+    ports:
+      - "127.0.0.1:8200:8200"
+    mem_limit: 768m
+    cpus: 1.0
+    volumes:
+      - mlp_var:/app/var
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8200/api/v1/health', timeout=2).status == 200 else 1)"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  mlp_pg:
+  mlp_var:

@@ -1,0 +1,18 @@
+# 이미지에 들어가지 않는 것 — 비밀 · 실행 산출물 · 개발 도구 · 정본 문서
+.env
+.env.*
+.git
+.venv
+.pytest_cache
+**/__pycache__
+var
+outputs
+tests
+gates
+migration
+docs
+web/node_modules
+web/dist
+*.md
+!README.md
+!contracts/*.md

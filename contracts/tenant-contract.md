@@ -28,6 +28,8 @@ notify: {webhook_env: MLP_<CODE>_SLACK_WEBHOOK}
 compat:                       # 호환 라우터(D-18)만 쓰는 회사 고유 값
   entity_prefix: "SW-DEMO-"
   routes: [/api/quality/predict, /api/ml/optimize, /api/ml/overview, /api/data/records]
+  round: {delta_e: 3, risk_probability: 4}           # 옛 응답 반올림 자리(D-71 · D-W2-02). 없으면 반올림 안 함(위험 확률만 기본 4)
+  optimize_rename: {delta_e: pred_delta_e}           # 선택 — 표준 예측 · 비용식 이름 → 옛 행 키
 labels: {}                    # 회사 문구 덮어쓰기
 ```
 
@@ -39,6 +41,7 @@ labels: {}                    # 회사 문구 덮어쓰기
 | T2 | 다른 회사 코드 · 회사명 · 데이터 파일 경로가 없다(`tests/fixtures/<자기 code>/` 만) | G-S06 FAIL |
 | T4 | 새 회사 연습(G-M10 · spec §17-9 "CSV 업로드")의 CSV 는 **커밋하지 않는다.** 시험이 `migration/make_fixtures.py --kind template_csv --out <tmp>` 로 만들고, 임시 등록부 폴더에서 `make tenant` 가 만든 `tenants/yn.yaml` 의 `sources.eval.path` 가 그 파일을 가리킨다. 1차에는 `tenants/yn*` · `tests/fixtures/yn/` 을 커밋하지 않는다("빈 폴더에서 처음부터" 를 되풀이할 수 있게 — D-51) | G-S06 · G-M10 |
 | T3 | 병합 규칙 5(spec §11.3) — 아래 | 기동 거부(G-S02) |
+| T5 | 등록부 루트는 저장소 `tenants/` 가 기본이고, 시험 · 새 회사 연습만 `MLP_TENANTS_DIR`(`os.pathsep` 목록)로 바꾼다. 해석 규칙은 `interfaces.md` §10 하나(D-65) | 시험 오염 · FileNotFound |
 
 ### 2.1 병합 규칙 5 (기동 거부)
 

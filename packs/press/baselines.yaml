@@ -1,5 +1,7 @@
-# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (goal §4.1). Phase 0: 값 없음 → 기준선 회귀 게이트는 FAIL 이 정상.
-remaining_hours:    {metric: mae,     value: null, measured_by: null, source_reported: 5.568}
-failure_24h:        {metric: brier,   value: null, measured_by: null, source_reported: 0.0576}
-sensor_ood:         {metric: flag_rate, value: null, measured_by: null, source_reported: null}
-maintenance_timing: {metric: constraint_satisfaction_rate, value: null, measured_by: null, source_reported: null}
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (goal §4.1). 값 = 표준 학습기 시험 구간 실측(합성 시드 42, 시험 1회).
+# measured_by = 재현 명령. source_reported = 원천 문서값(migration/source_inventory.md). 2026-10-12 기입(D-52 후속).
+# optimize 의 constraint_satisfaction_rate = 원천 시험 요청(기본 제약)에서 충족 후보 / 탐색점 (reproduce.py optimize).
+remaining_hours:    {metric: mae,       value: 5.5683, baseline: 21.2194, measured_by: "migration/reproduce.py", source_reported: 5.568}
+failure_24h:        {metric: brier,     value: 0.0576, baseline: 0.0586,  measured_by: "migration/reproduce.py", source_reported: 0.0576}
+sensor_ood:         {metric: flag_rate, value: 0.1389, baseline: 0.08,    measured_by: "migration/reproduce.py", source_reported: null}   # 기준 = contamination 0.08 × [0.5, 2.0] (D-50)
+maintenance_timing: {metric: constraint_satisfaction_rate, value: 0.9175, baseline: null, measured_by: "migration/reproduce.py (89/97)", source_reported: null}

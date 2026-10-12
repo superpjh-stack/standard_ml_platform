@@ -41,11 +41,12 @@ def _submit_fn():
 
 
 def submit(tenant_id: str, task_id: str, *, actor: str, source_role: str, seed: int | None) -> dict:
-    """→ {run_id, status, reused}. 같은 스냅숏 · 같은 설정이면 학습기가 기존 run_id 를 돌려준다(멱등)."""
+    """→ {run_id, status, reused}. 같은 스냅숏 · 같은 설정이면 학습기가 기존 run_id 를 돌려준다(멱등).
+    reused = 그 run_id 가 전에 있었고 failed 가 아니었다(failed 재접수 = 새 실행, D-64)."""
     fn = _submit_fn()
     with connect() as c:
-        before = {r["run_id"] for r in c.execute(
-            "SELECT run_id FROM mlp_train_run WHERE tenant_id=%s AND task_id=%s", (tenant_id, task_id)).fetchall()}
+        before = {r["run_id"]: r["status"] for r in c.execute(
+            "SELECT run_id, status FROM mlp_train_run WHERE tenant_id=%s AND task_id=%s", (tenant_id, task_id)).fetchall()}
     params = inspect.signature(fn).parameters
     extra = {k: v for k, v in (("source_role", source_role), ("seed", seed)) if k in params and v is not None}
     try:
@@ -63,7 +64,9 @@ def submit(tenant_id: str, task_id: str, *, actor: str, source_role: str, seed: 
         raise
     with connect() as c:
         row = c.execute("SELECT status FROM mlp_train_run WHERE run_id = %s", (run_id,)).fetchone()
-    return {"run_id": run_id, "status": row["status"] if row else "queued", "reused": run_id in before}
+    # failed 실행의 재접수는 새 실행이다(학습기가 queued 로 되돌림 — D-64) → reused 아님(202)
+    return {"run_id": run_id, "status": row["status"] if row else "queued",
+            "reused": run_id in before and before[run_id] != "failed"}
 
 
 def run_and_register(run_id: str):

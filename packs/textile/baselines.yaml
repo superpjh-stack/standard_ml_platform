@@ -1,5 +1,6 @@
-# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만. Phase 0: 값 없음 → 기준선 회귀 게이트 FAIL 이 정상.
-delta_e:        {metric: mae,   value: null, measured_by: null, source_reported: 0.557}
-defect_risk:    {metric: brier, value: null, measured_by: null, source_reported: 0.127}
-print_ood:      {metric: flag_rate, value: null, measured_by: null, source_reported: null}
-print_setpoint: {metric: constraint_satisfaction_rate, value: null, measured_by: null, source_reported: null}
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (goal §4.1). 값 = 표준 학습기 시험 구간 실측(합성 시드 42, 시험 1회).
+# source_reported = 원천 문서값. 불량 분류 지표는 문서값과 ≤ 0.0013 차이(D-52 · 이슈 #3) — value 는 표준 실측.
+delta_e:        {metric: mae,       value: 0.5569, baseline: 1.0865, measured_by: "migration/reproduce.py", source_reported: 0.557}
+defect_risk:    {metric: brier,     value: 0.1261, baseline: 0.2051, measured_by: "migration/reproduce.py", source_reported: 0.127}   # AUC 0.8686 · AP 0.7823 (문서 0.868 · 0.781)
+print_ood:      {metric: flag_rate, value: 0.1458, baseline: 0.08,   measured_by: "migration/reproduce.py", source_reported: null}   # 기준 = contamination 0.08 × [0.5, 2.0] (D-50)
+print_setpoint: {metric: constraint_satisfaction_rate, value: 0.2907, baseline: null, measured_by: "migration/reproduce.py (314/1080)", source_reported: null}   # 원천 1,054/8,400 — 공간 다름(D-31)

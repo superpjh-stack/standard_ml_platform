@@ -1,7 +1,7 @@
 """G-S03 화면 · G-S04 API (`make check-routes`).
 
 G-S03: contracts/screen-map.md 1차 화면 6 의 파일 존재 · `/app/<path>` 200(빌드 있을 때) · `_placeholder` 표지 0 ·
-       회사 화면 코드 0 (web/src 에 회사 이름 폴더 · 파일 없음). 1024px 가로 스크롤은 tests/e2e/ 가 본다.
+       회사 화면 코드 0 (web/src 에 회사 이름 폴더 · 파일 없음). 1024px 가로 스크롤 · 폼 생성 · 브라우저 200 은 tests/e2e/test_console.py(Playwright 1.63.0, D-40).
 G-S04: contracts/api-contract.md 1차 묶음 12 의 경로가 앱에 전부 있고, 2차 3 묶음은 501 경로가 있다.
        오류 계약 · 역할 · 목록 모양은 tests/test_api_contract.py.
 """
@@ -64,11 +64,11 @@ def run() -> list[Line]:
             probs.append(f"/app 200 {http_ok}/{len(sc)}")
     else:
         probs.append("web/dist 없음(npm run build)")
-    e2e = (ROOT / "tests" / "e2e").is_dir()
-    if not e2e:
-        probs.append("tests/e2e/ 없음(1024px 검사)")
+    e2e = pytest_gate("G-S03", "", "tests/e2e/test_console.py")   # 실제 브라우저(Playwright) · 1024px · features.yaml 폼
+    if e2e.status != "PASS":
+        probs.append(f"e2e {e2e.measured}")
     lines.append(Line("G-S03", "화면", "FAIL" if probs else "PASS",
-                      "; ".join(probs) if probs else f"화면 6/6 200 · _placeholder 0 · e2e 있음"))
+                      "; ".join(probs) if probs else f"화면 6/6 /app 200 · _placeholder 0 · e2e(ks·sw, 1024px 화면 2·3 가로 스크롤 0 · 폼=features.yaml) {e2e.measured}"))
     # G-S04
     rows = api_rows()
     bundles1 = sorted({r["bundle"] for r in rows if r["phase"] == 1})

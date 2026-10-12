@@ -22,7 +22,7 @@ CHECKS = [
     lambda: [pytest_gate("G-M10", "새 회사", "tests/test_new_tenant.py")],
     "check_deploy", "check_migration",
     lambda: [pytest_gate("G-M13", "최적화", "tests/test_optimize.py")],
-    lambda: [Line("G-M14", "비기능", "FAIL", "make bench 미구현 (p95 · batch 500 · 기동 · RSS 미측정)")],
+    lambda: importlib.import_module("bench").run(compose=importlib.import_module("bench")._docker_up()),   # make bench 와 같다
 ]
 ORDER = ["G-V01"] + [f"G-S0{i}" for i in range(1, 8)] + [f"G-M{i:02d}" for i in range(1, 15)]
 
