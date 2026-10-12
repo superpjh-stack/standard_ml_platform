@@ -1,0 +1,4 @@
+G-M09  만료 경계 경합 #0(만료 0.8s)  PASS  state={'state': 'expired', 'decided_by': 'system'} 200=0 409=82 기타=[] 감사=[{'action': 'approval.expired', 'n': 1}, {'action': 'approval.request.rollback', 'n': 1}] production [{'version': 'v4'}]→[{'version': 'v4'}]
+G-M09  만료 경계 경합 #1(만료 1.0s)  PASS  state={'state': 'expired', 'decided_by': 'system'} 200=0 409=72 기타=[] 감사=[{'action': 'approval.expired', 'n': 1}, {'action': 'approval.request.rollback', 'n': 1}] production [{'version': 'v4'}]→[{'version': 'v4'}]
+G-M09  만료 경계 경합 #2(만료 1.2s)  PASS  state={'state': 'expired', 'decided_by': 'system'} 200=0 409=84 기타=[] 감사=[{'action': 'approval.expired', 'n': 1}, {'action': 'approval.request.rollback', 'n': 1}] production [{'version': 'v4'}]→[{'version': 'v4'}]
+G-M09  만료 경합 3  WARN  pending 승인 없음

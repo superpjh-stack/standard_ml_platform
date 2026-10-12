@@ -1,0 +1,8 @@
+G-M02  KS-E1 GET /api/health  PASS  HTTP 200 
+G-M02  KS-E2 GET /api/ml/overview  PASS  HTTP 200 
+G-M02  KS-E5 GET /api/data/records?limit=2  PASS  HTTP 200 
+G-M02  KS-E6 GET /api/data/records/KS-DEMO-0001  PASS  HTTP 200 
+G-M02  KS-E6 GET /api/data/records/KS-DEMO-9999  PASS  HTTP 404 {'detail': 'LOT를 찾을 수 없습니다'}
+G-M02  KS-E7 GET /  FAIL  HTTP 404 {'error': {'code': 'not_found', 'message': '찾을 수 없습니다', 'detail': {}}}
+G-M02  KS-E7 GET /app/overview  PASS  HTTP 200 
+G-M02  KS-E1(std) GET /api/v1/health  PASS  HTTP 200 

@@ -1,5 +1,49 @@
 # progress.md — 검증된 현황의 유일한 진실
 
+## 최종 보고 — 1차 종료 (2026-10-13, 기준 커밋 1ec05e6)
+
+goal §4.4 종료 조건 4개를 모두 만족해 루프를 멈춘다.
+
+| 조건 | 판정 | 실측 · 명령 |
+|---|---|---|
+| 1. G-V01 · G-S01~07 · G-M01~14 전건 PASS (BLOCKED 는 D-13 실연결만) | 충족 | `make gate` = PASS 23 · FAIL 0 · BLOCKED 1(G-M08 doctor-live, D-13) |
+| 2. §1 의 1~7 을 `make gate-full` 로 확인 | 충족 | `CONFIRM=1 make gate-full` = PASS 23 · BLOCKED 1 |
+| 3. QA 리포트 3종 + 치명 0 | 충족 | `outputs/qa1-*.md` · `qa2-*.md` · `qa3-*.md` (치명 2 · 중대 8 발견) → 웨이브 C 수정 → `outputs/qa-r2-재검증.md` 치명 0 · 중대 0 |
+| 4. 연속 2회전 실측 변화 없음 | 충족 | 1ec05e6 이후 코드 변경 0, `make gate` 2회 연속 같은 판정 |
+
+시험: `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` 459 passed · 3 skipped · 0 failed, `uv run pytest -q tests/e2e` 10 passed.
+
+### 과제 8 (합성 시드, 시험 구간 1회)
+
+| 과제 | 유형 | 챔피언 | 시험 지표 (기준선) | 원천 보고값 | 차이 |
+|---|---|---|---|---|---|
+| ks.remaining_hours | regression | gbr | MAE 5.568 (21.219) · R² 0.9199 | MAE 5.568 · R² 0.9199 | ≤ 0.01% |
+| ks.failure_24h | risk | rf_clf | Brier 0.0576 (0.0586) · AUC 0.6444 | Brier 0.0576 · AUC 0.6444 | 0% |
+| ks.sensor_ood | anomaly | isolation_forest | flag 0.1389 (밴드 0.04~0.16) | 보고 없음 | — |
+| ks.maintenance_timing | optimize | 1차원 격자 | 후보 97 · 충족 89 | 후보 97 | 0% |
+| sw.delta_e | regression | extra_trees | MAE 0.557 (1.087) · R² 0.722 | MAE 0.557 · R² 0.722 | ≤ 0.03% |
+| sw.defect_risk | risk | gbc | Brier 0.1261 (0.2051) · AUC 0.8686 | Brier 0.127 · AUC 0.868 | ≤ 0.71% (D-52, #3) |
+| sw.print_ood | anomaly | isolation_forest | flag 0.1458 | 보고 없음 | — |
+| sw.print_setpoint | optimize | 5차원 격자 | 후보 1,080 · 충족 314 | 후보 8,400 | 학습 범위 밖 외삽 제거(D-31, 의도) |
+
+과제 대응 32/32(`docs/task-map.md`). 비기능(compose 768MB · CPU 1): p95 27.9 ms · batch 500 0.306 s · 기동 1.65 s · RSS 248 MB.
+
+### 이관 중 발견한 원천 결함 (요약 — 상세 `docs/migration-report.md` · `migration/source_inventory.md`)
+평창식 표본 내 평가(기준선 원칙 위반) · sw 원천 격자의 학습 범위 밖 외삽(S9) · 원천 문서의 공개 IP · 호스트(D-41, 옮기지 않음) · 원천 문서 지표 반올림 불일치(D-52).
+
+### 사람이 정해야 할 것
+- D-130 승인 만료(모델 168h · 추천 24h, 가설)
+- D-32 · D-33 실데이터(목표 변수 · 원천 열 · Data Platform 뷰 이름) — 이슈 #1
+- D-27 · D-30 · D-04 · D-82 · 정본 결함 — 이슈 #2
+- D-52 sw 원천 문서값 출처 — 이슈 #3
+- D-13 실연결 키(`.env`) — 넣으면 `make doctor` live · `train-live`
+
+### 열린 이슈 (모두 경미 또는 사람 확인)
+#1 · #2 · #3(사람) · #7 후속(D-123 compose 앱 계정 · `make image` 재빌드 · D-81 · 시험 DB 정리) · #13 · #16 · #19 · #20 경미 결함.
+
+### 2차 착수 전 확인
+goal §10 — 유형 `review_queue` · `extract` · `quote` 를 코어에 먼저 넣고 1차 게이트 재실행, 팩 4 · 회사 4(krs · pc · ot · kd), 화면 7~10, Agent 플랫폼 `ml.*` 도구 · 데이터 허브 연동, 실데이터 1과제 production.
+
 ## 지금 해야 할 것 (2026-10-12, 웨이브 C 결함 수정 마감 — 기준 커밋 9d2febc + 작업 트리, 커밋은 오케스트레이터)
 
 1. **make gate 2회 연속 = PASS 23 · FAIL 0 · BLOCKED 1(D-13 만).** 전체 시험 `pytest --ignore=tests/e2e` **459 passed · 3 skipped · 0 failed**, e2e **10 passed**. G-M13 은 게이트 2회 + test_optimize 단독 6회 모두 통과(간헐 실패 재현 0 — 개발2 가 시험 대역을 고친 뒤).

@@ -1,0 +1,322 @@
+<repo>/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+train s 3.3
+C-PRED   PASS  t858596.remaining_hours predict(mid) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t858596.remaining_hours predict(explain) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t858596.remaining_hours predict(imputed3) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": ["press_force", "vibration", "motor_current"], "oor": []}
+C-PRED   PASS  t858596.remaining_hours predict(oor) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "out_of_range", "imputed": [], "oor": ["press_force"]}
+C-BATCH  PASS  t858596.remaining_hours batch 순서 · 건별 422 · 스키마 :: {"status": 200, "shape": ["ok", "error", "ok", "error"], "bad_schema": [], "keys": ["items", "next_cursor"]}
+C-BATCH-NAN PASS  t858596.remaining_hours batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝) :: {"status": 200, "body": "{\"items\":[{\"task\":\"t858596.remaining_hours\",\"type\":\"regression\",\"tenant\":\"t858596\",\"entity_id\":null,\"prediction\":{\"value\":103.086277,\"unit\":\"h\",\"interval\":[92.414523,113.758031],\"grade\":null,\"baseline"}
+C-BATCH-501 PASS  t858596.remaining_hours batch 501 → 422 invalid_input :: 422
+C-PRED   PASS  t858596.failure_24h predict(mid) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t858596.failure_24h predict(explain) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t858596.failure_24h predict(imputed3) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": ["press_force", "vibration", "motor_current"], "oor": []}
+C-PRED   PASS  t858596.failure_24h predict(oor) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "out_of_range", "imputed": [], "oor": ["press_force"]}
+C-BATCH  PASS  t858596.failure_24h batch 순서 · 건별 422 · 스키마 :: {"status": 200, "shape": ["ok", "error", "ok", "error"], "bad_schema": [], "keys": ["items", "next_cursor"]}
+C-BATCH-NAN PASS  t858596.failure_24h batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝) :: {"status": 200, "body": "{\"items\":[{\"task\":\"t858596.failure_24h\",\"type\":\"risk\",\"tenant\":\"t858596\",\"entity_id\":null,\"prediction\":{\"value\":0.027266,\"unit\":\"probability\",\"interval\":null,\"grade\":\"low\",\"baseline\":0.0625},\"probabil"}
+C-BATCH-501 PASS  t858596.failure_24h batch 501 → 422 invalid_input :: 422
+C-PRED   PASS  t858596.sensor_ood predict(mid) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t858596.sensor_ood predict(explain) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t858596.sensor_ood predict(imputed3) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": ["press_force", "vibration", "motor_current"], "oor": []}
+C-PRED   PASS  t858596.sensor_ood predict(oor) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "out_of_range", "imputed": [], "oor": ["press_force"]}
+C-BATCH  PASS  t858596.sensor_ood batch 순서 · 건별 422 · 스키마 :: {"status": 200, "shape": ["ok", "error", "ok", "error"], "bad_schema": [], "keys": ["items", "next_cursor"]}
+C-BATCH-NAN PASS  t858596.sensor_ood batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝) :: {"status": 200, "body": "{\"items\":[{\"task\":\"t858596.sensor_ood\",\"type\":\"anomaly\",\"tenant\":\"t858596\",\"entity_id\":null,\"prediction\":null,\"probability\":null,\"anomaly\":{\"score\":0.481895,\"flag\":false,\"threshold\":0.561426,\"contamin"}
+C-BATCH-501 PASS  t858596.sensor_ood batch 501 → 422 invalid_input :: 422
+C-OPT    PASS  t858596.maintenance_timing optimize(ok) 18키 · 스키마 :: {"status": 200, "keys": 18, "errs": [], "st": "needs_approval", "feasible": true, "in_range": 1.0}
+C-OPT    PASS  t858596.maintenance_timing optimize(infeasible) 18키 · 스키마 :: {"status": 200, "keys": 18, "errs": [], "st": "review", "feasible": false, "in_range": 1.0}
+C-OPT    PASS  t858596.maintenance_timing predict 경로 → 404 :: 404
+C-PRED   PASS  t8214c6.delta_e predict(mid) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t8214c6.delta_e predict(explain) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   FAIL  t8214c6.delta_e predict(imputed3) 18키 · 유형 null 규칙 :: {"status": 422, "keys": 1, "errs": ["http 422 {\"error\":{\"code\":\"missing_required\",\"message\":\"필수 입력이 없습니다\",\"detail\":{\"field\":\"set_temp\",\"rule\":\"required\"}}}"], "st": null, "imputed": null, "oor": null}
+C-PRED   PASS  t8214c6.delta_e predict(oor) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "out_of_range", "imputed": [], "oor": ["set_temp"]}
+C-BATCH  PASS  t8214c6.delta_e batch 순서 · 건별 422 · 스키마 :: {"status": 200, "shape": ["ok", "error", "ok", "error"], "bad_schema": [], "keys": ["items", "next_cursor"]}
+C-BATCH-NAN PASS  t8214c6.delta_e batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝) :: {"status": 200, "body": "{\"items\":[{\"task\":\"t8214c6.delta_e\",\"type\":\"regression\",\"tenant\":\"t8214c6\",\"entity_id\":null,\"prediction\":{\"value\":1.860959,\"unit\":\"ΔE\",\"interval\":[0.722322,2.999595],\"grade\":null,\"baseline\":3.209655},"}
+C-BATCH-501 PASS  t8214c6.delta_e batch 501 → 422 invalid_input :: 422
+C-PRED   PASS  t8214c6.defect_risk predict(mid) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t8214c6.defect_risk predict(explain) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   FAIL  t8214c6.defect_risk predict(imputed3) 18키 · 유형 null 규칙 :: {"status": 422, "keys": 1, "errs": ["http 422 {\"error\":{\"code\":\"missing_required\",\"message\":\"필수 입력이 없습니다\",\"detail\":{\"field\":\"set_temp\",\"rule\":\"required\"}}}"], "st": null, "imputed": null, "oor": null}
+C-PRED   PASS  t8214c6.defect_risk predict(oor) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "out_of_range", "imputed": [], "oor": ["set_temp"]}
+C-BATCH  PASS  t8214c6.defect_risk batch 순서 · 건별 422 · 스키마 :: {"status": 200, "shape": ["ok", "error", "ok", "error"], "bad_schema": [], "keys": ["items", "next_cursor"]}
+C-BATCH-NAN PASS  t8214c6.defect_risk batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝) :: {"status": 200, "body": "{\"items\":[{\"task\":\"t8214c6.defect_risk\",\"type\":\"risk\",\"tenant\":\"t8214c6\",\"entity_id\":null,\"prediction\":{\"value\":0.086293,\"unit\":\"probability\",\"interval\":null,\"grade\":\"low\",\"baseline\":0.322917},\"probab"}
+C-BATCH-501 PASS  t8214c6.defect_risk batch 501 → 422 invalid_input :: 422
+C-PRED   PASS  t8214c6.print_ood predict(mid) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   PASS  t8214c6.print_ood predict(explain) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "ok", "imputed": [], "oor": []}
+C-PRED   FAIL  t8214c6.print_ood predict(imputed3) 18키 · 유형 null 규칙 :: {"status": 422, "keys": 1, "errs": ["http 422 {\"error\":{\"code\":\"missing_required\",\"message\":\"필수 입력이 없습니다\",\"detail\":{\"field\":\"set_temp\",\"rule\":\"required\"}}}"], "st": null, "imputed": null, "oor": null}
+C-PRED   PASS  t8214c6.print_ood predict(oor) 18키 · 유형 null 규칙 :: {"status": 200, "keys": 18, "errs": [], "st": "out_of_range", "imputed": [], "oor": ["set_temp"]}
+C-BATCH  PASS  t8214c6.print_ood batch 순서 · 건별 422 · 스키마 :: {"status": 200, "shape": ["ok", "error", "ok", "error"], "bad_schema": [], "keys": ["items", "next_cursor"]}
+C-BATCH-NAN PASS  t8214c6.print_ood batch 2건 중 1건 NaN → 나머지 1건은 답한다(계약 §5 끝) :: {"status": 200, "body": "{\"items\":[{\"task\":\"t8214c6.print_ood\",\"type\":\"anomaly\",\"tenant\":\"t8214c6\",\"entity_id\":null,\"prediction\":null,\"probability\":null,\"anomaly\":{\"score\":0.451574,\"flag\":false,\"threshold\":0.57032,\"contaminat"}
+C-BATCH-501 PASS  t8214c6.print_ood batch 501 → 422 invalid_input :: 422
+C-OPT    PASS  t8214c6.print_setpoint optimize(ok) 18키 · 스키마 :: {"status": 200, "keys": 18, "errs": [], "st": "needs_approval", "feasible": true, "in_range": 1.0}
+C-OPT    PASS  t8214c6.print_setpoint optimize(infeasible) 18키 · 스키마 :: {"status": 200, "keys": 18, "errs": [], "st": "review", "feasible": false, "in_range": 1.0}
+C-OPT    PASS  t8214c6.print_setpoint predict 경로 → 404 :: 404
+IN       PASS  t858596.remaining_hours NaN :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.remaining_hours Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.remaining_hours -Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.remaining_hours 1e400(→inf) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.remaining_hours 1e308 거대 실수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "max"}}
+IN       PASS  t858596.remaining_hours 10**30 거대 정수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "max"}}
+IN       PASS  t858596.remaining_hours 10**400 거대 정수(float 넘침) :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "max"}}
+IN       PASS  t858596.remaining_hours 5000자리 정수(파서 한도) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": null, "rule": "json_invalid"}]}}
+IN       PASS  t858596.remaining_hours -0.0 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "min"}}
+IN       PASS  t858596.remaining_hours 빈 문자열(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "press_force", "rule": "type"}}
+IN       PASS  t858596.remaining_hours 문자열 숫자 "1" :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "press_force", "rule": "type"}}
+IN       PASS  t858596.remaining_hours true(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.remaining_hours 중첩 객체 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.remaining_hours 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.remaining_hours 유니코드 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": null, "rule": "unknown_key"}}
+IN       PASS  t858596.remaining_hours 범주 빈 문자열 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "machine_code", "rule": "values"}}
+IN       PASS  t858596.remaining_hours 범주 유니코드 반사 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "machine_code", "rule": "values"}}
+IN       PASS  t858596.remaining_hours 범주 숫자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "machine_code", "rule": "type"}}
+IN       PASS  t858596.remaining_hours 최상위 모르는 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "*", "rule": "extra_forbidden"}]}}
+IN       PASS  t858596.remaining_hours inputs 가 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs", "rule": "dict_type"}]}}
+IN       PASS  t858596.remaining_hours 본문이 JSON 아님 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "1", "rule": "json_invalid"}]}}
+IN       PASS  t858596.remaining_hours entity_id 129자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "entity_id", "rule": "string_too_long"}]}}
+IN       PASS  t858596.remaining_hours model_version 형식 위반 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "model_version", "rule": "string_pattern_mismatch"}]}}
+IN       PASS  t858596.remaining_hours explain 문자열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "explain", "rule": "bool_type"}]}}
+IN       PASS  t858596.remaining_hours 정수 변수에 2.5 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "shot_count", "rule": "integer"}}
+IN       PASS  t858596.remaining_hours 정수 변수에 65000.0 :: {"status": 200, "code": null, "echo": false, "detail": null, "st": "ok", "oor": [], "schema": []}
+IN       WARN  t858596.remaining_hours 중복 키(앞=잘못, 뒤=정상) :: {"status": 200, "code": null, "echo": false, "detail": null, "st": "ok", "oor": [], "schema": []}
+IN-ECHO  PASS  t858596.remaining_hours 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"finite_number\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IN-ECHO  PASS  t858596.remaining_hours 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"float_type\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IMP      PASS  t858596.remaining_hours 결측 3개(null) / max_imputed 3 :: {"status": 200, "imputed": ["press_force", "vibration", "motor_current"], "err": null}
+IMP      PASS  t858596.remaining_hours 결측 4개(null) / max_imputed 3 :: {"status": 422, "imputed": null, "err": {"code": "missing_required", "message": "보정 한도(3)를 넘었습니다", "detail": {"field": null, "rule": "max_imputed", "count": 4}}}
+IMP      PASS  t858596.remaining_hours 결측 4개(키 생략) :: {"status": 422, "err": {"code": "missing_required", "message": "보정 한도(3)를 넘었습니다", "detail": {"field": null, "rule": "max_imputed", "count": 4}}}
+IMP      PASS  t858596.remaining_hours 필수 변수 machine_code null → 422 missing_required :: {"status": 422, "err": {"code": "missing_required", "message": "필수 입력이 없습니다", "detail": {"field": "machine_code", "rule": "required"}}}
+RNG      PASS  t858596.remaining_hours press_force=p1(182.3867618421862) :: {"status": 200, "oor": false, "st": "watch", "near": ["press_force"]}
+RNG      PASS  t858596.remaining_hours press_force=p99(318.21596731098) :: {"status": 200, "oor": false, "st": "watch", "near": ["press_force"]}
+RNG      PASS  t858596.remaining_hours press_force=p1-ε(182.38676184218616) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.remaining_hours press_force=p99+ε(318.21596731098003) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.remaining_hours vibration=p1(0.4343057811816147) :: {"status": 200, "oor": false, "st": "watch", "near": ["vibration"]}
+RNG      PASS  t858596.remaining_hours vibration=p99(7.93829063033766) :: {"status": 200, "oor": false, "st": "watch", "near": ["vibration"]}
+RNG      PASS  t858596.remaining_hours vibration=p1-ε(0.43430578118161467) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.remaining_hours vibration=p99+ε(7.938290630337661) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.remaining_hours motor_current=p1(31.004561237085444) :: {"status": 200, "oor": false, "st": "watch", "near": ["motor_current"]}
+RNG      PASS  t858596.remaining_hours motor_current=p99(84.51882798497745) :: {"status": 200, "oor": false, "st": "watch", "near": ["motor_current"]}
+RNG      PASS  t858596.remaining_hours motor_current=p1-ε(31.00456123708544) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.remaining_hours motor_current=p99+ε(84.51882798497746) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+IN       PASS  t8214c6.delta_e NaN :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.delta_e Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.delta_e -Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.delta_e 1e400(→inf) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.delta_e 1e308 거대 실수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "max"}}
+IN       PASS  t8214c6.delta_e 10**30 거대 정수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "max"}}
+IN       PASS  t8214c6.delta_e 10**400 거대 정수(float 넘침) :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "max"}}
+IN       PASS  t8214c6.delta_e 5000자리 정수(파서 한도) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": null, "rule": "json_invalid"}]}}
+IN       PASS  t8214c6.delta_e -0.0 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "min"}}
+IN       PASS  t8214c6.delta_e 빈 문자열(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "set_temp", "rule": "type"}}
+IN       PASS  t8214c6.delta_e 문자열 숫자 "1" :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "set_temp", "rule": "type"}}
+IN       PASS  t8214c6.delta_e true(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.delta_e 중첩 객체 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.delta_e 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.delta_e 유니코드 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": null, "rule": "unknown_key"}}
+IN       PASS  t8214c6.delta_e 범주 빈 문자열 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "print_type", "rule": "values"}}
+IN       PASS  t8214c6.delta_e 범주 유니코드 반사 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "print_type", "rule": "values"}}
+IN       PASS  t8214c6.delta_e 범주 숫자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "print_type", "rule": "type"}}
+IN       PASS  t8214c6.delta_e 최상위 모르는 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "*", "rule": "extra_forbidden"}]}}
+IN       PASS  t8214c6.delta_e inputs 가 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs", "rule": "dict_type"}]}}
+IN       PASS  t8214c6.delta_e 본문이 JSON 아님 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "1", "rule": "json_invalid"}]}}
+IN       PASS  t8214c6.delta_e entity_id 129자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "entity_id", "rule": "string_too_long"}]}}
+IN       PASS  t8214c6.delta_e model_version 형식 위반 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "model_version", "rule": "string_pattern_mismatch"}]}}
+IN       PASS  t8214c6.delta_e explain 문자열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "explain", "rule": "bool_type"}]}}
+IN       WARN  t8214c6.delta_e 중복 키(앞=잘못, 뒤=정상) :: {"status": 200, "code": null, "echo": false, "detail": null, "st": "ok", "oor": [], "schema": []}
+IN-ECHO  PASS  t8214c6.delta_e 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"finite_number\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IN-ECHO  PASS  t8214c6.delta_e 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"float_type\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IMP      FAIL  t8214c6.delta_e 결측 3개(null) / max_imputed 3 :: {"status": 200, "imputed": ["absorb_rate", "fabric_strength"], "err": null}
+IMP      FAIL  t8214c6.delta_e 결측 4개(null) / max_imputed 3 :: {"status": 200, "imputed": ["absorb_rate", "fabric_strength"], "err": null}
+IMP      FAIL  t8214c6.delta_e 결측 4개(키 생략) :: {"status": 200, "err": null}
+IMP      PASS  t8214c6.delta_e 필수 변수 set_temp null → 422 missing_required :: {"status": 422, "err": {"code": "missing_required", "message": "필수 입력이 없습니다", "detail": {"field": "set_temp", "rule": "required"}}}
+RNG      PASS  t8214c6.delta_e set_temp=p1(141.195) :: {"status": 200, "oor": false, "st": "watch", "near": ["set_temp"]}
+RNG      PASS  t8214c6.delta_e set_temp=p99(209.10500000000002) :: {"status": 200, "oor": false, "st": "review", "near": ["set_temp"]}
+RNG      PASS  t8214c6.delta_e set_temp=p1-ε(141.19499999999996) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.delta_e set_temp=p99+ε(209.10500000000005) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.delta_e set_pressure=p1(2.02) :: {"status": 200, "oor": false, "st": "watch", "near": ["set_pressure"]}
+RNG      PASS  t8214c6.delta_e set_pressure=p99(5.97) :: {"status": 200, "oor": false, "st": "watch", "near": ["set_pressure"]}
+RNG      PASS  t8214c6.delta_e set_pressure=p1-ε(2.0199999999999996) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.delta_e set_pressure=p99+ε(5.970000000000001) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.delta_e line_speed=p1(6.327500000000001) :: {"status": 200, "oor": false, "st": "watch", "near": ["line_speed"]}
+RNG      PASS  t8214c6.delta_e line_speed=p99(23.842499999999998) :: {"status": 200, "oor": false, "st": "watch", "near": ["line_speed"]}
+RNG      PASS  t8214c6.delta_e line_speed=p1-ε(6.3275) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.delta_e line_speed=p99+ε(23.8425) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+IN       PASS  t858596.failure_24h NaN :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.failure_24h Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.failure_24h -Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.failure_24h 1e400(→inf) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.failure_24h 1e308 거대 실수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "max"}}
+IN       PASS  t858596.failure_24h 10**30 거대 정수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "max"}}
+IN       PASS  t858596.failure_24h 10**400 거대 정수(float 넘침) :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "max"}}
+IN       PASS  t858596.failure_24h 5000자리 정수(파서 한도) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": null, "rule": "json_invalid"}]}}
+IN       PASS  t858596.failure_24h -0.0 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "press_force", "rule": "min"}}
+IN       PASS  t858596.failure_24h 빈 문자열(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "press_force", "rule": "type"}}
+IN       PASS  t858596.failure_24h 문자열 숫자 "1" :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "press_force", "rule": "type"}}
+IN       PASS  t858596.failure_24h true(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.failure_24h 중첩 객체 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.failure_24h 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t858596.failure_24h 유니코드 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": null, "rule": "unknown_key"}}
+IN       PASS  t858596.failure_24h 범주 빈 문자열 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "machine_code", "rule": "values"}}
+IN       PASS  t858596.failure_24h 범주 유니코드 반사 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "machine_code", "rule": "values"}}
+IN       PASS  t858596.failure_24h 범주 숫자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "machine_code", "rule": "type"}}
+IN       PASS  t858596.failure_24h 최상위 모르는 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "*", "rule": "extra_forbidden"}]}}
+IN       PASS  t858596.failure_24h inputs 가 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs", "rule": "dict_type"}]}}
+IN       PASS  t858596.failure_24h 본문이 JSON 아님 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "1", "rule": "json_invalid"}]}}
+IN       PASS  t858596.failure_24h entity_id 129자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "entity_id", "rule": "string_too_long"}]}}
+IN       PASS  t858596.failure_24h model_version 형식 위반 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "model_version", "rule": "string_pattern_mismatch"}]}}
+IN       PASS  t858596.failure_24h explain 문자열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "explain", "rule": "bool_type"}]}}
+IN       PASS  t858596.failure_24h 정수 변수에 2.5 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "shot_count", "rule": "integer"}}
+IN       PASS  t858596.failure_24h 정수 변수에 65000.0 :: {"status": 200, "code": null, "echo": false, "detail": null, "st": "ok", "oor": [], "schema": []}
+IN       WARN  t858596.failure_24h 중복 키(앞=잘못, 뒤=정상) :: {"status": 200, "code": null, "echo": false, "detail": null, "st": "ok", "oor": [], "schema": []}
+IN-ECHO  PASS  t858596.failure_24h 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"finite_number\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IN-ECHO  PASS  t858596.failure_24h 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"float_type\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IMP      PASS  t858596.failure_24h 결측 3개(null) / max_imputed 3 :: {"status": 200, "imputed": ["press_force", "vibration", "motor_current"], "err": null}
+IMP      PASS  t858596.failure_24h 결측 4개(null) / max_imputed 3 :: {"status": 422, "imputed": null, "err": {"code": "missing_required", "message": "보정 한도(3)를 넘었습니다", "detail": {"field": null, "rule": "max_imputed", "count": 4}}}
+IMP      PASS  t858596.failure_24h 결측 4개(키 생략) :: {"status": 422, "err": {"code": "missing_required", "message": "보정 한도(3)를 넘었습니다", "detail": {"field": null, "rule": "max_imputed", "count": 4}}}
+IMP      PASS  t858596.failure_24h 필수 변수 machine_code null → 422 missing_required :: {"status": 422, "err": {"code": "missing_required", "message": "필수 입력이 없습니다", "detail": {"field": "machine_code", "rule": "required"}}}
+RNG      PASS  t858596.failure_24h press_force=p1(182.3867618421862) :: {"status": 200, "oor": false, "st": "watch", "near": ["press_force"]}
+RNG      PASS  t858596.failure_24h press_force=p99(318.21596731098) :: {"status": 200, "oor": false, "st": "watch", "near": ["press_force"]}
+RNG      PASS  t858596.failure_24h press_force=p1-ε(182.38676184218616) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.failure_24h press_force=p99+ε(318.21596731098003) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.failure_24h vibration=p1(0.4343057811816147) :: {"status": 200, "oor": false, "st": "watch", "near": ["vibration"]}
+RNG      PASS  t858596.failure_24h vibration=p99(7.93829063033766) :: {"status": 200, "oor": false, "st": "watch", "near": ["vibration"]}
+RNG      PASS  t858596.failure_24h vibration=p1-ε(0.43430578118161467) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.failure_24h vibration=p99+ε(7.938290630337661) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.failure_24h motor_current=p1(31.004561237085444) :: {"status": 200, "oor": false, "st": "watch", "near": ["motor_current"]}
+RNG      PASS  t858596.failure_24h motor_current=p99(84.51882798497745) :: {"status": 200, "oor": false, "st": "watch", "near": ["motor_current"]}
+RNG      PASS  t858596.failure_24h motor_current=p1-ε(31.00456123708544) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t858596.failure_24h motor_current=p99+ε(84.51882798497746) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+IN       PASS  t8214c6.print_ood NaN :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.print_ood Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.print_ood -Infinity :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.print_ood 1e400(→inf) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "finite_number"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.print_ood 1e308 거대 실수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "max"}}
+IN       PASS  t8214c6.print_ood 10**30 거대 정수 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "max"}}
+IN       PASS  t8214c6.print_ood 10**400 거대 정수(float 넘침) :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "max"}}
+IN       PASS  t8214c6.print_ood 5000자리 정수(파서 한도) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": null, "rule": "json_invalid"}]}}
+IN       PASS  t8214c6.print_ood -0.0 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "set_temp", "rule": "min"}}
+IN       PASS  t8214c6.print_ood 빈 문자열(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "set_temp", "rule": "type"}}
+IN       PASS  t8214c6.print_ood 문자열 숫자 "1" :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "set_temp", "rule": "type"}}
+IN       PASS  t8214c6.print_ood true(수치 자리) :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.print_ood 중첩 객체 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.print_ood 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+IN       PASS  t8214c6.print_ood 유니코드 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": null, "rule": "unknown_key"}}
+IN       PASS  t8214c6.print_ood 범주 빈 문자열 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "print_type", "rule": "values"}}
+IN       PASS  t8214c6.print_ood 범주 유니코드 반사 :: {"status": 422, "code": "out_of_bounds", "echo": false, "detail": {"field": "print_type", "rule": "values"}}
+IN       PASS  t8214c6.print_ood 범주 숫자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"field": "print_type", "rule": "type"}}
+IN       PASS  t8214c6.print_ood 최상위 모르는 키 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "*", "rule": "extra_forbidden"}]}}
+IN       PASS  t8214c6.print_ood inputs 가 배열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "inputs", "rule": "dict_type"}]}}
+IN       PASS  t8214c6.print_ood 본문이 JSON 아님 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "1", "rule": "json_invalid"}]}}
+IN       PASS  t8214c6.print_ood entity_id 129자 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "entity_id", "rule": "string_too_long"}]}}
+IN       PASS  t8214c6.print_ood model_version 형식 위반 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "model_version", "rule": "string_pattern_mismatch"}]}}
+IN       PASS  t8214c6.print_ood explain 문자열 :: {"status": 422, "code": "invalid_input", "echo": false, "detail": {"errors": [{"field": "explain", "rule": "bool_type"}]}}
+IN       WARN  t8214c6.print_ood 중복 키(앞=잘못, 뒤=정상) :: {"status": 200, "code": null, "echo": false, "detail": null, "st": "ok", "oor": [], "schema": []}
+IN-ECHO  PASS  t8214c6.print_ood 422 가 임의 입력 키를 되풀이하지 않는다(NaN 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"finite_number\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IN-ECHO  PASS  t8214c6.print_ood 422 가 임의 입력 키를 되풀이하지 않는다(중첩 객체 값 + 임의 키) :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"inputs.*\",\"rule\":\"int_type\"},{\"field\":\"inputs.*\",\"rule\":\"float_type\"},{\"field\":\"inputs.*\",\"rule\":\"string_type\"}]}}}"}
+IMP      FAIL  t8214c6.print_ood 결측 3개(null) / max_imputed 3 :: {"status": 200, "imputed": ["absorb_rate", "fabric_strength"], "err": null}
+IMP      FAIL  t8214c6.print_ood 결측 4개(null) / max_imputed 3 :: {"status": 200, "imputed": ["absorb_rate", "fabric_strength"], "err": null}
+IMP      FAIL  t8214c6.print_ood 결측 4개(키 생략) :: {"status": 200, "err": null}
+IMP      PASS  t8214c6.print_ood 필수 변수 set_temp null → 422 missing_required :: {"status": 422, "err": {"code": "missing_required", "message": "필수 입력이 없습니다", "detail": {"field": "set_temp", "rule": "required"}}}
+RNG      PASS  t8214c6.print_ood set_temp=p1(141.195) :: {"status": 200, "oor": false, "st": "ok", "near": ["set_temp"]}
+RNG      PASS  t8214c6.print_ood set_temp=p99(209.10500000000002) :: {"status": 200, "oor": false, "st": "ok", "near": ["set_temp"]}
+RNG      PASS  t8214c6.print_ood set_temp=p1-ε(141.19499999999996) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.print_ood set_temp=p99+ε(209.10500000000005) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.print_ood set_pressure=p1(2.02) :: {"status": 200, "oor": false, "st": "ok", "near": ["set_pressure"]}
+RNG      PASS  t8214c6.print_ood set_pressure=p99(5.97) :: {"status": 200, "oor": false, "st": "ok", "near": ["set_pressure"]}
+RNG      PASS  t8214c6.print_ood set_pressure=p1-ε(2.0199999999999996) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.print_ood set_pressure=p99+ε(5.970000000000001) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.print_ood line_speed=p1(6.327500000000001) :: {"status": 200, "oor": false, "st": "ok", "near": ["line_speed"]}
+RNG      PASS  t8214c6.print_ood line_speed=p99(23.842499999999998) :: {"status": 200, "oor": false, "st": "ok", "near": ["line_speed"]}
+RNG      PASS  t8214c6.print_ood line_speed=p1-ε(6.3275) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+RNG      PASS  t8214c6.print_ood line_speed=p99+ε(23.8425) :: {"status": 200, "oor": true, "st": "out_of_range", "near": []}
+ART      PASS  model.joblib 바꿔치기 → 503 model_artifact_mismatch · 기록 0 :: {"status": 503, "body": {"error": {"code": "model_artifact_mismatch", "message": "모델 산출물이 등록부와 다릅니다 (해시 · 패키지 버전 불일치)", "detail": {"rule": "sha256", "field": null}}}, "pred_rows_added": 0}
+ART      PASS  env.lock 위조(파일) → 503 :: {"status": 503, "detail": {"rule": "sha256", "field": null}}
+ART      PASS  features.lock.json 범위 위조 → 503 :: {"status": 503}
+ART      WARN  제자리 바꿔치기(크기 · mtime · inode 같음) — 캐시 적중 :: {"status": 200, "note": "캐시는 이미 검증한 메모리 모델로 답한다(디스크 변조본은 읽지 않음). 재기동 뒤에는 해시 재측정"}
+ART      PASS  제자리 바꿔치기 후 캐시 비움(재기동 모사) → 503 :: {"status": 503}
+ART-TOCTOU FAIL  해시 측정 ↔ joblib.load 사이 바꿔치기 → 검증 안 된 모델로 200 응답 :: {"status": 200, "value_before": 103.086277, "value_after": 103.086277, "note": "load_artifacts: artifact_sha256(d) 뒤 joblib.load(d/'model.joblib') 를 다시 연다(같은 바이트 검증 아님)"}
+ART-TOCTOU WARN  바꿔치기 다음 요청 :: {"status": 200, "code": null}
+ART      PASS  산출물 폴더 없음 → 503 · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_artifact_mismatch", "message": "모델 산출물이 등록부와 다릅니다 (해시 · 패키지 버전 불일치)", "detail": {"rule": "dir_missing", "field": null}}}}
+CMP      PASS  ks 옛 predict 키 = 원천 ml_service 반환 키 :: {"status": 200, "got": ["remaining_hours", "risk_probability", "anomaly", "status", "warnings", "imputed_fields", "model", "risk_model", "version", "notice"], "want": ["remaining_hours", "risk_probability", "anomaly", "status", "warnings", "imputed_fields", "model", "risk_model", "version", "notice"]}
+AUD      PASS  ks 호환 POST predict 감사 1행 (예측 3행 기록) :: {"audit_added": 1, "pred_added": 3}
+CMP      PASS  ks 옛 optimize 최상위 키 :: {"status": 200, "got": ["feasible", "prediction", "candidate_count", "feasible_count", "recommendation", "alternatives", "unmet_constraints", "objective", "notice"], "want": ["feasible", "prediction", "candidate_count", "feasible_count", "recommendation", "alternatives", "unmet_constraints", "objective", "notice"]}
+AUD      PASS  ks 호환 POST optimize(추천 · 승인 행 생성) 감사 :: {"audit_added": 2}
+CMP      WARN  ks 옛 optimize recommendation 행 키 · unmet_constraints 값 :: {"rec_keys": ["stop_after_hours", "cost_index", "reserve_hours", "violation"], "unmet": [], "objective": "제약 충족 후보 중 데모 비용지수 최소화, 동률이면 더 늦은 시점 선택"}
+CMP      WARN  ks 옛 optimize(불가능) unmet_constraints 값 — 원천은 한국어 문구 :: {"feasible": false, "unmet": ["요청한 잔여수명 여유시간 미충족", "정비 비용지수 상한 초과"], "rec_keys": ["stop_after_hours", "cost_index", "reserve_hours", "violation"]}
+CMP      WARN  ks 옛 overview 키(원천 전체 대비) :: {"status": 200, "got": ["data_mode", "version", "rows", "champion", "risk_champion", "metrics", "risk_metrics", "test_metrics", "risk_test_metrics", "split", "features", "risk_threshold", "warning", "missing_cells", "duplicate_lots", "impossible_cells", "importance", "evaluated", "products"]}
+CMP      PASS  ks 옛 records 키 · total :: {"status": 200, "keys": ["total", "limit", "offset", "records"], "total": 720, "rec0_keys": ["lot_id", "recorded_at", "press_force", "vibration", "motor_current", "equip_temp", "mold_temp", "cycle_time", "shot_count", "machine", "product", "remaining_hours", "failure_24h"]}
+CMP      PASS  ks 옛 422 모양 · 입력값 되풀이 0 :: {"status": 422, "body": "{\"detail\":[{\"loc\":[\"body\",\"press_force\"],\"msg\":\"숫자여야 합니다\",\"type\":\"invalid_input\"}]}"}
+CMP      PASS  ks 옛 경로 NaN → 422 :: {"status": 422, "body": "{\"detail\":[{\"loc\":[\"body\"],\"msg\":\"JSON 형식이 아니거나 NaN · Infinity 가 있습니다\",\"type\":\"json_invalid\"}]}"}
+CMP      PASS  ks 옛 predict 다른 회사 키 → 404 :: 404
+CMP      PASS  ks 옛 predict viewer → 403 :: 403
+CMP      PASS  sw 옛 predict 키 = 원천 ml_service 반환 키 :: {"status": 200, "got": ["delta_e", "risk_probability", "anomaly", "status", "warnings", "imputed_fields", "equipment", "model", "risk_model", "version", "notice"], "want": ["delta_e", "risk_probability", "anomaly", "status", "warnings", "imputed_fields", "equipment", "model", "risk_model", "version", "notice"]}
+AUD      PASS  sw 호환 POST predict 감사 1행 (예측 3행 기록) :: {"audit_added": 1, "pred_added": 3}
+CMP      PASS  sw 옛 optimize 최상위 키 :: {"status": 200, "got": ["feasible", "current", "current_cost_index", "candidate_count", "feasible_count", "recommendation", "alternatives", "unmet_constraints", "warnings", "objective", "notice"], "want": ["feasible", "current", "current_cost_index", "candidate_count", "feasible_count", "recommendation", "alternatives", "unmet_constraints", "warnings", "objective", "notice"]}
+AUD      PASS  sw 호환 POST optimize(추천 · 승인 행 생성) 감사 :: {"audit_added": 2}
+CMP      WARN  sw 옛 optimize recommendation 행 키 · unmet_constraints 값 :: {"rec_keys": ["set_temp", "set_pressure", "line_speed", "ink_usage", "dwell_time", "pred_delta_e", "risk_probability", "cost_index", "violation", "anomaly"], "unmet": [], "objective": "제약 충족 후보 중 데모 공정 비용지수 최소화, 동률이면 예측 색차가 작은 조건"}
+CMP      WARN  sw 옛 optimize(불가능) unmet_constraints 값 — 원천은 한국어 문구 :: {"feasible": false, "unmet": ["목표 색차(ΔE) 상한 미충족", "불량 위험 상한 초과", "최소 라인속도 미충족"], "rec_keys": ["set_temp", "set_pressure", "line_speed", "ink_usage", "dwell_time", "pred_delta_e", "risk_probability", "cost_index", "violation", "anomaly"]}
+CMP      WARN  sw 옛 overview 키(원천 전체 대비) :: {"status": 200, "got": ["data_mode", "version", "rows", "champion", "risk_champion", "metrics", "risk_metrics", "test_metrics", "risk_test_metrics", "split", "features", "risk_threshold", "warning", "missing_cells", "duplicate_lots", "impossible_cells", "importance", "evaluated", "print_types", "color_tones", "controls"]}
+CMP      PASS  sw 옛 records 키 · total :: {"status": 200, "keys": ["total", "limit", "offset", "records"], "total": 720, "rec0_keys": ["lot_id", "recorded_at", "set_temp", "set_pressure", "line_speed", "ink_usage", "dwell_time", "absorb_rate", "fabric_strength", "print_type", "color_tone", "delta_e", "defect"]}
+CMP      PASS  sw 옛 422 모양 · 입력값 되풀이 0 :: {"status": 422, "body": "{\"detail\":[{\"loc\":[\"body\",\"set_temp\"],\"msg\":\"숫자여야 합니다\",\"type\":\"invalid_input\"}]}"}
+CMP      PASS  sw 옛 경로 NaN → 422 :: {"status": 422, "body": "{\"detail\":[{\"loc\":[\"body\"],\"msg\":\"JSON 형식이 아니거나 NaN · Infinity 가 있습니다\",\"type\":\"json_invalid\"}]}"}
+CMP      PASS  sw 옛 predict 다른 회사 키 → 404 :: 404
+CMP      PASS  sw 옛 predict viewer → 403 :: 403
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks/remaining_hours/models :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/predict :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/predict:batch :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/actuals :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/predictions/<prd>/trace :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"예측을 찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/runs/<run> :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"run\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/tenants/<A>/approvals :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 POST /api/v1/approvals/<apr>/decide :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"승인을 찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 POST /api/v1/tenants/<A>/tasks/remaining_hours/models/v2/promote :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks/remaining_hours/monitor :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/tenants/<A>/doctor :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사(admin) 키 GET /api/v1/tenants/<A>/tasks/remaining_hours/records :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  다른 회사 · 없는 ID 응답 동일 predictions :: {"other": [404, {"error": {"code": "not_found", "message": "예측을 찾을 수 없습니다", "detail": {}}}], "none": [404, {"error": {"code": "not_found", "message": "예측을 찾을 수 없습니다", "detail": {}}}]}
+ISO      PASS  다른 회사 · 없는 ID 응답 동일 runs :: {"other": [404, {"error": {"code": "not_found", "message": "run", "detail": {}}}], "none": [404, {"error": {"code": "not_found", "message": "run", "detail": {}}}]}
+ISO      PASS  다른 회사 · 없는 승인 decide 응답 동일 :: {"other": {"error": {"code": "not_found", "message": "승인을 찾을 수 없습니다", "detail": {}}}, "none": {"error": {"code": "not_found", "message": "승인을 찾을 수 없습니다", "detail": {}}}}
+AUD      FAIL  다른 회사 키의 쓰기 시도(404)가 감사에 남는가 :: {"audit_rows_added_tenantA": 0, "sw_rows": 9}
+ROLE     PASS  viewer POST /api/v1/tenants/<t>/tasks/remaining_hours/predict :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer POST /api/v1/tenants/<t>/tasks/remaining_hours/predict:batch :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer POST /api/v1/tenants/<t>/tasks/remaining_hours/actuals :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer POST /api/v1/tenants/<t>/tasks/maintenance_timing/optimize :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer GET /api/v1/tenants/<t>/tasks/remaining_hours/models :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer GET /api/v1/tenants/<t>/approvals :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer GET /api/v1/tenants/<t>/tasks/remaining_hours/monitor :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer GET /api/v1/tenants/<t>/doctor :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  viewer GET /api/v1/tenants/<t>/tasks :: {"status": 200, "code": null}
+ROLE     PASS  viewer GET /api/v1/predictions/<prd>/trace :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  operator POST /api/v1/tenants/<t>/tasks/remaining_hours/train :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  operator POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/stage :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  operator POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/promote :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  operator POST /api/v1/approvals/<apr>/decide :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  operator GET /api/v1/tenants/<t>/approvals :: {"status": 200, "code": null}
+ROLE     PASS  operator GET /api/v1/tenants/<t>/tasks/remaining_hours/models :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  operator GET /api/v1/predictions/<prd>/trace :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  operator POST /api/v1/tenants/<t>/tasks/remaining_hours/predict :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  approver POST /api/v1/tenants/<t>/tasks/remaining_hours/train :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  approver POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/stage :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  approver GET /api/v1/tenants/<t>/tasks/remaining_hours/models :: {"status": 200, "code": null}
+ROLE     PASS  approver GET /api/v1/predictions/<prd>/trace :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  approver_other POST /api/v1/approvals/<apr>/decide :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  approver_other POST /api/v1/tenants/<t>/tasks/remaining_hours/models/v2/promote :: {"status": 403, "code": "forbidden"}
+ROLE     PASS  admin GET /api/v1/predictions/<prd>/trace :: {"status": 200, "code": null}
+ROLE     WARN  approver(다른 과제 담당)가 승인 목록에서 남의 과제 승인을 본다 :: {"status": 200, "n_items": 8, "roles_in_items": ["maintenance_lead"]}
+ROLE     PASS  approver(담당) decide approve → 200 · production 교체 :: {"status": 200, "body": {"approval_id": "apr_01M4RA1K4N6VVC1028GVAP0TNA", "state": "approved", "production_version": "v2"}}
+ROLE     PASS  같은 승인 재결정 → 409 already_decided :: {"status": 409}
+AUTH     PASS  키 없음 → 401 :: 401
+AUTH     PASS  틀린 키 → 401 :: 401
+AUTH     PASS  폐기한 키 → 401 :: 401
+ISO      PASS  경로 꼴 우회 /api/v1/tenants/<B>/tasks/<A>.remaining_hours/predict :: {"status": 404}
+ISO      PASS  경로 꼴 우회 /api/v1//tenants/<A>/tasks/remaining_hours/predict :: {"status": 404}
+ISO      PASS  경로 꼴 우회 /api/v1/tenants/T858596/tasks/remaining_hours/predict :: {"status": 404}
+ISO      PASS  경로 꼴 우회 /api/v1/tenants/<A>%2F/tasks/remaining_hours/predict :: {"status": 404}
+APPEND   PASS  UPDATE mlp_prediction SET status='ok' WHERE prediction_id IN :: "InsufficientPrivilege: append_only: mlp_prediction 은(는) 추가만 할 수 있습니다 (UPDATE)"
+APPEND   PASS  DELETE FROM mlp_prediction WHERE prediction_id IN (SELECT pr :: "InsufficientPrivilege: append_only: mlp_prediction 은(는) 추가만 할 수 있습니다 (DELETE)"
+APPEND   PASS  TRUNCATE mlp_prediction :: "InsufficientPrivilege: append_only: mlp_prediction 은(는) 추가만 할 수 있습니다 (TRUNCATE)"
+APPEND   PASS  UPDATE mlp_audit SET actor='x' WHERE audit_id IN (SELECT aud :: "InsufficientPrivilege: append_only: mlp_audit 은(는) 추가만 할 수 있습니다 (UPDATE)"
+APPEND   PASS  DELETE FROM mlp_audit WHERE audit_id IN (SELECT audit_id FRO :: "InsufficientPrivilege: append_only: mlp_audit 은(는) 추가만 할 수 있습니다 (DELETE)"
+APPEND   PASS  INSERT INTO mlp_api_key (tenant_id, key_hash, key_prefix, ro :: "CheckViolation: new row for relation \"mlp_api_key\" violates check constraint \"mlp_api_key_no_plain\""
+KEY      PASS  API 키 저장 형태 = sha256$<64hex> · 평문 0 :: {"n": 5, "prefix_len": [8], "sample": "sha256$6c924…"}
+CORS     PASS  MLP_CORS_ORIGINS=http://localhost:5190 :: {"http://localhost:5190": [200, "http://localhost:5190", "http://localhost:5190", null], "http://evil.invalid": [400, null, null, null]}
+CORS     PASS  MLP_CORS_ORIGINS=* :: {"http://localhost:5190": [405, null, null, null], "http://evil.invalid": [405, null, null, null]}
+CORS     PASS  MLP_CORS_ORIGINS=(빈 값) :: {"http://localhost:5190": [405, null, null, null], "http://evil.invalid": [405, null, null, null]}
+total 318 FAIL 11 WARN 13

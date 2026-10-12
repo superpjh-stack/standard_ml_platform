@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "<repo>/outputs/qa-r2/qa1/lv_flip.py", line 19, in <module>
+    rows, sp = _test_rows(f, t, 7)
+               ^^^^^^^^^^^^^^^^^^^
+  File "<repo>/outputs/qa-r2/qa1/leak_probe.py", line 33, in _test_rows
+    sp, _ = split.plan(f, t, seed)
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/src/mlcore/train/split.py", line 173, in plan
+    tr, va, te, bounds = _time_split(frame, task, pol["fractions"])
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/src/mlcore/train/split.py", line 122, in _time_split
+    raise SplitRefused(
+mlcore.train.split.SplitRefused: group_key 'lot' 가 시간상 섞여 시간순과 그룹 경계를 함께 지키는 분할이 없다 (가능한 자르는 위치 0곳 — 학습 1000 · 검증 0 · 시험 0 행)

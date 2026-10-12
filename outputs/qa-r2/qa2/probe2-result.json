@@ -1,0 +1,583 @@
+[
+ {
+  "id": "NOMODEL",
+  "item": "ks.remaining_hours batch 모델 없음 → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t6a7249.remaining_hours",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks.remaining_hours (regression) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t6a7249.remaining_hours",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks.failure_24h batch 모델 없음 → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t6a7249.failure_24h",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks.failure_24h (risk) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t6a7249.failure_24h",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks.sensor_ood batch 모델 없음 → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t6a7249.sensor_ood",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks.sensor_ood (anomaly) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t6a7249.sensor_ood",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks.maintenance_timing (optimize) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t6a7249.remaining_hours",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks health model_ready 전부 false",
+  "verdict": "PASS",
+  "measured": {
+   "status": "ok",
+   "db": true,
+   "version": "0.1.0",
+   "tenant": "t6a7249",
+   "tasks": [
+    {
+     "task": "t6a7249.remaining_hours",
+     "model_ready": false,
+     "version": null
+    },
+    {
+     "task": "t6a7249.failure_24h",
+     "model_ready": false,
+     "version": null
+    },
+    {
+     "task": "t6a7249.sensor_ood",
+     "model_ready": false,
+     "version": null
+    },
+    {
+     "task": "t6a7249.maintenance_timing",
+     "model_ready": false,
+     "version": null
+    }
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "HEALTH",
+  "item": "ks 키 없는 /api/v1/health 가 노출하는 값",
+  "verdict": "WARN",
+  "measured": {
+   "keys": [
+    "status",
+    "db",
+    "version",
+    "tenant",
+    "tasks"
+   ],
+   "tenant": "t6a7249",
+   "task_ids": [
+    "t6a7249.remaining_hours",
+    "t6a7249.failure_24h",
+    "t6a7249.sensor_ood",
+    "t6a7249.maintenance_timing"
+   ]
+  },
+  "expect": "공개 경로 — 회사 코드 · 과제 이름 · 버전 노출 범위 확인"
+ },
+ {
+  "id": "NOMODEL",
+  "item": "ks 호환 predict 모델 없음(빈 본문)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{\"detail\":[{\"loc\":[\"body\",\"press_force\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"body\",\"vibration\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"bo"
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw.delta_e batch 모델 없음 → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t4429d5.delta_e",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw.delta_e (regression) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t4429d5.delta_e",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw.defect_risk batch 모델 없음 → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t4429d5.defect_risk",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw.defect_risk (risk) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t4429d5.defect_risk",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw.print_ood batch 모델 없음 → 503",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t4429d5.print_ood",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw.print_ood (anomaly) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t4429d5.print_ood",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw.print_setpoint (optimize) 모델 없음 → 503 model_not_ready · 값 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 503,
+   "body": {
+    "error": {
+     "code": "model_not_ready",
+     "message": "운영(production) 모델이 없습니다",
+     "detail": {
+      "task": "t4429d5.delta_e",
+      "version": null
+     }
+    }
+   }
+  },
+  "expect": ""
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw health model_ready 전부 false",
+  "verdict": "PASS",
+  "measured": {
+   "status": "ok",
+   "db": true,
+   "version": "0.1.0",
+   "tenant": "t4429d5",
+   "tasks": [
+    {
+     "task": "t4429d5.delta_e",
+     "model_ready": false,
+     "version": null
+    },
+    {
+     "task": "t4429d5.defect_risk",
+     "model_ready": false,
+     "version": null
+    },
+    {
+     "task": "t4429d5.print_ood",
+     "model_ready": false,
+     "version": null
+    },
+    {
+     "task": "t4429d5.print_setpoint",
+     "model_ready": false,
+     "version": null
+    }
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "HEALTH",
+  "item": "sw 키 없는 /api/v1/health 가 노출하는 값",
+  "verdict": "WARN",
+  "measured": {
+   "keys": [
+    "status",
+    "db",
+    "version",
+    "tenant",
+    "tasks"
+   ],
+   "tenant": "t4429d5",
+   "task_ids": [
+    "t4429d5.delta_e",
+    "t4429d5.defect_risk",
+    "t4429d5.print_ood",
+    "t4429d5.print_setpoint"
+   ]
+  },
+  "expect": "공개 경로 — 회사 코드 · 과제 이름 · 버전 노출 범위 확인"
+ },
+ {
+  "id": "NOMODEL",
+  "item": "sw 호환 predict 모델 없음(빈 본문)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{\"detail\":[{\"loc\":[\"body\",\"set_temp\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"body\",\"set_pressure\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"bo"
+  },
+  "expect": ""
+ },
+ {
+  "id": "REJ",
+  "item": "remaining_hours reject 정책 · 범위 밖 → 200 rejected · 18키 · 값 null",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "st": "rejected",
+   "errs": [],
+   "prediction": {
+    "value": null,
+    "unit": "h",
+    "interval": null,
+    "grade": null,
+    "baseline": 7.79894
+   },
+   "anomaly": null,
+   "prob": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "REJ",
+  "item": "remaining_hours rejected 도 mlp_prediction 기록 · trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": [
+    "prediction",
+    "model",
+    "run",
+    "snapshot",
+    "sources",
+    "actuals"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "REJ",
+  "item": "failure_24h reject 정책 · 범위 밖 → 200 rejected · 18키 · 값 null",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "st": "rejected",
+   "errs": [],
+   "prediction": {
+    "value": null,
+    "unit": "probability",
+    "interval": null,
+    "grade": null,
+    "baseline": 0.3
+   },
+   "anomaly": null,
+   "prob": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "REJ",
+  "item": "failure_24h rejected 도 mlp_prediction 기록 · trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": [
+    "prediction",
+    "model",
+    "run",
+    "snapshot",
+    "sources",
+    "actuals"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "REJ",
+  "item": "sensor_ood reject 정책 · 범위 밖 → 200 rejected · 18키 · 값 null",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "st": "rejected",
+   "errs": [],
+   "prediction": null,
+   "anomaly": {
+    "score": null,
+    "flag": null,
+    "threshold": 0.561426,
+    "contamination": 0.08,
+    "contributors": []
+   },
+   "prob": null
+  },
+  "expect": ""
+ },
+ {
+  "id": "REJ",
+  "item": "sensor_ood rejected 도 mlp_prediction 기록 · trace",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "keys": [
+    "prediction",
+    "model",
+    "run",
+    "snapshot",
+    "sources",
+    "actuals"
+   ]
+  },
+  "expect": ""
+ },
+ {
+  "id": "MVER",
+  "item": "approver model_version=v1 (production)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "code": null
+  },
+  "expect": "200"
+ },
+ {
+  "id": "MVER",
+  "item": "approver model_version=v2 (candidate)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "code": "not_found"
+  },
+  "expect": "404"
+ },
+ {
+  "id": "MVER",
+  "item": "approver model_version=v99 (없음)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "code": "not_found"
+  },
+  "expect": "404"
+ },
+ {
+  "id": "MVER",
+  "item": "admin model_version=v99 (없음)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "code": "not_found"
+  },
+  "expect": "404"
+ },
+ {
+  "id": "REQID",
+  "item": "X-Request-Id 길이 8000 그대로 응답 헤더 · 감사 저장",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "echo_header": false,
+   "audit_rows": 0
+  },
+  "expect": "형식 · 길이 제한 권장"
+ },
+ {
+  "id": "REQID",
+  "item": "X-Request-Id 길이 15 그대로 응답 헤더 · 감사 저장",
+  "verdict": "WARN",
+  "measured": {
+   "status": 200,
+   "echo_header": false,
+   "audit_rows": 0
+  },
+  "expect": "형식 · 길이 제한 권장"
+ },
+ {
+  "id": "HEALTH",
+  "item": "산출물 변조 상태에서 health model_ready",
+  "verdict": "WARN",
+  "measured": {
+   "health_model_ready": false,
+   "predict": 503
+  },
+  "expect": "health 는 DB 만 본다 — 503 인데 ready=true 면 화면 1 이 정상으로 보임"
+ }
+]

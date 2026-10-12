@@ -1,0 +1,33 @@
+G-M09  candidate 를 promote 요청  PASS  HTTP 409 code=invalid_transition (기대 409 invalid_transition)
+G-M09  operator 가 stage  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+G-M09  admin stage v1  PASS  200 {'version': 'v1', 'stage': 'staging'}
+G-M09  다른 과제 담당 approver 가 promote  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+G-M09  promote = 승인 요청만(202 pending)  PASS  202 {'approval_id': 'apr_01M4RA96CEQXHSKXB23JBAYDXV', 'state': 'pending'} production=[]
+G-M09  같은 대상 promote 재요청 → 같은 approval_id  PASS  202 apr_01M4RA96CEQXHSKXB23JBAYDXV vs apr_01M4RA96CEQXHSKXB23JBAYDXV
+G-M09  승인 대기 중 predict  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+§6  operator decide  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+§6  viewer decide  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+§6  다른 과제 approver decide(own_task)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.3  다른 회사 키로 decide  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.3  없는 승인 ID decide  PASS  HTTP 404 code=not_found (기대 404 not_found)
+G-M09  역할 거부 뒤 production 그대로  PASS  production=[]
+G-M09  두 탭 동시 승인 → 200 1 · 409 1  PASS  codes=[200, 409] 감사 approved=1 production=['v1']
+2.3  이미 결정된 승인 재결정(반려)  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+G-M09  승인 직후 새 후보 도착 → production 불변  PASS  v2=candidate production=['v1']
+G-M09  새 후보 뒤 predict 는 production v1  PASS  200 model=v1
+G-M09  승인 · 반려 동시 → 하나만  PASS  codes=[200, 409] 최종=rejected production=['v1']
+G-M09  v2 승인 → production v2 · v1 archived  PASS  {'v1': 'archived', 'v2': 'production'}
+2.3  사유 없는 rollback  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+G-M09  archived 아닌 것을 rollback  PASS  HTTP 409 code=invalid_transition (기대 409 invalid_transition)
+G-M09  rollback = 승인 요청만(production 불변)  PASS  202 production=['v2']
+G-M09  rollback 승인 → v1 production · v2 archived  PASS  200 {'approval_id': 'apr_01M4RA9A10DEQNYXH80Y8CV4FE', 'state': 'approved', 'production_version': 'v1'} {'v1': 'production', 'v2': 'archived', 'v3': 'staging'}
+G-M09  models 목록 production 1개  PASS  200 production 항목 1
+G-M09  되돌리기 뒤 대기 중 v3 승인 유지  PASS  pending
+2.3  만료된 승인 결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided) production=['v1']
+G-M09  만료된 승인이 대기열(state=pending)에서 빠짐  PASS  pending 목록에 남음=False state=-
+G-M09  state=expired 조회에 만료 승인 보임  PASS  200 n=1
+G-M09  만료 뒤 같은 버전 재요청 → 새 승인  PASS  202 {'approval_id': 'apr_01M4RA9A3XCV7JXYZSGXBDEG6B', 'state': 'pending'}
+G-M09  승인 요청에 만료 시각(expires_at) 설정  PASS  expires_at 있는 승인 26건(QA 가 손으로 넣은 1건 제외)
+G-M09  같은 승인 두 번 결정 감사 0  PASS  중복 []
+G-M09  과제당 production ≤ 1  PASS  []
+G-M09  production 전부 approval_id 있음  PASS  []

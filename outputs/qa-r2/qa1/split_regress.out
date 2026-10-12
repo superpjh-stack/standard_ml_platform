@@ -1,0 +1,13 @@
+group 없음 n=1000                                OK      크기 600/200/200 · 시간순 OK · 같은시각 교차 0 · cut_moved=None
+group 없음 n=400                                 OK      크기 267/53/80 · 시간순 OK · 같은시각 교차 0 · cut_moved=None
+group 없음 n=120                                 OK      크기 80/16/24 · 시간순 OK · 같은시각 교차 0 · cut_moved=None
+group 없음 · 같은 시각 4행                            OK      크기 600/200/200 · 시간순 OK · 같은시각 교차 0 · cut_moved=None
+group 없음 · 같은 시각 3행 (DEF-QA1-008)              OK      크기 600/201/201 · 시간순 OK · 같은시각 교차 0 · cut_moved={'train': -1, 'valid_end': -1}
+group 블록 40                                    OK      크기 600/200/200 · 시간순 OK · 같은시각 교차 0 · 그룹교차 0 · cut_moved=None
+group 블록 40 · 모든 경계 1행 교차                      REFUSED group_key 'lot' 가 시간상 섞여 시간순과 그룹 경계를 함께 지키는 분할이 없다 (가능한 자르는 위치 0곳 — 학습 1000 · 검증 0 · 시험 0 행)
+group 블록 40 · 경계 3/4 교차(1/4 깨끗)                OK      크기 600/200/200 · 시간순 OK · 같은시각 교차 0 · 그룹교차 0 · cut_moved=None
+설비 2대 병렬 · LOT 동시 진행(정렬 경계)                    OK      크기 600/200/200 · 시간순 OK · 같은시각 교차 0 · 그룹교차 0 · cut_moved=None
+설비 2대 병렬 · LOT 엇갈림                             REFUSED group_key 'lot' 가 시간상 섞여 시간순과 그룹 경계를 함께 지키는 분할이 없다 (가능한 자르는 위치 0곳 — 학습 1000 · 검증 0 · 시험 0 행)
+time_cv5 블록 20 n=400                           OK      크기 260/60/80 · 시간순 OK · 같은시각 교차 0 · 그룹교차 0 · cut_moved=None
+stratified 섞인 그룹(시간 무관)                        OK      크기 600/200/200 · 그룹교차 0 · cut_moved=None
+random 섞인 그룹                                   OK      크기 600/200/200 · 그룹교차 0 · cut_moved=None

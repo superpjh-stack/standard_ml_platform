@@ -1,0 +1,6 @@
+doctor ks (mode demo, fixture 모드)
+  demo     synthetic    연결   rows=720 기간=2026-08-01T00:00:00+09:00~2026-08-30T23:00:00+09:00 대응률=100.0% 최대결측률=1.1% 목표=있음 · 합성 생성기 정상
+  eval     csv          연결   rows=720 기간=2026-08-01T00:00:00+09:00~2026-08-30T23:00:00+09:00 대응률=100.0% 최대결측률=1.1% 목표=있음 · CSV 정상
+  train    dataplatform 미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=목표 없음 · fixture 모드 — 실연결은 doctor-live 에서 사람이 확인 (D-13) · 소스 테이블 · 뷰 미확인 — 대응률 · 목표를 셀 수 없다
+  gateway  gateway      미연결  rows=- 기간=-~- 대응률=0.0% 최대결측률=- 목표=목표 없음 · fixture 모드 — 실연결은 doctor-live 에서 사람이 확인 (D-13)
+  actuals  mes          미연결  rows=- 기간=-~- 대응률=66.7% 최대결측률=- 목표=목표 없음 · fixture 모드 — 실연결은 doctor-live 에서 사람이 확인 (D-13)

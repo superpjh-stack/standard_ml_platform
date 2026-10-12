@@ -12,33 +12,33 @@
  "tenants": [
   {
    "tenant_source": "ks",
-   "image": "mlp-app:9d2febc",
-   "train_in_container_s": 2.41,
-   "health_s": 1.679,
-   "startup_s": 1.764,
+   "image": "mlp-app:1ec05e6",
+   "train_in_container_s": 2.58,
+   "health_s": 1.655,
+   "startup_s": 1.74,
    "per_task": {
     "remaining_hours": {
      "type": "regression",
-     "p50_ms": 22.11,
-     "p95_ms": 25.6,
-     "max_ms": 69.35,
-     "batch500_s": 0.092,
+     "p50_ms": 22.83,
+     "p95_ms": 25.61,
+     "max_ms": 69.92,
+     "batch500_s": 0.094,
      "n": 200
     },
     "failure_24h": {
      "type": "risk",
-     "p50_ms": 23.24,
-     "p95_ms": 25.79,
-     "max_ms": 35.58,
-     "batch500_s": 0.113,
+     "p50_ms": 23.92,
+     "p95_ms": 25.19,
+     "max_ms": 27.82,
+     "batch500_s": 0.114,
      "n": 200
     },
     "sensor_ood": {
      "type": "anomaly",
-     "p50_ms": 28.5,
-     "p95_ms": 30.66,
-     "max_ms": 37.55,
-     "batch500_s": 0.316,
+     "p50_ms": 28.56,
+     "p95_ms": 29.66,
+     "max_ms": 30.61,
+     "batch500_s": 0.325,
      "n": 200
     }
    },
@@ -48,46 +48,46 @@
   },
   {
    "tenant_source": "sw",
-   "image": "mlp-app:9d2febc",
+   "image": "mlp-app:1ec05e6",
    "train_in_container_s": 2.52,
-   "health_s": 1.616,
-   "startup_s": 1.694,
+   "health_s": 1.595,
+   "startup_s": 1.679,
    "per_task": {
     "delta_e": {
      "type": "regression",
-     "p50_ms": 23.33,
-     "p95_ms": 29.18,
-     "max_ms": 73.77,
-     "batch500_s": 0.098,
+     "p50_ms": 24.27,
+     "p95_ms": 25.6,
+     "max_ms": 66.48,
+     "batch500_s": 0.095,
      "n": 200
     },
     "defect_risk": {
      "type": "risk",
-     "p50_ms": 21.65,
-     "p95_ms": 23.47,
-     "max_ms": 31.61,
-     "batch500_s": 0.11,
+     "p50_ms": 22.15,
+     "p95_ms": 23.17,
+     "max_ms": 26.86,
+     "batch500_s": 0.109,
      "n": 200
     },
     "print_ood": {
      "type": "anomaly",
-     "p50_ms": 27.41,
-     "p95_ms": 29.33,
-     "max_ms": 32.97,
-     "batch500_s": 0.312,
+     "p50_ms": 28.27,
+     "p95_ms": 29.61,
+     "max_ms": 34.25,
+     "batch500_s": 0.322,
      "n": 200
     }
    },
-   "rss_mb": 246.9,
+   "rss_mb": 248.8,
    "cgroup_memory_max": "805306368",
    "cgroup_cpu_max": "100000 100000"
   }
  ],
  "worst": {
-  "p95_ms": 30.66,
-  "batch500_s": 0.316,
-  "startup_s": 1.764,
-  "rss_mb": 246.9
+  "p95_ms": 29.66,
+  "batch500_s": 0.325,
+  "startup_s": 1.74,
+  "rss_mb": 248.8
  },
  "pass": {
   "p95_ms": true,

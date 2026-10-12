@@ -1,0 +1,43 @@
+  from starlette.testclient import TestClient as TestClient  # noqa
+audit write failed: RuntimeError
+TOCTOU   PASS  해시 측정(읽은 바이트) 직후 디스크 바꿔치기 → 검증된 바이트로만 응답 :: {"status": 200, "v0": 103.086277, "v": 103.086277, "swapped": 1}
+TOCTOU   PASS  다음 요청(디스크는 바뀐 상태) → 503 mismatch :: {"status": 503, "code": "model_artifact_mismatch"}
+HEALTH   PASS  변조 상태 health model_ready=false + error :: {"task": "t5145ec.remaining_hours", "model_ready": false, "version": "v1", "error": "model_artifact_mismatch"}
+HEALTH   PASS  복구 뒤 health model_ready=true :: {"task": "t5145ec.remaining_hours", "model_ready": true, "version": "v1"}
+ART      PASS  제자리 1바이트 변조(mtime · 크기 · inode 유지) → 캐시는 검증된 메모리 모델 :: {"status": 200, "same_value": true}
+FIELD    PASS  변수 값이 리스트 :: {"status": 422, "code": "invalid_input", "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+FIELD    PASS  변수 값이 문자열 :: {"status": 422, "code": "invalid_input", "detail": {"field": "press_force", "rule": "type"}}
+FIELD    PASS  explain 문자열 :: {"status": 422, "code": "invalid_input", "detail": {"errors": [{"field": "explain", "rule": "bool_type"}]}}
+FIELD    PASS  entity_id 숫자 :: {"status": 422, "code": "invalid_input", "detail": {"errors": [{"field": "entity_id", "rule": "string_type"}]}}
+FIELD    PASS  최상위 모르는 키(<b>x) :: {"status": 422, "code": "invalid_input", "detail": {"errors": [{"field": "*", "rule": "extra_forbidden"}]}}
+FIELD    PASS  inputs 임의 키 + 객체 값 :: {"status": 422, "code": "invalid_input", "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule": "float_type"}, {"field": "inputs.*", "rule": "string_type"}]}}
+FIELD    PASS  inputs 가 리스트 :: {"status": 422, "code": "invalid_input", "detail": {"errors": [{"field": "inputs", "rule": "dict_type"}]}}
+FIELD    PASS  모르는 키 이름 = 계약 필드명(reason) :: {"status": 422, "code": "invalid_input", "detail": {"errors": [{"field": "reason", "rule": "extra_forbidden"}]}}
+FIELD    PASS  decide decision 잘못(정상 위치 'decision' 이 남는가) :: {"status": 422, "detail": {"errors": [{"field": "decision", "rule": "literal_error"}]}}
+BATCH    PASS  7건 혼합(정상 · NaN · 모르는 키 · min/max 밖 · inputs 리스트 · 모르는 최상위 · entity_id 길이) → 건별 :: ["ok", "invalid_input", "invalid_input", "out_of_bounds", "invalid_input", "invalid_input", "invalid_input"]
+BATCH    PASS  빈 items :: {"status": 422, "body": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"입력 값이 올바르지 않습니다\",\"detail\":{\"errors\":[{\"field\":\"items\",\"rule\":\"too_short\"}]}}}"}
+BATCH    PASS  items 가 객체 → 전체 422 :: {"status": 422}
+AUDIT    PASS  읽기(GET 5건) 는 감사하지 않는다 :: {"added": 0}
+AUDIT    PASS  키 없는 쓰기 401 → tenant '-' anonymous 1행 :: {"added": 1}
+AUDIT    PASS  다른 회사 키 쓰기 404 → 키의 회사(sw) 감사 1행 · ks 0 :: {"status": 404, "sw_added": 1, "ks_added": 0}
+AUDIT    PASS  감사 쓰기 실패 → 응답은 깨지지 않음(200) · 예측 기록됨 :: {"status": 200, "pred_added": 1}
+AUDIT    WARN  감사 실패 시 쓰기가 감사 없이 성공(관찰) :: {"note": "middleware 가 audit 실패를 log.error 로만 남김 — 쓰기는 커밋됨"}
+ISO      PASS  sw admin 으로 ks 예측 trace :: {"status": 404}
+ISO      PASS  sw 가 같은 entity_id 로 actuals → ks trace 에 섞이지 않음 :: {"sw_status": 404, "ks_actuals": []}
+ISO      PASS  ks 키로 ks 경로 + sw 과제 이름(delta_e) :: {"status": 404}
+ISO      PASS  ks 경로에 과제 칸 = 'sw.delta_e' 전체 id :: {"status": 404, "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"과제를 찾을 수 없습니다\",\"detail\":{}}}"}
+ISO      PASS  ks 키로 sw 승인 목록 :: {"status": 404}
+NOMODEL  PASS  admin model_version=v1(production) → 200 :: {"status": 200}
+Traceback (most recent call last):
+  File "<repo>/outputs/qa-r2/qa2/probe_r2.py", line 142, in <module>
+    ref2, _ = h.real_production(ks, f"{KS}.remaining_hours")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/tests/_dev2.py", line 287, in real_production
+    result, ref = training.run_and_register(out["run_id"])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/src/mlcore/serve/training.py", line 79, in run_and_register
+    result = jobs.execute(run_id)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/src/mlcore/train/jobs.py", line 38, in execute
+    raise RunNotFound(f"{run_id}: " + (f"상태 {exists['status']} — queued 아님" if exists else "없음"))
+mlcore.train.jobs.RunNotFound: run_5ed5781c9b3381fc: 상태 succeeded — queued 아님

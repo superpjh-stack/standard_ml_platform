@@ -1,0 +1,14 @@
+G-M03  [정상] approver_role 같은 값 재기입        PASS  통과 {'approver_role': 'maintenance_lead'}
+G-M03  [정상] target 같은 값 재기입               PASS  통과 {'target': {'name': 'remaining_hours', 'unit': 'h', 'direction': 'higher_is_better'}}
+G-M03  [정상] candidates 줄이기                PASS  통과 {'candidates': ['ridge']}
+G-M03  [정상] out_of_range 정책 reject        PASS  통과 {'out_of_range': 'reject'}
+G-M03  [정상] max_imputed 2                 PASS  통과 {'max_imputed': 2}
+G-M03  [정상] features 하나 빼기(선택 변수)         PASS  통과 {'features': ['press_force', 'motor_current', 'equip_temp', 'mold_temp', 'cycle_time', 'shot_count', 'machine_
+G-M03  [우회] target 대소문자 다른 이름             PASS  거부 RegistryRejected: R1: remaining_hours: 덮어쓰기로 target 를 바꿀 수 없다
+G-M03  [우회] target 에 공백                   PASS  거부 RegistryRejected: R1: remaining_hours: 덮어쓰기로 target 를 바꿀 수 없다
+G-M03  [우회] approver_role 대소문자            PASS  거부 RegistryRejected: R1: remaining_hours: 덮어쓰기로 approver_role 를 바꿀 수 없다
+G-M03  [우회] approver_role 목록으로            PASS  거부 RegistryRejected: R1: remaining_hours: 덮어쓰기로 approver_role 를 바꿀 수 없다
+G-M03  [우회] fixed 에 목표 열                  PASS  거부 RegistryRejected: R1: remaining_hours: 목표 target 'remaining_hours' 가 입력 변수에 있다(목표 누수)
+G-M03  [우회] uses 에 자기 자신                  PASS  거부 RegistryRejected: R1: remaining_hours: 덮어쓰기로 uses 를 바꿀 수 없다
+G-M03  [우회] approval 키 추가(자동 승인?)         FAIL  통과 {'auto_promote': True}
+G-M03  [우회] split 같은 이름 다른 대소문자           PASS  거부 RegistryRejected: R1: remaining_hours: 덮어쓰기로 split 를 바꿀 수 없다

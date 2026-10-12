@@ -1,0 +1,20 @@
+delta_e {'approval_id': 'apr_01M4RAHT3VVFDJFM0DACVJ8ZV1', 'state': 'approved', 'production_version': 'v1'} synthetic True
+defect_risk {'approval_id': 'apr_01M4RAHTGX8M1J99N5K70T4X9Q', 'state': 'approved', 'production_version': 'v1'} synthetic True
+print_ood {'approval_id': 'apr_01M4RAHTRWKSHCKF9D8XSSWRC0', 'state': 'approved', 'production_version': 'v1'} synthetic True
+live yaml 작성
+A health: {"status":"ok","db":true,"version":"0.1.0","tenant":"qz4a","tasks":[{"task":"qz4a.delta_e","model_ready":false,"version":null,"disabled":"model_not_ready: live 회사의 합성 스냅숏 모델"},{"task":"qz4a.defect_risk","model_ready":false,"version":null,"disabled":"model_not_ready: live 회사의 합성 스냅숏 모델"},{"task":"qz4a.print_ood","model_ready":false,"version":null,"disabled":"model_not_ready: live 회사의 합성 스냅숏 모델"}]}
+A tasks: {"items":[],"next_cursor":null,"total":0,"disabled":[{"task":"qz4a.delta_e","reason":"model_not_ready: live 회사의 합성 스냅숏 모델"},{"task":"qz4a.defect_risk","reason":"model_not_ready: live 회사의 합성 스냅숏 모델"},{"task":"qz4a.print_ood","reason":"model_not_ready: live 회사의 합성 스냅숏 모델"}],"tenant":{"code":"qz4a","name":"송월타월","pack":"textile","mode":"live"}}
+A predict: {"error":{"code":"model_not_ready","message":"이 과제는 꺼져 있어 운영 모델을 쓸 수 없습니다","detail":{"task":"qz4a.delta_e","rule":"disabled"}}} HTTP503
+A batch: {"error":{"code":"model_not_ready","message":"이 과제는 꺼져 있어 운영 모델을 쓸 수 없습니다","detail":{"task":"qz4a.delta_e","rule":"disabled"}}} HTTP503
+A compat: {"detail":"이 회사에는 해당 과제가 켜져 있지 않습니다"} HTTP404
+setup only
+live yaml 작성
+B health(기동 직후): {"status":"ok","db":true,"version":"0.1.0","tenant":"qz4b","tasks":[{"task":"qz4b.delta_e","model_ready":false,"version":null},{"task":"qz4b.defect_risk","model_ready":false,"version":null},{"task":"qz4b.print_ood","model_ready":false,"version":null}]}
+delta_e {'approval_id': 'apr_01M4RAHZDM3BHR9KVR5E6WE8K0', 'state': 'approved', 'production_version': 'v1'} synthetic True
+defect_risk {'approval_id': 'apr_01M4RAHZTKTWD6K17545PVN7GF', 'state': 'approved', 'production_version': 'v1'} synthetic True
+print_ood {'approval_id': 'apr_01M4RAJ02WQ9WE0QN7G3Q2DA0G', 'state': 'approved', 'production_version': 'v1'} synthetic True
+B health(승인 뒤): {"status":"ok","db":true,"version":"0.1.0","tenant":"qz4b","tasks":[{"task":"qz4b.delta_e","model_ready":true,"version":"v1"},{"task":"qz4b.defect_risk","model_ready":true,"version":"v1"},{"task":"qz4b.print_ood","model_ready":true,"version":"v1"}]}
+B predict: {"error":{"code":"model_not_ready","message":"live 회사에서 합성 스냅숏 모델로 답하지 않습니다","detail":{"task":"qz4b.delta_e","rule":"live_synthetic"}}} HTTP503
+B batch: {"error":{"code":"model_not_ready","message":"live 회사에서 합성 스냅숏 모델로 답하지 않습니다","detail":{"task":"qz4b.delta_e","rule":"live_synthetic"}}} HTTP503
+B compat: {"detail":"live 회사에서 합성 스냅숏 모델로 답하지 않습니다","code":"model_not_ready"} HTTP503
+B model_version=v1: {"error":{"code":"forbidden","message":"모델 버전 지정은 approver 이상입니다","detail":{}}} HTTP403

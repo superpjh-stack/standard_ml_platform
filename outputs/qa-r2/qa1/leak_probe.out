@@ -1,0 +1,15 @@
+LEAK  ks.remaining_hours                         PASS  policy=time_60_20_20 test_rows=144 champion=gbr 바뀐 항목=없음 시험지표 변화=예
+LEAK  ks.failure_24h                             PASS  policy=time_60_20_20 test_rows=144 champion=rf_clf 바뀐 항목=없음 시험지표 변화=예
+LEAK  ks.sensor_ood                              PASS  policy=time_60_20_20 test_rows=144 champion=isolation_forest 바뀐 항목=없음 시험지표 변화=예
+LEAK  sw.delta_e                                 PASS  policy=time_60_20_20 test_rows=144 champion=extra_trees 바뀐 항목=없음 시험지표 변화=예
+LEAK  sw.defect_risk                             PASS  policy=time_60_20_20 test_rows=144 champion=gbc 바뀐 항목=없음 시험지표 변화=예
+LEAK  sw.print_ood                               PASS  policy=time_60_20_20 test_rows=144 champion=isolation_forest 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.reg time_60_20_20 + iqr + search       PASS  policy=time_60_20_20 test_rows=200 champion=ridge 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.reg time_cv5 (300행) + iqr              PASS  policy=time_cv5 test_rows=60 champion=ridge 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.reg random_60_20_20 + search           PASS  policy=random_60_20_20 test_rows=200 champion=ridge 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.risk stratified + isotonic + search    PASS  policy=stratified_60_20_20 test_rows=200 champion=logreg 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.risk random + sigmoid                  PASS  policy=random_60_20_20 test_rows=200 champion=logreg 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.risk time_cv5 + sigmoid                PASS  policy=time_cv5 test_rows=80 champion=logreg 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.anomaly time_60_20_20                  PASS  policy=time_60_20_20 test_rows=200 champion=isolation_forest 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.anomaly random                         PASS  policy=random_60_20_20 test_rows=200 champion=isolation_forest 바뀐 항목=없음 시험지표 변화=예
+LEAK  tmp.anomaly time_cv5                       PASS  policy=time_cv5 test_rows=60 champion=isolation_forest 바뀐 항목=없음 시험지표 변화=예

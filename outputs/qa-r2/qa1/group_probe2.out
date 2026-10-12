@@ -1,0 +1,5 @@
+LV 1000 PASS 분할 거부(R2: split_time_group_conflict) — 시험값 교란 대상 없음
+   R2: 분할 거부 split_time_group_conflict
+LV 400 PASS 분할 거부(R2: split_time_group_conflict) — 시험값 교란 대상 없음
+   R2: 분할 거부 split_time_group_conflict
+TIE sizes 600 201 201 train∩valid ts 0 valid∩test ts 0

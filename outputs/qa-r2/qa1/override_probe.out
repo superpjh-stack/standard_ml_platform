@@ -1,0 +1,10 @@
+G-M03  덮어쓰기 type 변경                      PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 type 를 바꿀 수 없다
+G-M03  덮어쓰기 split 변경                     PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 split 를 바꿀 수 없다
+G-M03  덮어쓰기 time_key 지우기                 PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 time_key 를 바꿀 수 없다
+G-M03  덮어쓰기 group_key 바꾸기                PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 group_key 를 바꿀 수 없다
+G-M03  덮어쓰기 approver_role 지우기            PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 approver_role 를 바꿀 수 없다
+G-M03  덮어쓰기 approver_role 다른 역할로 바꾸기     PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 approver_role 를 바꿀 수 없다
+G-M03  덮어쓰기 interval 바꾸기                 PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 interval 를 바꿀 수 없다
+G-M03  덮어쓰기 seed 바꾸기(시드 골라 쓰기)           WARN  통과(적용됨) · 적용 값 {'seed': 7}
+G-M03  덮어쓰기 features 에 목표 열 추가           PASS  거부 · RegistryRejected: R1: remaining_hours: 목표 target 'remaining_hours' 가 입력 변수에 있다(목표 누수)
+G-M03  덮어쓰기 target.name 바꾸기              PASS  거부 · RegistryRejected: R1: remaining_hours: 덮어쓰기로 target 를 바꿀 수 없다

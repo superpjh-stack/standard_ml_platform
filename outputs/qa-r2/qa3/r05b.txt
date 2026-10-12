@@ -1,0 +1,20 @@
+G-S03  화면2 예측(1024px) 값 · 상태 · 모델 버전 · 합성 배지  PASS  합성=True 버전v1=True 가로스크롤=False 오류=[]
+G-S03  화면2 1024px 가로 스크롤 0  PASS  False
+G-S03  화면2 학습 범위 밖 표시(1024px)  PASS  cls=field field-oor
+G-S03  화면2 min/max 밖 → 오류 상자 out_of_bounds(1024px)  PASS  code=out_of_bounds 결과카드=False
+G-S03  화면2 콘솔 · 페이지 오류(1024px)  PASS  ['console.error: Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)']
+G-S03  화면2 예측(390px) 값 · 상태 · 모델 버전 · 합성 배지  PASS  합성=True 버전v1=True 가로스크롤=False 오류=[]
+G-S03  화면2 390px 가로 스크롤 0  PASS  False
+G-S03  화면2 학습 범위 밖 표시(390px)  PASS  cls=field field-oor
+G-S03  화면2 min/max 밖 → 오류 상자 out_of_bounds(390px)  PASS  code=out_of_bounds 결과카드=False
+G-S03  화면2 콘솔 · 페이지 오류(390px)  PASS  ['console.error: Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)']
+G-S03  화면2 viewer → 403 forbidden 표시  PASS  forbidden
+G-S03  화면3 추천 · '설비로 내려가지 않음' · 가로 스크롤 0  FAIL  needs_approval=False hscroll=False 오류=[]
+G-S03  화면3 불가능 제약 → least_violation · 검토 필요 표시  PASS  least=True
+G-S03  화면3 390px 가로 스크롤  PASS  hscroll=False sw=390
+G-M09  화면5 두 탭: A 승인 → B 승인 클릭 409 already_decided 표시  PASS  이전 production=['v1'] A 뒤=['v6'] B 오류=already_decided 최종=['v6']
+G-M09  화면5 409 뒤 B 탭 목록 새로 고침(대기 카드 사라짐)  PASS  버튼 남음=False
+G-S03  화면5 콘솔 · 페이지 오류  PASS  ['console.error: Failed to load resource: the server responded with a status of 409 (Conflict)']
+G-S03  화면5 operator(조회만) — 승인 버튼 노출 여부 · 누르면 403  PASS  버튼 노출=True 결과=forbidden
+G-S03  화면5 viewer → forbidden 표시  PASS  forbidden
+G-S03  키 없는 첫 방문 안내  PASS  True

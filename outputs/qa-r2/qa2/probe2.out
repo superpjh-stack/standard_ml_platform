@@ -1,0 +1,36 @@
+<repo>/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+NOMODEL  PASS  ks.remaining_hours batch 모델 없음 → 503 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t6a7249.remaining_hours", "version": null}}}}
+NOMODEL  PASS  ks.remaining_hours (regression) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t6a7249.remaining_hours", "version": null}}}}
+NOMODEL  PASS  ks.failure_24h batch 모델 없음 → 503 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t6a7249.failure_24h", "version": null}}}}
+NOMODEL  PASS  ks.failure_24h (risk) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t6a7249.failure_24h", "version": null}}}}
+NOMODEL  PASS  ks.sensor_ood batch 모델 없음 → 503 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t6a7249.sensor_ood", "version": null}}}}
+NOMODEL  PASS  ks.sensor_ood (anomaly) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t6a7249.sensor_ood", "version": null}}}}
+NOMODEL  PASS  ks.maintenance_timing (optimize) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t6a7249.remaining_hours", "version": null}}}}
+NOMODEL  PASS  ks health model_ready 전부 false :: {"status": "ok", "db": true, "version": "0.1.0", "tenant": "t6a7249", "tasks": [{"task": "t6a7249.remaining_hours", "model_ready": false, "version": null}, {"task": "t6a7249.failure_24h", "model_ready": false, "version": null}, {"task": "t6a7249.sensor_ood", "model_ready": false, "version": null}, {"task": "t6a7249.maintenance_timing", "model_ready": false, "version": null}]}
+HEALTH   WARN  ks 키 없는 /api/v1/health 가 노출하는 값 :: {"keys": ["status", "db", "version", "tenant", "tasks"], "tenant": "t6a7249", "task_ids": ["t6a7249.remaining_hours", "t6a7249.failure_24h", "t6a7249.sensor_ood", "t6a7249.maintenance_timing"]}
+NOMODEL  PASS  ks 호환 predict 모델 없음(빈 본문) :: {"status": 422, "body": "{\"detail\":[{\"loc\":[\"body\",\"press_force\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"body\",\"vibration\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"bo"}
+NOMODEL  PASS  sw.delta_e batch 모델 없음 → 503 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t4429d5.delta_e", "version": null}}}}
+NOMODEL  PASS  sw.delta_e (regression) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t4429d5.delta_e", "version": null}}}}
+NOMODEL  PASS  sw.defect_risk batch 모델 없음 → 503 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t4429d5.defect_risk", "version": null}}}}
+NOMODEL  PASS  sw.defect_risk (risk) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t4429d5.defect_risk", "version": null}}}}
+NOMODEL  PASS  sw.print_ood batch 모델 없음 → 503 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t4429d5.print_ood", "version": null}}}}
+NOMODEL  PASS  sw.print_ood (anomaly) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t4429d5.print_ood", "version": null}}}}
+NOMODEL  PASS  sw.print_setpoint (optimize) 모델 없음 → 503 model_not_ready · 값 없음 :: {"status": 503, "body": {"error": {"code": "model_not_ready", "message": "운영(production) 모델이 없습니다", "detail": {"task": "t4429d5.delta_e", "version": null}}}}
+NOMODEL  PASS  sw health model_ready 전부 false :: {"status": "ok", "db": true, "version": "0.1.0", "tenant": "t4429d5", "tasks": [{"task": "t4429d5.delta_e", "model_ready": false, "version": null}, {"task": "t4429d5.defect_risk", "model_ready": false, "version": null}, {"task": "t4429d5.print_ood", "model_ready": false, "version": null}, {"task": "t4429d5.print_setpoint", "model_ready": false, "version": null}]}
+HEALTH   WARN  sw 키 없는 /api/v1/health 가 노출하는 값 :: {"keys": ["status", "db", "version", "tenant", "tasks"], "tenant": "t4429d5", "task_ids": ["t4429d5.delta_e", "t4429d5.defect_risk", "t4429d5.print_ood", "t4429d5.print_setpoint"]}
+NOMODEL  PASS  sw 호환 predict 모델 없음(빈 본문) :: {"status": 422, "body": "{\"detail\":[{\"loc\":[\"body\",\"set_temp\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"body\",\"set_pressure\"],\"msg\":\"필수 항목입니다\",\"type\":\"missing\"},{\"loc\":[\"bo"}
+REJ      PASS  remaining_hours reject 정책 · 범위 밖 → 200 rejected · 18키 · 값 null :: {"status": 200, "st": "rejected", "errs": [], "prediction": {"value": null, "unit": "h", "interval": null, "grade": null, "baseline": 7.79894}, "anomaly": null, "prob": null}
+REJ      PASS  remaining_hours rejected 도 mlp_prediction 기록 · trace :: {"status": 200, "keys": ["prediction", "model", "run", "snapshot", "sources", "actuals"]}
+REJ      PASS  failure_24h reject 정책 · 범위 밖 → 200 rejected · 18키 · 값 null :: {"status": 200, "st": "rejected", "errs": [], "prediction": {"value": null, "unit": "probability", "interval": null, "grade": null, "baseline": 0.3}, "anomaly": null, "prob": null}
+REJ      PASS  failure_24h rejected 도 mlp_prediction 기록 · trace :: {"status": 200, "keys": ["prediction", "model", "run", "snapshot", "sources", "actuals"]}
+REJ      PASS  sensor_ood reject 정책 · 범위 밖 → 200 rejected · 18키 · 값 null :: {"status": 200, "st": "rejected", "errs": [], "prediction": null, "anomaly": {"score": null, "flag": null, "threshold": 0.561426, "contamination": 0.08, "contributors": []}, "prob": null}
+REJ      PASS  sensor_ood rejected 도 mlp_prediction 기록 · trace :: {"status": 200, "keys": ["prediction", "model", "run", "snapshot", "sources", "actuals"]}
+MVER     PASS  approver model_version=v1 (production) :: {"status": 200, "code": null}
+MVER     PASS  approver model_version=v2 (candidate) :: {"status": 404, "code": "not_found"}
+MVER     PASS  approver model_version=v99 (없음) :: {"status": 404, "code": "not_found"}
+MVER     PASS  admin model_version=v99 (없음) :: {"status": 404, "code": "not_found"}
+REQID    WARN  X-Request-Id 길이 8000 그대로 응답 헤더 · 감사 저장 :: {"status": 200, "echo_header": false, "audit_rows": 0}
+REQID    WARN  X-Request-Id 길이 15 그대로 응답 헤더 · 감사 저장 :: {"status": 200, "echo_header": false, "audit_rows": 0}
+HEALTH   WARN  산출물 변조 상태에서 health model_ready :: {"health_model_ready": false, "predict": 503}
+total 33 FAIL 0

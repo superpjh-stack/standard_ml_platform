@@ -1,0 +1,2 @@
+G-M03  덮어쓰기 학습 목표 열을 변수로              PASS 거부 RegistryRejected: R1: remaining_hours: 목표 target 'remaining_hours' 가 입력 변수에 있다(목표 누수)
+G-M03  덮어쓰기 학습 목표를 변수 shot_count 로    PASS 거부 RegistryRejected: R1: remaining_hours: 덮어쓰기로 target 를 바꿀 수 없다

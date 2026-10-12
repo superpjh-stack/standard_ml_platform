@@ -1,0 +1,10 @@
+G-M05  guard 우회 여집합(전체 − 학습 − 검증)                    WARN  복원=True · ledger +0
+G-M05  guard 우회 vars(test)                           PASS  TypeError · ledger +0
+G-M05  guard 우회 overlaps() 한 행씩                      PASS  TestLeak(시험 구간 겹침 질의는 1회만(표본 내 평가 판정)) · ledger +1
+G-M05  guard 우회 boundaries.test_ts                   WARN  복원=True · ledger +0
+G-M05  guard 우회 copy.copy                            PASS  TestLeak(시험 구간 인덱스 직접 접근(copy) 금지) · ledger +1
+G-M05  guard 우회 pickle.dumps                         PASS  TestLeak(시험 구간 인덱스 직접 접근(pickle) 금지) · ledger +1
+G-M05  guard 우회 [신규] getattr 문자열 조립                  WARN  복원=True · ledger +0
+G-M05  guard 우회 [신규] gc.get_referents                WARN  복원=True · ledger +0
+G-M05  guard 우회 [신규] slot 서술자                        WARN  복원=True · ledger +0
+G-M05  guard 우회 같은 ledger 다른 래퍼 final_eval 2회       PASS  허용=False

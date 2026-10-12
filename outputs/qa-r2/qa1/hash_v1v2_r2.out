@@ -1,0 +1,9 @@
+저장소 스냅숏 1293 · v1 792 · v2 501
+v1/v2 표본 load 성공 80 · 실패 0
+v2 표지 제거(v1 로 하향)                        PASS 거부 (snp_1b93e5ed81d59abd: 내용 해시 불일치)
+v2 표지·기록해시 제거                            PASS 거부 (snp_1b93e5ed81d59abd: 내용 해시 불일치)
+v2 값 1개 변경                               PASS 거부 (snp_1b93e5ed81d59abd: 내용 해시 불일치)
+v1 에 v2 표지 추가(상향)                        PASS 거부 (snp_ddfb1067bdfaea36: 내용 해시 불일치)
+v1 값 1개 변경                               PASS 거부 (snp_ddfb1067bdfaea36: 내용 해시 불일치)
+v1 값 변경 + 기록해시 제거                        PASS 거부 (snp_ddfb1067bdfaea36: 내용 해시 불일치)
+v1 표지 값 'v0'(모르는 규칙)                     PASS 거부 (snp_ddfb1067bdfaea36: 내용 해시 불일치)

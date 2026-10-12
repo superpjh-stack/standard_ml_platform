@@ -1,0 +1,17 @@
+G-M06  스냅숏 안정 열 순서 역순                                PASS  같은 해시=True
+G-M06  스냅숏 안정 행 섞기                                   PASS  같은 해시=True
+G-M06  스냅숏 안정 ts 를 UTC 로 표현(같은 순간)                   PASS  같은 해시=True
+G-M06  스냅숏 안정 정수 dtype vs 실수 dtype(같은 값)             PASS  같은 해시=True
+G-M06  스냅숏 안정 parquet 왕복                             PASS  같은 해시=True
+G-M06  스냅숏 안정 같은 (ts,entity_id) 중복행 순서만 다름           PASS  같은 해시=True
+G-M06  스냅숏 민감 값 1e-12 변경                             PASS  다른 해시=True
+G-M06  스냅숏 민감 값 → 결측                                 PASS  다른 해시=True
+G-M06  스냅숏 민감 열 추가                                   PASS  다른 해시=True
+G-M06  스냅숏 민감 행 삭제                                   PASS  다른 해시=True
+G-M06  스냅숏 민감 목표 변경                                  PASS  다른 해시=True
+G-M06  스냅숏 민감 범주 문자열 변경                              PASS  다른 해시=True
+G-M06  스냅숏 민감 _source_ref 변경                         PASS  다른 해시=True
+G-M06  스냅숏 민감 열 이름 변경                                PASS  다른 해시=True
+G-M06  스냅숏 민감 0.0 vs -0.0 (다르게 나와도 무방, 기록용)          PASS  다른 해시=True
+G-M06  스냅숏 민감 수치 열 → 같은 값의 문자열 열(dtype 변경)           PASS  다른 해시=True
+G-M06  스냅숏 안정 entity_id 없는 원천 · 행 순서만 다름          PASS  같은 해시=True (ROW-n 이 원천 행 순서로 붙는다)

@@ -1,0 +1,4 @@
+쓰기 함수 뷰 SELECT: PASS 거부 — 조회 실패(qa_src2.v): ReadOnlySqlTransaction
+log 행 수(0 이어야): 0
+probe: SourceHealth(kind='gateway', connected=True, rows=5, ts_from=None, ts_to=None, lag_seconds=None, feature_coverage=None, missing_rates={}, has_target=None, message='Gateway 원장 연결 · 경고: 쓰기 권한 있는 계정(허용 테이블 1개) — 읽기 전용 역할 권장')
+read_role 없는 역할: SourceHealth(kind='gateway', connected=False, rows=None, ts_from=None, ts_to=None, lag_seconds=None, feature_coverage=None, missing_rates={}, has_target=None, message='읽기 역할 전환 실패: InvalidParameterValue')

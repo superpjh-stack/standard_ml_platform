@@ -1,0 +1,170 @@
+ok {'ks': ['viewer', 'operator', 'approver', 'admin', 'approver_other'], 'sw': ['viewer', 'operator', 'approver', 'admin', 'approver_other']}
+{"run_id": "run_07db9a8cae333dfa", "status": "succeeded", "champion": "gbr", "beats_baseline": true, "artifact_dir": "<scratch-cut>
+{"run_id": "run_28e5e4926e00e84d", "status": "succeeded", "champion": "rf_clf", "beats_baseline": true, "artifact_dir": "<scratch-cut>
+{"run_id": "run_dd020686539cc620", "status": "succeeded", "champion": "isolation_forest", "beats_baseline": true, "artifact_dir": "<scratch-cut>
+2.3  production 없음 predict ks.remaining_hours  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 predict ks.failure_24h  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 predict ks.sensor_ood  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 predict:batch  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  production 없음 optimize(uses 미운영)  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.3  health model_ready 전부 false  PASS  200 [False, False, False, False]
+2.3  overview production null  PASS  200 production=None
+G-M09  candidate 를 promote 요청  PASS  HTTP 409 code=invalid_transition (기대 409 invalid_transition)
+G-M09  operator 가 stage  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+G-M09  admin stage v1  PASS  200 {'version': 'v1', 'stage': 'staging'}
+G-M09  다른 과제 담당 approver 가 promote  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+G-M09  promote = 승인 요청만(202 pending)  PASS  202 {'approval_id': 'apr_01M4RA96CEQXHSKXB23JBAYDXV', 'state': 'pending'} production=[]
+G-M09  같은 대상 promote 재요청 → 같은 approval_id  PASS  202 apr_01M4RA96CEQXHSKXB23JBAYDXV vs apr_01M4RA96CEQXHSKXB23JBAYDXV
+G-M09  승인 대기 중 predict  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+§6  operator decide  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+§6  viewer decide  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+§6  다른 과제 approver decide(own_task)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.3  다른 회사 키로 decide  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.3  없는 승인 ID decide  PASS  HTTP 404 code=not_found (기대 404 not_found)
+G-M09  역할 거부 뒤 production 그대로  PASS  production=[]
+G-M09  두 탭 동시 승인 → 200 1 · 409 1  PASS  codes=[200, 409] 감사 approved=1 production=['v1']
+2.3  이미 결정된 승인 재결정(반려)  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+G-M09  승인 직후 새 후보 도착 → production 불변  PASS  v2=candidate production=['v1']
+G-M09  새 후보 뒤 predict 는 production v1  PASS  200 model=v1
+G-M09  승인 · 반려 동시 → 하나만  PASS  codes=[200, 409] 최종=rejected production=['v1']
+G-M09  v2 승인 → production v2 · v1 archived  PASS  {'v1': 'archived', 'v2': 'production'}
+2.3  사유 없는 rollback  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+G-M09  archived 아닌 것을 rollback  PASS  HTTP 409 code=invalid_transition (기대 409 invalid_transition)
+G-M09  rollback = 승인 요청만(production 불변)  PASS  202 production=['v2']
+G-M09  rollback 승인 → v1 production · v2 archived  PASS  200 {'approval_id': 'apr_01M4RA9A10DEQNYXH80Y8CV4FE', 'state': 'approved', 'production_version': 'v1'} {'v1': 'production', 'v2': 'archived', 'v3': 'staging'}
+G-M09  models 목록 production 1개  PASS  200 production 항목 1
+G-M09  되돌리기 뒤 대기 중 v3 승인 유지  PASS  pending
+2.3  만료된 승인 결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided) production=['v1']
+G-M09  만료된 승인이 대기열(state=pending)에서 빠짐  PASS  pending 목록에 남음=False state=-
+G-M09  state=expired 조회에 만료 승인 보임  PASS  200 n=1
+G-M09  만료 뒤 같은 버전 재요청 → 새 승인  PASS  202 {'approval_id': 'apr_01M4RA9A3XCV7JXYZSGXBDEG6B', 'state': 'pending'}
+G-M09  승인 요청에 만료 시각(expires_at) 설정  PASS  expires_at 있는 승인 26건(QA 가 손으로 넣은 1건 제외)
+G-M09  같은 승인 두 번 결정 감사 0  PASS  중복 []
+G-M09  과제당 production ≤ 1  PASS  []
+G-M09  production 전부 approval_id 있음  PASS  []
+failure_24h v1 200 202 (200, {'approval_id': 'apr_01M4RA9A7RZXXT7NP2GCRH1BC5', 'state': 'approved', 'production_version': 'v1'})
+sensor_ood v1 200 202 (200, {'approval_id': 'apr_01M4RA9A92DBZFT59DV2KY3AY2', 'state': 'approved', 'production_version': 'v1'})
+2.3  모르는 입력 키  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input) echo=False
+2.3  모르는 최상위 키(이름=반사 문자열)  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input) echo=False
+2.3  NaN  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+2.3  Infinity  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+2.3  -Infinity  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+2.3  1e400  PASS  HTTP 422 code=invalid_input (기대 422 ) (1e400 은 invalid_input · out_of_bounds 어느 쪽이든 422)
+2.3  숫자 자리에 문자열(반사 문자열)  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input) echo=False
+2.3  범주 목록 밖 값(반사 문자열) → out_of_bounds(D-55)  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds) echo=False
+2.3  깨진 JSON  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+2.3  필수 변수(machine_code) 누락  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+2.3  선택 변수 3개 누락(= max_imputed 3) → 200 보정  PASS  200 imputed=['press_force', 'vibration', 'motor_current']
+2.3  선택 변수 4개 누락(> max_imputed 3)  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+2.3  null 4개(> max_imputed)  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+2.3  min/max 밖 press_force=320.0001  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+2.3  min/max 밖 press_force=179.9  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+2.3  min/max 밖 shot_count=180001  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+2.3  min/max 밖 vibration=-1  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+2.3  max 경계값 320 → 422 아님  PASS  200 status=out_of_range
+2.3  학습 범위 밖(181 < p1 182.39) → 200 out_of_range + 경고  PASS  200 status=out_of_range oor=['press_force']
+2.3  학습 범위 안 → status ok/watch  PASS  200 status=ok synthetic=True
+2.3  합성 모델 응답 synthetic=true + 경고  PASS  synthetic=True warnings=['synthetic_model']
+2.3  batch 501건  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+2.3  batch 안 한 건 out_of_bounds  PASS  200 {'items': [{'task': 'ks.remaining_hours', 'type': 'regression', 'tenant': 'ks', 'entity_id': None, 'prediction': {'value': 120.933399, 'unit': 'h', 'interval': 
+2.3  viewer predict(역할 밖)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.3  키 없음  PASS  HTTP 401 code=auth_required (기대 401 auth_required)
+2.3  틀린 키  PASS  HTTP 401 code=auth_required (기대 401 auth_required)
+2.3  다른 회사 키(sw)로 ks predict  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.3  없는 과제  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.3  ks 키로 sw 경로  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.3  없는 예측 ID trace  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.3  다른 회사 키로 실제 예측 trace  PASS  HTTP 404 code=not_found (기대 404 not_found)
+§6  approver trace(admin 전용)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.3  optimize 아닌 과제에 optimize  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.3  2차 GET review  PASS  HTTP 501 code=not_implemented (기대 501 not_implemented)
+2.3  2차 PATCH review/x1  PASS  HTTP 501 code=not_implemented (기대 501 not_implemented)
+2.3  2차 POST documents  PASS  HTTP 501 code=not_implemented (기대 501 not_implemented)
+2.3  2차 GET documents/d1  PASS  HTTP 501 code=not_implemented (기대 501 not_implemented)
+2.3  2차 POST quotes  PASS  HTTP 501 code=not_implemented (기대 501 not_implemented)
+2.3  2차 GET quotes  PASS  HTTP 501 code=not_implemented (기대 501 not_implemented)
+2.3  2차 GET quotes/q1.csv  PASS  HTTP 501 code=not_implemented (기대 501 not_implemented)
+2.3  소스 실패 train(dataplatform 미연결)  PASS  HTTP 503 code=source_disconnected (기대 503 source_disconnected)
+2.3  같은 스냅숏 · 설정 재요청 → 200 + 기존 run_id  FAIL  200 {'run_id': 'run_07db9a8cae333dfa', 'status': 'succeeded', 'reused': True}
+§6  approver train  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.3  doctor 200 + 소스별 미연결  PASS  200 {'demo': '연결', 'eval': '연결', 'train': '미연결', 'gateway': '미연결', 'actuals': '미연결'}
+G-M08  doctor 목표 없음 표기(D-33)  PASS  target=['있음', '있음', '목표 없음', '목표 없음', '목표 없음']
+2.3  산출물 해시 불일치(이미 적재된 모델)  PASS  HTTP 503 code=model_artifact_mismatch (기대 503 model_artifact_mismatch) (바꾸기 전 200)
+2.3  되돌린 뒤 다시 200  PASS  200
+2.3  env.lock 패키지 버전 바꿈  PASS  HTTP 503 code=model_artifact_mismatch (기대 503 model_artifact_mismatch)
+G-M13  기본 params → needs_approval · 후보 5  PASS  200 status=needs_approval n_candidates=97 n_feasible=89 0.05s
+G-M13  결정 변수 점 수 = 0..48 step 0.5 = 97  PASS  n_candidates=97
+G-M13  후보 결정 변수 ∈ [0, max_delay_hours]  PASS  [48.0, 47.5, 47.0, 46.5, 46.0]
+G-M13  후보 전부 제약 충족  PASS  [[True, True], [True, True], [True, True], [True, True], [True, True]]
+G-M13  응답 키 18 · prediction/model/prediction_id null · uses 배열  PASS  keys=18 uses=[{'task': 'ks.remaining_hours', 'version': 'v1', 'synthetic': True}]
+G-M13  mlp_recommendation needs_approval + 승인 요청(kind=recommendation)  PASS  rec=[{'status': 'needs_approval', 'feasible': True}] approval=[{'approval_id': 'apr_01M4RA9B5F56RM6V4MQMBB4RXR', 'state': 'pending', 'kind': 'recommendation', 'approver_role': 'maintenance_lead'}]
+G-M13  불가능 제약 → feasible=false · status review · least_violation  PASS  200 status=review feasible=False on_infeasible=least_violation n_feasible=0
+G-M13  불가능 제약에서 ok/needs_approval 0  PASS  status=review
+G-M13  least_violation best 의 미충족 제약 표시  PASS  unmet=['reserve', 'max_cost']
+G-M13  least_violation 후보 위반 오름차순  PASS  [59.3537773428, 59.3571106761, 59.3604440095, 59.3637773428, 59.3671106761]
+G-M13  불가능 추천도 needs_approval 로 기록(설비 미적용)  PASS  [{'status': 'needs_approval', 'feasible': False}]
+G-M13  reserve 150h(예측 잔여수명보다 큼) → review  PASS  200 review best={'stop_after_hours': 4.0}
+G-M13  decision_vars 경계 {'max_delay_hours': 72}  PASS  200 n=145 max=72.0
+G-M13  decision_vars 경계 {'max_delay_hours': 0}  PASS  200 n=1 max=0.0
+G-M13  decision_vars 경계 {'max_delay_hours': 0.4}  PASS  200 n=1 max=0.0
+G-M13  params 경계 {'max_delay_hours': 72.5}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'max_delay_hours': -0.5}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'reserve_hours': 0}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'max_cost_index': 501}  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+G-M13  params 경계 {'zz_param': 1}  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+G-M13  params 경계 {'reserve_hours': '12'}  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+G-M13  params 경계 {'reserve_hours': True}  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+G-M13  current.stop_after_hours=1000(결정 변수 max 72 밖) 거부  PASS  422 status=None current=None
+G-M13  current.stop_after_hours=-5 거부  PASS  422
+G-M13  고정 입력 학습 범위 밖 → review + out_of_range 경고  PASS  200 review ['press_force']
+G-M13  고정 입력 min/max 밖  PASS  HTTP 422 code=out_of_bounds (기대 422 out_of_bounds)
+§6  viewer optimize  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+G-M13  추천 승인 → production 불변 · rec approved · production_version null  PASS  200 {'approval_id': 'apr_01M4RA9B5F56RM6V4MQMBB4RXR', 'state': 'approved', 'production_version': None} rec=approved production 변화=set()
+2.3  추천 승인 재결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+G-M13  추천 결정 감사 1행  PASS  1
+G-M13  추천 승인 두 탭 동시 → 200 1 · 409 1  PASS  {'B': 200, 'A': 409}
+G-S03  화면2 예측(1024px) 값 · 상태 · 모델 버전 · 합성 배지  PASS  합성=True 버전v1=True 가로스크롤=False 오류=[]
+G-S03  화면2 1024px 가로 스크롤 0  PASS  False
+G-S03  화면2 학습 범위 밖 표시(1024px)  PASS  cls=field field-oor
+G-S03  화면2 min/max 밖 → 오류 상자 out_of_bounds(1024px)  PASS  code=out_of_bounds 결과카드=False
+G-S03  화면2 콘솔 · 페이지 오류(1024px)  PASS  ['console.error: Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)']
+G-S03  화면2 예측(390px) 값 · 상태 · 모델 버전 · 합성 배지  PASS  합성=True 버전v1=True 가로스크롤=False 오류=[]
+G-S03  화면2 390px 가로 스크롤 0  PASS  False
+G-S03  화면2 학습 범위 밖 표시(390px)  PASS  cls=field field-oor
+G-S03  화면2 min/max 밖 → 오류 상자 out_of_bounds(390px)  PASS  code=out_of_bounds 결과카드=False
+G-S03  화면2 콘솔 · 페이지 오류(390px)  PASS  ['console.error: Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)']
+G-S03  화면2 viewer → 403 forbidden 표시  PASS  forbidden
+G-S03  화면3 추천 · '설비로 내려가지 않음' · 가로 스크롤 0  FAIL  needs_approval=False hscroll=False 오류=[]
+G-S03  화면3 불가능 제약 → least_violation · 검토 필요 표시  PASS  least=True
+G-S03  화면3 390px 가로 스크롤  PASS  hscroll=False sw=390
+Traceback (most recent call last):
+  File "<repo>/outputs/qa-r2/qa3/t05_ui.py", line 94, in <module>
+    v = [i["version"] for i in bd["items"] if i["stage"] == "candidate"][0]
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+G-M09  드리프트 fixture → 재학습 접수 · production 불변  PASS  사유=['psi:vibration'] psi.vibration=(5.5979, 'retrain') production ['v1']→['v1']
+G-M09  작업자 등록 → candidate · production 불변  PASS  v4 {'v3': 'staging', 'v2': 'archived', 'v1': 'production', 'v4': 'candidate'}
+G-M09  감시 → staging + 승인 요청(pending, monitor) · production 불변  PASS  [{'task_id': 'ks.remaining_hours', 'version': 'v4', 'run_id': 'run_efc8d54c56b1a126', 'approval_id': 'apr_01M4RA9QM28PXJ0ENFJV10WGVM'}] [('pending', 'monitor')] {'v3': 'staging', 'v2': 'archived', 'v1': 'production', 'v4': 'staging'}
+G-M09  감시 두 번째 실행 → 새 요청 없음  PASS  
+G-M09  다음 날 같은 드리프트 → 재접수(같은 스냅숏이면 재사용)  PASS  run_id=run_efc8d54c56b1a126 첫날=run_efc8d54c56b1a126
+G-M09  기준선 미달 후보 → stage 0 · 승인 요청 0  PASS  v5=candidate [{'task_id': 'ks.remaining_hours', 'version': 'v5', 'run_id': 'run_5304736f015b2477', 'approval_id': None, 'skipped': '기준선 미달 — candidate 로 둔다'}] production=['v1']
+G-M09  기준선 미달 후보의 mlp_approval 0  PASS  0
+G-M09  다음 날 같은 드리프트 → 재접수(같은 스냅숏이면 재사용)  PASS  run_id=run_efc8d54c56b1a126 첫날=None
+Traceback (most recent call last):
+  File "<repo>/outputs/qa-r2/qa3/t07b_below_baseline.py", line 47, in <module>
+    _, ref2 = training.run_and_register(out)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/src/mlcore/serve/training.py", line 79, in run_and_register
+    result = jobs.execute(run_id)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/src/mlcore/train/jobs.py", line 38, in execute
+    raise RunNotFound(f"{run_id}: " + (f"상태 {exists['status']} — queued 아님" if exists else "없음"))
+mlcore.train.jobs.RunNotFound: run_5304736f015b2477: 상태 succeeded — queued 아님
+G-M02  KS-E1 GET /api/health  PASS  HTTP 200 
+G-M02  KS-E2 GET /api/ml/overview  PASS  HTTP 200 
+G-M02  KS-E5 GET /api/data/records?limit=2  PASS  HTTP 200 
+G-M02  KS-E6 GET /api/data/records/KS-DEMO-0001  PASS  HTTP 200 
+G-M02  KS-E6 GET /api/data/records/KS-DEMO-9999  PASS  HTTP 404 {'detail': 'LOT를 찾을 수 없습니다'}
+G-M02  KS-E7 GET /  FAIL  HTTP 404 {'error': {'code': 'not_found', 'message': '찾을 수 없습니다', 'detail': {}}}
+G-M02  KS-E7 GET /app/overview  PASS  HTTP 200 
+G-M02  KS-E1(std) GET /api/v1/health  PASS  HTTP 200 

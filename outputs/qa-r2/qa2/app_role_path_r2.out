@@ -1,0 +1,14 @@
+  from starlette.testclient import TestClient as TestClient  # noqa
+ROLE-PATH  PASS  tenant · task INSERT :: "te64dc4"
+ROLE-PATH  PASS  학습 · 등록 · stage · 승인 → production(2과제) :: {"remaining_hours": "v1", "failure_24h": "v1"}
+ROLE-PATH  PASS  predict 200 :: 200
+ROLE-PATH  PASS  batch 200 :: 200
+ROLE-PATH  PASS  actuals :: [200, "{\"actual_id\":1,\"linked_prediction_ids\":[\"prd_01M4RAMQS8D0A1N2SC08EEC3NQ\"]}"]
+ROLE-PATH  PASS  trace 200 + actuals 연결 :: 200
+ROLE-PATH  PASS  optimize(추천 · 승인 요청 INSERT) :: [200, "{\"task\":\"te64dc4.maintenance_timing\",\"type\":\"optimize\",\"tenant\":\"te64dc4\",\"entity_id\":null,\"prediction\":null,\"probability\":null,\"anomaly\":null,\"recommendation\":{\"rec_id\":\"rec_01M4RAMQVNPGN70GCAYCDECC2"]
+ROLE-PATH  PASS  승인 목록(expire_due UPDATE) :: 200
+ROLE-PATH  PASS  추천 반려 decide :: 200
+ROLE-PATH  PASS  monitor GET :: 200
+ROLE-PATH  PASS  doctor GET :: 200
+ROLE-PATH  PASS  감사 행 INSERT :: 15
+total 12 FAIL 0

@@ -1,0 +1,10 @@
+G-M10  yn 기동 · 과제 2 · model_ready false  PASS  {'status': 'ok', 'db': True, 'version': '0.1.0', 'tenant': 'yn', 'tasks': [{'task': 'yn.target_value', 'model_ready': False, 'version': None}, {'task': 'yn.target_risk', 'model_ready': False, 'version': None}]}
+G-M10  doctor API(eval 연결 · train 미연결)  PASS  [('demo', '연결'), ('eval', '연결'), ('train', '미연결'), ('actuals', '미연결')]
+G-M10  학습 전 yn.target_value predict  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+G-M10  yn.target_value train(eval CSV) 접수 202  PASS  202 {'run_id': 'run_2b8a143ca9e0d756', 'status': 'queued'}
+G-M10  학습 전 yn.target_risk predict  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+G-M10  yn.target_risk train(eval CSV) 접수 202  FAIL  409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+G-M10  작업자(make worker) 실행  PASS  tatus": "succeeded", "champion": "ridge", "beats_baseline": true, "artifact_dir": "<scratch>/art/yn/yn.target_value/run_2b8a143ca9e0d756", "version": "v1", "stage": "candidate"}
+G-M10  yn.target_value v1 stage→승인→production  PASS  200  202 200 {'approval_id': 'apr_01M4RAK99X34FKR0ZXX2FSN2Y0', 'state': 'approved', 'production_version': 'v1'}  synthetic=False beats=True
+G-M10  yn.target_value predict 200 · 18키 · 모델 v1  PASS  200 status=ok model={'name': 'ridge', 'version': 'v1', 'trained_at': '2026-10-13T00:09:46+09:00', 'snapshot_id': 'snp_fb9e6fe3e9b334b8', 'synthetic': False}
+G-M10  yn.target_risk candidate  FAIL  {'items': [], 'next_cursor': None, 'total': 0}

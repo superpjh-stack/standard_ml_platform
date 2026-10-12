@@ -1,0 +1,25 @@
+NOMODEL  model_version=v1(archived) → 값 없음  PASS  HTTP 404 code=not_found
+NOMODEL  batch model_version=v1(archived) → 값 없음  PASS  HTTP 404 {}
+NOMODEL  model_version=v2(archived) → 값 없음  PASS  HTTP 404 code=not_found
+NOMODEL  batch model_version=v2(archived) → 값 없음  PASS  HTTP 404 {}
+NOMODEL  model_version=v3(archived) → 값 없음  PASS  HTTP 404 code=not_found
+NOMODEL  batch model_version=v3(archived) → 값 없음  PASS  HTTP 404 {}
+NOMODEL  model_version=v5(candidate) → 값 없음  PASS  HTTP 404 code=not_found
+NOMODEL  batch model_version=v5(candidate) → 값 없음  PASS  HTTP 404 {}
+NOMODEL  model_version=v6(archived) → 값 없음  PASS  HTTP 404 code=not_found
+NOMODEL  batch model_version=v6(archived) → 값 없음  PASS  HTTP 404 {}
+NOMODEL  model_version='v0' → 값 없음  PASS  HTTP 422 code=invalid_input
+NOMODEL  model_version='v999999999999' → 값 없음  PASS  HTTP 404 code=not_found
+NOMODEL  model_version='V1' → 값 없음  PASS  HTTP 422 code=invalid_input
+NOMODEL  model_version='v1 ' → 값 없음  PASS  HTTP 422 code=invalid_input
+NOMODEL  model_version='production' → 값 없음  PASS  HTTP 422 code=invalid_input
+NOMODEL  model_version='latest' → 값 없음  PASS  HTTP 422 code=invalid_input
+NOMODEL  production 산출물 없음 predict  PASS  HTTP 503 code=model_artifact_mismatch (기대 503 model_artifact_mismatch)
+NOMODEL  production 산출물 없음 optimize(uses) → 503 · 추천 없음  PASS  HTTP 503 code=model_artifact_mismatch
+NOMODEL  production 산출물 없음 호환 predict → 값 없음  FAIL  HTTP 422 {'detail': [{'loc': ['body', 'machine_code'], 'msg': '알 수 없는 입력입니다', 'type': 'extra_forbidden'}, {'loc': ['body', 'product_type'], 'msg': '알 수 없는 입력입니
+NOMODEL  산출물 없음 health model_ready=false  PASS  {'task': 'ks.remaining_hours', 'model_ready': False, 'version': 'v4', 'error': 'model_artifact_mismatch'}
+NOMODEL  복구 뒤 predict 200  PASS  HTTP 200
+INV  production 전부 = 승인된 같은 버전 승인 행  PASS  []
+INV  승인 결정 감사 중복 0  PASS  []
+INV  과제당 production ≤ 1  PASS  []
+INV  DB 상 live 회사 합성 production 0  PASS  []

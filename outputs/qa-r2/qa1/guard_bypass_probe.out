@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<repo>/outputs/qa-r2/qa1/guard_bypass_probe.py", line 17, in <module>
+    rec("vars(test) 이름 맹글링 속성", sorted(next(v for k, v in vars(test).items() if k.endswith("__idx"))), led)
+                                                                 ^^^^^^^^^^
+TypeError: vars() argument must have __dict__ attribute
