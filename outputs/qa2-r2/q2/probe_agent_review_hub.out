@@ -1,0 +1,37 @@
+<local>/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+G2-I01    도구 4 · 별칭 4 · LLM 이름 4 = 12 호출 → 쓰기 0(승인 · 단계 · 학습 · 실측 · 대기열 · 견적 · 문서)  FAIL  {"calls": [{"name": "ml.calculate_prediction", "status": "ok", "summary": "t20768e.sensory_score 예측 상태 ok (모델 v1) · 합성 데이터 모델", "cites": 1}, {"name": "ml.get_explanation", "status": "ok", "summary": "t20768e.sensory_score 예측 근거 — 모델 v1(gbr) · 스냅숏 420행", "cites": 1}, {"name": "ml.calculate_recommenda
+G2-I01    도구 호출 상태(ok 기대)  PASS  []
+G2-I01    승인 요청 유도 · 경로 주입 11종(admin 키) → 승인 · 단계 변화 0  PASS  {"results": {"추천 top-level request_approval": "error", "추천 params.request_approval=true": "error", "추천 params.request_approval=1": "error", "추천 current 에 request_approval": "error", "예측 task 경로 주입": "error", "예측 task 줄바꿈": "error", "다른 회사 과제": "denied", "견적 과제(quote 유형)": "error", "대기열 과제": "error",
+G2-I01    ToolMeta readonly 4 · 이름 규칙  PASS  {"ml.calculate_prediction": true, "ml.get_explanation": true, "ml.calculate_recommendation": true, "ml.get_monitor_summary": true}
+G2-I01    viewer 키 → denied  PASS  {"status": "denied"}
+G2-I01    explain 결과에 원천 ref · 입력값 · 경로 없음  PASS  {"status": "ok", "keys": ["algo", "contributors", "model_version", "notice", "prediction_id", "snapshot_id", "snapshot_range", "snapshot_rows", "synthetic", "task", "trained_at"]}
+G2-A01    GET review · viewer  PASS  {"status": 403}
+G2-A01    GET review · operator  PASS  {"status": 200}
+G2-A01    GET review · approver  PASS  {"status": 200}
+G2-A01    GET review · admin  PASS  {"status": 200}
+G2-A01    GET review · approver_other  PASS  {"status": 200}
+G2-A01    대기열 열린 항목  PASS  {"n": 6, "origins": ["test_split"]}
+G2-A01    PATCH review · viewer  PASS  {"status": 403}
+G2-A01    PATCH review · operator  PASS  {"status": 403}
+G2-A01    PATCH review · approver_other  PASS  {"status": 403}
+G2-A01    PATCH review · approver(자기 과제)  PASS  {"status": 200}
+감사        대기열 결정 → review.<state> 감사 1행  PASS  {"delta": 1}
+G2-A01    닫힌 항목 재검토 → 409 already_decided  PASS  {"status": 409}
+G2-A01    PATCH review 잘못된 본문 · state=open  PASS  {"status": 422}
+G2-A01    PATCH review 잘못된 본문 · note 없음  PASS  {"status": 422}
+G2-A01    PATCH review 잘못된 본문 · 모르는 키 decided_by  PASS  {"status": 422}
+G2-A01    PATCH review 잘못된 본문 · note 5000자  PASS  {"status": 422}
+G2-A01    다른 회사 admin · GET review  PASS  {"status": 404}
+G2-A01    다른 회사 admin · PATCH review  PASS  {"status": 404}
+G2-A01    다른 회사 경로 · 남의 item_id  PASS  {"status": 404}
+G2-A01    남의 시도 뒤 항목 그대로 open  PASS  {"open": 5}
+G2-A01    대기열 아닌 과제 review → 404 type_route  PASS  {"status": 404}
+G2-I02    허브 내보내기 금지 패턴(키 · DSN · URL · IP · 경로 · 입력값 · ID)  PASS  {"file_bytes": 80752, "companies": ["kd", "krs", "ks", "ot", "pc", "sw", "pc"], "hits": {}}
+G2-I02    예측 입력값(학습 범위 중앙값) 문자열이 파일에 없음  PASS  {"leaked": [], "checked": 9}
+G2-I02    source_ref 는 저장소 상대 경로:줄 만  PASS  {"n": 44, "bad": [], "sample": ["contracts/agent-tools.md:13", "contracts/agent-tools.md:14", "contracts/agent-tools.md:15", "contracts/agent-tools.md:16"]}
+G2-I02    datasets(원천 테이블 이름 — 정의만)  INFO  {"physical_names": ["BAS_EQUIPMENTS", "EIF_PLC_RAW", "PRC_MONITOR_DATA", "PRS_MOLD_SHOTS", "PRS_PROCESS_DATA", "PRT_PRINT_CONDS", "PRT_PRINT_RESULTS", "PRT_QUALITY_HISTORY", "RCV_MATERIAL_LOTS"]}
+G2-I02    api_usage 는 집계 숫자만(이 회사)  INFO  {"company": "pc", "api_usage": {"2026-10-13": {"/api/v1/tenants/t20768e/tasks/t20768e.recipe_optimize/optimize": {"calls": 0, "errors": 1, "p95_ms": null, "ref": "mlp_prediction@2026-10-13", "basis": "실측"}, "/api/v1/tenants/t20768e/tasks/t20768e.residual_review/review": {"calls": 9, "errors": 8, "p9
+G2-I02    내보내기 범위 = 등록부 6개사(_template · 임시 회사 제외)  PASS  {"codes": ["kd", "krs", "ks", "ot", "pc", "sw"]}
+
+== 33 검사 · FAIL 1 · WARN 0 → probe_agent_review_hub-result.json

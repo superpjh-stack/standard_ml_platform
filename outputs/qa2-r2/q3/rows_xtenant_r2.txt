@@ -1,0 +1,9 @@
+XT  kd admin → 남의 id PATCH review  PASS  HTTP 404 not_found
+XT  kd admin → 남의 id GET pc.residual_review  PASS  HTTP 404 not_found
+XT  kd admin → 남의 id GET quotes  PASS  HTTP 404 not_found
+XT  kd admin → 남의 id GET quotes  PASS  HTTP 404 not_found
+XT  kd admin → 남의 id POST qte_01M4RXCDFMF17TBVZAV8VV2KJ2  PASS  HTTP 422 missing_required
+XT  kd admin → 남의 id GET /api/quotes/qte_01M4RXCDFMF17TBVZAV8VV2KJ2  PASS  HTTP 404 
+XT  kd admin → 남의 id GET documents  PASS  HTTP 404 not_found
+XT  kd admin → 남의 id GET /api/cad/doc_01M4RXCDDQ9ZDGK1WW7HMGY8QF  PASS  HTTP 404 
+XT  kd admin → 남의 id POST kd.quote  PASS  HTTP 422 missing_required

@@ -1,0 +1,129 @@
+<local>/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{
+ "split": {
+  "policy": "time_cv5",
+  "sizes": {
+   "test": 84,
+   "train": 336,
+   "valid": 0
+  },
+  "folds": [
+   {
+    "train": 56,
+    "valid": 56
+   },
+   {
+    "train": 112,
+    "valid": 56
+   },
+   {
+    "train": 168,
+    "valid": 56
+   },
+   {
+    "train": 224,
+    "valid": 56
+   },
+   {
+    "train": 280,
+    "valid": 56
+   }
+  ]
+ },
+ "threshold": {
+  "rule": "top_quantile",
+  "value": 3.598430347470682,
+  "from": "valid",
+  "n": 56,
+  "q": 0.1
+ },
+ "valid_abs_quantiles": {
+  "q90_pooled": 3.598430347470682,
+  "n": 56
+ },
+ "test_share_over_thr": 0.07142857142857142,
+ "actual_status": [
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200
+ ],
+ "A_train_rows_predicted": 20,
+ "A_in_sample_abs_resid": [
+  0.0054,
+  0.0828,
+  0.2068,
+  0.2073,
+  0.3692,
+  0.4941,
+  0.6282,
+  0.6948,
+  0.8929,
+  0.972,
+  1.0462,
+  1.2002,
+  1.3469,
+  1.3766,
+  1.5552,
+  1.6395,
+  1.843,
+  2.0333,
+  2.0874,
+  2.6765
+ ],
+ "C_second_prediction": 200,
+ "B_actual_first_status": 200,
+ "B_predict_status": 200,
+ "run_review": [
+  {
+   "tenant_id": "tcf74e9",
+   "task_id": "tcf74e9.residual_review",
+   "day": "2026-10-03",
+   "origin": "live_residual",
+   "uses": "tcf74e9.sensory_score",
+   "rule": "top_quantile",
+   "version": "v1",
+   "threshold": 3.598430347470682,
+   "threshold_from": "valid",
+   "pairs": 0,
+   "created": 0,
+   "test_split": {
+    "origin": "test_split",
+    "version": "v1",
+    "created": 6,
+    "threshold": 3.598430347470682
+   }
+  }
+ ],
+ "items": {
+  "total": 6,
+  "live": 0,
+  "test_split": 6,
+  "live_from_train_segment_entities": [],
+  "live_pre_actual": [],
+  "live_same_entity_count": 0
+ },
+ "pairs": {
+  "n": 0,
+  "train_segment_pairs": 0,
+  "pre_actual_paired": false,
+  "same_entity_pairs": 0
+ }
+}

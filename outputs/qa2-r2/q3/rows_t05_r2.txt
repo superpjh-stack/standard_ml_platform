@@ -1,0 +1,44 @@
+# t05_make_tenant.py 콘솔 출력(파일은 뒤 실행의 rm 으로 지워져 콘솔에서 옮겨 적음 — 경로는 <scratch>)
+NEW  press: CATEGORIES 없이 → 거부 · 초안 .draft 만 · 채울 칸 안내  PASS  rc=2 files=['qn1.yaml.draft']
+NEW  press: 초안 상태 seed → 회사 행 0  PASS  rc=0 rows=0
+NEW  press: 채움 파일 모르는 키 → T0 거부 · 파일 그대로  PASS  rc=2 files=['qn1.yaml.draft']
+NEW  press: 팩 범주 아닌 키 → T0 거부 · 파일 그대로  PASS  rc=2 files=['qn1.yaml.draft']
+NEW  press: CATEGORIES= 로 다시 → 통과 · 초안 삭제  PASS  rc=0 files=['qn1.yaml'] out=<scratch>/tenreg-qn1/qn1.yaml pack=press
+NEW  press: db-seed(그 루트만)  PASS  tenants 1 · tasks 4
+NEW  press: make doctor  PASS
+NEW  press: 기동 · model_ready 전부 false  PASS
+NEW  press: qn1.remaining_hours 학습(demo) → stage → 승인 → production  PASS  champion=gbr beats=True 200/202/200
+NEW  press: qn1.remaining_hours predict 200 · 18키  PASS
+NEW  press: qn1.failure_24h 학습 → production · predict 18키  PASS  champion=rf_clf
+NEW  press: qn1.sensor_ood 학습 → production · predict 18키  PASS  champion=isolation_forest
+NEW  textile: make tenant NEW=qn2 (범주 없음) → 등록부 1 파일  PASS  rc=0 files=['qn2.yaml']
+NEW  textile: db-seed · doctor · 기동 model_ready false  PASS
+NEW  textile: qn2.delta_e · defect_risk · print_ood 학습 → production · predict 18키  PASS  extra_trees · gbc · isolation_forest
+NEW  solder: CATEGORIES 없이 → 거부 · 초안 .draft 만 · 채울 칸 안내  PASS  rc=2 files=['qn3.yaml.draft']
+NEW  solder: 초안 상태 seed → 회사 행 0  PASS
+NEW  solder: 채움 파일 모르는 키 / 팩 범주 아닌 키 → T0 거부 · 파일 그대로  PASS
+NEW  solder: CATEGORIES= 로 다시 → 통과 · 초안 삭제  PASS  files=['qn3.yaml']
+NEW  solder: db-seed · doctor · 기동 model_ready false  PASS
+NEW  solder: qn3.joint_strength 학습(demo) → stage → 승인 → production  PASS  champion=svr
+NEW  solder: qn3.joint_strength predict 200 · 18키  PASS(정상 거부)  HTTP 422 invalid_input — QA 중간값 조성 합 > 100(팩 input_rules, 1차 QA3 와 같은 판정)
+NEW  solder: 감시 1회 → 대기열 항목(test_split)  PASS  total=15
+NEW  kimchi: CATEGORIES 없이 → 거부 · 초안 .draft 만 · 채울 칸 안내  PASS  rc=2 files=['qn4.yaml.draft']
+NEW  kimchi: 초안 seed 0 · 모르는 키 / 팩 범주 아닌 키 T0 · CATEGORIES= 통과 · 초안 삭제  PASS  files=['qn4.yaml']
+NEW  kimchi: db-seed · doctor · 기동 model_ready false  PASS
+NEW  kimchi: qn4.sensory_score 학습 → production · predict 18키  PASS  champion=gbr
+NEW  kimchi: 감시 1회 → 대기열 항목(test_split)  PASS  total=6
+NEW  rollform-quote: CATEGORIES 없이 → 거부 · 초안 .draft 만 · 채울 칸 안내  PASS  rc=2 files=['qn5.yaml.draft']
+NEW  rollform-quote: 초안 seed 0 · T0 2종 · CATEGORIES= 통과(덮어쓰기 tasks/quote.yaml)  PASS  files=['qn5.yaml', 'qn5/tasks/quote.yaml']
+NEW  rollform-quote: db-seed · doctor · 기동 model_ready false  PASS
+2.1  rollform-quote: uses 운영 모델 없음 견적 → 503  N/A(입력 불완전)  HTTP 422 missing_required — 완전한 입력으로 잰 행 = rows_t06.txt PASS
+NEW  rollform-quote: qn5.machining_minutes · cad_objects 학습 → production · predict 18키  PASS  ridge · logreg
+NEW  rollform-quote: 도면 업로드 201 labels=synthetic · 견적 초안 201 total=46650  PASS
+NEW  eto: CATEGORIES 없이 → 거부 · 초안 .draft 만 · 채울 칸 안내  PASS  rc=2 files=['qn6.yaml.draft']
+NEW  eto: 초안 seed 0 · T0 2종 · CATEGORIES= 통과 · 초안 삭제  PASS  files=['qn6.yaml']
+NEW  eto: db-seed · doctor  PASS
+NEW  eto: 기동 · model_ready  PASS(기대 변경)  drawing_regions True — 규칙 추출기는 모델 불필요(C2 D2-94, #29-002 해결의 결과). labor_hours · quote False
+2.1  eto: uses 운영 모델 없음 견적 → 503  N/A(입력 불완전)  HTTP 422 missing_required — rows_t06.txt PASS
+NEW  eto: qn6.labor_hours 학습 → production · predict 18키  PASS  champion=ridge
+NEW  eto: qn6.drawing_regions train → 422 not_trainable  PASS(기대 변경 — #29-007 해결)
+NEW  eto: 도면 업로드  PASS  HTTP 201 labels=none
+NEW  eto: 견적 초안  N/A(스크립트)  HTTP 422 min_items — 스크립트가 bom_rows 를 lines 로 못 옮긴 경우(추정: 업로드 결과 bom_rows 0행 → lines 빈 목록). kd 견적 흐름 rows_t02_kd.txt PASS

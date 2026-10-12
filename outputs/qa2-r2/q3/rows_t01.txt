@@ -1,0 +1,74 @@
+T01  ks.remaining_hours train 접수  PASS  HTTP 202 {'run_id': 'run_07db9a8cae333dfa', 'status': 'queued'}
+T01  ks.remaining_hours 작업자  PASS  Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/ks/ks.remaining_hours/run_07db9a8cae333dfa", "version": "v1", "stage": "candidate"} | 
+T01  ks.failure_24h train 접수  PASS  HTTP 202 {'run_id': 'run_28e5e4926e00e84d', 'status': 'queued'}
+T01  ks.failure_24h 작업자  PASS  ing-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/ks/ks.failure_24h/run_28e5e4926e00e84d", "version": "v1", "stage": "candidate"} | 
+T01  ks.sensor_ood train 접수  PASS  HTTP 202 {'run_id': 'run_dd020686539cc620', 'status': 'queued'}
+T01  ks.sensor_ood 작업자  PASS  ding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/ks/ks.sensor_ood/run_dd020686539cc620", "version": "v1", "stage": "candidate"} | 
+T01  ks.remaining_hours 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  ks.remaining_hours stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.remaining_hours promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXBN749DWD0E61RD9MKEN1', 'state': 'pending'}
+T01  ks.remaining_hours 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXBN749DWD0E61RD9MKEN1', 'state': 'approved', 'production_version': 'v1'}
+T01  ks.failure_24h 학습  PASS  status=succeeded champion=rf_clf beats=True v=v1 err=None
+T01  ks.failure_24h stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.failure_24h promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXBN8S845GG0D31FDT48TG', 'state': 'pending'}
+T01  ks.failure_24h 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXBN8S845GG0D31FDT48TG', 'state': 'approved', 'production_version': 'v1'}
+T01  ks.sensor_ood 학습  PASS  status=succeeded champion=isolation_forest beats=True v=v1 err=None
+T01  ks.sensor_ood stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.sensor_ood promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXBNA51CCFZ8JJGMARKWD4', 'state': 'pending'}
+T01  ks.sensor_ood 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXBNA51CCFZ8JJGMARKWD4', 'state': 'approved', 'production_version': 'v1'}
+T01  ks health model_ready  PASS  [('ks.remaining_hours', True), ('ks.failure_24h', True), ('ks.sensor_ood', True), ('ks.maintenance_timing', True)]
+T01  sw.delta_e train 접수  PASS  HTTP 202 {'run_id': 'run_17912735c4e81f79', 'status': 'queued'}
+T01  sw.delta_e 작업자  PASS  -Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/sw/sw.delta_e/run_17912735c4e81f79", "version": "v1", "stage": "candidate"} | 
+T01  sw.defect_risk train 접수  PASS  HTTP 202 {'run_id': 'run_9ee3915b13c0cee6', 'status': 'queued'}
+T01  sw.defect_risk 작업자  PASS  ing-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/sw/sw.defect_risk/run_9ee3915b13c0cee6", "version": "v1", "stage": "candidate"} | 
+T01  sw.print_ood train 접수  PASS  HTTP 202 {'run_id': 'run_94302387fadce1a4', 'status': 'queued'}
+T01  sw.print_ood 작업자  PASS  oding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/sw/sw.print_ood/run_94302387fadce1a4", "version": "v1", "stage": "candidate"} | 
+T01  sw.delta_e 학습  PASS  status=succeeded champion=extra_trees beats=True v=v1 err=None
+T01  sw.delta_e stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.delta_e promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXBTKFQKFF7TQV62DZP86N', 'state': 'pending'}
+T01  sw.delta_e 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXBTKFQKFF7TQV62DZP86N', 'state': 'approved', 'production_version': 'v1'}
+T01  sw.defect_risk 학습  PASS  status=succeeded champion=gbc beats=True v=v1 err=None
+T01  sw.defect_risk stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.defect_risk promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXBTN0YG09511G5ESYDXV0', 'state': 'pending'}
+T01  sw.defect_risk 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXBTN0YG09511G5ESYDXV0', 'state': 'approved', 'production_version': 'v1'}
+T01  sw.print_ood 학습  PASS  status=succeeded champion=isolation_forest beats=True v=v1 err=None
+T01  sw.print_ood stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.print_ood promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXBTPD4K7QGPJHBHC9RE3V', 'state': 'pending'}
+T01  sw.print_ood 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXBTPD4K7QGPJHBHC9RE3V', 'state': 'approved', 'production_version': 'v1'}
+T01  sw health model_ready  PASS  [('sw.delta_e', True), ('sw.defect_risk', True), ('sw.print_ood', True), ('sw.print_setpoint', True)]
+T01  krs.joint_strength train 접수  PASS  HTTP 202 {'run_id': 'run_92d255512def8101', 'status': 'queued'}
+T01  krs.joint_strength 작업자  PASS  tandard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/krs/krs.joint_strength/run_92d255512def8101", "version": "v1", "stage": "candidate"} | 
+T01  krs.residual_review train 접수  WARN  HTTP 422 {'error': {'code': 'invalid_input', 'message': '학습 대상이 아닌 과제입니다 — uses 과제의 운영 모델을 씁니다', 'detail': {'rule': 'not_trainabl
+T01  krs.joint_strength 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  krs.joint_strength stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  krs.joint_strength promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXBXHDG3W1PETJ19GAGA87', 'state': 'pending'}
+T01  krs.joint_strength 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXBXHDG3W1PETJ19GAGA87', 'state': 'approved', 'production_version': 'v1'}
+T01  krs health model_ready  PASS  [('krs.joint_strength', True), ('krs.recipe_optimize', True), ('krs.residual_review', True)]
+T01  pc.sensory_score train 접수  PASS  HTTP 202 {'run_id': 'run_dccd4bcbabb791fb', 'status': 'queued'}
+T01  pc.sensory_score 작업자  PASS  g-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/pc/pc.sensory_score/run_dccd4bcbabb791fb", "version": "v1", "stage": "candidate"} | 
+T01  pc.residual_review train 접수  WARN  HTTP 422 {'error': {'code': 'invalid_input', 'message': '학습 대상이 아닌 과제입니다 — uses 과제의 운영 모델을 씁니다', 'detail': {'rule': 'not_trainabl
+T01  pc.sensory_score 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  pc.sensory_score stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  pc.sensory_score promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXC0E11SW46YHNRHT9MPJ0', 'state': 'pending'}
+T01  pc.sensory_score 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXC0E11SW46YHNRHT9MPJ0', 'state': 'approved', 'production_version': 'v1'}
+T01  pc health model_ready  PASS  [('pc.sensory_score', True), ('pc.recipe_optimize', True), ('pc.residual_review', True)]
+T01  ot.machining_minutes train 접수  PASS  HTTP 202 {'run_id': 'run_3d886787fb207a3c', 'status': 'queued'}
+T01  ot.machining_minutes 작업자  PASS  andard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/ot/ot.machining_minutes/run_3d886787fb207a3c", "version": "v1", "stage": "candidate"} | 
+T01  ot.cad_objects train 접수  PASS  HTTP 202 {'run_id': 'run_9f8d86feb50ece0c', 'status': 'queued'}
+T01  ot.cad_objects 작업자  PASS  ing-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/ot/ot.cad_objects/run_9f8d86feb50ece0c", "version": "v1", "stage": "candidate"} | 
+T01  ot.machining_minutes 학습  PASS  status=succeeded champion=ridge beats=True v=v1 err=None
+T01  ot.machining_minutes stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ot.machining_minutes promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXC49XT9EXYRY00EHY2TMT', 'state': 'pending'}
+T01  ot.machining_minutes 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXC49XT9EXYRY00EHY2TMT', 'state': 'approved', 'production_version': 'v1'}
+T01  ot.cad_objects 학습  PASS  status=succeeded champion=logreg beats=True v=v1 err=None
+T01  ot.cad_objects stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ot.cad_objects promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXC4BJ7DD52AFTZ6H6P23E', 'state': 'pending'}
+T01  ot.cad_objects 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXC4BJ7DD52AFTZ6H6P23E', 'state': 'approved', 'production_version': 'v1'}
+T01  ot health model_ready  PASS  [('ot.machining_minutes', True), ('ot.cad_objects', True), ('ot.quote', True)]
+T01  kd.labor_hours train 접수  PASS  HTTP 202 {'run_id': 'run_3996ffaa15182ea6', 'status': 'queued'}
+T01  kd.labor_hours 작업자  PASS  ing-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/r2/art/kd/kd.labor_hours/run_3996ffaa15182ea6", "version": "v1", "stage": "candidate"} | 
+T01  kd.labor_hours 학습  PASS  status=succeeded champion=ridge beats=True v=v1 err=None
+T01  kd.labor_hours stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  kd.labor_hours promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RXC6WH027JP34WZD7BVVXZ', 'state': 'pending'}
+T01  kd.labor_hours 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RXC6WH027JP34WZD7BVVXZ', 'state': 'approved', 'production_version': 'v1'}
+T01  kd health model_ready  PASS  [('kd.labor_hours', True), ('kd.drawing_regions', True), ('kd.quote', True)]

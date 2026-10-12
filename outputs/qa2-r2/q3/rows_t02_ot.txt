@@ -1,0 +1,54 @@
+Q  ot 도면 업로드 201  PASS  HTTP 201 labels=synthetic metrics=None regions=0 bom=0 objects=9 counts={'outer': 1, 'hole': 6, 'slot': 2, 'other': 0}
+Q  ot 라벨 없음 → labels none · metrics null  FAIL  labels=synthetic metrics=None
+Q  ot 문서 재조회 같은 인식값  PASS  HTTP 200
+Q  ot 초안 201 draft rev1  PASS  HTTP 201  total=723718 ov=1
+Q  ot 금액 = 원 단위 문자열  PASS  total='723718' costs={'vat': '65793', 'setup': '31500', 'markup': '85816', 'material': '423222', 'subtotal': '657925', 'processing': '117387'}
+Q  ot 사람 수정 → overrides 1+  PASS  [{"field": "hole_count", "confirmed": 7, "recognized": 6}]
+Q  ot 수정 201 rev2  PASS  HTTP 201 ov=2 total=727395
+Q  ot 수정 뒤 이전 overrides 유지(누적)  PASS  1 → 2
+Q  ot 인식값으로 되돌린 수정 뒤에도 overrides 이력 유지  PASS  HTTP 201 rev=3 ov=2
+Q  ot 처음 quote_id 로 조회 = 최신 revision  PASS  HTTP 200 rev=4
+Q  ot 확정 요청 reviewed 없음  PASS  HTTP 422 code=missing_required (기대 422 missing_required) field=reviewed
+Q  ot 확정 요청 메모 < 5자  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+Q  ot viewer 확정 요청  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  ot 확정 요청 202 pending  PASS  HTTP 202 {'approval_id': 'apr_01M4RXCDKK28SW41KKS842NK8G', 'state': 'pending'}
+Q  ot 상태 pending_confirm  PASS  status=pending_confirm
+Q  ot 확정 대기 중 수정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 확정 대기 중 재확정 요청  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot operator 확정 결정(✕ — D2-04)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  ot 다른 과제 담당 approver 결정  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  ot 반려 200  PASS  HTTP 200 {'approval_id': 'apr_01M4RXCDKK28SW41KKS842NK8G', 'state': 'rejected', 'production_version': None}
+Q  ot 반려 뒤 초안 복귀 · overrides 유지  PASS  status=draft reviewed=False ov=2 total=727395
+Q  ot 반려된 확정 재결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+Q  ot 반려 뒤 다시 고칠 수 있음  PASS  HTTP 201 rev=7
+Q  ot 만료 승인 = state expired 목록  PASS  HTTP 200 n=1
+Q  ot 만료 뒤 초안 복귀 · overrides 유지  PASS  status=draft ov=2
+Q  ot 만료된 확정 결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+Q  ot 만료 뒤 재요청 → 새 승인 ID  PASS  HTTP 202
+Q  ot 두 탭 동시 확정 → 200 1 · 409 1  PASS  codes=[200, 409]
+Q  ot confirmed 행 1 · 감사 1  PASS  confirmed rows=1 audit=1
+Q  ot 확정 · 확정자 · 시각  PASS  status=confirmed by=qa23-admin#88
+Q  ot 확정 금액 = 확정 요청 때 금액  PASS  total 727395 → 727395
+Q  ot 확정 뒤 overrides 유지  PASS  ov=2
+Q  ot 확정 견적 재수정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 확정 견적 재수정(admin)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 확정 견적 재확정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 옛 revision ID 로 재수정(우회)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 옛 revision ID 로 재수정(우회)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot CSV 200 · BOM · 합계  PASS  HTTP 200 bytes=1314 sha=7c226e4fe45e
+Q  ot uses 모델 교체 → production v2  PASS  HTTP 200 {'approval_id': 'apr_01M4RXCF8KBEQ2BJFARPWXGEKN', 'state': 'approved', 'production_version': 'v2'}
+Q  ot 모델 교체 뒤 확정 견적 금액 · 예측 · 모델 버전 불변  PASS  total 727395 → 727395 versions=[{'task': 'ot.machining_minutes', 'version': 'v1', 'synthetic': True}]
+Q  ot 모델 교체 뒤 CSV 바이트 동일  PASS  7c226e4fe45e
+Q  ot 목록의 확정 견적 금액 불변  PASS  confirmed in list=1
+Q  ot 새 초안은 새 모델 버전 사용  PASS  HTTP 201 versions=[{'task': 'ot.machining_minutes', 'version': 'v2', 'synthetic': True}] total=729741 (확정 727395)
+Q  ot 동시 확정 요청 → 202 1 · 409 1 · 대기 승인 1  PASS  codes=[202, 409] pending approvals=1
+Q  ot 동시 수정 → 사슬 분기 없음 · revision 중복 0  PASS  codes=[201, 201] revisions=[1, 2, 3]
+2.1  ot DXF 아님(PNG 바이트)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document) rule=parse
+2.1  ot 확장자 아님(.pdf)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document)
+2.1  ot 깨진 DXF(절반)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document) rule=parse
+2.1  ot 바이너리/잡음 DXF  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document)
+2.1  ot 5 MiB 초과  PASS  HTTP 413 code=document_too_large (기대 413 document_too_large) rule=bytes
+2.1  ot 20,000 엔티티 초과(711 KiB)  PASS  HTTP 413 code=document_too_large (기대 413 document_too_large) rule=entities
+2.1  ot viewer 업로드  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.1  ot 없는 문서  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  ot 초안에 reviewed true + 메모 3자  PASS  HTTP 422 code=missing_required (기대 422 missing_required)

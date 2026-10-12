@@ -1,0 +1,66 @@
+{
+ "ks.remaining_hours": {
+  "rows": [
+   720,
+   720
+  ],
+  "max_rel": 2.1907597226172536e-16,
+  "rule_ok": true,
+  "bad": []
+ },
+ "sw.delta_e": {
+  "rows": [
+   720,
+   720
+  ],
+  "max_rel": 0.0,
+  "rule_ok": true,
+  "bad": []
+ },
+ "krs.joint_strength": {
+  "rows": [
+   720,
+   720
+  ],
+  "max_rel": 2.2192702843766863e-16,
+  "rule_ok": true,
+  "bad": []
+ },
+ "pc.sensory_score": {
+  "rows": [
+   420,
+   420
+  ],
+  "max_rel": 2.1145517166786043e-16,
+  "rule_ok": true,
+  "bad": []
+ },
+ "ot.cad_objects": "NoTarget: ot.cad_objects: 목표 없음",
+ "ot.machining_minutes": {
+  "rows": [
+   900,
+   900
+  ],
+  "max_rel": 2.1326958312332612e-16,
+  "rule_ok": true,
+  "bad": []
+ },
+ "kd.drawing_regions": {
+  "rows": [
+   900,
+   900
+  ],
+  "max_rel": 0.0,
+  "rule_ok": true,
+  "bad": []
+ },
+ "kd.labor_hours": {
+  "rows": [
+   900,
+   900
+  ],
+  "max_rel": 2.2119726568860817e-16,
+  "rule_ok": true,
+  "bad": []
+ }
+}

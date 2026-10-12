@@ -1,0 +1,254 @@
+<local>/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+[
+ {
+  "tenant_src": "pc",
+  "fit_entities": 336,
+  "test_entities_not_fit": 84,
+  "cases": {
+   "N_predict": 200,
+   "N_actual": [
+    200,
+    "{\"actual_id\":35,\"linked_prediction_ids\":[\"prd_01M4RX439C43WQFRSAX7GGZE84\"]}"
+   ],
+   "T_predict": [
+    "DEMO-0337",
+    200
+   ],
+   "T_actual": [
+    200,
+    "{\"actual_id\":36,\"linked_prediction_ids\":[\"prd_01M4RX43CD5M61RS6FAPGJ7WJ5\"]}"
+   ],
+   "F_predict": [
+    "DEMO-0001",
+    200
+   ],
+   "F_actual": [
+    200,
+    "{\"actual_id\":37,\"linked_prediction_ids\":[\"prd_01M4RX43DC421ZHBS918SV0F4T\"]}"
+   ],
+   "M_predict": [
+    200,
+    200
+   ],
+   "M_actual": [
+    200,
+    "{\"actual_id\":38,\"linked_prediction_ids\":[\"prd_01M4RX43E74WJ4HYJBRT6T8ZBX\",\"prd_01M4RX43EVDD303F7GY0CB0SCD\"]}"
+   ],
+   "U_actual_first": [
+    200,
+    "{\"actual_id\":39,\"linked_prediction_ids\":[]}"
+   ],
+   "U_predict": 200,
+   "A_actual1": [
+    200,
+    "{\"actual_id\":40,\"linked_prediction_ids\":[\"prd_01M4RX44ZXRA6WEGG9J2P73V3Z\"]}"
+   ],
+   "A_actual2": [
+    200,
+    "{\"actual_id\":41,\"linked_prediction_ids\":[\"prd_01M4RX44ZXRA6WEGG9J2P73V3Z\",\"prd_01M4RX46GWMV3MKQEXRAPVAXJV\"]}"
+   ]
+  },
+  "pairs": {
+   "n": 6,
+   "entities": [
+    "DEMO-0337",
+    "R2-ALT",
+    "R2-ALT",
+    "R2-FUTURE",
+    "R2-MULTI",
+    "R2-NEW-1"
+   ],
+   "N": true,
+   "T": true,
+   "F": false,
+   "M_first": false,
+   "M_second": true,
+   "A1": true,
+   "A2": true,
+   "U_future_actual_paired": true
+  },
+  "run_review": [
+   {
+    "tenant_id": "t39d082",
+    "task_id": "t39d082.residual_review",
+    "day": "2026-10-13",
+    "origin": "live_residual",
+    "uses": "t39d082.sensory_score",
+    "rule": "top_quantile",
+    "version": "v1",
+    "threshold": 3.598430347470682,
+    "threshold_from": "valid",
+    "pairs": 6,
+    "created": 6,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 6,
+     "threshold": 3.598430347470682
+    }
+   }
+  ],
+  "live_items": [
+   "DEMO-0337",
+   "R2-ALT",
+   "R2-ALT",
+   "R2-FUTURE",
+   "R2-MULTI",
+   "R2-NEW-1"
+  ],
+  "live_items_in_fit": [],
+  "api_review_live": 6,
+  "X_run_review": [
+   {
+    "tenant_id": "t39d082",
+    "task_id": "t39d082.residual_review",
+    "day": "2026-10-13",
+    "origin": "live_residual",
+    "uses": "t39d082.sensory_score",
+    "rule": "top_quantile",
+    "version": "v1",
+    "threshold": 3.598430347470682,
+    "threshold_from": "valid",
+    "pairs": 0,
+    "created": 0,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 0,
+     "skipped": "이 버전의 test_split 항목이 이미 있다"
+    },
+    "error": {
+     "type": "InSampleEvaluation",
+     "message": "t39d082.sensory_score v1: 학습 스냅숏을 읽을 수 없다(FileNotFoundError)"
+    }
+   }
+  ],
+  "X_item_made": 0
+ },
+ {
+  "tenant_src": "krs",
+  "fit_entities": 576,
+  "test_entities_not_fit": 144,
+  "cases": {
+   "N_predict": 200,
+   "N_actual": [
+    200,
+    "{\"actual_id\":43,\"linked_prediction_ids\":[\"prd_01M4RX4AHXGAJEBM4P1BSD7T4Q\"]}"
+   ],
+   "T_predict": [
+    "DEMO-20240001",
+    200
+   ],
+   "T_actual": [
+    200,
+    "{\"actual_id\":44,\"linked_prediction_ids\":[\"prd_01M4RX4AMY38QYW242JGNJRJCG\"]}"
+   ],
+   "F_predict": [
+    "DEMO-20240000",
+    200
+   ],
+   "F_actual": [
+    200,
+    "{\"actual_id\":45,\"linked_prediction_ids\":[\"prd_01M4RX4ANW030JWN39360CXHG3\"]}"
+   ],
+   "M_predict": [
+    200,
+    200
+   ],
+   "M_actual": [
+    200,
+    "{\"actual_id\":46,\"linked_prediction_ids\":[\"prd_01M4RX4APNFC2A3JVX8PZRZ0KY\",\"prd_01M4RX4AQ72HXSXFQ45EVTKWK8\"]}"
+   ],
+   "U_actual_first": [
+    200,
+    "{\"actual_id\":47,\"linked_prediction_ids\":[]}"
+   ],
+   "U_predict": 200,
+   "A_actual1": [
+    200,
+    "{\"actual_id\":48,\"linked_prediction_ids\":[\"prd_01M4RX4C8DDFZAEHWCEFRD97WD\"]}"
+   ],
+   "A_actual2": [
+    200,
+    "{\"actual_id\":49,\"linked_prediction_ids\":[\"prd_01M4RX4C8DDFZAEHWCEFRD97WD\",\"prd_01M4RX4DSDHR1B7YXXHHZQ6Z8D\"]}"
+   ]
+  },
+  "pairs": {
+   "n": 6,
+   "entities": [
+    "DEMO-20240001",
+    "R2-ALT",
+    "R2-ALT",
+    "R2-FUTURE",
+    "R2-MULTI",
+    "R2-NEW-1"
+   ],
+   "N": true,
+   "T": true,
+   "F": false,
+   "M_first": false,
+   "M_second": true,
+   "A1": true,
+   "A2": true,
+   "U_future_actual_paired": true
+  },
+  "run_review": [
+   {
+    "tenant_id": "tcad836",
+    "task_id": "tcad836.residual_review",
+    "day": "2026-10-13",
+    "origin": "live_residual",
+    "uses": "tcad836.joint_strength",
+    "rule": "abs_residual_ge",
+    "version": "v1",
+    "threshold": 4.0,
+    "threshold_from": "rule",
+    "pairs": 6,
+    "created": 6,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 16,
+     "threshold": 4.0
+    }
+   }
+  ],
+  "live_items": [
+   "DEMO-20240001",
+   "R2-ALT",
+   "R2-ALT",
+   "R2-FUTURE",
+   "R2-MULTI",
+   "R2-NEW-1"
+  ],
+  "live_items_in_fit": [],
+  "api_review_live": 6,
+  "X_run_review": [
+   {
+    "tenant_id": "tcad836",
+    "task_id": "tcad836.residual_review",
+    "day": "2026-10-13",
+    "origin": "live_residual",
+    "uses": "tcad836.joint_strength",
+    "rule": "abs_residual_ge",
+    "version": "v1",
+    "threshold": 4.0,
+    "threshold_from": "rule",
+    "pairs": 0,
+    "created": 0,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 0,
+     "skipped": "이 버전의 test_split 항목이 이미 있다"
+    },
+    "error": {
+     "type": "InSampleEvaluation",
+     "message": "tcad836.joint_strength v1: 학습 스냅숏을 읽을 수 없다(FileNotFoundError)"
+    }
+   }
+  ],
+  "X_item_made": 0
+ }
+]

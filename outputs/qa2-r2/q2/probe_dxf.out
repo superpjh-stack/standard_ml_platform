@@ -1,0 +1,70 @@
+<local>/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+G2-E01    정상 샘플 업로드  PASS  {"status": 201, "labels": "none", "metrics": null, "regions": 3, "bom": 4, "sec": 0.697}
+G2-E01    kd 엔티티 20,000  PASS  {"status": 201, "err": [null, null], "sec": 0.29, "resp_bytes": 1090}
+G2-E01    kd 엔티티 20,001  PASS  {"status": 413, "err": ["document_too_large", "entities"], "sec": 0.12, "resp_bytes": 145}
+G2-E01    POLYLINE + VERTEX 15만(엔티티 수 회피)  PASS  {"status": 201, "err": [null, null], "entity_count": 2, "sec": 0.55, "bytes": 4089050}
+G2-E01    크기 정확히 5 MiB (5,242,880 B)  PASS  {"status": 201, "err": [null, null], "sec": 0.08}
+G2-E01    크기 5 MiB + 1 (5,242,881 B)  PASS  {"status": 413, "err": ["document_too_large", "bytes"], "sec": 0.03}
+G2-E01    업로드 50 MiB  PASS  {"status": 413, "body": {"error": {"code": "document_too_large", "message": "업로드가 허용 상한을 넘습니다", "detail": {"rule": "bytes", "field": "file"}}}, "sec": 0.02}
+G2-E01    깨진 문서 · 바이너리 DXF 표지  PASS  {"status": 422, "err": ["invalid_document", "binary"]}
+G2-E01    깨진 문서 · gzip(.dxf 이름)  PASS  {"status": 422, "err": ["invalid_document", "binary"]}
+G2-E01    깨진 문서 · zip 폭탄(.dxf 이름)  PASS  {"status": 422, "err": ["invalid_document", "binary"]}
+G2-E01    깨진 문서 · 빈 파일  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    깨진 문서 · 홀수 줄  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    깨진 문서 · SECTION 없음  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    깨진 문서 · 그룹 코드 문자  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    깨진 문서 · 닫히지 않은 SECTION  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    깨진 문서 · 중첩 SECTION  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    깨진 문서 · UTF-16  PASS  {"status": 422, "err": ["invalid_document", "binary"]}
+G2-E01    좌표 nan  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    좌표 inf  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    좌표 -inf  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    좌표 1e309  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    좌표 1e308  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    좌표 1e9  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    좌표 1e-320  PASS  {"status": 201, "err": [null, null]}
+G2-E01    원 반지름 1e300  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    정수 코드 70 = 'abc'  PASS  {"status": 422, "err": ["invalid_document", "parse"]}
+G2-E01    꼭짓점 4,001  PASS  {"status": 413, "err": ["document_too_large", "vertices"]}
+G2-E01    악성 텍스트(스크립트 · 수식 · \U+0000 · 제어문자)  PASS  {"status": 422, "err": ["invalid_document", "nul"], "texts_has_nul": false, "n_texts": 0}
+G2-E01    NUL 문자(앞 4096 바이트 뒤) 텍스트  PASS  {"status": 422, "err": ["invalid_document", "nul"], "body": "{'error': {'code': 'invalid_document', 'message': '도면에 NUL 문자가 있습니다', 'detail': {'rule': 'nul', 'field': 'file'}}}"}
+G2-E01    레이어 이름 2,000,000자  PASS  {"status": 201, "err": [null, null], "resp_bytes": 1086, "sec": 0.06}
+G2-E01    텍스트 3,000,000자(TEXT_MAX 2,000 자름)  PASS  {"status": 201, "resp_bytes": 1086}
+G2-E01    파일 이름 '../../../etc/passwd.dxf'  PASS  {"status": 201, "filename": "passwd.dxf", "len": 10}
+G2-E01    파일 이름 '..\\..\\win.dxf'  PASS  {"status": 201, "filename": "win.dxf", "len": 7}
+G2-E01    파일 이름 'C:\\x\\y.dxf'  PASS  {"status": 201, "filename": "y.dxf", "len": 5}
+G2-E01    파일 이름 '/abs/path/z.dxf'  PASS  {"status": 201, "filename": "z.dxf", "len": 5}
+G2-E01    파일 이름 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'  FAIL  {"status": 422, "filename": ["invalid_document", "format"], "len": 3}
+G2-E01    파일 이름 '\u202egpj.dxf'  PASS  {"status": 201, "filename": "‮gpj.dxf", "len": 8}
+G2-E01    파일 이름 'x.DXF'  PASS  {"status": 201, "filename": "x.DXF", "len": 5}
+G2-E01    파일 이름 'noext'  PASS  {"status": 422, "filename": ["invalid_document", "format"], "len": 3}
+G2-E01    파일 이름 '.dxf'  PASS  {"status": 201, "filename": ".dxf", "len": 4}
+G2-E01    파일 이름 'a.dxf\x00.exe'  FAIL  {"status": 422, "filename": ["invalid_document", "format"], "len": 3}
+G2-E01    파일 이름 'a.dxf/'  FAIL  {"status": 201, "filename": "upload.dxf", "len": 10}
+G2-E01    원본 저장 경로 = <tenant>/<sha256>.dxf 만  PASS  {"n": 15, "sample": ["<scratch>/r2/docs/tb2c928/f5a81156904f9688e6186e5d4637e7b6744f61b78bfdf847d428071d4fd69806.dxf", "<scratch>
+G2-E01    unit_override=None  PASS  {"status": 422, "err": ["invalid_document", "unit"]}
+G2-E01    unit_override=mm  PASS  {"status": 201, "err": [null, null]}
+G2-E01    unit_override=inch  PASS  {"status": 201, "err": [null, null]}
+G2-E01    unit_override=m  PASS  {"status": 422, "err": ["invalid_document", "unit"]}
+G2-E01    unit_override=../mm  PASS  {"status": 422, "err": ["invalid_document", "unit"]}
+G2-E01    unit_override=MM  PASS  {"status": 422, "err": ["invalid_document", "unit"]}
+G2-E01    multipart boundary 없음  PASS  {"status": 422}
+G2-E01    JSON 본문  PASS  {"status": 422}
+G2-E01    file 칸 2개(첫째 사용)  PASS  {"status": 201}
+G2-E01    base64 전송 인코딩 칸  PASS  {"status": 201}
+G2-E01    Content-Encoding: gzip 머리(압축 해제 안 함)  PASS  {"status": 201}
+G2-A01    viewer 업로드  PASS  {"status": 403}
+감사        문서 업로드 2회(403 · 201) → mlp_audit +2  PASS  {"delta": 2}
+감사        업로드 감사 행 내용(문서 ID 남김?)  FAIL  {"row": {"actor": "test-operator", "detail": {"status": 201}, "target": "/api/v1/tenants/tb2c928/tasks/tb2c928.drawing_regions/documents"}}
+G2-A01    다른 회사 admin 키 · GET 문서  PASS  {"status": 404, "code": "not_found"}
+G2-A01    다른 회사 admin 키 · GET 목록  PASS  {"status": 404, "code": "not_found"}
+G2-A01    다른 회사 admin 키 · GET 다른 회사 경로로 내 문서  PASS  {"status": 404, "code": "not_found"}
+G2-A01    다른 회사 키 업로드  PASS  {"status": 404}
+G2-A01    extract 아닌 과제의 documents → 404 type_route  PASS  {"status": 404, "err": ["not_found", "type_route"]}
+G2-E01    cad_regions 최악 꼴 규모(키워드 텍스트 × 중첩 사각형)  WARN  {"scaling": [{"n_rect": 250, "n_text": 250, "entities": 500, "file_bytes": 37607, "sec": 0.04, "peak_MB": 1.1, "regions": 250, "regions_json_MB": 0.24}, {"n_rect": 500, "n_text": 500, "entities": 1000, "file_bytes": 76107, "sec": 0.13, "peak_MB": 3.1, "regions": 500, "regions_json_MB": 0.9}, {"n_rec
+G2-E01    API 업로드 · 사각형 2,000 + 키워드 텍스트 2,000 (엔티티 4,000 · 상한의 20%)  PASS  {"status": 413, "sec": 0.1, "resp_MB": 0.0}
+G2-E01    ot geometry_objects 최악 꼴(외곽 bulge 500 + 원 1,999)  WARN  {"error": "ExtractError: points 곡선이 너무 복잡합니다. 도면을 단순화하세요.", "sec": 0.0, "file_bytes": 110599}
+
+== 65 검사 · FAIL 4 · WARN 2 → probe_dxf-result.json
+{"tenant": "tb2c928", "zip_bytes": 20525}

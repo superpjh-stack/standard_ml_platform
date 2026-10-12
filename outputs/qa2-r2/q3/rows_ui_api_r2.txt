@@ -1,0 +1,38 @@
+r2  kd health 항목 type · model_required · uses 키  PASS  {'kd.labor_hours': ('regression', True, True), 'kd.drawing_regions': ('extract', False, True), 'kd.quote': ('quote', False, True)}
+r2  kd model_required false = 규칙 extract · quote · review_queue · optimize  PASS  ['kd.drawing_regions', 'kd.quote']
+r2  kd overview kd.labor_hours model_required · uses  PASS  HTTP 200 mr=True uses=None
+r2  kd overview kd.drawing_regions model_required · uses  PASS  HTTP 200 mr=False uses=None
+r2  kd overview kd.quote model_required · uses  PASS  HTTP 200 mr=False uses=[{'task': 'kd.labor_hours', 'version': 'v2', 'synthetic': True}]
+r2  kd records kd.labor_hours ts 에 'NaT' 문자열 0  PASS  HTTP 200 n=50 null=50
+r2  kd doctor viewer → 403  PASS  HTTP 403 forbidden
+r2  kd doctor operator → 403  PASS  HTTP 403 forbidden
+r2  kd doctor approver → 200  PASS  HTTP 200 
+r2  kd doctor admin → 200  PASS  HTTP 200 
+r2  kd train kd.drawing_regions(extract) → 422 not_trainable · run 0  PASS  HTTP 422 invalid_input {'rule': 'not_trainable', 'type': 'extract'} runs 0->0
+r2  kd train kd.quote(quote) → 422 not_trainable · run 0  PASS  HTTP 422 invalid_input {'rule': 'not_trainable', 'type': 'quote'} runs 0->0
+r2  kd 화면 1 drawing_regions '모델 불필요 (규칙)' · quote '의존 kd.labor_hours: v1'  PASS  cells=['true', 'false', 'false']
+r2  kd 화면 1 대상 데이터 NaT 표시 0  PASS  
+r2  kd 화면 6 operator doctor  PASS  forbidden_note=1 table=0 errs=[]
+r2  kd 화면 6 approver doctor  PASS  forbidden_note=0 table=1 errs=[]
+r2  krs health 항목 type · model_required · uses 키  PASS  {'krs.joint_strength': ('regression', True, True), 'krs.recipe_optimize': ('optimize', False, True), 'krs.residual_review': ('review_queue', False, True)}
+r2  krs model_required false = 규칙 extract · quote · review_queue · optimize  PASS  ['krs.recipe_optimize', 'krs.residual_review']
+r2  krs overview krs.joint_strength model_required · uses  PASS  HTTP 200 mr=True uses=None
+r2  krs overview krs.recipe_optimize model_required · uses  PASS  HTTP 200 mr=False uses=[{'task': 'krs.joint_strength', 'version': 'v1', 'synthetic': True}]
+r2  krs overview krs.residual_review model_required · uses  PASS  HTTP 200 mr=False uses=[{'task': 'krs.joint_strength', 'version': 'v1', 'synthetic': True}]
+r2  krs records krs.joint_strength ts 에 'NaT' 문자열 0  PASS  HTTP 200 n=50 null=50
+r2  krs doctor viewer → 403  PASS  HTTP 403 forbidden
+r2  krs doctor operator → 403  PASS  HTTP 403 forbidden
+r2  krs doctor approver → 200  PASS  HTTP 200 
+r2  krs doctor admin → 200  PASS  HTTP 200 
+r2  krs train krs.recipe_optimize(optimize) → 422 not_trainable · run 0  PASS  HTTP 422 invalid_input {'rule': 'not_trainable', 'type': 'optimize'} runs 0->0
+r2  krs train krs.residual_review(review_queue) → 422 not_trainable · run 0  PASS  HTTP 422 invalid_input {'rule': 'not_trainable', 'type': 'review_queue'} runs 0->0
+r2  krs review can_decide · operator  PASS  HTTP 200 can_decide=False
+r2  krs review can_decide · approver  PASS  HTTP 200 can_decide=True
+r2  krs review can_decide · approver_other  PASS  HTTP 200 can_decide=False
+r2  krs review can_decide · admin  PASS  HTTP 200 can_decide=True
+r2  krs review can_decide · viewer  PASS  HTTP 403 can_decide=None
+r2  krs 화면 8 operator 버튼 · 조회 전용 안내  PASS  readonly=1 buttons=0 errs=[]
+r2  krs 화면 8 operator 가로 스크롤 0  PASS  scrollWidth=1024
+r2  krs 화면 8 approver 버튼 · 조회 전용 안내  PASS  readonly=0 buttons=30 errs=[]
+r2  krs 화면 8 approver 가로 스크롤 0  PASS  scrollWidth=1024
+r2  krs 화면 8 두 탭 · 뒤 탭 409 문구  PASS  ['rvw_01M4RXDBHHXFQ9CZ0W6HFVTGAE 은(는) 이미 검토가 끝난 항목입니다 — 다른 사람이 먼저 결정했습니다', '409 · 이미 결정되었습니다 (already_decided)']

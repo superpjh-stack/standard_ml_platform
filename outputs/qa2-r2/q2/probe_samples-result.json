@@ -1,0 +1,109 @@
+[
+ {
+  "gate": "G2-A01",
+  "item": "등록부 params.file '../secret.txt' → 기동 거부",
+  "verdict": "PASS",
+  "measured": "RegistryRejected",
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "등록부 params.file '/etc/passwd' → 기동 거부",
+  "verdict": "PASS",
+  "measured": "RegistryRejected",
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "등록부 params.file '%2e%2e/secret.txt' → 기동 거부",
+  "verdict": "PASS",
+  "measured": "RegistryRejected",
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "등록부 params.file 'a/../../secret.txt' → 기동 거부",
+  "verdict": "PASS",
+  "measured": "RegistryRejected",
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file params · samples 안 링크 → 밖",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "leak": false
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file params · 정상 ok.json",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "leak": false
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file 경로 인자 · ..%2Fsecret.txt",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "leak": false
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file 경로 인자 · %2e%2e%2fsecret.txt",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "leak": false
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file 경로 인자 · link.dxf",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "leak": false
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file 경로 인자 · ....//secret.txt",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "leak": false
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file 경로 인자 · ok.json",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "leak": false
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "pack_file 키 없음 → 401",
+  "verdict": "PASS",
+  "measured": {
+   "status": 401
+  },
+  "expected": null
+ }
+]

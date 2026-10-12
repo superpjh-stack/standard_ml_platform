@@ -1,0 +1,2774 @@
+{
+  "companies": [
+    {
+      "api_usage": {
+        "2026-10-13": {
+          "/api/v1/tenants/kd/tasks/kd.drawing_regions/documents": {
+            "basis": "실측",
+            "calls": 36,
+            "errors": 19,
+            "p95_ms": null,
+            "ref": "mlp_audit@2026-10-13"
+          },
+          "/api/v1/tenants/kd/tasks/kd.labor_hours/predict": {
+            "basis": "실측",
+            "calls": 9,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13 (quote 9)"
+          },
+          "/api/v1/tenants/kd/tasks/kd.quote/quotes": {
+            "basis": "실측",
+            "calls": 25,
+            "errors": 12,
+            "p95_ms": null,
+            "ref": "mlp_audit@2026-10-13"
+          }
+        }
+      },
+      "company": "kd",
+      "consumers": [
+        {
+          "code": "ML:kd.drawing_regions",
+          "kind": "MODEL",
+          "name": "도면 영역 · BOM 추출",
+          "origin": "MLP",
+          "source_ref": "packs/eto/tasks/drawing_regions.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML:kd.labor_hours",
+          "kind": "MODEL",
+          "name": "대당 제조공수 예측",
+          "origin": "MLP",
+          "source_ref": "packs/eto/tasks/labor_hours.yaml:1",
+          "state": "v2",
+          "synthetic": true
+        },
+        {
+          "code": "ML:kd.quote",
+          "kind": "MODEL",
+          "name": "수주 견적 초안",
+          "origin": "MLP",
+          "source_ref": "packs/eto/tasks/quote.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S1",
+          "kind": "SCREEN",
+          "name": "회사 · 과제 개요",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:10",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S2",
+          "kind": "SCREEN",
+          "name": "예측 시험",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:11",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S4",
+          "kind": "SCREEN",
+          "name": "모델 비교 · 검증",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S5",
+          "kind": "SCREEN",
+          "name": "승인 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S6",
+          "kind": "SCREEN",
+          "name": "감시",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S7",
+          "kind": "SCREEN",
+          "name": "데이터 소스 · 스냅숏",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:16",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S9",
+          "kind": "SCREEN",
+          "name": "도면 추출 · 견적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:18",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S10",
+          "kind": "SCREEN",
+          "name": "감사 · 예측 추적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:19",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_prediction",
+          "kind": "TOOL",
+          "name": "ml.calculate_prediction",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_explanation",
+          "kind": "TOOL",
+          "name": "ml.get_explanation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_monitor_summary",
+          "kind": "TOOL",
+          "name": "ml.get_monitor_summary",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:16",
+          "state": null,
+          "synthetic": true
+        }
+      ],
+      "datasets": [],
+      "features": [
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.complexity",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.cut_m",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.main_material",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.product_family",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.thickness_mm",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.total_mass_kg",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.weld_m",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "eto.labor_hours",
+          "task": "kd.labor_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.complexity",
+          "task": "kd.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.cut_m",
+          "task": "kd.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.main_material",
+          "task": "kd.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.product_family",
+          "task": "kd.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.thickness_mm",
+          "task": "kd.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "eto.weld_m",
+          "task": "kd.quote"
+        }
+      ],
+      "mode": "demo",
+      "usages": [
+        {
+          "api_path": "/api/v1/tenants/kd/tasks/kd.drawing_regions/documents",
+          "consumer_code": "ML:kd.drawing_regions",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/eto/tasks/drawing_regions.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/kd/tasks/kd.labor_hours/predict",
+          "consumer_code": "ML:kd.labor_hours",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/eto/tasks/labor_hours.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/kd/tasks/kd.quote/quotes",
+          "consumer_code": "ML:kd.quote",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/eto/tasks/quote.yaml:1"
+        }
+      ]
+    },
+    {
+      "api_usage": {
+        "2026-10-13": {
+          "/api/v1/tenants/krs/tasks/krs.joint_strength/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/krs/tasks/krs.recipe_optimize/optimize": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/krs/tasks/krs.residual_review/review": {
+            "basis": "실측",
+            "calls": 10,
+            "errors": 8,
+            "p95_ms": null,
+            "ref": "mlp_audit@2026-10-13"
+          }
+        }
+      },
+      "company": "krs",
+      "consumers": [
+        {
+          "code": "ML:krs.joint_strength",
+          "kind": "MODEL",
+          "name": "접합강도 예측",
+          "origin": "MLP",
+          "source_ref": "packs/solder/tasks/joint_strength.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML:krs.recipe_optimize",
+          "kind": "MODEL",
+          "name": "배합 · 공정 조건 추천",
+          "origin": "MLP",
+          "source_ref": "packs/solder/tasks/recipe_optimize.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML:krs.residual_review",
+          "kind": "MODEL",
+          "name": "접합강도 잔차 검토 대기열",
+          "origin": "MLP",
+          "source_ref": "packs/solder/tasks/residual_review.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S1",
+          "kind": "SCREEN",
+          "name": "회사 · 과제 개요",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:10",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S2",
+          "kind": "SCREEN",
+          "name": "예측 시험",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:11",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S3",
+          "kind": "SCREEN",
+          "name": "조건 추천",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:12",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S4",
+          "kind": "SCREEN",
+          "name": "모델 비교 · 검증",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S5",
+          "kind": "SCREEN",
+          "name": "승인 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S6",
+          "kind": "SCREEN",
+          "name": "감시",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S7",
+          "kind": "SCREEN",
+          "name": "데이터 소스 · 스냅숏",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:16",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S8",
+          "kind": "SCREEN",
+          "name": "검토 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:17",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S10",
+          "kind": "SCREEN",
+          "name": "감사 · 예측 추적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:19",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_prediction",
+          "kind": "TOOL",
+          "name": "ml.calculate_prediction",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_recommendation",
+          "kind": "TOOL",
+          "name": "ml.calculate_recommendation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_explanation",
+          "kind": "TOOL",
+          "name": "ml.get_explanation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_monitor_summary",
+          "kind": "TOOL",
+          "name": "ml.get_monitor_summary",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:16",
+          "state": null,
+          "synthetic": true
+        }
+      ],
+      "datasets": [],
+      "features": [
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.ag_pct",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.cu_pct",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.flux_pct",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.mixing_min",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.sb_pct",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.sn_pct",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.supplier",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "solder.temperature_c",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "solder.joint_strength_mpa",
+          "task": "krs.joint_strength"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "solder.ag_pct",
+          "task": "krs.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "solder.cu_pct",
+          "task": "krs.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "solder.flux_pct",
+          "task": "krs.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "solder.mixing_min",
+          "task": "krs.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "solder.sb_pct",
+          "task": "krs.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "solder.temperature_c",
+          "task": "krs.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "solder.supplier",
+          "task": "krs.recipe_optimize"
+        }
+      ],
+      "mode": "demo",
+      "usages": [
+        {
+          "api_path": "/api/v1/tenants/krs/tasks/krs.joint_strength/predict",
+          "consumer_code": "ML:krs.joint_strength",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/solder/tasks/joint_strength.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/krs/tasks/krs.recipe_optimize/optimize",
+          "consumer_code": "ML:krs.recipe_optimize",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/solder/tasks/recipe_optimize.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/krs/tasks/krs.residual_review/review",
+          "consumer_code": "ML:krs.residual_review",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/solder/tasks/residual_review.yaml:1"
+        }
+      ]
+    },
+    {
+      "api_usage": {
+        "2026-10-13": {
+          "/api/v1/tenants/ks/tasks/ks.failure_24h/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/ks/tasks/ks.maintenance_timing/optimize": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/ks/tasks/ks.remaining_hours/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/ks/tasks/ks.sensor_ood/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          }
+        }
+      },
+      "company": "ks",
+      "consumers": [
+        {
+          "code": "ML:ks.failure_24h",
+          "kind": "MODEL",
+          "name": "24시간 고장 위험",
+          "origin": "MLP",
+          "source_ref": "packs/press/tasks/failure_24h.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML:ks.maintenance_timing",
+          "kind": "MODEL",
+          "name": "정비 시점 탐색",
+          "origin": "MLP",
+          "source_ref": "packs/press/tasks/maintenance_timing.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML:ks.remaining_hours",
+          "kind": "MODEL",
+          "name": "잔여수명 예측",
+          "origin": "MLP",
+          "source_ref": "packs/press/tasks/remaining_hours.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML:ks.sensor_ood",
+          "kind": "MODEL",
+          "name": "센서 분포 이탈 탐지",
+          "origin": "MLP",
+          "source_ref": "packs/press/tasks/sensor_ood.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML-S1",
+          "kind": "SCREEN",
+          "name": "회사 · 과제 개요",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:10",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S2",
+          "kind": "SCREEN",
+          "name": "예측 시험",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:11",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S3",
+          "kind": "SCREEN",
+          "name": "조건 추천",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:12",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S4",
+          "kind": "SCREEN",
+          "name": "모델 비교 · 검증",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S5",
+          "kind": "SCREEN",
+          "name": "승인 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S6",
+          "kind": "SCREEN",
+          "name": "감시",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S7",
+          "kind": "SCREEN",
+          "name": "데이터 소스 · 스냅숏",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:16",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S10",
+          "kind": "SCREEN",
+          "name": "감사 · 예측 추적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:19",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_prediction",
+          "kind": "TOOL",
+          "name": "ml.calculate_prediction",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_recommendation",
+          "kind": "TOOL",
+          "name": "ml.calculate_recommendation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_explanation",
+          "kind": "TOOL",
+          "name": "ml.get_explanation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_monitor_summary",
+          "kind": "TOOL",
+          "name": "ml.get_monitor_summary",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:16",
+          "state": null,
+          "synthetic": true
+        }
+      ],
+      "datasets": [
+        {
+          "layer": "L5",
+          "physical_name": "BAS_EQUIPMENTS",
+          "source_ref": "tenants/ks.yaml:18"
+        },
+        {
+          "layer": "L5",
+          "physical_name": "EIF_PLC_RAW",
+          "source_ref": "tenants/ks.yaml:17"
+        },
+        {
+          "layer": "L5",
+          "physical_name": "PRS_MOLD_SHOTS",
+          "source_ref": "tenants/ks.yaml:18"
+        },
+        {
+          "layer": "L5",
+          "physical_name": "PRS_PROCESS_DATA",
+          "source_ref": "tenants/ks.yaml:18"
+        }
+      ],
+      "features": [
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.CYCLE_TIME_SEC",
+          "std_name": "press.cycle_time",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.equip_temp",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "BAS_EQUIPMENTS.EQUIP_CODE",
+          "std_name": "press.machine_code",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.MOLD_TEMP_C",
+          "std_name": "press.mold_temp",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.motor_current",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.PRESS_FORCE_TON",
+          "std_name": "press.press_force",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.product_type",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_MOLD_SHOTS.ACC_SHOT_CNT",
+          "std_name": "press.shot_count",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.VIBRATION_MMS",
+          "std_name": "press.vibration",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "press.failure_24h",
+          "task": "ks.failure_24h"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "PRS_PROCESS_DATA.CYCLE_TIME_SEC",
+          "std_name": "press.cycle_time",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "press.equip_temp",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "BAS_EQUIPMENTS.EQUIP_CODE",
+          "std_name": "press.machine_code",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "PRS_PROCESS_DATA.MOLD_TEMP_C",
+          "std_name": "press.mold_temp",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "press.motor_current",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "PRS_PROCESS_DATA.PRESS_FORCE_TON",
+          "std_name": "press.press_force",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "press.product_type",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "PRS_MOLD_SHOTS.ACC_SHOT_CNT",
+          "std_name": "press.shot_count",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "PRS_PROCESS_DATA.VIBRATION_MMS",
+          "std_name": "press.vibration",
+          "task": "ks.maintenance_timing"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.CYCLE_TIME_SEC",
+          "std_name": "press.cycle_time",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.equip_temp",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "BAS_EQUIPMENTS.EQUIP_CODE",
+          "std_name": "press.machine_code",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.MOLD_TEMP_C",
+          "std_name": "press.mold_temp",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.motor_current",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.PRESS_FORCE_TON",
+          "std_name": "press.press_force",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.product_type",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_MOLD_SHOTS.ACC_SHOT_CNT",
+          "std_name": "press.shot_count",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.VIBRATION_MMS",
+          "std_name": "press.vibration",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "press.remaining_hours",
+          "task": "ks.remaining_hours"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.CYCLE_TIME_SEC",
+          "std_name": "press.cycle_time",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.equip_temp",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "BAS_EQUIPMENTS.EQUIP_CODE",
+          "std_name": "press.machine_code",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.MOLD_TEMP_C",
+          "std_name": "press.mold_temp",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.motor_current",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.PRESS_FORCE_TON",
+          "std_name": "press.press_force",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "press.product_type",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_MOLD_SHOTS.ACC_SHOT_CNT",
+          "std_name": "press.shot_count",
+          "task": "ks.sensor_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRS_PROCESS_DATA.VIBRATION_MMS",
+          "std_name": "press.vibration",
+          "task": "ks.sensor_ood"
+        }
+      ],
+      "mode": "demo",
+      "usages": [
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.failure_24h/predict",
+          "consumer_code": "ML:ks.failure_24h",
+          "declared_in": "tenants",
+          "physical_name": "BAS_EQUIPMENTS",
+          "source_ref": "tenants/ks.yaml:25"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.failure_24h/predict",
+          "consumer_code": "ML:ks.failure_24h",
+          "declared_in": "tenants",
+          "physical_name": "PRS_MOLD_SHOTS",
+          "source_ref": "tenants/ks.yaml:24"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.failure_24h/predict",
+          "consumer_code": "ML:ks.failure_24h",
+          "declared_in": "tenants",
+          "physical_name": "PRS_PROCESS_DATA",
+          "source_ref": "tenants/ks.yaml:20"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.maintenance_timing/optimize",
+          "consumer_code": "ML:ks.maintenance_timing",
+          "declared_in": "tenants",
+          "physical_name": "BAS_EQUIPMENTS",
+          "source_ref": "tenants/ks.yaml:25"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.maintenance_timing/optimize",
+          "consumer_code": "ML:ks.maintenance_timing",
+          "declared_in": "tenants",
+          "physical_name": "PRS_MOLD_SHOTS",
+          "source_ref": "tenants/ks.yaml:24"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.maintenance_timing/optimize",
+          "consumer_code": "ML:ks.maintenance_timing",
+          "declared_in": "tenants",
+          "physical_name": "PRS_PROCESS_DATA",
+          "source_ref": "tenants/ks.yaml:20"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.remaining_hours/predict",
+          "consumer_code": "ML:ks.remaining_hours",
+          "declared_in": "tenants",
+          "physical_name": "BAS_EQUIPMENTS",
+          "source_ref": "tenants/ks.yaml:25"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.remaining_hours/predict",
+          "consumer_code": "ML:ks.remaining_hours",
+          "declared_in": "tenants",
+          "physical_name": "PRS_MOLD_SHOTS",
+          "source_ref": "tenants/ks.yaml:24"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.remaining_hours/predict",
+          "consumer_code": "ML:ks.remaining_hours",
+          "declared_in": "tenants",
+          "physical_name": "PRS_PROCESS_DATA",
+          "source_ref": "tenants/ks.yaml:20"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.sensor_ood/predict",
+          "consumer_code": "ML:ks.sensor_ood",
+          "declared_in": "tenants",
+          "physical_name": "BAS_EQUIPMENTS",
+          "source_ref": "tenants/ks.yaml:25"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.sensor_ood/predict",
+          "consumer_code": "ML:ks.sensor_ood",
+          "declared_in": "tenants",
+          "physical_name": "PRS_MOLD_SHOTS",
+          "source_ref": "tenants/ks.yaml:24"
+        },
+        {
+          "api_path": "/api/v1/tenants/ks/tasks/ks.sensor_ood/predict",
+          "consumer_code": "ML:ks.sensor_ood",
+          "declared_in": "tenants",
+          "physical_name": "PRS_PROCESS_DATA",
+          "source_ref": "tenants/ks.yaml:20"
+        }
+      ]
+    },
+    {
+      "api_usage": {
+        "2026-10-13": {
+          "/api/v1/tenants/ot/tasks/ot.cad_objects/documents": {
+            "basis": "실측",
+            "calls": 8,
+            "errors": 7,
+            "p95_ms": null,
+            "ref": "mlp_audit@2026-10-13"
+          },
+          "/api/v1/tenants/ot/tasks/ot.machining_minutes/predict": {
+            "basis": "실측",
+            "calls": 9,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13 (quote 9)"
+          },
+          "/api/v1/tenants/ot/tasks/ot.quote/quotes": {
+            "basis": "실측",
+            "calls": 25,
+            "errors": 12,
+            "p95_ms": null,
+            "ref": "mlp_audit@2026-10-13"
+          }
+        }
+      },
+      "company": "ot",
+      "consumers": [
+        {
+          "code": "ML:ot.cad_objects",
+          "kind": "MODEL",
+          "name": "도면 객체 인식 (외곽 · 홀 · 슬롯)",
+          "origin": "MLP",
+          "source_ref": "packs/rollform-quote/tasks/cad_objects.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML:ot.machining_minutes",
+          "kind": "MODEL",
+          "name": "개당 가공시간 예측",
+          "origin": "MLP",
+          "source_ref": "packs/rollform-quote/tasks/machining_minutes.yaml:1",
+          "state": "v2",
+          "synthetic": true
+        },
+        {
+          "code": "ML:ot.quote",
+          "kind": "MODEL",
+          "name": "롤포밍 부품 견적 초안",
+          "origin": "MLP",
+          "source_ref": "packs/rollform-quote/tasks/quote.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S1",
+          "kind": "SCREEN",
+          "name": "회사 · 과제 개요",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:10",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S2",
+          "kind": "SCREEN",
+          "name": "예측 시험",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:11",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S4",
+          "kind": "SCREEN",
+          "name": "모델 비교 · 검증",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S5",
+          "kind": "SCREEN",
+          "name": "승인 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S6",
+          "kind": "SCREEN",
+          "name": "감시",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S7",
+          "kind": "SCREEN",
+          "name": "데이터 소스 · 스냅숏",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:16",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S9",
+          "kind": "SCREEN",
+          "name": "도면 추출 · 견적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:18",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S10",
+          "kind": "SCREEN",
+          "name": "감사 · 예측 추적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:19",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_prediction",
+          "kind": "TOOL",
+          "name": "ml.calculate_prediction",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_explanation",
+          "kind": "TOOL",
+          "name": "ml.get_explanation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_monitor_summary",
+          "kind": "TOOL",
+          "name": "ml.get_monitor_summary",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:16",
+          "state": null,
+          "synthetic": true
+        }
+      ],
+      "datasets": [],
+      "features": [
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.area_ratio",
+          "task": "ot.cad_objects"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.aspect_ratio",
+          "task": "ot.cad_objects"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.circularity",
+          "task": "ot.cad_objects"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.is_circle",
+          "task": "ot.cad_objects"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.is_closed",
+          "task": "ot.cad_objects"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.is_curved",
+          "task": "ot.cad_objects"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "rollform-quote.label",
+          "task": "ot.cad_objects"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.bend_count",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.blank_width_mm",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.hole_count",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.part_length_mm",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.section_profile",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.sheet_thickness_mm",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.slot_count",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.steel_grade",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "rollform-quote.machining_minutes",
+          "task": "ot.machining_minutes"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.bend_count",
+          "task": "ot.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.blank_width_mm",
+          "task": "ot.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.hole_count",
+          "task": "ot.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.part_length_mm",
+          "task": "ot.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.section_profile",
+          "task": "ot.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.sheet_thickness_mm",
+          "task": "ot.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.slot_count",
+          "task": "ot.quote"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "rollform-quote.steel_grade",
+          "task": "ot.quote"
+        }
+      ],
+      "mode": "demo",
+      "usages": [
+        {
+          "api_path": "/api/v1/tenants/ot/tasks/ot.cad_objects/documents",
+          "consumer_code": "ML:ot.cad_objects",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/rollform-quote/tasks/cad_objects.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/ot/tasks/ot.machining_minutes/predict",
+          "consumer_code": "ML:ot.machining_minutes",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/rollform-quote/tasks/machining_minutes.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/ot/tasks/ot.quote/quotes",
+          "consumer_code": "ML:ot.quote",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/rollform-quote/tasks/quote.yaml:1"
+        }
+      ]
+    },
+    {
+      "api_usage": {
+        "2026-10-13": {
+          "/api/v1/tenants/pc/tasks/pc.recipe_optimize/optimize": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/pc/tasks/pc.residual_review/review": {
+            "basis": "실측",
+            "calls": 8,
+            "errors": 7,
+            "p95_ms": null,
+            "ref": "mlp_audit@2026-10-13"
+          },
+          "/api/v1/tenants/pc/tasks/pc.sensory_score/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          }
+        }
+      },
+      "company": "pc",
+      "consumers": [
+        {
+          "code": "ML:pc.recipe_optimize",
+          "kind": "MODEL",
+          "name": "배합 · 숙성 조건 추천",
+          "origin": "MLP",
+          "source_ref": "packs/kimchi/tasks/recipe_optimize.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML:pc.residual_review",
+          "kind": "MODEL",
+          "name": "잔차 검토 대기열",
+          "origin": "MLP",
+          "source_ref": "packs/kimchi/tasks/residual_review.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML:pc.sensory_score",
+          "kind": "MODEL",
+          "name": "관능 점수 예측",
+          "origin": "MLP",
+          "source_ref": "packs/kimchi/tasks/sensory_score.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML-S1",
+          "kind": "SCREEN",
+          "name": "회사 · 과제 개요",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:10",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S2",
+          "kind": "SCREEN",
+          "name": "예측 시험",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:11",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S3",
+          "kind": "SCREEN",
+          "name": "조건 추천",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:12",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S4",
+          "kind": "SCREEN",
+          "name": "모델 비교 · 검증",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S5",
+          "kind": "SCREEN",
+          "name": "승인 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S6",
+          "kind": "SCREEN",
+          "name": "감시",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S7",
+          "kind": "SCREEN",
+          "name": "데이터 소스 · 스냅숏",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:16",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S8",
+          "kind": "SCREEN",
+          "name": "검토 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:17",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S10",
+          "kind": "SCREEN",
+          "name": "감사 · 예측 추적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:19",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_prediction",
+          "kind": "TOOL",
+          "name": "ml.calculate_prediction",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_recommendation",
+          "kind": "TOOL",
+          "name": "ml.calculate_recommendation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_explanation",
+          "kind": "TOOL",
+          "name": "ml.get_explanation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_monitor_summary",
+          "kind": "TOOL",
+          "name": "ml.get_monitor_summary",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:16",
+          "state": null,
+          "synthetic": true
+        }
+      ],
+      "datasets": [],
+      "features": [
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.brine_salinity_pct",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.brining_hours",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_pct",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_hours",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_temp_c",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.radish_pct",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.salt_pct",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.storage_temp_c",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_origin",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "kimchi.prod_line",
+          "task": "pc.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.brine_salinity_pct",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.brining_hours",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_origin",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_pct",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_hours",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_temp_c",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.prod_line",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.radish_pct",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.salt_pct",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.seasoning_pct",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.storage_temp_c",
+          "task": "pc.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "kimchi.sensory_score",
+          "task": "pc.sensory_score"
+        }
+      ],
+      "mode": "demo",
+      "usages": [
+        {
+          "api_path": "/api/v1/tenants/pc/tasks/pc.recipe_optimize/optimize",
+          "consumer_code": "ML:pc.recipe_optimize",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/kimchi/tasks/recipe_optimize.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/pc/tasks/pc.residual_review/review",
+          "consumer_code": "ML:pc.residual_review",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/kimchi/tasks/residual_review.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/pc/tasks/pc.sensory_score/predict",
+          "consumer_code": "ML:pc.sensory_score",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/kimchi/tasks/sensory_score.yaml:1"
+        }
+      ]
+    },
+    {
+      "api_usage": {
+        "2026-10-13": {
+          "/api/v1/tenants/sw/tasks/sw.defect_risk/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/sw/tasks/sw.delta_e/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/sw/tasks/sw.print_ood/predict": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/sw/tasks/sw.print_setpoint/optimize": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 0,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          }
+        }
+      },
+      "company": "sw",
+      "consumers": [
+        {
+          "code": "ML:sw.defect_risk",
+          "kind": "MODEL",
+          "name": "불량 위험",
+          "origin": "MLP",
+          "source_ref": "packs/textile/tasks/defect_risk.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML:sw.delta_e",
+          "kind": "MODEL",
+          "name": "색차(ΔE) 예측",
+          "origin": "MLP",
+          "source_ref": "packs/textile/tasks/delta_e.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML:sw.print_ood",
+          "kind": "MODEL",
+          "name": "인쇄 조건 분포 이탈 탐지",
+          "origin": "MLP",
+          "source_ref": "packs/textile/tasks/print_ood.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML:sw.print_setpoint",
+          "kind": "MODEL",
+          "name": "인쇄 조건 추천",
+          "origin": "MLP",
+          "source_ref": "packs/textile/tasks/print_setpoint.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S1",
+          "kind": "SCREEN",
+          "name": "회사 · 과제 개요",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:10",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S2",
+          "kind": "SCREEN",
+          "name": "예측 시험",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:11",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S3",
+          "kind": "SCREEN",
+          "name": "조건 추천",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:12",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S4",
+          "kind": "SCREEN",
+          "name": "모델 비교 · 검증",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S5",
+          "kind": "SCREEN",
+          "name": "승인 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S6",
+          "kind": "SCREEN",
+          "name": "감시",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S7",
+          "kind": "SCREEN",
+          "name": "데이터 소스 · 스냅숏",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:16",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S10",
+          "kind": "SCREEN",
+          "name": "감사 · 예측 추적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:19",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_prediction",
+          "kind": "TOOL",
+          "name": "ml.calculate_prediction",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_recommendation",
+          "kind": "TOOL",
+          "name": "ml.calculate_recommendation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_explanation",
+          "kind": "TOOL",
+          "name": "ml.get_explanation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_monitor_summary",
+          "kind": "TOOL",
+          "name": "ml.get_monitor_summary",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:16",
+          "state": null,
+          "synthetic": true
+        }
+      ],
+      "datasets": [
+        {
+          "layer": "L5",
+          "physical_name": "PRC_MONITOR_DATA",
+          "source_ref": "tenants/sw.yaml:15"
+        },
+        {
+          "layer": "L5",
+          "physical_name": "PRT_PRINT_CONDS",
+          "source_ref": "tenants/sw.yaml:16"
+        },
+        {
+          "layer": "L5",
+          "physical_name": "PRT_PRINT_RESULTS",
+          "source_ref": "tenants/sw.yaml:16"
+        },
+        {
+          "layer": "L5",
+          "physical_name": "PRT_QUALITY_HISTORY",
+          "source_ref": "tenants/sw.yaml:16"
+        },
+        {
+          "layer": "L5",
+          "physical_name": "RCV_MATERIAL_LOTS",
+          "source_ref": "tenants/sw.yaml:16"
+        }
+      ],
+      "features": [
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.SET_PRESSURE",
+          "std_name": "pressure_set_bar",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.SET_TEMP",
+          "std_name": "temp_set_c",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "RCV_MATERIAL_LOTS.ABSORB_RATE",
+          "std_name": "textile.absorb_rate",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "textile.color_tone",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "textile.dwell_time",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "RCV_MATERIAL_LOTS.STRENGTH_VALUE",
+          "std_name": "textile.fabric_strength",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.INK_USAGE",
+          "std_name": "textile.ink_usage",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.LINE_SPEED",
+          "std_name": "textile.line_speed",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.PRINT_TYPE",
+          "std_name": "textile.print_type",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "target",
+          "source_column": "PRT_QUALITY_HISTORY.JUDGE_RESULT",
+          "std_name": "textile.defect",
+          "task": "sw.defect_risk"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.SET_PRESSURE",
+          "std_name": "pressure_set_bar",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.SET_TEMP",
+          "std_name": "temp_set_c",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "RCV_MATERIAL_LOTS.ABSORB_RATE",
+          "std_name": "textile.absorb_rate",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "textile.color_tone",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "textile.dwell_time",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "RCV_MATERIAL_LOTS.STRENGTH_VALUE",
+          "std_name": "textile.fabric_strength",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.INK_USAGE",
+          "std_name": "textile.ink_usage",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.LINE_SPEED",
+          "std_name": "textile.line_speed",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.PRINT_TYPE",
+          "std_name": "textile.print_type",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "target",
+          "source_column": "PRT_QUALITY_HISTORY.DELTA_E",
+          "std_name": "textile.delta_e",
+          "task": "sw.delta_e"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.SET_PRESSURE",
+          "std_name": "pressure_set_bar",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.SET_TEMP",
+          "std_name": "temp_set_c",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "RCV_MATERIAL_LOTS.ABSORB_RATE",
+          "std_name": "textile.absorb_rate",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "textile.color_tone",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "textile.dwell_time",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "RCV_MATERIAL_LOTS.STRENGTH_VALUE",
+          "std_name": "textile.fabric_strength",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.INK_USAGE",
+          "std_name": "textile.ink_usage",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.LINE_SPEED",
+          "std_name": "textile.line_speed",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": true,
+          "role": "feature",
+          "source_column": "PRT_PRINT_CONDS.PRINT_TYPE",
+          "std_name": "textile.print_type",
+          "task": "sw.print_ood"
+        },
+        {
+          "mapped": true,
+          "role": "control",
+          "source_column": "PRT_PRINT_CONDS.SET_PRESSURE",
+          "std_name": "pressure_set_bar",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": true,
+          "role": "control",
+          "source_column": "PRT_PRINT_CONDS.SET_TEMP",
+          "std_name": "temp_set_c",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "textile.dwell_time",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": true,
+          "role": "control",
+          "source_column": "PRT_PRINT_CONDS.INK_USAGE",
+          "std_name": "textile.ink_usage",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": true,
+          "role": "control",
+          "source_column": "PRT_PRINT_CONDS.LINE_SPEED",
+          "std_name": "textile.line_speed",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "RCV_MATERIAL_LOTS.ABSORB_RATE",
+          "std_name": "textile.absorb_rate",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "textile.color_tone",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "RCV_MATERIAL_LOTS.STRENGTH_VALUE",
+          "std_name": "textile.fabric_strength",
+          "task": "sw.print_setpoint"
+        },
+        {
+          "mapped": true,
+          "role": "fixed",
+          "source_column": "PRT_PRINT_CONDS.PRINT_TYPE",
+          "std_name": "textile.print_type",
+          "task": "sw.print_setpoint"
+        }
+      ],
+      "mode": "demo",
+      "usages": [
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.defect_risk/predict",
+          "consumer_code": "ML:sw.defect_risk",
+          "declared_in": "tenants",
+          "physical_name": "PRT_PRINT_CONDS",
+          "source_ref": "tenants/sw.yaml:18"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.defect_risk/predict",
+          "consumer_code": "ML:sw.defect_risk",
+          "declared_in": "tenants",
+          "physical_name": "PRT_QUALITY_HISTORY",
+          "source_ref": "tenants/sw.yaml:26"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.defect_risk/predict",
+          "consumer_code": "ML:sw.defect_risk",
+          "declared_in": "tenants",
+          "physical_name": "RCV_MATERIAL_LOTS",
+          "source_ref": "tenants/sw.yaml:23"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.delta_e/predict",
+          "consumer_code": "ML:sw.delta_e",
+          "declared_in": "tenants",
+          "physical_name": "PRT_PRINT_CONDS",
+          "source_ref": "tenants/sw.yaml:18"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.delta_e/predict",
+          "consumer_code": "ML:sw.delta_e",
+          "declared_in": "tenants",
+          "physical_name": "PRT_QUALITY_HISTORY",
+          "source_ref": "tenants/sw.yaml:26"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.delta_e/predict",
+          "consumer_code": "ML:sw.delta_e",
+          "declared_in": "tenants",
+          "physical_name": "RCV_MATERIAL_LOTS",
+          "source_ref": "tenants/sw.yaml:23"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.print_ood/predict",
+          "consumer_code": "ML:sw.print_ood",
+          "declared_in": "tenants",
+          "physical_name": "PRT_PRINT_CONDS",
+          "source_ref": "tenants/sw.yaml:18"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.print_ood/predict",
+          "consumer_code": "ML:sw.print_ood",
+          "declared_in": "tenants",
+          "physical_name": "RCV_MATERIAL_LOTS",
+          "source_ref": "tenants/sw.yaml:23"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.print_setpoint/optimize",
+          "consumer_code": "ML:sw.print_setpoint",
+          "declared_in": "tenants",
+          "physical_name": "PRT_PRINT_CONDS",
+          "source_ref": "tenants/sw.yaml:18"
+        },
+        {
+          "api_path": "/api/v1/tenants/sw/tasks/sw.print_setpoint/optimize",
+          "consumer_code": "ML:sw.print_setpoint",
+          "declared_in": "tenants",
+          "physical_name": "RCV_MATERIAL_LOTS",
+          "source_ref": "tenants/sw.yaml:23"
+        }
+      ]
+    },
+    {
+      "api_usage": {
+        "2026-10-13": {
+          "/api/v1/tenants/t20768e/tasks/t20768e.recipe_optimize/optimize": {
+            "basis": "실측",
+            "calls": 0,
+            "errors": 1,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13"
+          },
+          "/api/v1/tenants/t20768e/tasks/t20768e.residual_review/review": {
+            "basis": "실측",
+            "calls": 9,
+            "errors": 8,
+            "p95_ms": null,
+            "ref": "mlp_audit@2026-10-13"
+          },
+          "/api/v1/tenants/t20768e/tasks/t20768e.sensory_score/predict": {
+            "basis": "실측",
+            "calls": 3,
+            "errors": 1,
+            "p95_ms": null,
+            "ref": "mlp_prediction@2026-10-13 (api 3)"
+          }
+        }
+      },
+      "company": "pc",
+      "consumers": [
+        {
+          "code": "ML:t20768e.recipe_optimize",
+          "kind": "MODEL",
+          "name": "배합 · 숙성 조건 추천",
+          "origin": "MLP",
+          "source_ref": "packs/kimchi/tasks/recipe_optimize.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML:t20768e.residual_review",
+          "kind": "MODEL",
+          "name": "잔차 검토 대기열",
+          "origin": "MLP",
+          "source_ref": "packs/kimchi/tasks/residual_review.yaml:1",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML:t20768e.sensory_score",
+          "kind": "MODEL",
+          "name": "관능 점수 예측",
+          "origin": "MLP",
+          "source_ref": "packs/kimchi/tasks/sensory_score.yaml:1",
+          "state": "v1",
+          "synthetic": true
+        },
+        {
+          "code": "ML-S1",
+          "kind": "SCREEN",
+          "name": "회사 · 과제 개요",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:10",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S2",
+          "kind": "SCREEN",
+          "name": "예측 시험",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:11",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S3",
+          "kind": "SCREEN",
+          "name": "조건 추천",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:12",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S4",
+          "kind": "SCREEN",
+          "name": "모델 비교 · 검증",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S5",
+          "kind": "SCREEN",
+          "name": "승인 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S6",
+          "kind": "SCREEN",
+          "name": "감시",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S7",
+          "kind": "SCREEN",
+          "name": "데이터 소스 · 스냅숏",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:16",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S8",
+          "kind": "SCREEN",
+          "name": "검토 대기열",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:17",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "ML-S10",
+          "kind": "SCREEN",
+          "name": "감사 · 예측 추적",
+          "origin": "MLP",
+          "source_ref": "contracts/screen-map.md:19",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_prediction",
+          "kind": "TOOL",
+          "name": "ml.calculate_prediction",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:13",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.calculate_recommendation",
+          "kind": "TOOL",
+          "name": "ml.calculate_recommendation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:15",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_explanation",
+          "kind": "TOOL",
+          "name": "ml.get_explanation",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:14",
+          "state": null,
+          "synthetic": true
+        },
+        {
+          "code": "tool:ml.get_monitor_summary",
+          "kind": "TOOL",
+          "name": "ml.get_monitor_summary",
+          "origin": "MLP",
+          "source_ref": "contracts/agent-tools.md:16",
+          "state": null,
+          "synthetic": true
+        }
+      ],
+      "datasets": [],
+      "features": [
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.brine_salinity_pct",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.brining_hours",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_pct",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_hours",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_temp_c",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.radish_pct",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.salt_pct",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "control",
+          "source_column": null,
+          "std_name": "kimchi.storage_temp_c",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_origin",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "fixed",
+          "source_column": null,
+          "std_name": "kimchi.prod_line",
+          "task": "t20768e.recipe_optimize"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.brine_salinity_pct",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.brining_hours",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_origin",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.cabbage_pct",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_hours",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.fermentation_temp_c",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.prod_line",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.radish_pct",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.salt_pct",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.seasoning_pct",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "feature",
+          "source_column": null,
+          "std_name": "kimchi.storage_temp_c",
+          "task": "t20768e.sensory_score"
+        },
+        {
+          "mapped": false,
+          "role": "target",
+          "source_column": null,
+          "std_name": "kimchi.sensory_score",
+          "task": "t20768e.sensory_score"
+        }
+      ],
+      "mode": "demo",
+      "usages": [
+        {
+          "api_path": "/api/v1/tenants/t20768e/tasks/t20768e.recipe_optimize/optimize",
+          "consumer_code": "ML:t20768e.recipe_optimize",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/kimchi/tasks/recipe_optimize.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/t20768e/tasks/t20768e.residual_review/review",
+          "consumer_code": "ML:t20768e.residual_review",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/kimchi/tasks/residual_review.yaml:1"
+        },
+        {
+          "api_path": "/api/v1/tenants/t20768e/tasks/t20768e.sensory_score/predict",
+          "consumer_code": "ML:t20768e.sensory_score",
+          "declared_in": "packs",
+          "physical_name": null,
+          "source_ref": "packs/kimchi/tasks/sensory_score.yaml:1"
+        }
+      ]
+    }
+  ],
+  "date": "2026-10-13",
+  "format": "mlp-hub-export/1",
+  "generated_at": "2026-10-14T00:00:00+09:00",
+  "system": {
+    "code_version": "dev",
+    "kind": "ML",
+    "name": "Standard ML Platform"
+  }
+}

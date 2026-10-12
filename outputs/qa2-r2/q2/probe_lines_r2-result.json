@@ -1,0 +1,734 @@
+[
+ {
+  "gate": "r2-Q",
+  "item": "create · name 80자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035689",
+   "saved": [
+    [
+     "가가가가가가",
+     "STS316L",
+     1,
+     "6500",
+     "2246400"
+    ]
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · name 81자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · name 빈 문자열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · name 공백만",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · name 숫자형",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · name null",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · quantity 1000",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "field": "total_mass_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · quantity 1001",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.quantity",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · quantity 1.0",
+  "verdict": "INFO",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035689",
+   "saved": [
+    [
+     "SHELL",
+     "STS316L",
+     1,
+     "6500",
+     "2246400"
+    ]
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · quantity '5'",
+  "verdict": "INFO",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "20955891",
+   "saved": [
+    [
+     "SHELL",
+     "STS316L",
+     5,
+     "6500",
+     "11232000"
+    ]
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · quantity true",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.quantity",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · quantity 리스트",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.quantity",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · mass_kg 0.01",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "6055731",
+   "saved": [
+    [
+     "SHELL",
+     "STS316L",
+     1,
+     "6500",
+     "70"
+    ]
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · mass_kg 0.009",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.mass_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · mass_kg 10000",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "field": "total_mass_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · mass_kg 10000.01",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.mass_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · mass_kg -0.0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.mass_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · price_kg 1000000",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "443377993",
+   "saved": [
+    [
+     "SHELL",
+     "STS316L",
+     1,
+     1000000,
+     "345600000"
+    ]
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · price_kg 1000000.01",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · price_kg 'NaN'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · price_kg 'Infinity'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · price_kg '1e3'",
+  "verdict": "INFO",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · price_kg '-0'",
+  "verdict": "INFO",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · price_kg ' 6500 '",
+  "verdict": "INFO",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035689",
+   "saved": [
+    [
+     "SHELL",
+     "STS316L",
+     1,
+     " 6500 ",
+     "2246400"
+    ]
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · material 별칭(소문자 sts304)",
+  "verdict": "INFO",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035689",
+   "saved": [
+    [
+     "SHELL",
+     "STS304",
+     1,
+     "6500",
+     "2246400"
+    ]
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · material 별칭 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035689",
+   "saved": [
+    [
+     "SHELL",
+     "STS304",
+     1,
+     "6500",
+     "2246400"
+    ]
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · material null",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.material",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · material 빈",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.material",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 100행",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "field": "total_mass_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 101행",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 lines null",
+  "verdict": "INFO",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines",
+   "total": null,
+   "saved": null
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 lines 객체",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 행이 문자열",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 amount 키(금액 직접)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.amount",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 weight_total 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.weight_total",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 키 대소문자 Price_kg",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 중첩 객체 값",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null,
+   "saved": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · 품목 이름 NUL",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 500,
+   "code": null,
+   "field": null,
+   "total": null,
+   "saved": null
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "create · inputs 모르는 키(discount)",
+  "verdict": "INFO",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "discount",
+   "total": null,
+   "saved": null
+  },
+  "expected": null
+ },
+ {
+  "gate": "r2-Q",
+  "item": "revision · rev 음수 단가",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.price_kg"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "revision · rev 단가 1e12",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.price_kg"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "revision · rev 수량 1.5",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.quantity"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "revision · rev 모르는 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.discount"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "revision · rev 재질 목록 밖",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.material"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "revision · rev 0행",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "revision · rev 정상",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "r2-Q",
+  "item": "old · old 음수 단가",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{'detail': [{'loc': ['body', 'lines.0.price_kg'], 'msg': '허용 범위(0 이상 1000000 이하) 밖입니다', 'type': 'invalid_input'}]}"
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "old · old 단가 1e12",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{'detail': [{'loc': ['body', 'lines.0.price_kg'], 'msg': '허용 범위(0 이상 1000000 이하) 밖입니다', 'type': 'invalid_input'}]}"
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "old · old 수량 1.5",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{'detail': [{'loc': ['body', 'lines.0.quantity'], 'msg': '정수여야 합니다', 'type': 'invalid_input'}]}"
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "old · old 재질 목록 밖",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{'detail': [{'loc': ['body', 'lines.0.material'], 'msg': '회사 범주 목록에 없는 값입니다', 'type': 'invalid_input'}]}"
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "old · old 모르는 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{'detail': [{'loc': ['body', 'bom', 0], 'msg': 'BOM 행 키는 name, material, quantity, mass_kg, price_kg', 'type': 'model_attributes_type'}]}"
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "old · old 이름 81자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "body": "{'detail': [{'loc': ['body', 'lines.0.name'], 'msg': '1~80자입니다', 'type': 'invalid_input'}]}"
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-Q",
+  "item": "old · old 정상",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "body": "{'drawing_id': 'doc_01M4RXJTQBCP10N3W0MTB3PCES', 'filename': 'sample.dxf', 'status': '검토용 초안', 'input': {'drawing_id': 'doc_01M4RXJTQBCP10N3W0MTB3PCES', 'product': '반응기', 'material': 'STS316L', 'bom':"
+  },
+  "expected": 200
+ }
+]

@@ -1,0 +1,16 @@
+<local>/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+G2-A01    등록부 params.file '../secret.txt' → 기동 거부  PASS  "RegistryRejected"
+G2-A01    등록부 params.file '/etc/passwd' → 기동 거부  PASS  "RegistryRejected"
+G2-A01    등록부 params.file '%2e%2e/secret.txt' → 기동 거부  PASS  "RegistryRejected"
+G2-A01    등록부 params.file 'a/../../secret.txt' → 기동 거부  PASS  "RegistryRejected"
+G2-A01    pack_file params · samples 안 링크 → 밖  PASS  {"status": 404, "leak": false}
+G2-A01    pack_file params · 정상 ok.json  PASS  {"status": 200, "leak": false}
+G2-A01    pack_file 경로 인자 · ..%2Fsecret.txt  PASS  {"status": 404, "leak": false}
+G2-A01    pack_file 경로 인자 · %2e%2e%2fsecret.txt  PASS  {"status": 404, "leak": false}
+G2-A01    pack_file 경로 인자 · link.dxf  PASS  {"status": 404, "leak": false}
+G2-A01    pack_file 경로 인자 · ....//secret.txt  PASS  {"status": 404, "leak": false}
+G2-A01    pack_file 경로 인자 · ok.json  PASS  {"status": 200, "leak": false}
+G2-A01    pack_file 키 없음 → 401  PASS  {"status": 401}
+
+== 12 검사 · FAIL 0 · WARN 0 → probe_samples-result.json

@@ -1,0 +1,5364 @@
+{
+ "errors_500": [],
+ "companies": {
+  "krs": {
+   "GET /api/health (before production)": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "status",
+      "model_ready"
+     ],
+     "types": {
+      "status": "str",
+      "model_ready": "bool"
+     },
+     "scalars": {
+      "status": "ok",
+      "model_ready": false
+     },
+     "body": {
+      "status": "ok",
+      "model_ready": false
+     }
+    }
+   ],
+   "GET /api/health": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "status",
+      "model_ready"
+     ],
+     "types": {
+      "status": "str",
+      "model_ready": "bool"
+     },
+     "scalars": {
+      "status": "ok",
+      "model_ready": true
+     },
+     "body": {
+      "status": "ok",
+      "model_ready": true
+     }
+    }
+   ],
+   "GET /api/ml/overview": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "quality",
+      "models",
+      "champion",
+      "features",
+      "target",
+      "data_mode"
+     ],
+     "types": {
+      "quality": "dict",
+      "models": "list",
+      "champion": "str",
+      "features": "list",
+      "target": "str",
+      "data_mode": "str"
+     },
+     "scalars": {
+      "champion": "gbr",
+      "target": "joint_strength_mpa",
+      "data_mode": "재현 가능한 데모 샘플"
+     },
+     "quality.keys": [
+      "source_rows",
+      "missing_cells"
+     ],
+     "quality.types": {
+      "source_rows": "int",
+      "missing_cells": "int"
+     },
+     "quality.scalars": {
+      "source_rows": 720,
+      "missing_cells": 24
+     },
+     "models.keys": [
+      "name",
+      "r2",
+      "mae",
+      "rmse"
+     ],
+     "models[0].types": {
+      "name": "str",
+      "r2": "float",
+      "mae": "float",
+      "rmse": "float"
+     },
+     "models[0].scalars": {
+      "name": "gbr",
+      "r2": 0.8703,
+      "mae": 1.986,
+      "rmse": 2.844
+     },
+     "models.len": 5,
+     "features.keys": null,
+     "target.keys": null
+    }
+   ],
+   "GET /api/ml/samples": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "total",
+      "items"
+     ],
+     "types": {
+      "total": "int",
+      "items": "list"
+     },
+     "scalars": {
+      "total": 720
+     },
+     "items.keys": [
+      "lot_id",
+      "sn_pct",
+      "ag_pct",
+      "cu_pct",
+      "sb_pct",
+      "flux_pct",
+      "temperature_c",
+      "mixing_min",
+      "supplier",
+      "joint_strength_mpa"
+     ],
+     "items[0].types": {
+      "lot_id": "str",
+      "sn_pct": "float",
+      "ag_pct": "float",
+      "cu_pct": "float",
+      "sb_pct": "float",
+      "flux_pct": "float",
+      "temperature_c": "float",
+      "mixing_min": "float",
+      "supplier": "str",
+      "joint_strength_mpa": "float"
+     },
+     "items[0].scalars": {
+      "lot_id": "KS-DEMO-20240000",
+      "sn_pct": 95.99984388180499,
+      "ag_pct": 2.733668893913142,
+      "cu_pct": 0.4444524212123949,
+      "sb_pct": 0.15179045232637767,
+      "flux_pct": 0.6702443507430862,
+      "temperature_c": 234.21871548677322,
+      "mixing_min": 76.05146486726977,
+      "supplier": "A",
+      "joint_strength_mpa": 36.08328689464832
+     },
+     "items.len": 12
+    }
+   ],
+   "GET /api/ml/samples?limit=0": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "limit"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "POST /api/ml/optimize": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "feasible",
+      "model",
+      "target_strength",
+      "predicted_strength",
+      "cost_index",
+      "composition",
+      "process",
+      "notice"
+     ],
+     "types": {
+      "feasible": "bool",
+      "model": "str",
+      "target_strength": "float",
+      "predicted_strength": "float",
+      "cost_index": "float",
+      "composition": "dict",
+      "process": "dict",
+      "notice": "str"
+     },
+     "scalars": {
+      "feasible": true,
+      "model": "gbr",
+      "target_strength": 47.0,
+      "predicted_strength": 47.68,
+      "cost_index": 61.25,
+      "notice": "샘플 데이터 기반 추천입니다. 현장 적용 전 품질 승인과 시험 생산이 필요합니다."
+     },
+     "composition.keys": [
+      "sn_pct",
+      "ag_pct",
+      "cu_pct",
+      "sb_pct",
+      "flux_pct"
+     ],
+     "composition.types": {
+      "sn_pct": "float",
+      "ag_pct": "float",
+      "cu_pct": "float",
+      "sb_pct": "float",
+      "flux_pct": "float"
+     },
+     "composition.scalars": {
+      "sn_pct": 95.13,
+      "ag_pct": 2.56,
+      "cu_pct": 0.92,
+      "sb_pct": 1.25,
+      "flux_pct": 0.14
+     },
+     "process.keys": [
+      "temperature_c",
+      "mixing_min",
+      "supplier"
+     ],
+     "process.types": {
+      "temperature_c": "float",
+      "mixing_min": "float",
+      "supplier": "str"
+     },
+     "process.scalars": {
+      "temperature_c": 249.0,
+      "mixing_min": 51.0,
+      "supplier": "A"
+     },
+     "body": {
+      "feasible": true,
+      "model": "gbr",
+      "target_strength": 47.0,
+      "predicted_strength": 47.68,
+      "cost_index": 61.25,
+      "composition": {
+       "sn_pct": 95.13,
+       "ag_pct": 2.56,
+       "cu_pct": 0.92,
+       "sb_pct": 1.25,
+       "flux_pct": 0.14
+      },
+      "process": {
+       "temperature_c": 249.0,
+       "mixing_min": 51.0,
+       "supplier": "A"
+      },
+      "notice": "샘플 데이터 기반 추천입니다. 현장 적용 전 품질 승인과 시험 생산이 필요합니다."
+     }
+    }
+   ],
+   "POST /api/ml/optimize {}": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "feasible",
+      "model",
+      "target_strength",
+      "predicted_strength",
+      "cost_index",
+      "composition",
+      "process",
+      "notice"
+     ],
+     "types": {
+      "feasible": "bool",
+      "model": "str",
+      "target_strength": "float",
+      "predicted_strength": "float",
+      "cost_index": "float",
+      "composition": "dict",
+      "process": "dict",
+      "notice": "str"
+     },
+     "scalars": {
+      "feasible": true,
+      "model": "gbr",
+      "target_strength": 48.0,
+      "predicted_strength": 48.27,
+      "cost_index": 61.68,
+      "notice": "샘플 데이터 기반 추천입니다. 현장 적용 전 품질 승인과 시험 생산이 필요합니다."
+     },
+     "body": {
+      "feasible": true,
+      "model": "gbr",
+      "target_strength": 48.0,
+      "predicted_strength": 48.27,
+      "cost_index": 61.68,
+      "composition": {
+       "sn_pct": 94.66,
+       "ag_pct": 2.58,
+       "cu_pct": 0.74,
+       "sb_pct": 1.52,
+       "flux_pct": 0.5
+      },
+      "process": {
+       "temperature_c": 242.5,
+       "mixing_min": 51.0,
+       "supplier": "A"
+      },
+      "notice": "샘플 데이터 기반 추천입니다. 현장 적용 전 품질 승인과 시험 생산이 필요합니다."
+     }
+    }
+   ],
+   "POST /api/ml/optimize target 500": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body",
+         "target_strength"
+        ],
+        "msg": "30 이상 70 이하",
+        "type": "less_than_equal"
+       }
+      ]
+     }
+    }
+   ],
+   "POST /api/quality/predict": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "model",
+      "predicted_strength",
+      "status",
+      "warnings",
+      "notice"
+     ],
+     "types": {
+      "model": "str",
+      "predicted_strength": "float",
+      "status": "str",
+      "warnings": "list",
+      "notice": "str"
+     },
+     "scalars": {
+      "model": "gbr",
+      "predicted_strength": 45.52,
+      "status": "정상",
+      "notice": "데모 모델 예측이며 출하 승인이나 품질 판정을 대체하지 않습니다."
+     },
+     "body": {
+      "model": "gbr",
+      "predicted_strength": 45.52,
+      "status": "정상",
+      "warnings": [],
+      "notice": "데모 모델 예측이며 출하 승인이나 품질 판정을 대체하지 않습니다."
+     }
+    }
+   ],
+   "POST /api/quality/predict temp262": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "model",
+      "predicted_strength",
+      "status",
+      "warnings",
+      "notice"
+     ],
+     "types": {
+      "model": "str",
+      "predicted_strength": "float",
+      "status": "str",
+      "warnings": "list",
+      "notice": "str"
+     },
+     "scalars": {
+      "model": "gbr",
+      "predicted_strength": 33.69,
+      "status": "주의",
+      "notice": "데모 모델 예측이며 출하 승인이나 품질 판정을 대체하지 않습니다."
+     },
+     "body": {
+      "model": "gbr",
+      "predicted_strength": 33.69,
+      "status": "주의",
+      "warnings": [
+       "권장 용탕 온도(232~260°C)를 벗어났습니다.",
+       "예측 접합강도가 내부 검토 기준 35 MPa보다 낮습니다."
+      ],
+      "notice": "데모 모델 예측이며 출하 승인이나 품질 판정을 대체하지 않습니다."
+     }
+    }
+   ],
+   "POST /api/quality/predict unbalanced": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "조성비 합계가 100%여야 합니다. 현재 94.000%입니다."
+     },
+     "body": {
+      "detail": "조성비 합계가 100%여야 합니다. 현재 94.000%입니다."
+     }
+    }
+   ],
+   "POST /api/quality/predict missing sn_pct": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body",
+         "sn_pct"
+        ],
+        "msg": "필수 항목입니다",
+        "type": "missing"
+       }
+      ]
+     }
+    }
+   ],
+   "POST /api/quality/predict supplier D": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body",
+         "supplier"
+        ],
+        "msg": "A · B · C 중 하나입니다",
+        "type": "literal_error"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/quality/overview (empty)": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "flagged_lots",
+      "review_threshold",
+      "flagged",
+      "notice"
+     ],
+     "types": {
+      "flagged_lots": "int",
+      "review_threshold": "float",
+      "flagged": "list",
+      "notice": "str"
+     },
+     "scalars": {
+      "flagged_lots": 0,
+      "review_threshold": 4.0,
+      "notice": "실측값과 모델 예측의 절대 오차가 4 MPa 이상인 LOT을 주의로 표시합니다."
+     },
+     "body": {
+      "flagged_lots": 0,
+      "review_threshold": 4.0,
+      "flagged": [],
+      "notice": "실측값과 모델 예측의 절대 오차가 4 MPa 이상인 LOT을 주의로 표시합니다."
+     }
+    }
+   ],
+   "GET /api/quality/overview": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "flagged_lots",
+      "review_threshold",
+      "flagged",
+      "notice"
+     ],
+     "types": {
+      "flagged_lots": "int",
+      "review_threshold": "float",
+      "flagged": "list",
+      "notice": "str"
+     },
+     "scalars": {
+      "flagged_lots": 16,
+      "review_threshold": 4.0,
+      "notice": "실측값과 모델 예측의 절대 오차가 4 MPa 이상인 LOT을 주의로 표시합니다."
+     },
+     "flagged.keys": [
+      "lot_id",
+      "actual_strength",
+      "predicted_strength",
+      "absolute_error",
+      "status"
+     ],
+     "flagged[0].types": {
+      "lot_id": "str",
+      "actual_strength": "float",
+      "predicted_strength": "float",
+      "absolute_error": "float",
+      "status": "str"
+     },
+     "flagged[0].scalars": {
+      "lot_id": "KS-DEMO-20240252",
+      "actual_strength": 22.8,
+      "predicted_strength": 28.4,
+      "absolute_error": 5.6,
+      "status": "주의"
+     },
+     "flagged.len": 12
+    }
+   ],
+   "GET /api/data/records": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "total",
+      "offset",
+      "limit",
+      "items",
+      "summary"
+     ],
+     "types": {
+      "total": "int",
+      "offset": "int",
+      "limit": "int",
+      "items": "list",
+      "summary": "dict"
+     },
+     "scalars": {
+      "total": 720,
+      "offset": 0,
+      "limit": 20
+     },
+     "items.keys": [
+      "lot_id",
+      "sn_pct",
+      "ag_pct",
+      "cu_pct",
+      "sb_pct",
+      "flux_pct",
+      "temperature_c",
+      "mixing_min",
+      "supplier",
+      "joint_strength_mpa",
+      "missing_fields",
+      "data_status"
+     ],
+     "items[0].types": {
+      "lot_id": "str",
+      "sn_pct": "float",
+      "ag_pct": "float",
+      "cu_pct": "float",
+      "sb_pct": "float",
+      "flux_pct": "float",
+      "temperature_c": "float",
+      "mixing_min": "float",
+      "supplier": "str",
+      "joint_strength_mpa": "float",
+      "missing_fields": "int",
+      "data_status": "str"
+     },
+     "items[0].scalars": {
+      "lot_id": "KS-DEMO-20240000",
+      "sn_pct": 95.9998438818,
+      "ag_pct": 2.7336688939,
+      "cu_pct": 0.4444524212,
+      "sb_pct": 0.1517904523,
+      "flux_pct": 0.6702443507,
+      "temperature_c": 234.2187154868,
+      "mixing_min": 76.0514648673,
+      "supplier": "A",
+      "joint_strength_mpa": 36.0832868946,
+      "missing_fields": 0,
+      "data_status": "정상"
+     },
+     "items.len": 20,
+     "summary.keys": [
+      "all",
+      "normal",
+      "missing",
+      "outlier"
+     ],
+     "summary.types": {
+      "all": "int",
+      "normal": "int",
+      "missing": "int",
+      "outlier": "int"
+     },
+     "summary.scalars": {
+      "all": 720,
+      "normal": 691,
+      "missing": 24,
+      "outlier": 5
+     }
+    }
+   ],
+   "GET /api/data/records?supplier=B&state=결측": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "total",
+      "offset",
+      "limit",
+      "items",
+      "summary"
+     ],
+     "types": {
+      "total": "int",
+      "offset": "int",
+      "limit": "int",
+      "items": "list",
+      "summary": "dict"
+     },
+     "scalars": {
+      "total": 12,
+      "offset": 0,
+      "limit": 5
+     },
+     "items.keys": [
+      "lot_id",
+      "sn_pct",
+      "ag_pct",
+      "cu_pct",
+      "sb_pct",
+      "flux_pct",
+      "temperature_c",
+      "mixing_min",
+      "supplier",
+      "joint_strength_mpa",
+      "missing_fields",
+      "data_status"
+     ],
+     "items[0].types": {
+      "lot_id": "str",
+      "sn_pct": "float",
+      "ag_pct": "float",
+      "cu_pct": "float",
+      "sb_pct": "float",
+      "flux_pct": "float",
+      "temperature_c": "float",
+      "mixing_min": "NoneType",
+      "supplier": "str",
+      "joint_strength_mpa": "float",
+      "missing_fields": "int",
+      "data_status": "str"
+     },
+     "items[0].scalars": {
+      "lot_id": "KS-DEMO-20240002",
+      "sn_pct": 95.9675571817,
+      "ag_pct": 1.8113295601,
+      "cu_pct": 0.9081905278,
+      "sb_pct": 0.8480101213,
+      "flux_pct": 0.4649126091,
+      "temperature_c": 244.6726377632,
+      "mixing_min": null,
+      "supplier": "B",
+      "joint_strength_mpa": 32.740193169,
+      "missing_fields": 1,
+      "data_status": "결측"
+     },
+     "items.len": 5,
+     "summary.keys": [
+      "all",
+      "normal",
+      "missing",
+      "outlier"
+     ],
+     "summary.types": {
+      "all": "int",
+      "normal": "int",
+      "missing": "int",
+      "outlier": "int"
+     },
+     "summary.scalars": {
+      "all": 720,
+      "normal": 0,
+      "missing": 12,
+      "outlier": 0
+     }
+    }
+   ],
+   "GET /api/data/records?limit=0": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "limit"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?limit=101": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "limit"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?offset=-1": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "offset"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?state=unknown": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "state"
+        ],
+        "msg": "정상 · 결측 · 이상 중 하나입니다",
+        "type": "literal_error"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?supplier=D": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "supplier"
+        ],
+        "msg": "A · B · C 중 하나입니다",
+        "type": "literal_error"
+       }
+      ]
+     }
+    }
+   ],
+   "AUTH nokey GET /api/ml/overview": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/ml/overview": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/ml/samples": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/ml/samples": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quality/overview": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quality/overview": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/data/records": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/data/records": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey POST /api/quality/predict": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/quality/predict": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey POST /api/ml/optimize": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/ml/optimize": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ]
+  },
+  "pc": {
+   "GET /api/health (before production)": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "status",
+      "model_ready",
+      "data_mode",
+      "product"
+     ],
+     "types": {
+      "status": "str",
+      "model_ready": "bool",
+      "data_mode": "str",
+      "product": "str"
+     },
+     "scalars": {
+      "status": "ok",
+      "model_ready": false,
+      "data_mode": "demo",
+      "product": "평창꽃순이김치"
+     },
+     "body": {
+      "status": "ok",
+      "model_ready": false,
+      "data_mode": "demo",
+      "product": "평창꽃순이김치"
+     }
+    }
+   ],
+   "GET /api/health": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "status",
+      "model_ready",
+      "data_mode",
+      "product"
+     ],
+     "types": {
+      "status": "str",
+      "model_ready": "bool",
+      "data_mode": "str",
+      "product": "str"
+     },
+     "scalars": {
+      "status": "ok",
+      "model_ready": true,
+      "data_mode": "demo",
+      "product": "평창꽃순이김치"
+     },
+     "body": {
+      "status": "ok",
+      "model_ready": true,
+      "data_mode": "demo",
+      "product": "평창꽃순이김치"
+     }
+    }
+   ],
+   "GET /api/ml/overview": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "data_mode",
+      "rows",
+      "missing_cells",
+      "duplicate_lots",
+      "features",
+      "target",
+      "champion",
+      "metrics",
+      "warning"
+     ],
+     "types": {
+      "data_mode": "str",
+      "rows": "int",
+      "missing_cells": "int",
+      "duplicate_lots": "int",
+      "features": "list",
+      "target": "dict",
+      "champion": "str",
+      "metrics": "list",
+      "warning": "str"
+     },
+     "scalars": {
+      "data_mode": "demo",
+      "rows": 420,
+      "missing_cells": 15,
+      "duplicate_lots": 0,
+      "champion": "gbr",
+      "warning": "합성 데모 데이터의 성능이며 실제 김치 품질 성능이 아닙니다."
+     },
+     "metrics.keys": [
+      "model",
+      "r2",
+      "mae_score",
+      "rmse_score"
+     ],
+     "metrics[0].types": {
+      "model": "str",
+      "r2": "float",
+      "mae_score": "float",
+      "rmse_score": "float"
+     },
+     "metrics[0].scalars": {
+      "model": "gbr",
+      "r2": 0.2235,
+      "mae_score": 1.926,
+      "rmse_score": 2.541
+     },
+     "metrics.len": 3,
+     "target.keys": [
+      "name",
+      "unit"
+     ],
+     "target.types": {
+      "name": "str",
+      "unit": "str"
+     },
+     "target.scalars": {
+      "name": "sensory_score",
+      "unit": "점"
+     }
+    }
+   ],
+   "POST /api/ml/optimize": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "feasible",
+      "prediction_score",
+      "material_cost_index",
+      "settings",
+      "context",
+      "unmet_constraints",
+      "model",
+      "notice"
+     ],
+     "types": {
+      "feasible": "bool",
+      "prediction_score": "float",
+      "material_cost_index": "float",
+      "settings": "dict",
+      "context": "dict",
+      "unmet_constraints": "list",
+      "model": "str",
+      "notice": "str"
+     },
+     "scalars": {
+      "feasible": true,
+      "prediction_score": 81.57,
+      "material_cost_index": 67.12,
+      "model": "gbr",
+      "notice": "데모 탐색 결과이며 승인 배합표 확인과 시험 생산 후 적용해야 합니다."
+     },
+     "settings.keys": [
+      "cabbage_pct",
+      "radish_pct",
+      "seasoning_pct",
+      "salt_pct",
+      "brine_salinity_pct",
+      "brining_hours",
+      "fermentation_temp_c",
+      "fermentation_hours",
+      "storage_temp_c"
+     ],
+     "settings.types": {
+      "cabbage_pct": "float",
+      "radish_pct": "float",
+      "seasoning_pct": "float",
+      "salt_pct": "float",
+      "brine_salinity_pct": "float",
+      "brining_hours": "float",
+      "fermentation_temp_c": "float",
+      "fermentation_hours": "float",
+      "storage_temp_c": "float"
+     },
+     "settings.scalars": {
+      "cabbage_pct": 72.0,
+      "radish_pct": 10.0,
+      "seasoning_pct": 15.5,
+      "salt_pct": 2.5,
+      "brine_salinity_pct": 11.3,
+      "brining_hours": 12.5,
+      "fermentation_temp_c": 5.5,
+      "fermentation_hours": 34.0,
+      "storage_temp_c": -0.5
+     },
+     "context.keys": [
+      "cabbage_origin",
+      "line"
+     ],
+     "context.types": {
+      "cabbage_origin": "str",
+      "line": "str"
+     },
+     "context.scalars": {
+      "cabbage_origin": "평창",
+      "line": "K2"
+     },
+     "body": {
+      "feasible": true,
+      "prediction_score": 81.57,
+      "material_cost_index": 67.12,
+      "settings": {
+       "cabbage_pct": 72.0,
+       "radish_pct": 10.0,
+       "seasoning_pct": 15.5,
+       "salt_pct": 2.5,
+       "brine_salinity_pct": 11.3,
+       "brining_hours": 12.5,
+       "fermentation_temp_c": 5.5,
+       "fermentation_hours": 34.0,
+       "storage_temp_c": -0.5
+      },
+      "context": {
+       "cabbage_origin": "평창",
+       "line": "K2"
+      },
+      "unmet_constraints": [],
+      "model": "gbr",
+      "notice": "데모 탐색 결과이며 승인 배합표 확인과 시험 생산 후 적용해야 합니다."
+     }
+    }
+   ],
+   "POST /api/ml/optimize infeasible": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "feasible",
+      "prediction_score",
+      "material_cost_index",
+      "settings",
+      "context",
+      "unmet_constraints",
+      "model",
+      "notice"
+     ],
+     "types": {
+      "feasible": "bool",
+      "prediction_score": "float",
+      "material_cost_index": "float",
+      "settings": "dict",
+      "context": "dict",
+      "unmet_constraints": "list",
+      "model": "str",
+      "notice": "str"
+     },
+     "scalars": {
+      "feasible": false,
+      "prediction_score": 81.59,
+      "material_cost_index": 67.3,
+      "model": "gbr",
+      "notice": "데모 탐색 결과이며 승인 배합표 확인과 시험 생산 후 적용해야 합니다."
+     },
+     "body": {
+      "feasible": false,
+      "prediction_score": 81.59,
+      "material_cost_index": 67.3,
+      "settings": {
+       "cabbage_pct": 71.5,
+       "radish_pct": 10.5,
+       "seasoning_pct": 15.7,
+       "salt_pct": 2.3,
+       "brine_salinity_pct": 10.9,
+       "brining_hours": 11.5,
+       "fermentation_temp_c": 5.5,
+       "fermentation_hours": 35.0,
+       "storage_temp_c": 1.0
+      },
+      "context": {
+       "cabbage_origin": "평창",
+       "line": "K1"
+      },
+      "unmet_constraints": [
+       "목표 품질점수 95.0점 미달",
+       "원재료비 지수 상한 초과"
+      ],
+      "model": "gbr",
+      "notice": "데모 탐색 결과이며 승인 배합표 확인과 시험 생산 후 적용해야 합니다."
+     }
+    }
+   ],
+   "POST /api/ml/optimize missing target": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body",
+         "target_score"
+        ],
+        "msg": "필수 항목입니다",
+        "type": "missing"
+       }
+      ]
+     }
+    }
+   ],
+   "POST /api/quality/predict": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "prediction_score",
+      "status",
+      "warnings",
+      "model",
+      "notice"
+     ],
+     "types": {
+      "prediction_score": "float",
+      "status": "str",
+      "warnings": "list",
+      "model": "str",
+      "notice": "str"
+     },
+     "scalars": {
+      "prediction_score": 81.98,
+      "status": "예측 범위 양호",
+      "model": "gbr",
+      "notice": "모델 예측은 관능검사, 이화학검사 또는 출하 승인을 대체하지 않습니다."
+     },
+     "body": {
+      "prediction_score": 81.98,
+      "status": "예측 범위 양호",
+      "warnings": [],
+      "model": "gbr",
+      "notice": "모델 예측은 관능검사, 이화학검사 또는 출하 승인을 대체하지 않습니다."
+     }
+    }
+   ],
+   "POST /api/quality/predict warn": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "prediction_score",
+      "status",
+      "warnings",
+      "model",
+      "notice"
+     ],
+     "types": {
+      "prediction_score": "float",
+      "status": "str",
+      "warnings": "list",
+      "model": "str",
+      "notice": "str"
+     },
+     "scalars": {
+      "prediction_score": 81.98,
+      "status": "검토 필요",
+      "model": "gbr",
+      "notice": "모델 예측은 관능검사, 이화학검사 또는 출하 승인을 대체하지 않습니다."
+     },
+     "body": {
+      "prediction_score": 81.98,
+      "status": "검토 필요",
+      "warnings": [
+       "배합 합계가 100.50%입니다(데모 허용 99.7~100.3%)."
+      ],
+      "model": "gbr",
+      "notice": "모델 예측은 관능검사, 이화학검사 또는 출하 승인을 대체하지 않습니다."
+     }
+    }
+   ],
+   "POST /api/quality/predict reject": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body"
+        ],
+        "msg": "Value error, 배추·무·양념·소금 배합 합계는 98~102% 범위여야 합니다",
+        "type": "value_error"
+       }
+      ]
+     }
+    }
+   ],
+   "POST /api/quality/predict line K3": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body",
+         "line"
+        ],
+        "msg": "허용된 범주 값이 아닙니다",
+        "type": "out_of_bounds"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/quality/overview (empty)": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "residual_review_threshold",
+      "priority_queue",
+      "notice"
+     ],
+     "types": {
+      "residual_review_threshold": "NoneType",
+      "priority_queue": "list",
+      "notice": "str"
+     },
+     "scalars": {
+      "residual_review_threshold": null,
+      "notice": "잔차 우선순위는 불량 판정이 아니라 데이터/모델 검토 순서입니다."
+     },
+     "body": {
+      "residual_review_threshold": null,
+      "priority_queue": [],
+      "notice": "잔차 우선순위는 불량 판정이 아니라 데이터/모델 검토 순서입니다."
+     }
+    }
+   ],
+   "GET /api/quality/overview": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "residual_review_threshold",
+      "priority_queue",
+      "notice"
+     ],
+     "types": {
+      "residual_review_threshold": "float",
+      "priority_queue": "list",
+      "notice": "str"
+     },
+     "scalars": {
+      "residual_review_threshold": 3.6,
+      "notice": "잔차 우선순위는 불량 판정이 아니라 데이터/모델 검토 순서입니다."
+     },
+     "priority_queue.keys": [
+      "lot_id",
+      "measured_score",
+      "predicted_score",
+      "residual_score"
+     ],
+     "priority_queue[0].types": {
+      "lot_id": "str",
+      "measured_score": "float",
+      "predicted_score": "float",
+      "residual_score": "float"
+     },
+     "priority_queue[0].scalars": {
+      "lot_id": "PC-K-DEMO-0364",
+      "measured_score": 69.33,
+      "predicted_score": 74.54,
+      "residual_score": 5.21
+     },
+     "priority_queue.len": 6
+    }
+   ],
+   "GET /api/data/records": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "total",
+      "limit",
+      "offset",
+      "records"
+     ],
+     "types": {
+      "total": "int",
+      "limit": "int",
+      "offset": "int",
+      "records": "list"
+     },
+     "scalars": {
+      "total": 420,
+      "limit": 25,
+      "offset": 0
+     },
+     "records.keys": [
+      "lot_id",
+      "produced_at",
+      "cabbage_pct",
+      "radish_pct",
+      "seasoning_pct",
+      "salt_pct",
+      "brine_salinity_pct",
+      "brining_hours",
+      "fermentation_temp_c",
+      "fermentation_hours",
+      "storage_temp_c",
+      "cabbage_origin",
+      "line",
+      "sensory_score"
+     ],
+     "records[0].types": {
+      "lot_id": "str",
+      "produced_at": "str",
+      "cabbage_pct": "float",
+      "radish_pct": "float",
+      "seasoning_pct": "float",
+      "salt_pct": "float",
+      "brine_salinity_pct": "float",
+      "brining_hours": "float",
+      "fermentation_temp_c": "float",
+      "fermentation_hours": "float",
+      "storage_temp_c": "float",
+      "cabbage_origin": "str",
+      "line": "str",
+      "sensory_score": "float"
+     },
+     "records[0].scalars": {
+      "lot_id": "PC-K-DEMO-0420",
+      "produced_at": "2025-07-30T12:00:00+09:00",
+      "cabbage_pct": 66.8073528,
+      "radish_pct": 9.9332812766,
+      "seasoning_pct": 21.6889292759,
+      "salt_pct": 1.5704366475,
+      "brine_salinity_pct": 9.771766946,
+      "brining_hours": 9.9986087025,
+      "fermentation_temp_c": 5.553072461,
+      "fermentation_hours": 48.068950484,
+      "storage_temp_c": -0.1089657176,
+      "cabbage_origin": "평창",
+      "line": "K1",
+      "sensory_score": 79.4595906315
+     },
+     "records.len": 25
+    }
+   ],
+   "GET /api/data/records?filters": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "total",
+      "limit",
+      "offset",
+      "records"
+     ],
+     "types": {
+      "total": "int",
+      "limit": "int",
+      "offset": "int",
+      "records": "list"
+     },
+     "scalars": {
+      "total": 182,
+      "limit": 7,
+      "offset": 0
+     },
+     "records.keys": [
+      "lot_id",
+      "produced_at",
+      "cabbage_pct",
+      "radish_pct",
+      "seasoning_pct",
+      "salt_pct",
+      "brine_salinity_pct",
+      "brining_hours",
+      "fermentation_temp_c",
+      "fermentation_hours",
+      "storage_temp_c",
+      "cabbage_origin",
+      "line",
+      "sensory_score"
+     ],
+     "records[0].types": {
+      "lot_id": "str",
+      "produced_at": "str",
+      "cabbage_pct": "float",
+      "radish_pct": "float",
+      "seasoning_pct": "float",
+      "salt_pct": "float",
+      "brine_salinity_pct": "float",
+      "brining_hours": "float",
+      "fermentation_temp_c": "float",
+      "fermentation_hours": "float",
+      "storage_temp_c": "float",
+      "cabbage_origin": "str",
+      "line": "str",
+      "sensory_score": "float"
+     },
+     "records[0].scalars": {
+      "lot_id": "PC-K-DEMO-0420",
+      "produced_at": "2025-07-30T12:00:00+09:00",
+      "cabbage_pct": 66.8073528,
+      "radish_pct": 9.9332812766,
+      "seasoning_pct": 21.6889292759,
+      "salt_pct": 1.5704366475,
+      "brine_salinity_pct": 9.771766946,
+      "brining_hours": 9.9986087025,
+      "fermentation_temp_c": 5.553072461,
+      "fermentation_hours": 48.068950484,
+      "storage_temp_c": -0.1089657176,
+      "cabbage_origin": "평창",
+      "line": "K1",
+      "sensory_score": 79.4595906315
+     },
+     "records.len": 7
+    }
+   ],
+   "GET /api/data/records?limit=101": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "limit"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?limit=0": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "limit"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?offset=-1": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "offset"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?line=K3": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "line"
+        ],
+        "msg": "허용된 값이 아닙니다",
+        "type": "literal_error"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?cabbage_origin=invalid": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "cabbage_origin"
+        ],
+        "msg": "허용된 값이 아닙니다",
+        "type": "literal_error"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/data/records?search=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "search"
+        ],
+        "msg": "30자 이하",
+        "type": "string_too_long"
+       }
+      ]
+     }
+    }
+   ],
+   "AUTH nokey GET /api/ml/overview": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/ml/overview": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quality/overview": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quality/overview": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/data/records": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/data/records": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey POST /api/quality/predict": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/quality/predict": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey POST /api/ml/optimize": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/ml/optimize": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ]
+  },
+  "ot": {
+   "GET /api/health": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "status",
+      "model_ready",
+      "version",
+      "mode"
+     ],
+     "types": {
+      "status": "str",
+      "model_ready": "bool",
+      "version": "str",
+      "mode": "str"
+     },
+     "scalars": {
+      "status": "ok",
+      "model_ready": true,
+      "version": "v1",
+      "mode": "synthetic_demo"
+     },
+     "body": {
+      "status": "ok",
+      "model_ready": true,
+      "version": "v1",
+      "mode": "synthetic_demo"
+     }
+    }
+   ],
+   "GET /api/ml/overview": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "version",
+      "mode",
+      "job_rows",
+      "missing_cells",
+      "champion",
+      "metrics",
+      "test_metrics",
+      "split",
+      "features",
+      "profiles",
+      "warning"
+     ],
+     "types": {
+      "version": "str",
+      "mode": "str",
+      "job_rows": "int",
+      "missing_cells": "int",
+      "champion": "str",
+      "metrics": "list",
+      "test_metrics": "dict",
+      "split": "dict",
+      "features": "dict",
+      "profiles": "list",
+      "warning": "str"
+     },
+     "scalars": {
+      "version": "v1",
+      "mode": "synthetic_demo",
+      "job_rows": 900,
+      "missing_cells": 12,
+      "champion": "ridge",
+      "warning": "객체 분류는 합성 기하 특징, 시간 예측은 합성 작업 이력으로 학습했습니다. 표시 성능은 실제 고객 CAD 인식률·견적 정확도가 아닙니다."
+     },
+     "metrics.keys": [
+      "model",
+      "mae",
+      "rmse",
+      "r2"
+     ],
+     "metrics[0].types": {
+      "model": "str",
+      "mae": "float",
+      "rmse": "float",
+      "r2": "float"
+     },
+     "metrics[0].scalars": {
+      "model": "ridge",
+      "mae": 0.3031,
+      "rmse": 0.3928,
+      "r2": 0.9778
+     },
+     "metrics.len": 4,
+     "test_metrics.keys": [
+      "mae",
+      "rmse",
+      "r2"
+     ],
+     "test_metrics.types": {
+      "mae": "float",
+      "rmse": "float",
+      "r2": "float"
+     },
+     "test_metrics.scalars": {
+      "mae": 0.2956,
+      "rmse": 0.372,
+      "r2": 0.9775
+     },
+     "split.keys": [
+      "jobs"
+     ],
+     "split.types": {
+      "jobs": "list"
+     },
+     "split.scalars": {},
+     "features.keys": [
+      "length",
+      "width",
+      "thickness",
+      "holes",
+      "slots",
+      "bends"
+     ],
+     "features.types": {
+      "length": "dict",
+      "width": "dict",
+      "thickness": "dict",
+      "holes": "dict",
+      "slots": "dict",
+      "bends": "dict"
+     },
+     "features.scalars": {},
+     "features.length.keys": [
+      "label",
+      "unit",
+      "min",
+      "max",
+      "default"
+     ],
+     "features.length.types": {
+      "label": "str",
+      "unit": "str",
+      "min": "int",
+      "max": "int",
+      "default": "int"
+     },
+     "features.length.scalars": {
+      "label": "제품 길이",
+      "unit": "mm",
+      "min": 100,
+      "max": 6000,
+      "default": 1200
+     }
+    }
+   ],
+   "GET /api/data/demo": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "manifest",
+      "cad",
+      "quotes"
+     ],
+     "types": {
+      "manifest": "dict",
+      "cad": "list",
+      "quotes": "list"
+     },
+     "scalars": {},
+     "manifest.keys": [
+      "dataset",
+      "version",
+      "source",
+      "counts",
+      "data_mode",
+      "limitations",
+      "redacted"
+     ],
+     "manifest.types": {
+      "dataset": "str",
+      "version": "str",
+      "source": "dict",
+      "counts": "dict",
+      "data_mode": "str",
+      "limitations": "list",
+      "redacted": "str"
+     },
+     "manifest.scalars": {
+      "dataset": "onetouch-cad-reference-demo",
+      "version": "2026.09",
+      "data_mode": "synthetic_reference",
+      "redacted": "원본 도면 파일 이름 · 제품명 · 제품 모델 코드는 공개 저장소에 옮기지 않는다(D2-65)"
+     },
+     "cad.keys": [
+      "sample_id",
+      "source_pdf",
+      "source_cad",
+      "source_product",
+      "source_type",
+      "component_type",
+      "material",
+      "profile",
+      "length_mm",
+      "width_mm",
+      "thickness_mm",
+      "holes",
+      "slots",
+      "bends",
+      "model_confidence",
+      "recognition_status",
+      "review_reason",
+      "synthetic_reference"
+     ],
+     "cad[0].types": {
+      "sample_id": "str",
+      "source_pdf": "str",
+      "source_cad": "str",
+      "source_product": "str",
+      "source_type": "str",
+      "component_type": "str",
+      "material": "str",
+      "profile": "str",
+      "length_mm": "int",
+      "width_mm": "int",
+      "thickness_mm": "float",
+      "holes": "int",
+      "slots": "int",
+      "bends": "int",
+      "model_confidence": "float",
+      "recognition_status": "str",
+      "review_reason": "str",
+      "synthetic_reference": "bool"
+     },
+     "cad[0].scalars": {
+      "sample_id": "OT-REF-001",
+      "source_pdf": "비공개",
+      "source_cad": "비공개",
+      "source_product": "비공개",
+      "source_type": "assembly_reference",
+      "component_type": "챔버 프레임",
+      "material": "SUS304",
+      "profile": "각관",
+      "length_mm": 420,
+      "width_mm": 80,
+      "thickness_mm": 1.5,
+      "holes": 2,
+      "slots": 0,
+      "bends": 1,
+      "model_confidence": 0.82,
+      "recognition_status": "검토 필요",
+      "review_reason": "조립도 기준 후보 단품이며 실제 부품 도면·치수 확인 필요",
+      "synthetic_reference": true
+     },
+     "cad.len": 20,
+     "quotes.keys": [
+      "quote_id",
+      "sample_id",
+      "source_product",
+      "component_type",
+      "material",
+      "profile",
+      "length_mm",
+      "width_mm",
+      "thickness_mm",
+      "holes",
+      "slots",
+      "bends",
+      "quantity",
+      "minutes_per_piece",
+      "weight_per_piece_kg",
+      "material_cost_krw",
+      "processing_cost_krw",
+      "setup_cost_krw",
+      "markup_cost_krw",
+      "subtotal_krw",
+      "vat_krw",
+      "total_krw",
+      "status",
+      "pricing_basis",
+      "synthetic_reference"
+     ],
+     "quotes[0].types": {
+      "quote_id": "str",
+      "sample_id": "str",
+      "source_product": "str",
+      "component_type": "str",
+      "material": "str",
+      "profile": "str",
+      "length_mm": "int",
+      "width_mm": "int",
+      "thickness_mm": "float",
+      "holes": "int",
+      "slots": "int",
+      "bends": "int",
+      "quantity": "int",
+      "minutes_per_piece": "float",
+      "weight_per_piece_kg": "float",
+      "material_cost_krw": "int",
+      "processing_cost_krw": "int",
+      "setup_cost_krw": "int",
+      "markup_cost_krw": "int",
+      "subtotal_krw": "int",
+      "vat_krw": "int",
+      "total_krw": "int",
+      "status": "str",
+      "pricing_basis": "str",
+      "synthetic_reference": "bool"
+     },
+     "quotes[0].scalars": {
+      "quote_id": "QT-REF-001",
+      "sample_id": "OT-REF-001",
+      "source_product": "비공개",
+      "component_type": "챔버 프레임",
+      "material": "SUS304",
+      "profile": "각관",
+      "length_mm": 420,
+      "width_mm": 80,
+      "thickness_mm": 1.5,
+      "holes": 2,
+      "slots": 0,
+      "bends": 1,
+      "quantity": 10,
+      "minutes_per_piece": 3.9284,
+      "weight_per_piece_kg": 0.3997,
+      "material_cost_krw": 19424,
+      "processing_cost_krw": 35356,
+      "setup_cost_krw": 31500,
+      "markup_cost_krw": 12942,
+      "subtotal_krw": 99222,
+      "vat_krw": 9922,
+      "total_krw": 109144,
+      "status": "검토용 초안",
+      "pricing_basis": "합성 모델·예시 단가",
+      "synthetic_reference": true
+     },
+     "quotes.len": 20
+    }
+   ],
+   "GET /api/cad/sample.dxf": [
+    {
+     "status": 200,
+     "content_type": "application/dxf",
+     "len": 719,
+     "content_disposition": "attachment; filename=\"sample.dxf\""
+    }
+   ],
+   "POST /api/cad/demo": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "filename",
+      "unit",
+      "source_unit",
+      "objects",
+      "counts",
+      "bbox",
+      "dimensions",
+      "warnings",
+      "entity_count",
+      "data_mode",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "filename": "str",
+      "unit": "str",
+      "source_unit": "str",
+      "objects": "list",
+      "counts": "dict",
+      "bbox": "list",
+      "dimensions": "dict",
+      "warnings": "list",
+      "entity_count": "int",
+      "data_mode": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "filename": "sample.dxf",
+      "unit": "mm",
+      "source_unit": "mm",
+      "entity_count": 9,
+      "data_mode": "synthetic_demo",
+      "id": "doc_01M4RXR1K89T5WNMNW17A6WX1S",
+      "created_at": "2026-10-13T05:44:25+09:00"
+     },
+     "objects.keys": [
+      "id",
+      "entity",
+      "layer",
+      "points",
+      "closed",
+      "curved",
+      "area",
+      "perimeter",
+      "bbox",
+      "width",
+      "height",
+      "model_label",
+      "confidence",
+      "label",
+      "review_reason"
+     ],
+     "objects[0].types": {
+      "id": "str",
+      "entity": "str",
+      "layer": "str",
+      "points": "list",
+      "closed": "bool",
+      "curved": "bool",
+      "area": "float",
+      "perimeter": "float",
+      "bbox": "list",
+      "width": "float",
+      "height": "float",
+      "model_label": "str",
+      "confidence": "float",
+      "label": "str",
+      "review_reason": "NoneType"
+     },
+     "objects[0].scalars": {
+      "id": "OBJ-001",
+      "entity": "LWPOLYLINE",
+      "layer": "OUTLINE",
+      "closed": true,
+      "curved": false,
+      "area": 192000.0,
+      "perimeter": 2720.0,
+      "width": 1200.0,
+      "height": 160.0,
+      "model_label": "outer",
+      "confidence": 0.9926,
+      "label": "outer",
+      "review_reason": null
+     },
+     "objects.len": 9,
+     "counts.keys": [
+      "outer",
+      "hole",
+      "slot",
+      "other"
+     ],
+     "counts.types": {
+      "outer": "int",
+      "hole": "int",
+      "slot": "int",
+      "other": "int"
+     },
+     "counts.scalars": {
+      "outer": 1,
+      "hole": 6,
+      "slot": 2,
+      "other": 0
+     },
+     "dimensions.keys": [
+      "length",
+      "width"
+     ],
+     "dimensions.types": {
+      "length": "float",
+      "width": "float"
+     },
+     "dimensions.scalars": {
+      "length": 1200.0,
+      "width": 160.0
+     }
+    }
+   ],
+   "GET /api/cad/{id}": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "filename",
+      "unit",
+      "source_unit",
+      "objects",
+      "counts",
+      "bbox",
+      "dimensions",
+      "warnings",
+      "entity_count",
+      "data_mode",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "filename": "str",
+      "unit": "str",
+      "source_unit": "str",
+      "objects": "list",
+      "counts": "dict",
+      "bbox": "list",
+      "dimensions": "dict",
+      "warnings": "list",
+      "entity_count": "int",
+      "data_mode": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "filename": "sample.dxf",
+      "unit": "mm",
+      "source_unit": "mm",
+      "entity_count": 9,
+      "data_mode": "uploaded_geometry_synthetic_model",
+      "id": "doc_01M4RXR1K89T5WNMNW17A6WX1S",
+      "created_at": "2026-10-13T05:44:25+09:00"
+     },
+     "objects.keys": [
+      "id",
+      "area",
+      "bbox",
+      "label",
+      "layer",
+      "width",
+      "closed",
+      "curved",
+      "entity",
+      "height",
+      "points",
+      "perimeter",
+      "confidence",
+      "model_label",
+      "review_reason"
+     ],
+     "objects[0].types": {
+      "id": "str",
+      "area": "float",
+      "bbox": "list",
+      "label": "str",
+      "layer": "str",
+      "width": "float",
+      "closed": "bool",
+      "curved": "bool",
+      "entity": "str",
+      "height": "float",
+      "points": "list",
+      "perimeter": "float",
+      "confidence": "float",
+      "model_label": "str",
+      "review_reason": "NoneType"
+     },
+     "objects[0].scalars": {
+      "id": "OBJ-001",
+      "area": 192000.0,
+      "label": "outer",
+      "layer": "OUTLINE",
+      "width": 1200.0,
+      "closed": true,
+      "curved": false,
+      "entity": "LWPOLYLINE",
+      "height": 160.0,
+      "perimeter": 2720.0,
+      "confidence": 0.9926,
+      "model_label": "outer",
+      "review_reason": null
+     },
+     "objects.len": 9
+    }
+   ],
+   "GET /api/cad/{unknown}": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "POST /api/cad/analyze": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "filename",
+      "unit",
+      "source_unit",
+      "objects",
+      "counts",
+      "bbox",
+      "dimensions",
+      "warnings",
+      "entity_count",
+      "data_mode",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "filename": "str",
+      "unit": "str",
+      "source_unit": "str",
+      "objects": "list",
+      "counts": "dict",
+      "bbox": "list",
+      "dimensions": "dict",
+      "warnings": "list",
+      "entity_count": "int",
+      "data_mode": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "filename": "part.dxf",
+      "unit": "mm",
+      "source_unit": "mm",
+      "entity_count": 9,
+      "data_mode": "uploaded_geometry_synthetic_model",
+      "id": "doc_01M4RXR1QEKVVAF4M058EF2P21",
+      "created_at": "2026-10-13T05:44:25+09:00"
+     },
+     "objects.keys": [
+      "id",
+      "entity",
+      "layer",
+      "points",
+      "closed",
+      "curved",
+      "area",
+      "perimeter",
+      "bbox",
+      "width",
+      "height",
+      "model_label",
+      "confidence",
+      "label",
+      "review_reason"
+     ],
+     "objects[0].types": {
+      "id": "str",
+      "entity": "str",
+      "layer": "str",
+      "points": "list",
+      "closed": "bool",
+      "curved": "bool",
+      "area": "float",
+      "perimeter": "float",
+      "bbox": "list",
+      "width": "float",
+      "height": "float",
+      "model_label": "str",
+      "confidence": "float",
+      "label": "str",
+      "review_reason": "NoneType"
+     },
+     "objects[0].scalars": {
+      "id": "OBJ-001",
+      "entity": "LWPOLYLINE",
+      "layer": "OUTLINE",
+      "closed": true,
+      "curved": false,
+      "area": 192000.0,
+      "perimeter": 2720.0,
+      "width": 1200.0,
+      "height": 160.0,
+      "model_label": "outer",
+      "confidence": 0.9926,
+      "label": "outer",
+      "review_reason": null
+     },
+     "objects.len": 9
+    }
+   ],
+   "POST /api/cad/analyze a.dwg": [
+    {
+     "status": 415,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "ASCII DXF만 지원합니다. DWG·PDF는 자동 인식하지 않습니다. 원본 CAD에서 DXF 전개도로 내보내세요."
+     },
+     "body": {
+      "detail": "ASCII DXF만 지원합니다. DWG·PDF는 자동 인식하지 않습니다. 원본 CAD에서 DXF 전개도로 내보내세요."
+     }
+    }
+   ],
+   "POST /api/cad/analyze bad.dxf": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "그룹 코드 · 값 쌍이 맞지 않습니다"
+     },
+     "body": {
+      "detail": "그룹 코드 · 값 쌍이 맞지 않습니다"
+     }
+    }
+   ],
+   "POST /api/cad/analyze big": [
+    {
+     "status": 413,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 파일은 5MB 이하만 지원합니다."
+     },
+     "body": {
+      "detail": "도면 파일은 5MB 이하만 지원합니다."
+     }
+    }
+   ],
+   "POST /api/quotes": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "drawing_id",
+      "filename",
+      "status",
+      "input",
+      "minutes_per_piece",
+      "total_minutes",
+      "weight_per_piece",
+      "material_cost",
+      "processing_cost",
+      "setup_cost",
+      "markup_cost",
+      "subtotal",
+      "vat",
+      "total",
+      "unit_price",
+      "model_version",
+      "assumptions",
+      "overrides",
+      "notice",
+      "recognition_warnings",
+      "scope",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "drawing_id": "str",
+      "filename": "str",
+      "status": "str",
+      "input": "dict",
+      "minutes_per_piece": "float",
+      "total_minutes": "float",
+      "weight_per_piece": "float",
+      "material_cost": "int",
+      "processing_cost": "int",
+      "setup_cost": "int",
+      "markup_cost": "int",
+      "subtotal": "int",
+      "vat": "int",
+      "total": "int",
+      "unit_price": "float",
+      "model_version": "str",
+      "assumptions": "dict",
+      "overrides": "list",
+      "notice": "str",
+      "recognition_warnings": "list",
+      "scope": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "drawing_id": "doc_01M4RXR1K89T5WNMNW17A6WX1S",
+      "filename": "sample.dxf",
+      "status": "검토용 초안",
+      "minutes_per_piece": 1.3043,
+      "total_minutes": 165.43,
+      "weight_per_piece": 3.0144,
+      "material_cost": 423222,
+      "processing_cost": 117387,
+      "setup_cost": 31500,
+      "markup_cost": 85816,
+      "subtotal": 657925,
+      "vat": 65793,
+      "total": 723718,
+      "unit_price": 6579.25,
+      "model_version": "v1",
+      "notice": "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 도면 해석·재질·전개 치수·공정과 실제 단가 확인 후 담당자가 확정해야 합니다.",
+      "scope": "재료 + 통합 가공시간 + 준비비. 금형 제작·도금·열처리·포장·운송·외주 특수공정 비용은 별도입니다.",
+      "id": "qte_01M4RXR1T8NTXMJPPXF7VFCB54",
+      "created_at": "2026-10-13T05:44:25+09:00"
+     },
+     "input.keys": [
+      "drawing_id",
+      "material",
+      "profile",
+      "length",
+      "width",
+      "thickness",
+      "holes",
+      "slots",
+      "bends",
+      "quantity",
+      "reviewed",
+      "review_note"
+     ],
+     "input.types": {
+      "drawing_id": "str",
+      "material": "str",
+      "profile": "str",
+      "length": "int",
+      "width": "int",
+      "thickness": "int",
+      "holes": "int",
+      "slots": "int",
+      "bends": "int",
+      "quantity": "int",
+      "reviewed": "bool",
+      "review_note": "str"
+     },
+     "input.scalars": {
+      "drawing_id": "doc_01M4RXR1K89T5WNMNW17A6WX1S",
+      "material": "SPCC",
+      "profile": "잔넬",
+      "length": 1200,
+      "width": 160,
+      "thickness": 2,
+      "holes": 7,
+      "slots": 2,
+      "bends": 2,
+      "quantity": 100,
+      "reviewed": true,
+      "review_note": "단일 전개도 치수와 홀·슬롯, 재질·두께 확인"
+     },
+     "assumptions.keys": [
+      "machine_per_min",
+      "setup_minutes",
+      "scrap_rate",
+      "markup",
+      "vat_rate",
+      "price_kg",
+      "density"
+     ],
+     "assumptions.types": {
+      "machine_per_min": "int",
+      "setup_minutes": "int",
+      "scrap_rate": "float",
+      "markup": "float",
+      "vat_rate": "float",
+      "price_kg": "int",
+      "density": "int"
+     },
+     "assumptions.scalars": {
+      "machine_per_min": 900,
+      "setup_minutes": 35,
+      "scrap_rate": 0.08,
+      "markup": 0.15,
+      "vat_rate": 0.1,
+      "price_kg": 1300,
+      "density": 7850
+     },
+     "overrides.keys": [
+      "field",
+      "recognized",
+      "confirmed"
+     ],
+     "overrides[0].types": {
+      "field": "str",
+      "recognized": "int",
+      "confirmed": "int"
+     },
+     "overrides[0].scalars": {
+      "field": "holes",
+      "recognized": 6,
+      "confirmed": 7
+     },
+     "overrides.len": 1
+    }
+   ],
+   "POST /api/quotes review_note 5 spaces": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "확인 내용을 5자 이상 입력하세요."
+     },
+     "body": {
+      "detail": "확인 내용을 5자 이상 입력하세요."
+     }
+    }
+   ],
+   "POST /api/quotes extra": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body",
+         "extra"
+        ],
+        "msg": "알 수 없는 입력입니다",
+        "type": "extra_forbidden"
+       }
+      ]
+     }
+    }
+   ],
+   "POST /api/quotes unknown drawing": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "먼저 CAD 도면을 분석하세요."
+     },
+     "body": {
+      "detail": "먼저 CAD 도면을 분석하세요."
+     }
+    }
+   ],
+   "POST /api/quotes malformed drawing id": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "먼저 CAD 도면을 분석하세요."
+     },
+     "body": {
+      "detail": "먼저 CAD 도면을 분석하세요."
+     }
+    }
+   ],
+   "GET /api/quotes": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "total",
+      "offset",
+      "limit",
+      "records"
+     ],
+     "types": {
+      "total": "int",
+      "offset": "int",
+      "limit": "int",
+      "records": "list"
+     },
+     "scalars": {
+      "total": 1,
+      "offset": 0,
+      "limit": 10
+     },
+     "records.keys": [
+      "drawing_id",
+      "filename",
+      "status",
+      "input",
+      "minutes_per_piece",
+      "total_minutes",
+      "weight_per_piece",
+      "material_cost",
+      "processing_cost",
+      "setup_cost",
+      "markup_cost",
+      "subtotal",
+      "vat",
+      "total",
+      "unit_price",
+      "model_version",
+      "assumptions",
+      "overrides",
+      "notice",
+      "recognition_warnings",
+      "scope",
+      "id",
+      "created_at"
+     ],
+     "records[0].types": {
+      "drawing_id": "str",
+      "filename": "str",
+      "status": "str",
+      "input": "dict",
+      "minutes_per_piece": "float",
+      "total_minutes": "float",
+      "weight_per_piece": "float",
+      "material_cost": "int",
+      "processing_cost": "int",
+      "setup_cost": "int",
+      "markup_cost": "int",
+      "subtotal": "int",
+      "vat": "int",
+      "total": "int",
+      "unit_price": "float",
+      "model_version": "str",
+      "assumptions": "dict",
+      "overrides": "list",
+      "notice": "str",
+      "recognition_warnings": "list",
+      "scope": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "records[0].scalars": {
+      "drawing_id": "doc_01M4RXR1K89T5WNMNW17A6WX1S",
+      "filename": "sample.dxf",
+      "status": "검토용 초안",
+      "minutes_per_piece": 1.3043,
+      "total_minutes": 165.43,
+      "weight_per_piece": 3.0144,
+      "material_cost": 423222,
+      "processing_cost": 117387,
+      "setup_cost": 31500,
+      "markup_cost": 85816,
+      "subtotal": 657925,
+      "vat": 65793,
+      "total": 723718,
+      "unit_price": 6579.25,
+      "model_version": "v1",
+      "notice": "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 도면 해석·재질·전개 치수·공정과 실제 단가 확인 후 담당자가 확정해야 합니다.",
+      "scope": "재료 + 통합 가공시간 + 준비비. 금형 제작·도금·열처리·포장·운송·외주 특수공정 비용은 별도입니다.",
+      "id": "qte_01M4RXR1T8NTXMJPPXF7VFCB54",
+      "created_at": "2026-10-13T05:44:25+09:00"
+     },
+     "records.len": 1
+    }
+   ],
+   "GET /api/quotes?limit=101": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "limit"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/quotes/{id}": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "drawing_id",
+      "filename",
+      "status",
+      "input",
+      "minutes_per_piece",
+      "total_minutes",
+      "weight_per_piece",
+      "material_cost",
+      "processing_cost",
+      "setup_cost",
+      "markup_cost",
+      "subtotal",
+      "vat",
+      "total",
+      "unit_price",
+      "model_version",
+      "assumptions",
+      "overrides",
+      "notice",
+      "recognition_warnings",
+      "scope",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "drawing_id": "str",
+      "filename": "str",
+      "status": "str",
+      "input": "dict",
+      "minutes_per_piece": "float",
+      "total_minutes": "float",
+      "weight_per_piece": "float",
+      "material_cost": "int",
+      "processing_cost": "int",
+      "setup_cost": "int",
+      "markup_cost": "int",
+      "subtotal": "int",
+      "vat": "int",
+      "total": "int",
+      "unit_price": "float",
+      "model_version": "str",
+      "assumptions": "dict",
+      "overrides": "list",
+      "notice": "str",
+      "recognition_warnings": "list",
+      "scope": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "drawing_id": "doc_01M4RXR1K89T5WNMNW17A6WX1S",
+      "filename": "sample.dxf",
+      "status": "검토용 초안",
+      "minutes_per_piece": 1.3043,
+      "total_minutes": 165.43,
+      "weight_per_piece": 3.0144,
+      "material_cost": 423222,
+      "processing_cost": 117387,
+      "setup_cost": 31500,
+      "markup_cost": 85816,
+      "subtotal": 657925,
+      "vat": 65793,
+      "total": 723718,
+      "unit_price": 6579.25,
+      "model_version": "v1",
+      "notice": "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 도면 해석·재질·전개 치수·공정과 실제 단가 확인 후 담당자가 확정해야 합니다.",
+      "scope": "재료 + 통합 가공시간 + 준비비. 금형 제작·도금·열처리·포장·운송·외주 특수공정 비용은 별도입니다.",
+      "id": "qte_01M4RXR1T8NTXMJPPXF7VFCB54",
+      "created_at": "2026-10-13T05:44:25+09:00"
+     },
+     "input.keys": [
+      "drawing_id",
+      "material",
+      "profile",
+      "length",
+      "width",
+      "thickness",
+      "holes",
+      "slots",
+      "bends",
+      "quantity",
+      "reviewed",
+      "review_note"
+     ],
+     "input.types": {
+      "drawing_id": "str",
+      "material": "str",
+      "profile": "str",
+      "length": "int",
+      "width": "int",
+      "thickness": "int",
+      "holes": "int",
+      "slots": "int",
+      "bends": "int",
+      "quantity": "int",
+      "reviewed": "bool",
+      "review_note": "str"
+     },
+     "input.scalars": {
+      "drawing_id": "doc_01M4RXR1K89T5WNMNW17A6WX1S",
+      "material": "SPCC",
+      "profile": "잔넬",
+      "length": 1200,
+      "width": 160,
+      "thickness": 2,
+      "holes": 7,
+      "slots": 2,
+      "bends": 2,
+      "quantity": 100,
+      "reviewed": true,
+      "review_note": "단일 전개도 치수와 홀·슬롯, 재질·두께 확인"
+     }
+    }
+   ],
+   "GET /api/quotes/{unknown}": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "GET /api/quotes/{id}/csv": [
+    {
+     "status": 200,
+     "content_type": "text/csv; charset=utf-8",
+     "bom": true,
+     "csv_first_col": [
+      "원터치 견적 초안",
+      "상태",
+      "도면",
+      "생성 시각",
+      "재질",
+      "제품",
+      "수량",
+      "길이(mm)",
+      "전개 폭(mm)",
+      "두께(mm)",
+      "홀 수",
+      "슬롯 수",
+      "굽힘 수",
+      "개당 예측 가공시간(분)",
+      "재료비(원)",
+      "가공비(원)",
+      "준비비(원)",
+      "원가 가산액(원)",
+      "공급가액(원)",
+      "부가세(원)",
+      "합계(원)",
+      "확인 내용",
+      "버전",
+      "주의",
+      "범위"
+     ],
+     "csv_rows": [
+      [
+       "원터치 견적 초안",
+       "qte_01M4RXR1T8NTXMJPPXF7VFCB54"
+      ],
+      [
+       "상태",
+       "검토용 초안"
+      ],
+      [
+       "도면",
+       "sample.dxf"
+      ]
+     ],
+     "content_disposition": "attachment; filename=\"qte_01M4RXR1T8NTXMJPPXF7VFCB54.csv\""
+    }
+   ],
+   "GET /api/quotes/{unknown}/csv": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/ml/overview": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/ml/overview": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/data/demo": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/data/demo": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/cad/sample.dxf": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/cad/sample.dxf": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey POST /api/cad/demo": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/cad/demo": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/cad/doc_01M4RXR1K89T5WNMNW17A6WX1S": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/cad/doc_01M4RXR1K89T5WNMNW17A6WX1S": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quotes": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quotes": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quotes/qte_01M4RXR1T8NTXMJPPXF7VFCB54": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quotes/qte_01M4RXR1T8NTXMJPPXF7VFCB54": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quotes/qte_01M4RXR1T8NTXMJPPXF7VFCB54/csv": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quotes/qte_01M4RXR1T8NTXMJPPXF7VFCB54/csv": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey POST /api/quotes": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/quotes": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "먼저 CAD 도면을 분석하세요."
+     },
+     "body": {
+      "detail": "먼저 CAD 도면을 분석하세요."
+     }
+    }
+   ],
+   "AUTH nokey POST /api/cad/analyze": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/cad/analyze": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ]
+  },
+  "kd": {
+   "GET /api/health": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "status",
+      "model_ready",
+      "version",
+      "mode"
+     ],
+     "types": {
+      "status": "str",
+      "model_ready": "bool",
+      "version": "str",
+      "mode": "str"
+     },
+     "scalars": {
+      "status": "ok",
+      "model_ready": true,
+      "version": "v1",
+      "mode": "synthetic_demo"
+     },
+     "body": {
+      "status": "ok",
+      "model_ready": true,
+      "version": "v1",
+      "mode": "synthetic_demo"
+     }
+    }
+   ],
+   "GET /api/ml/overview": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "version",
+      "mode",
+      "job_rows",
+      "missing_cells",
+      "champion",
+      "metrics",
+      "test_metrics",
+      "split",
+      "features",
+      "products",
+      "recognition",
+      "warning"
+     ],
+     "types": {
+      "version": "str",
+      "mode": "str",
+      "job_rows": "int",
+      "missing_cells": "int",
+      "champion": "str",
+      "metrics": "list",
+      "test_metrics": "dict",
+      "split": "list",
+      "features": "dict",
+      "products": "list",
+      "recognition": "dict",
+      "warning": "str"
+     },
+     "scalars": {
+      "version": "v1",
+      "mode": "synthetic_demo",
+      "job_rows": 900,
+      "missing_cells": 12,
+      "champion": "ridge",
+      "warning": "합성 작업 900건으로 학습한 공수 예측입니다. 실측 견적 정확도·객체 인식률·납기 정확도를 의미하지 않습니다."
+     },
+     "metrics.keys": [
+      "model",
+      "mae",
+      "rmse",
+      "r2"
+     ],
+     "metrics[0].types": {
+      "model": "str",
+      "mae": "float",
+      "rmse": "float",
+      "r2": "float"
+     },
+     "metrics[0].scalars": {
+      "model": "ridge",
+      "mae": 3.8305,
+      "rmse": 4.9386,
+      "r2": 0.9959
+     },
+     "metrics.len": 4,
+     "test_metrics.keys": [
+      "mae",
+      "rmse",
+      "r2"
+     ],
+     "test_metrics.types": {
+      "mae": "float",
+      "rmse": "float",
+      "r2": "float"
+     },
+     "test_metrics.scalars": {
+      "mae": 3.7017,
+      "rmse": 4.5892,
+      "r2": 0.9962
+     },
+     "features.keys": [
+      "mass_kg",
+      "cut_m",
+      "weld_m",
+      "thickness_mm",
+      "complexity"
+     ],
+     "features.types": {
+      "mass_kg": "dict",
+      "cut_m": "dict",
+      "weld_m": "dict",
+      "thickness_mm": "dict",
+      "complexity": "dict"
+     },
+     "features.scalars": {},
+     "features.mass_kg.keys": [
+      "label",
+      "unit",
+      "min",
+      "max",
+      "default"
+     ],
+     "features.mass_kg.types": {
+      "label": "str",
+      "unit": "str",
+      "min": "int",
+      "max": "int",
+      "default": "int"
+     },
+     "features.mass_kg.scalars": {
+      "label": "BOM 총중량",
+      "unit": "kg/대",
+      "min": 10,
+      "max": 10000,
+      "default": 650
+     },
+     "recognition.keys": [
+      "method",
+      "labels",
+      "measured_accuracy",
+      "reason"
+     ],
+     "recognition.types": {
+      "method": "str",
+      "labels": "list",
+      "measured_accuracy": "NoneType",
+      "reason": "str"
+     },
+     "recognition.scalars": {
+      "method": "DXF 텍스트·폐합 사각형 기반 규칙 후보 추출",
+      "measured_accuracy": null,
+      "reason": "3종 영역 정답 라벨 미확보. 실제 객체 인식 정확도 측정 불가."
+     }
+    }
+   ],
+   "GET /api/cad/sample.dxf": [
+    {
+     "status": 200,
+     "content_type": "application/dxf",
+     "len": 1734,
+     "content_disposition": "attachment; filename=\"KD-demo-reactor.dxf\""
+    }
+   ],
+   "POST /api/cad/demo": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "filename",
+      "sha256",
+      "unit",
+      "scale_to_mm",
+      "mode",
+      "objects",
+      "bom",
+      "counts",
+      "warnings",
+      "entity_count",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "filename": "str",
+      "sha256": "str",
+      "unit": "str",
+      "scale_to_mm": "float",
+      "mode": "str",
+      "objects": "list",
+      "bom": "list",
+      "counts": "dict",
+      "warnings": "list",
+      "entity_count": "int",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "filename": "KD-demo-reactor.dxf",
+      "sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "unit": "mm",
+      "scale_to_mm": 1.0,
+      "mode": "synthetic_demo",
+      "entity_count": 21,
+      "id": "doc_01M4RXR2JASDDQ05JPDJC81Z25",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     },
+     "objects.keys": [
+      "id",
+      "label",
+      "bbox",
+      "texts",
+      "evidence",
+      "status"
+     ],
+     "objects[0].types": {
+      "id": "str",
+      "label": "str",
+      "bbox": "list",
+      "texts": "list",
+      "evidence": "str",
+      "status": "str"
+     },
+     "objects[0].scalars": {
+      "id": "REG-001",
+      "label": "title_block",
+      "evidence": "DRAWING NO: KD-DEMO-R1000",
+      "status": "검토 필요"
+     },
+     "objects.len": 3,
+     "bom.keys": [
+      "name",
+      "material",
+      "quantity",
+      "mass_kg",
+      "source"
+     ],
+     "bom[0].types": {
+      "name": "str",
+      "material": "str",
+      "quantity": "int",
+      "mass_kg": "float",
+      "source": "str"
+     },
+     "bom[0].scalars": {
+      "name": "SHELL",
+      "material": "STS316L",
+      "quantity": 1,
+      "mass_kg": 320.0,
+      "source": "REG-002"
+     },
+     "bom.len": 4,
+     "counts.keys": [
+      "title_block",
+      "bom_table",
+      "rev_table",
+      "other"
+     ],
+     "counts.types": {
+      "title_block": "int",
+      "bom_table": "int",
+      "rev_table": "int",
+      "other": "int"
+     },
+     "counts.scalars": {
+      "title_block": 1,
+      "bom_table": 1,
+      "rev_table": 1,
+      "other": 0
+     }
+    }
+   ],
+   "POST /api/cad/analyze": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "filename",
+      "sha256",
+      "unit",
+      "scale_to_mm",
+      "mode",
+      "objects",
+      "bom",
+      "counts",
+      "warnings",
+      "entity_count",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "filename": "str",
+      "sha256": "str",
+      "unit": "str",
+      "scale_to_mm": "float",
+      "mode": "str",
+      "objects": "list",
+      "bom": "list",
+      "counts": "dict",
+      "warnings": "list",
+      "entity_count": "int",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "filename": "KD-demo-reactor.dxf",
+      "sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "unit": "mm",
+      "scale_to_mm": 1.0,
+      "mode": "uploaded_dxf",
+      "entity_count": 21,
+      "id": "doc_01M4RXR2NE165DR9V465JB7Z3C",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     },
+     "objects.keys": [
+      "id",
+      "label",
+      "bbox",
+      "texts",
+      "evidence",
+      "status"
+     ],
+     "objects[0].types": {
+      "id": "str",
+      "label": "str",
+      "bbox": "list",
+      "texts": "list",
+      "evidence": "str",
+      "status": "str"
+     },
+     "objects[0].scalars": {
+      "id": "REG-001",
+      "label": "title_block",
+      "evidence": "DRAWING NO: KD-DEMO-R1000",
+      "status": "검토 필요"
+     },
+     "objects.len": 3,
+     "bom.keys": [
+      "name",
+      "material",
+      "quantity",
+      "mass_kg",
+      "source"
+     ],
+     "bom[0].types": {
+      "name": "str",
+      "material": "str",
+      "quantity": "int",
+      "mass_kg": "float",
+      "source": "str"
+     },
+     "bom[0].scalars": {
+      "name": "SHELL",
+      "material": "STS316L",
+      "quantity": 1,
+      "mass_kg": 320.0,
+      "source": "REG-002"
+     },
+     "bom.len": 4,
+     "counts.keys": [
+      "title_block",
+      "bom_table",
+      "rev_table",
+      "other"
+     ],
+     "counts.types": {
+      "title_block": "int",
+      "bom_table": "int",
+      "rev_table": "int",
+      "other": "int"
+     },
+     "counts.scalars": {
+      "title_block": 1,
+      "bom_table": 1,
+      "rev_table": 1,
+      "other": 0
+     }
+    }
+   ],
+   "GET /api/cad/{id}": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "filename",
+      "sha256",
+      "unit",
+      "scale_to_mm",
+      "mode",
+      "objects",
+      "bom",
+      "counts",
+      "warnings",
+      "entity_count",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "filename": "str",
+      "sha256": "str",
+      "unit": "str",
+      "scale_to_mm": "float",
+      "mode": "str",
+      "objects": "list",
+      "bom": "list",
+      "counts": "dict",
+      "warnings": "list",
+      "entity_count": "int",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "filename": "KD-demo-reactor.dxf",
+      "sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "unit": "mm",
+      "scale_to_mm": 1.0,
+      "mode": "uploaded_dxf",
+      "entity_count": 21,
+      "id": "doc_01M4RXR2NE165DR9V465JB7Z3C",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     },
+     "objects.keys": [
+      "id",
+      "bbox",
+      "label",
+      "texts",
+      "status",
+      "evidence"
+     ],
+     "objects[0].types": {
+      "id": "str",
+      "bbox": "list",
+      "label": "str",
+      "texts": "list",
+      "status": "str",
+      "evidence": "str"
+     },
+     "objects[0].scalars": {
+      "id": "REG-001",
+      "label": "title_block",
+      "status": "검토 필요",
+      "evidence": "DRAWING NO: KD-DEMO-R1000"
+     },
+     "objects.len": 3,
+     "bom.keys": [
+      "name",
+      "source",
+      "mass_kg",
+      "material",
+      "quantity"
+     ],
+     "bom[0].types": {
+      "name": "str",
+      "source": "str",
+      "mass_kg": "float",
+      "material": "str",
+      "quantity": "int"
+     },
+     "bom[0].scalars": {
+      "name": "SHELL",
+      "source": "REG-002",
+      "mass_kg": 320.0,
+      "material": "STS316L",
+      "quantity": 1
+     },
+     "bom.len": 4
+    }
+   ],
+   "GET /api/cad/{demo id}": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "filename",
+      "sha256",
+      "unit",
+      "scale_to_mm",
+      "mode",
+      "objects",
+      "bom",
+      "counts",
+      "warnings",
+      "entity_count",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "filename": "str",
+      "sha256": "str",
+      "unit": "str",
+      "scale_to_mm": "float",
+      "mode": "str",
+      "objects": "list",
+      "bom": "list",
+      "counts": "dict",
+      "warnings": "list",
+      "entity_count": "int",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "filename": "KD-demo-reactor.dxf",
+      "sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "unit": "mm",
+      "scale_to_mm": 1.0,
+      "mode": "uploaded_dxf",
+      "entity_count": 21,
+      "id": "doc_01M4RXR2JASDDQ05JPDJC81Z25",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     }
+    }
+   ],
+   "GET /api/cad/{unknown}": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "POST /api/cad/analyze x.dwg": [
+    {
+     "status": 415,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "ASCII DXF만 지원합니다. DWG·CAD·PDF는 DXF로 변환 후 업로드하세요."
+     },
+     "body": {
+      "detail": "ASCII DXF만 지원합니다. DWG·CAD·PDF는 DXF로 변환 후 업로드하세요."
+     }
+    }
+   ],
+   "POST /api/cad/analyze bad.dxf": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "그룹 코드 · 값 쌍이 맞지 않습니다"
+     },
+     "body": {
+      "detail": "그룹 코드 · 값 쌍이 맞지 않습니다"
+     }
+    }
+   ],
+   "POST /api/cad/analyze big": [
+    {
+     "status": 413,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 파일은 5 MiB 이하만 지원합니다."
+     },
+     "body": {
+      "detail": "도면 파일은 5 MiB 이하만 지원합니다."
+     }
+    }
+   ],
+   "POST /api/quotes": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "drawing_id",
+      "filename",
+      "status",
+      "input",
+      "source_bom",
+      "source_sha256",
+      "lines",
+      "features",
+      "mass_kg",
+      "hours_per_unit",
+      "material_cost",
+      "labor_cost",
+      "outsource_cost",
+      "markup_cost",
+      "subtotal",
+      "vat",
+      "total",
+      "model_version",
+      "cost_snapshot",
+      "notice",
+      "scope",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "drawing_id": "str",
+      "filename": "str",
+      "status": "str",
+      "input": "dict",
+      "source_bom": "list",
+      "source_sha256": "str",
+      "lines": "list",
+      "features": "dict",
+      "mass_kg": "float",
+      "hours_per_unit": "float",
+      "material_cost": "int",
+      "labor_cost": "int",
+      "outsource_cost": "int",
+      "markup_cost": "int",
+      "subtotal": "int",
+      "vat": "int",
+      "total": "int",
+      "model_version": "str",
+      "cost_snapshot": "dict",
+      "notice": "str",
+      "scope": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "drawing_id": "doc_01M4RXR2NE165DR9V465JB7Z3C",
+      "filename": "KD-demo-reactor.dxf",
+      "status": "검토용 초안",
+      "source_sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "mass_kg": 650.0,
+      "hours_per_unit": 57.3297,
+      "material_cost": 8184240,
+      "labor_cost": 5159673,
+      "outsource_cost": 200000,
+      "markup_cost": 2031587,
+      "subtotal": 15575500,
+      "vat": 1557550,
+      "total": 17133050,
+      "model_version": "v1",
+      "notice": "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 실제 BOM·공수·외주비·단가 확인 후 담당자가 확정해야 합니다.",
+      "scope": "사용자가 입력한 BOM 소재·통합 제조공수·외주비 기준입니다. 운송·인증·설계비 등 미입력 비용은 포함하지 않습니다. 공수는 납기 예측이 아닙니다.",
+      "id": "qte_01M4RXR2RAZMDSFK5SJBG2W7BR",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     },
+     "lines.keys": [
+      "name",
+      "material",
+      "quantity",
+      "mass_kg",
+      "price_kg",
+      "weight_total",
+      "cost"
+     ],
+     "lines[0].types": {
+      "name": "str",
+      "material": "str",
+      "quantity": "int",
+      "mass_kg": "float",
+      "price_kg": "int",
+      "weight_total": "float",
+      "cost": "int"
+     },
+     "lines[0].scalars": {
+      "name": "SHELL",
+      "material": "STS316L",
+      "quantity": 1,
+      "mass_kg": 320.0,
+      "price_kg": 6500,
+      "weight_total": 320.0,
+      "cost": 4492800
+     },
+     "lines.len": 4,
+     "features.keys": [
+      "cut_m",
+      "weld_m",
+      "thickness_mm",
+      "complexity",
+      "material",
+      "product",
+      "mass_kg"
+     ],
+     "features.types": {
+      "cut_m": "int",
+      "weld_m": "int",
+      "thickness_mm": "int",
+      "complexity": "int",
+      "material": "str",
+      "product": "str",
+      "mass_kg": "float"
+     },
+     "features.scalars": {
+      "cut_m": 24,
+      "weld_m": 18,
+      "thickness_mm": 6,
+      "complexity": 3,
+      "material": "STS316L",
+      "product": "반응기",
+      "mass_kg": 650.0
+     },
+     "cost_snapshot.keys": [
+      "labor_per_hour",
+      "scrap_rate",
+      "markup",
+      "vat_rate"
+     ],
+     "cost_snapshot.types": {
+      "labor_per_hour": "int",
+      "scrap_rate": "float",
+      "markup": "float",
+      "vat_rate": "float"
+     },
+     "cost_snapshot.scalars": {
+      "labor_per_hour": 45000,
+      "scrap_rate": 0.08,
+      "markup": 0.15,
+      "vat_rate": 0.1
+     },
+     "input.keys": [
+      "drawing_id",
+      "product",
+      "material",
+      "bom",
+      "quantity",
+      "cut_m",
+      "weld_m",
+      "thickness_mm",
+      "complexity",
+      "labor_rate",
+      "outsource_cost",
+      "reviewed",
+      "review_note"
+     ],
+     "input.types": {
+      "drawing_id": "str",
+      "product": "str",
+      "material": "str",
+      "bom": "list",
+      "quantity": "int",
+      "cut_m": "int",
+      "weld_m": "int",
+      "thickness_mm": "int",
+      "complexity": "int",
+      "labor_rate": "int",
+      "outsource_cost": "int",
+      "reviewed": "bool",
+      "review_note": "str"
+     },
+     "input.scalars": {
+      "drawing_id": "doc_01M4RXR2NE165DR9V465JB7Z3C",
+      "product": "반응기",
+      "material": "STS316L",
+      "quantity": 2,
+      "cut_m": 24,
+      "weld_m": 18,
+      "thickness_mm": 6,
+      "complexity": 3,
+      "labor_rate": 45000,
+      "outsource_cost": 100000,
+      "reviewed": true,
+      "review_note": "데모 BOM과 공정 조건 확인"
+     },
+     "source_bom.keys": [
+      "name",
+      "source",
+      "mass_kg",
+      "material",
+      "quantity"
+     ],
+     "source_bom[0].types": {
+      "name": "str",
+      "source": "str",
+      "mass_kg": "float",
+      "material": "str",
+      "quantity": "int"
+     },
+     "source_bom[0].scalars": {
+      "name": "SHELL",
+      "source": "REG-002",
+      "mass_kg": 320.0,
+      "material": "STS316L",
+      "quantity": 1
+     },
+     "source_bom.len": 4
+    }
+   ],
+   "POST /api/quotes material not in bom": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "drawing_id",
+      "filename",
+      "status",
+      "input",
+      "source_bom",
+      "source_sha256",
+      "lines",
+      "features",
+      "mass_kg",
+      "hours_per_unit",
+      "material_cost",
+      "labor_cost",
+      "outsource_cost",
+      "markup_cost",
+      "subtotal",
+      "vat",
+      "total",
+      "model_version",
+      "cost_snapshot",
+      "notice",
+      "scope",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "drawing_id": "str",
+      "filename": "str",
+      "status": "str",
+      "input": "dict",
+      "source_bom": "list",
+      "source_sha256": "str",
+      "lines": "list",
+      "features": "dict",
+      "mass_kg": "float",
+      "hours_per_unit": "float",
+      "material_cost": "int",
+      "labor_cost": "int",
+      "outsource_cost": "int",
+      "markup_cost": "int",
+      "subtotal": "int",
+      "vat": "int",
+      "total": "int",
+      "model_version": "str",
+      "cost_snapshot": "dict",
+      "notice": "str",
+      "scope": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "drawing_id": "doc_01M4RXR2NE165DR9V465JB7Z3C",
+      "filename": "KD-demo-reactor.dxf",
+      "status": "검토용 초안",
+      "source_sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "mass_kg": 650.0,
+      "hours_per_unit": 68.2455,
+      "material_cost": 8184240,
+      "labor_cost": 6142095,
+      "outsource_cost": 200000,
+      "markup_cost": 2178950,
+      "subtotal": 16705285,
+      "vat": 1670529,
+      "total": 18375814,
+      "model_version": "v1",
+      "notice": "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 실제 BOM·공수·외주비·단가 확인 후 담당자가 확정해야 합니다.",
+      "scope": "사용자가 입력한 BOM 소재·통합 제조공수·외주비 기준입니다. 운송·인증·설계비 등 미입력 비용은 포함하지 않습니다. 공수는 납기 예측이 아닙니다.",
+      "id": "qte_01M4RXR2S1JNS8D3KC70A8THJS",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     }
+    }
+   ],
+   "POST /api/quotes review_note spaces": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "body",
+         "review_note"
+        ],
+        "msg": "5자 이상 500자 이하",
+        "type": "string_too_short"
+       }
+      ]
+     }
+    }
+   ],
+   "POST /api/quotes unknown drawing": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "POST /api/quotes wellformed unknown drawing": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "POST /api/quotes CAD-style drawing id": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "GET /api/quotes": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "total",
+      "offset",
+      "limit",
+      "records"
+     ],
+     "types": {
+      "total": "int",
+      "offset": "int",
+      "limit": "int",
+      "records": "list"
+     },
+     "scalars": {
+      "total": 2,
+      "offset": 0,
+      "limit": 10
+     },
+     "records.keys": [
+      "drawing_id",
+      "filename",
+      "status",
+      "input",
+      "source_bom",
+      "source_sha256",
+      "lines",
+      "features",
+      "mass_kg",
+      "hours_per_unit",
+      "material_cost",
+      "labor_cost",
+      "outsource_cost",
+      "markup_cost",
+      "subtotal",
+      "vat",
+      "total",
+      "model_version",
+      "cost_snapshot",
+      "notice",
+      "scope",
+      "id",
+      "created_at"
+     ],
+     "records[0].types": {
+      "drawing_id": "str",
+      "filename": "str",
+      "status": "str",
+      "input": "dict",
+      "source_bom": "list",
+      "source_sha256": "str",
+      "lines": "list",
+      "features": "dict",
+      "mass_kg": "float",
+      "hours_per_unit": "float",
+      "material_cost": "int",
+      "labor_cost": "int",
+      "outsource_cost": "int",
+      "markup_cost": "int",
+      "subtotal": "int",
+      "vat": "int",
+      "total": "int",
+      "model_version": "str",
+      "cost_snapshot": "dict",
+      "notice": "str",
+      "scope": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "records[0].scalars": {
+      "drawing_id": "doc_01M4RXR2NE165DR9V465JB7Z3C",
+      "filename": "KD-demo-reactor.dxf",
+      "status": "검토용 초안",
+      "source_sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "mass_kg": 650.0,
+      "hours_per_unit": 68.2455,
+      "material_cost": 8184240,
+      "labor_cost": 6142095,
+      "outsource_cost": 200000,
+      "markup_cost": 2178950,
+      "subtotal": 16705285,
+      "vat": 1670529,
+      "total": 18375814,
+      "model_version": "v1",
+      "notice": "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 실제 BOM·공수·외주비·단가 확인 후 담당자가 확정해야 합니다.",
+      "scope": "사용자가 입력한 BOM 소재·통합 제조공수·외주비 기준입니다. 운송·인증·설계비 등 미입력 비용은 포함하지 않습니다. 공수는 납기 예측이 아닙니다.",
+      "id": "qte_01M4RXR2S1JNS8D3KC70A8THJS",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     },
+     "records.len": 2
+    }
+   ],
+   "GET /api/quotes?offset=-1": [
+    {
+     "status": 422,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "list"
+     },
+     "scalars": {},
+     "body": {
+      "detail": [
+       {
+        "loc": [
+         "query",
+         "offset"
+        ],
+        "msg": "범위 밖입니다",
+        "type": "range"
+       }
+      ]
+     }
+    }
+   ],
+   "GET /api/quotes/export/csv": [
+    {
+     "status": 200,
+     "content_type": "text/csv; charset=utf-8",
+     "bom": true,
+     "csv_first_col": [
+      "견적번호",
+      "qte_01M4RXR2S1JNS8D3KC70A8THJS",
+      "qte_01M4RXR2RAZMDSFK5SJBG2W7BR"
+     ],
+     "csv_rows": [
+      [
+       "견적번호",
+       "도면명",
+       "제품",
+       "상태",
+       "합계(원)",
+       "모델버전"
+      ],
+      [
+       "qte_01M4RXR2S1JNS8D3KC70A8THJS",
+       "KD-demo-reactor.dxf",
+       "반응기",
+       "검토용 초안",
+       "18375814",
+       "v1"
+      ],
+      [
+       "qte_01M4RXR2RAZMDSFK5SJBG2W7BR",
+       "KD-demo-reactor.dxf",
+       "반응기",
+       "검토용 초안",
+       "17133050",
+       "v1"
+      ]
+     ],
+     "content_disposition": "attachment; filename=\"kyungdong-visible-quotes.csv\""
+    }
+   ],
+   "GET /api/quotes/{id}": [
+    {
+     "status": 200,
+     "content_type": "application/json",
+     "keys": [
+      "drawing_id",
+      "filename",
+      "status",
+      "input",
+      "source_bom",
+      "source_sha256",
+      "lines",
+      "features",
+      "mass_kg",
+      "hours_per_unit",
+      "material_cost",
+      "labor_cost",
+      "outsource_cost",
+      "markup_cost",
+      "subtotal",
+      "vat",
+      "total",
+      "model_version",
+      "cost_snapshot",
+      "notice",
+      "scope",
+      "id",
+      "created_at"
+     ],
+     "types": {
+      "drawing_id": "str",
+      "filename": "str",
+      "status": "str",
+      "input": "dict",
+      "source_bom": "list",
+      "source_sha256": "str",
+      "lines": "list",
+      "features": "dict",
+      "mass_kg": "float",
+      "hours_per_unit": "float",
+      "material_cost": "int",
+      "labor_cost": "int",
+      "outsource_cost": "int",
+      "markup_cost": "int",
+      "subtotal": "int",
+      "vat": "int",
+      "total": "int",
+      "model_version": "str",
+      "cost_snapshot": "dict",
+      "notice": "str",
+      "scope": "str",
+      "id": "str",
+      "created_at": "str"
+     },
+     "scalars": {
+      "drawing_id": "doc_01M4RXR2NE165DR9V465JB7Z3C",
+      "filename": "KD-demo-reactor.dxf",
+      "status": "검토용 초안",
+      "source_sha256": "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d",
+      "mass_kg": 650.0,
+      "hours_per_unit": 57.3297,
+      "material_cost": 8184240,
+      "labor_cost": 5159673,
+      "outsource_cost": 200000,
+      "markup_cost": 2031587,
+      "subtotal": 15575500,
+      "vat": 1557550,
+      "total": 17133050,
+      "model_version": "v1",
+      "notice": "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 실제 BOM·공수·외주비·단가 확인 후 담당자가 확정해야 합니다.",
+      "scope": "사용자가 입력한 BOM 소재·통합 제조공수·외주비 기준입니다. 운송·인증·설계비 등 미입력 비용은 포함하지 않습니다. 공수는 납기 예측이 아닙니다.",
+      "id": "qte_01M4RXR2RAZMDSFK5SJBG2W7BR",
+      "created_at": "2026-10-13T05:44:26+09:00"
+     },
+     "lines.keys": [
+      "name",
+      "material",
+      "quantity",
+      "mass_kg",
+      "price_kg",
+      "weight_total",
+      "cost"
+     ],
+     "lines[0].types": {
+      "name": "str",
+      "material": "str",
+      "quantity": "int",
+      "mass_kg": "float",
+      "price_kg": "int",
+      "weight_total": "float",
+      "cost": "int"
+     },
+     "lines[0].scalars": {
+      "name": "SHELL",
+      "material": "STS316L",
+      "quantity": 1,
+      "mass_kg": 320.0,
+      "price_kg": 6500,
+      "weight_total": 320.0,
+      "cost": 4492800
+     },
+     "lines.len": 4
+    }
+   ],
+   "GET /api/quotes/{unknown}": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "GET /api/quotes/{id}/csv": [
+    {
+     "status": 200,
+     "content_type": "text/csv; charset=utf-8",
+     "bom": true,
+     "csv_first_col": [
+      "경동글로벌텍 견적 초안",
+      "도면",
+      "원본 SHA256",
+      "제품",
+      "대수",
+      "예측 공수(h/대)",
+      "소재비(원)",
+      "가공비(원)",
+      "외주비(원)",
+      "원가 가산액(원)",
+      "공급가액(원)",
+      "부가세(원)",
+      "합계(원)",
+      "버전",
+      "확인 메모",
+      "주의",
+      "범위",
+      "",
+      "품명",
+      "SHELL",
+      "HEAD",
+      "JACKET",
+      "SUPPORT"
+     ],
+     "csv_rows": [
+      [
+       "경동글로벌텍 견적 초안",
+       "qte_01M4RXR2RAZMDSFK5SJBG2W7BR"
+      ],
+      [
+       "도면",
+       "KD-demo-reactor.dxf"
+      ],
+      [
+       "원본 SHA256",
+       "984e5d3aee3b63c91755fce2c5f15a98f1c2374db4bc2f9e13b4dc7fc5962e7d"
+      ]
+     ],
+     "content_disposition": "attachment; filename=\"qte_01M4RXR2RAZMDSFK5SJBG2W7BR.csv\""
+    }
+   ],
+   "AUTH nokey GET /api/ml/overview": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/ml/overview": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/cad/sample.dxf": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/cad/sample.dxf": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey POST /api/cad/demo": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/cad/demo": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ],
+   "AUTH nokey GET /api/cad/doc_01M4RXR2NE165DR9V465JB7Z3C": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/cad/doc_01M4RXR2NE165DR9V465JB7Z3C": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "도면 분석을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quotes": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quotes": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quotes/export/csv": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quotes/export/csv": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quotes/qte_01M4RXR2RAZMDSFK5SJBG2W7BR": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quotes/qte_01M4RXR2RAZMDSFK5SJBG2W7BR": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey GET /api/quotes/qte_01M4RXR2RAZMDSFK5SJBG2W7BR/csv": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco GET /api/quotes/qte_01M4RXR2RAZMDSFK5SJBG2W7BR/csv": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey POST /api/quotes": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/quotes": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "견적을 찾을 수 없습니다."
+     },
+     "body": {
+      "detail": "견적을 찾을 수 없습니다."
+     }
+    }
+   ],
+   "AUTH nokey POST /api/cad/analyze": [
+    {
+     "status": 401,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "API 키가 필요합니다"
+     },
+     "body": {
+      "detail": "API 키가 필요합니다"
+     }
+    }
+   ],
+   "AUTH otherco POST /api/cad/analyze": [
+    {
+     "status": 404,
+     "content_type": "application/json",
+     "keys": [
+      "detail"
+     ],
+     "types": {
+      "detail": "str"
+     },
+     "scalars": {
+      "detail": "찾을 수 없습니다"
+     },
+     "body": {
+      "detail": "찾을 수 없습니다"
+     }
+    }
+   ]
+  }
+ },
+ "models": {
+  "krs": {
+   "version": "v1",
+   "algo": "gbr"
+  },
+  "pc": {
+   "version": "v1",
+   "algo": "gbr"
+  },
+  "ot": {
+   "version": "v1",
+   "algo": "ridge"
+  },
+  "kd": {
+   "version": "v1",
+   "algo": "ridge"
+  }
+ }
+}

@@ -1,0 +1,11 @@
+CRIT  A2 수정 사슬: NUL 수정 실패 뒤 revision 연속(1,2,3) · 누락 0  PASS  NUL 수정 HTTP 500 · revisions [1, 2, 3]
+CRIT  A 확정  PASS  status=confirmed total=46650
+CRIT  A 회사 단가표 ×3 + 재기동 → 확정 금액 · CSV 불변  PASS  confirmed 46650 → 46650 · csv_same=True · 새 초안 57357
+CRIT  A 새 초안은 새 단가(변경이 실제로 먹었는지)  PASS  new=57357
+CRIT  B live 전환 → 기동 거부(합성 운영 차단)  PASS  기동 거부: 기동 실패 rc=3 · 'RegistryRejected("R2", f"{full}: 필수 변수 {f} 를 채울 원천이 없다")\nmlcore.registry.tenants.RegistryRejected: R2: qn4.sensory_score: 필수 변수 cabbage_pct 를 채울 원천이 없다\n\nERROR:    Application startup failed. Exiting.\n'
+CRIT  C 채움 tasks 덮어쓰기 approver_role → operator → 거부  PASS  rc=2 files=['qc1.yaml.draft'] 거부: R1: quote: 덮어쓰기로 approver_role 를 바꿀 수 없다 — 초안 qc1.yaml.draft 를 남겼다. 값을 채움 파일(categories: {<변수>: [값, ...]}, 단가표는 tasks: {<과제>: {rates: ...}})로 적어 `make tenant NEW=qc1 PACK=eto C
+CRIT  C 채움 tasks 덮어쓰기 confirm.requires 비움 → 거부  PASS  rc=2 files=['qc1.yaml.draft'] 거부: R1: quote: 덮어쓰기로 confirm 를 바꿀 수 없다 — 초안 qc1.yaml.draft 를 남겼다. 값을 채움 파일(categories: {<변수>: [값, ...]}, 단가표는 tasks: {<과제>: {rates: ...}})로 적어 `make tenant NEW=qc1 PACK=eto CATEGOR
+CRIT  C 채움 tasks 덮어쓰기 line_limits 풀기 → 거부  PASS  rc=2 files=['qc1.yaml.draft'] 거부: R1: quote: 덮어쓰기로 line_limits 를 바꿀 수 없다 — 초안 qc1.yaml.draft 를 남겼다. 값을 채움 파일(categories: {<변수>: [값, ...]}, 단가표는 tasks: {<과제>: {rates: ...}})로 적어 `make tenant NEW=qc1 PACK=eto CAT
+CRIT  C 채움 tasks 덮어쓰기 input_limits 풀기 → 거부  PASS  rc=2 files=['qc1.yaml.draft'] 거부: R1: quote: 덮어쓰기로 input_limits 를 바꿀 수 없다 — 초안 qc1.yaml.draft 를 남겼다. 값을 채움 파일(categories: {<변수>: [값, ...]}, 단가표는 tasks: {<과제>: {rates: ...}})로 적어 `make tenant NEW=qc1 PACK=eto CA
+CRIT  C 채움 tasks 덮어쓰기 rounding 바꾸기 → 거부  PASS  rc=2 files=['qc1.yaml.draft'] 거부: R1: quote: 덮어쓰기로 rounding 를 바꿀 수 없다 — 초안 qc1.yaml.draft 를 남겼다. 값을 채움 파일(categories: {<변수>: [값, ...]}, 단가표는 tasks: {<과제>: {rates: ...}})로 적어 `make tenant NEW=qc1 PACK=eto CATEGO
+CRIT  C 채움 tasks 덮어쓰기 labor_hours out_of_range → 거부  PASS  rc=2 files=['qc1.yaml.draft'] 거부: R1: labor_hours: 모르는 덮어쓰기 키 ['out_of_range'] — 바꿀 수 있는 키만 (thresholds, features, candidates, candidate_params, constraints, params, monitor, notice, title, rule, max_items, rea

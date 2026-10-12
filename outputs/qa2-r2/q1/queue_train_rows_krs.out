@@ -1,0 +1,80 @@
+<local>/Desktop/AI Coding/Standard ML Platform/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{
+ "fit_rows": 576,
+ "fit_rows_ge4": 15,
+ "picked_complete_rows": 13,
+ "sent": [
+  {
+   "entity": "DEMO-20240045",
+   "actual_status": 200,
+   "predict_status": 422,
+   "warn": "{\"error\":{\"code\":\"out_of_bounds\",\"message\":\"입력 값이 허용 범위(min/max) 밖입니다\",\"detail\":{\"field\":\"temperature_c\",\"rule\":\"min\"}}}"
+  },
+  {
+   "entity": "DEMO-20240287",
+   "actual_status": 200,
+   "predict_status": 200,
+   "warn": [
+    {
+     "code": "synthetic_model",
+     "field": null,
+     "message": "합성 데이터로 학습한 모델입니다"
+    }
+   ]
+  },
+  {
+   "entity": "DEMO-20240369",
+   "actual_status": 200,
+   "predict_status": 422,
+   "warn": "{\"error\":{\"code\":\"out_of_bounds\",\"message\":\"입력 값이 허용 범위(min/max) 밖입니다\",\"detail\":{\"field\":\"temperature_c\",\"rule\":\"max\"}}}"
+  }
+ ],
+ "predict_ok": 10,
+ "run_review": [
+  {
+   "tenant_id": "t85f4e3",
+   "task_id": "t85f4e3.residual_review",
+   "day": "2026-10-03",
+   "origin": "live_residual",
+   "uses": "t85f4e3.joint_strength",
+   "rule": "abs_residual_ge",
+   "version": "v1",
+   "threshold": 4.0,
+   "threshold_from": "rule",
+   "pairs": 0,
+   "created": 0,
+   "test_split": {
+    "origin": "test_split",
+    "version": "v1",
+    "created": 16,
+    "threshold": 4.0
+   }
+  }
+ ],
+ "items": {
+  "total": 16,
+  "live": 0,
+  "live_from_fit_segment": 0,
+  "example": []
+ },
+ "api_review_first": {
+  "item_id": "rvw_01M4RX10S1Y0WW122HPX2AP136",
+  "task": "t85f4e3.residual_review",
+  "entity_id": "DEMO-20240378",
+  "prediction_id": null,
+  "model_version": "v1",
+  "predicted": 42.583367386514745,
+  "actual": 37.6827719171529,
+  "residual": -4.900595469361846,
+  "rule": "abs_residual_ge",
+  "threshold": 4.0,
+  "reason": "|잔차| 4.90 MPa ≥ 4.0 MPa",
+  "origin": "test_split",
+  "state": "open",
+  "decided_by": null,
+  "decided_at": null,
+  "note": null,
+  "created_at": "2026-10-13T05:31:51+09:00"
+ }
+}

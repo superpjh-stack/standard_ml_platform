@@ -1,0 +1,17 @@
+{
+ "cad_regions": {
+  "entities": 20000,
+  "file_MB": 1.55,
+  "cad_regions_sec": 3.3,
+  "bom_text_sec": 2.6,
+  "regions": 10000,
+  "regions_json_MB": 335.1
+ },
+ "ot_geometry": {
+  "objects": 2000,
+  "outer_pts": 500,
+  "total_pts": 54473,
+  "sec": 0.9,
+  "file_MB": 2.24
+ }
+}
