@@ -12,7 +12,7 @@ import importlib
 import inspect
 
 from ..db.conn import connect
-from .errors import ServeError
+from .errors import NotFound, ServeError
 
 SUBMIT_MODULES = ("mlcore.data.jobs", "mlcore.train.trainer")   # progress-dev1 §1 위치 → interfaces §4 위치
 
@@ -26,7 +26,7 @@ class SourceDisconnected(ServeError):
 
 
 class TrainBusy(ServeError):
-    status, code, default_message = 409, "train_busy", "이 회사의 학습이 이미 진행 중입니다"   # D-54 (오류 코드 미정)
+    status, code, default_message = 409, "train_busy", "이 회사의 학습이 이미 진행 중입니다"   # D-54 · spec §5.5 (회사당 1)
 
 
 def _submit_fn():
@@ -57,7 +57,9 @@ def submit(tenant_id: str, task_id: str, *, actor: str, source_role: str, seed: 
         if name == "NoTarget":
             raise SourceDisconnected("목표 없음 — 학습할 목표 열이 없습니다", {"rule": "no_target"}) from e
         if name == "TrainBusy":
-            raise TrainBusy() from e
+            raise TrainBusy(detail={"rule": "tenant_concurrency"}) from e
+        if isinstance(e, KeyError):                    # 켜지지 않은 과제 (interfaces §4.1)
+            raise NotFound("과제를 찾을 수 없습니다") from e
         raise
     with connect() as c:
         row = c.execute("SELECT status FROM mlp_train_run WHERE run_id = %s", (run_id,)).fetchone()

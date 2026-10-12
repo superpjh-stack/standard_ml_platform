@@ -107,6 +107,33 @@ def _time_split(frame: pd.DataFrame, task, fr: dict) -> tuple[np.ndarray, np.nda
     return order[:a], order[a:b], order[b:], bounds
 
 
+def _group_random(frame: pd.DataFrame, fr: dict, rng: np.random.RandomState, *, stratify: bool):
+    """group_key 가 있는 비시계열 분할 — 그룹 단위로 섞어 행 수 비율 60/20/20 에 가깝게 자른다(그룹이 경계를 넘지 않는다).
+    stratify 면 그룹의 다수 목표값별로 따로 섞어 번갈아 채운다(층화 근사)."""
+    g = frame["group"].astype(str).to_numpy()
+    sizes = pd.Series(g).value_counts().sort_index()
+    names = list(sizes.index)
+    if stratify and "target" in frame.columns:
+        # 층별로 섞은 뒤 층 안 순위 비율((i + 0.5) / 층 크기)로 합쳐 줄 세운다 — 앞 60% 에 각 층이 비율대로 들어간다
+        major = frame.groupby(g)["target"].agg(lambda s: s.mode().iloc[0] if s.notna().any() else -1)
+        keyed = []
+        for k in sorted(major.unique()):
+            members = rng.permutation([nm for nm in names if major[nm] == k])
+            keyed += [((i + 0.5) / len(members), str(nm)) for i, nm in enumerate(members)]
+        order = [nm for _, nm in sorted(keyed)]
+    else:
+        order = list(rng.permutation(names))
+    n = len(frame)
+    a, b = n * fr["train"], n * (fr["train"] + fr["valid"])
+    part, acc = {}, 0
+    for name in order:
+        mid = acc + sizes[name] / 2
+        part[name] = 0 if mid <= a else (1 if mid <= b else 2)
+        acc += sizes[name]
+    lab = np.array([part[x] for x in g])
+    return np.flatnonzero(lab == 0), np.flatnonzero(lab == 1), np.flatnonzero(lab == 2)
+
+
 def plan(frame: pd.DataFrame, task, seed: int, *, ledger: AccessLedger | None = None) -> tuple[SplitPlan, GuardedTest]:
     ledger = ledger if ledger is not None else AccessLedger()
     n = len(frame)
@@ -121,6 +148,13 @@ def plan(frame: pd.DataFrame, task, seed: int, *, ledger: AccessLedger | None = 
         k = int(pol["folds"])
         m = len(tr_all)
         edges = [int(round(m * (i + 1) / (k + 1))) for i in range(k + 1)]
+        if task.raw.get("group_key") and "group" in frame.columns:
+            # 폴드 경계도 그룹을 넘지 않게(시험 경계와 같은 규칙) — 끝 경계(m)는 그대로
+            gtr = frame["group"].astype(str).to_numpy()[tr_all]
+            cut = [_group_cut(gtr, e) for e in edges[:-1]] + [m]
+            edges = sorted({c for c in cut if c > 0})
+            if len(edges) < k + 1:
+                raise ValueError(f"time_cv5: 그룹이 적어 폴드 {k} 개를 만들 수 없다(경계 {len(edges)})")
         folds = tuple((tuple(int(i) for i in tr_all[:edges[i]]), tuple(int(i) for i in tr_all[edges[i]:edges[i + 1]]))
                       for i in range(k))
         # train/valid = 마지막 폴드 (검증 구간 잔차 · 선정은 폴드 전체로)
@@ -129,7 +163,10 @@ def plan(frame: pd.DataFrame, task, seed: int, *, ledger: AccessLedger | None = 
     else:
         rng = np.random.RandomState(seed)
         fr = pol["fractions"]
-        if policy == "stratified_60_20_20" and "target" in frame.columns:
+        grouped = bool(task.raw.get("group_key")) and "group" in frame.columns
+        if grouped:
+            tr, va, te = _group_random(frame, fr, rng, stratify=policy == "stratified_60_20_20")
+        elif policy == "stratified_60_20_20" and "target" in frame.columns:
             tr, va, te = [], [], []
             for _, idx in sorted(frame.groupby(frame["target"].fillna(-1)).indices.items()):
                 idx = rng.permutation(np.asarray(idx))
@@ -141,5 +178,7 @@ def plan(frame: pd.DataFrame, task, seed: int, *, ledger: AccessLedger | None = 
             a, b = int(round(n * fr["train"])), int(round(n * (fr["train"] + fr["valid"])))
             tr, va, te = np.sort(idx[:a]), np.sort(idx[a:b]), np.sort(idx[b:])
         bounds = {"order": pol["order"], "seed": seed, "sizes": {"train": len(tr), "valid": len(va), "test": len(te)}}
+        if grouped:
+            bounds["group_key"] = task.raw["group_key"]
     sp = SplitPlan(policy, tuple(int(i) for i in tr), tuple(int(i) for i in va), folds, bounds)
     return sp, GuardedTest(te, ledger)

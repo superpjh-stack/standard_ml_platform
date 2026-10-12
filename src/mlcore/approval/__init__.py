@@ -52,8 +52,11 @@ def decide(approval_id: str, *, actor: str, actor_role: str, approve: bool, reas
         if not appr:
             raise AlreadyDecided(detail={"approval_id": approval_id})
         tenant_id, task_id, version = appr["tenant_id"], appr["task_id"], appr["ref_id"]
+        if appr["kind"] == "recommendation":
+            return _decide_recommendation(c, appr, state=state, actor=actor, actor_role=actor_role, reason=reason,
+                                          request_id=request_id)
         if appr["kind"] != "model":
-            raise ServeError("모델 승인만 지원합니다 (A0)")   # recommendation · quote 결정은 웨이브 A — 트랜잭션 롤백
+            raise ServeError("이 승인 종류는 1차 범위가 아닙니다", {"rule": "kind", "field": None})   # quote — 트랜잭션 롤백
         previous = None
         if approve:
             rows = c.execute("SELECT version, stage FROM mlp_model_version WHERE tenant_id = %s AND task_id = %s "
@@ -80,3 +83,20 @@ def decide(approval_id: str, *, actor: str, actor_role: str, approve: bool, reas
                     request_id=request_id, conn=c)
     return {"approval_id": approval_id, "state": state, "production_version": prod["version"] if prod else None}
 
+
+
+def _decide_recommendation(c, appr: dict, *, state: str, actor: str, actor_role: str, reason: str | None,
+                           request_id: str | None) -> dict:
+    """추천 승인 — mlp_recommendation.status 만 바꾼다(needs_approval → approved | rejected). 설비 · MES 에 쓰지 않는다.
+    production 모델은 건드리지 않는다. 같은 트랜잭션에서 감사 1행."""
+    got = c.execute("UPDATE mlp_recommendation SET status = %s WHERE tenant_id = %s AND rec_id = %s "
+                    "AND status = 'needs_approval' RETURNING rec_id",
+                    (state, appr["tenant_id"], appr["ref_id"])).fetchone()
+    if not got:
+        raise AlreadyDecided("추천의 상태가 바뀌어 결정할 수 없습니다",
+                             {"approval_id": appr["approval_id"], "rule": "recommendation_not_pending"})
+    audit.write(tenant_id=appr["tenant_id"], actor=actor, role=actor_role, action=f"recommendation.{state}",
+                target=f"{appr['task_id']}@{appr['ref_id']}",
+                detail={"approval_id": appr["approval_id"], "action": appr["action"], "reason": reason},
+                request_id=request_id, conn=c)
+    return {"approval_id": appr["approval_id"], "state": state, "production_version": None}

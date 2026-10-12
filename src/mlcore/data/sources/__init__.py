@@ -1,6 +1,7 @@
 """데이터 소스 어댑터 (contracts/interfaces.md §2 · spec §4.1). 전부 읽기 전용(G-S05).
 
-1차(A0): synthetic · csv. gateway · dataplatform · mes 는 웨이브 A — 지금은 SourceDisconnected("미구현") 로 실패를 보인다.
+5종: synthetic · csv · gateway(원장 DB SELECT) · dataplatform(REST GET) · mes(허용목록 테이블 SELECT).
+DB · HTTP 어댑터의 연결 · 전송은 주입할 수 있다(`connect=` · `transport=`) — 시험은 fixture 사본 · 가짜 전송만 쓴다.
 """
 
 from __future__ import annotations
@@ -9,13 +10,17 @@ from pathlib import Path
 
 from .base import DataSource, ReadSpec, SourceDisconnected, SourceHealth, SourceKind
 from .csv import CsvSource
+from .dataplatform import DataPlatformSource
+from .gateway import GatewaySource
+from .mes import MesSource
 from .synthetic import SyntheticSource
 
 __all__ = ["DataSource", "ReadSpec", "SourceDisconnected", "SourceHealth", "SourceKind", "CsvSource",
-           "SyntheticSource", "make_source"]
+           "DataPlatformSource", "GatewaySource", "MesSource", "SyntheticSource", "make_source"]
 
 
-def make_source(src_cfg: dict, *, pack_dir: str | Path, pack_meta: dict, categories: dict | None = None) -> DataSource:
+def make_source(src_cfg: dict, *, pack_dir: str | Path, pack_meta: dict, categories: dict | None = None,
+                connect=None, transport=None) -> DataSource:
     """회사 등록부 `sources.<name>` 한 항목 → 어댑터."""
     kind = (src_cfg or {}).get("kind")
     if kind == "synthetic":
@@ -31,6 +36,10 @@ def make_source(src_cfg: dict, *, pack_dir: str | Path, pack_meta: dict, categor
         if not src_cfg.get("path"):
             raise SourceDisconnected("csv", "path 없음")
         return CsvSource(src_cfg["path"], encoding=src_cfg.get("encoding", "utf-8-sig"), units=src_cfg.get("units"))
-    if kind in ("gateway", "dataplatform", "mes"):
-        raise SourceDisconnected(kind, "어댑터 미구현(웨이브 A)")
+    if kind == "gateway":
+        return GatewaySource.from_config(src_cfg, connect=connect)
+    if kind == "mes":
+        return MesSource.from_config(src_cfg, connect=connect)
+    if kind == "dataplatform":
+        return DataPlatformSource.from_config(src_cfg, transport=transport)
     raise SourceDisconnected(str(kind), "알 수 없는 소스 종류")

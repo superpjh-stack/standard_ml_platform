@@ -9,7 +9,7 @@ params:
   max_delta_e:    {label: 목표 색차 상한, unit: "ΔE",  default: 2.5, min: 0.5,  max: 8}
   max_risk:       {label: 불량 위험 상한, unit: 확률,  default: 0.2, min: 0.01, max: 0.9}
   min_line_speed: {label: 최소 라인속도,  unit: m/min, default: 12,  min: 6,    max: 24}
-formulas: {process_cost: process_cost}             # formulas/process_cost.py — TODO(개발3, M3)
+formulas: {process_cost: process_cost}             # formulas/process_cost.py::cost — 원천 PROCESS_COST 식 이관(M3, packs/textile/tests/test_textile_formulas.py)
 objective: {minimize: process_cost, tiebreak: [{minimize: delta_e}]}   # 원천: 비용 최소, 동률이면 ΔE (spec §3.2 예시는 delta_e 최소 — D-30)
 constraints:
   - {name: max_delta_e,    expr: "delta_e <= max_delta_e"}

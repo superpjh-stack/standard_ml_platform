@@ -102,7 +102,8 @@ def test_missing_feature_column_is_nan_not_invented(tmp_path):
 
 
 @pytest.mark.parametrize("kind", ["gateway", "dataplatform", "mes", "nope"])
-def test_unimplemented_kinds_fail_visibly(kind, tmp_path):
+def test_incomplete_source_config_fails_visibly(kind, tmp_path):
+    """설정이 빈 원천(테이블 · 허용목록 · 환경변수 이름 없음)과 모르는 종류는 만들 때 실패를 보인다."""
     with pytest.raises(SourceDisconnected):
         make_source({"kind": kind}, pack_dir=tmp_path, pack_meta={})
 

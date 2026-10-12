@@ -6,9 +6,9 @@
 
 | 폴더 | 내용 | 상태 |
 |---|---|---|
-| `ks/` | ks 합성 스냅숏 · 드리프트 · CSV · 원천 DB 사본 | snapshot.parquet · snapshot.csv (A0). 드리프트 · DB 사본은 A |
-| `sw/` | sw 같은 구성 | snapshot.parquet · snapshot.csv (A0). 드리프트 · DB 사본은 A |
-| `bad_registry/` | 병합 규칙 5 위반 불량 등록부 5종 (`contracts/tenant-contract.md` §2.1) | TODO 개발3 (A) |
-| `yn/` | 새 회사 CSV fixture (G-M10) — `_template` 변수. 커밋하지 않고 시험이 만든다: `migration/make_fixtures.py --kind template_csv --out <dir>` (D-51) | 생성기 있음 (A0) · 회사 등록은 A |
+| `ks/` | ks 합성 스냅숏 · 드리프트 · CSV · 원천 DB 사본 | snapshot.parquet · snapshot.csv (A0) · drift.parquet · psi_hand.json · source_db.sql (A — D-W1-10) |
+| `sw/` | sw 같은 구성 | snapshot.parquet · snapshot.csv (A0) · drift.parquet · psi_hand.json · source_db.sql (A — D-W1-10) |
+| `bad_registry/` | 병합 규칙 5 위반 불량 등록부 5종 (`contracts/tenant-contract.md` §2.1) | 있음 (Phase 0 · `gates/check_registry.py` 5/5) |
+| `yn/` | 새 회사 CSV fixture (G-M10) — `_template` 변수. **커밋하지 않음(T4 · D-51)**: 시험이 tmp 에 만든다 `migration/make_fixtures.py --kind template_csv --out <tmp>` → `migration/make_tenant.py --new <code> --csv <tmp>/snapshot.csv` 가 tmp 등록부 루트(`MLP_TENANTS_DIR`)에 `<code>.yaml` 만 만든다(`tests/test_new_tenant.py`) | 폴더 없음이 정상 |
 
 생성 명령은 각 폴더 README 에 적는다. 생성 스크립트는 `migration/make_fixtures.py` 하나로 모은다(개발3).

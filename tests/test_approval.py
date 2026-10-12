@@ -186,3 +186,22 @@ def test_api_stage_admin_only(ks):
     assert tc.post(url, headers=h.hdr(k["approver"])).status_code == 403
     r = tc.post(url, headers=h.hdr(k["admin"]))
     assert r.status_code == 200 and r.json()["stage"] == "staging"
+
+
+def test_promotion_evidence_has_shadow_diff(tmp_path):
+    """승인 카드의 그림자 예측 차이 — 최근 운영 입력으로 대상 · production 을 같이 채점(시험 구간 미사용)."""
+    m = h.make_tenant("ks", tmp_path)
+    task = next(t for t, d in m.tasks.items() if d.type == "regression")
+    ref, res = h.to_production(m, task)
+    from mlcore.serve.catalog import TaskCatalog
+    from mlcore.serve.predict import PredictRequest, Predictor
+    for i in range(3):
+        Predictor(TaskCatalog(m)).predict(m.tenant.code, task, PredictRequest(inputs=h.sample_inputs(res, i)), caller="t")
+    ref2, _ = h.registered(m, task, seed=3)
+    reg = Registry()
+    reg.stage(m.tenant.code, task, ref2.version, actor="a")
+    aid = reg.request_promotion(m.tenant.code, task, ref2.version, actor="b", action="promote", reason=None)
+    ev = approval.get(aid)["evidence"]
+    assert ev["production"]["version"] == ref.version and ev["target"]["version"] == ref2.version
+    assert ev["shadow"]["n"] == 3 and ev["shadow"]["basis"] == "recent_operating_inputs"
+    assert ev["shadow"]["max_abs_diff"] >= ev["shadow"]["mean_abs_diff"] >= 0

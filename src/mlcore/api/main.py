@@ -19,12 +19,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .. import auth
 from ..db.conn import DbUnavailable
-from ..registry import tenants
 from ..serve.errors import ServeError
 from ..settings import ROOT, get_settings
 from .errors import ApiError
 from .middleware import AuthAuditMiddleware
-from .routers import models, predict, train, v1
+from .routers import compat, models, ops, predict, train, v1
 
 log = logging.getLogger("mlcore.api")
 VERSION = "0.1.0"
@@ -33,18 +32,23 @@ VERSION = "0.1.0"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     code = get_settings().tenant
-    # 등록부 병합만 한다. 학습 함수는 여기서 부르지 않는다.
-    app.state.registry = tenants.load_and_merge(code) if code else None
+    # 등록부 병합만 한다. 학습 함수는 여기서 부르지 않는다. 등록부 루트는 학습 작업자와 같은 규칙
+    # (mlcore.data.jobs.tenants_base_for: 환경변수 MLP_TENANTS_DIR → 기본 tenants/) — 데이터 모듈이라 학습 코드를 끌어오지 않는다.
+    if code:
+        from ..data.jobs import load_merged
+        app.state.registry = load_merged(code)
+    else:
+        app.state.registry = None
     yield
 
 
 app = FastAPI(title="표준 ML 플랫폼", version=VERSION, lifespan=lifespan,
               docs_url="/api/docs", openapi_url="/api/openapi.json")
 
-_origins = list(get_settings().cors_origins)
-if _origins:  # CORS 는 설정 목록만 (spec §17). 비어 있으면 붙이지 않는다
+_origins = [o for o in get_settings().cors_origins if o != "*"]   # 와일드카드는 설정에 있어도 받지 않는다
+if _origins:  # CORS 는 설정 목록(MLP_CORS_ORIGINS)만 (spec §17 · G-M11). 비어 있으면 붙이지 않는다
     app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["GET", "POST", "PATCH"],
-                       allow_headers=["X-API-Key", "Content-Type", "X-Request-Id"])
+                       allow_headers=["X-API-Key", "Content-Type", "X-Request-Id"], allow_credentials=False)
 app.add_middleware(AuthAuditMiddleware)
 
 
@@ -91,6 +95,19 @@ app.include_router(v1.router)
 app.include_router(predict.router)
 app.include_router(models.router)
 app.include_router(train.router)
+app.include_router(ops.router)       # 개발3 B02 · B06 · B12 · B14 (progress-dev3 §3 요청)
+
+
+def include_compat() -> None:
+    """호환 라우터(`/api/{rest}` 잡이)는 **맨 마지막**에 둔다 — 다른 담당 라우터가 붙은 뒤에도 끝으로 옮긴다."""
+    routes = app.router.routes
+    mine = [r for r in routes if getattr(r, "endpoint", None) is compat.compat]
+    for r in mine:
+        routes.remove(r)
+    if not mine:
+        app.include_router(compat.router)
+    else:
+        routes.extend(mine)
 
 # 콘솔 — web/dist 가 있으면 /app/* 로 제공 (contracts/screen-map.md)
 DIST: Path = ROOT / "web" / "dist"
@@ -104,3 +121,6 @@ def console(rest: str = ""):
     if not index.is_file():
         return _err(503, "console_not_built", "먼저 web 에서 npm run build 를 실행하세요")
     return FileResponse(index)
+
+
+include_compat()

@@ -34,7 +34,7 @@ def register(kind: TaskKind) -> TaskKind:
 
 
 def kind_for(task_type: str) -> TaskKind:
-    from . import regression, risk  # noqa: F401 — 등록
+    from . import anomaly, regression, risk  # noqa: F401 — 등록
 
     if task_type in KINDS:
         return KINDS[task_type]

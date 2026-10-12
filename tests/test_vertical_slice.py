@@ -10,8 +10,9 @@ API 를 끝까지 돈다:
   → GET /predictions/{id}/trace(admin) — 스냅숏 해시 · 소스 참조 · 실측.
 
 격리 (tests/_dev2.py 방식): 시험마다 tenants/<ks|sw>.yaml 을 새 회사 코드로 복사한 임시 등록부를 쓴다.
-학습기(개발1 `data.jobs.submit` · `train.jobs.execute`)는 회사 등록부를 `registry.tenants.load_and_merge(code)`
-(기본 폴더 tenants/)로 읽으므로, 시험에서만 그 함수를 임시 폴더를 보도록 감싼다(코드 경로는 그대로, 폴더만 다르다).
+학습기(개발1 `data.jobs.submit` · `train.jobs.execute`)는 등록부 루트를 `mlcore.data.jobs.tenants_base_for`
+(인자 → 환경변수 `MLP_TENANTS_DIR` → 기본 tenants/)로 찾는다 — 시험은 그 공식 주입 경로(환경변수)로 임시 폴더를 알린다.
+코드 함수를 바꿔 끼우는 우회(monkeypatch)는 없다(웨이브 A 에서 걷어냄).
 API 키 · 역할은 실제 auth 경로(mlp_api_key 해시 조회 → 미들웨어 → auth.require)로 보낸다 — 우회 없음.
 
 **우회 (D-57):** POST …/train 은 queued 작업만 만든다. queued 작업을 실행하는 주체(작업자 · 배경 작업)가
@@ -21,7 +22,6 @@ API 키 · 역할은 실제 auth 경로(mlp_api_key 해시 조회 → 미들웨�
 
 from __future__ import annotations
 
-import functools
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -31,7 +31,6 @@ import pytest
 
 import _dev2 as h
 from mlcore.db.conn import connect
-from mlcore.registry import tenants
 from mlcore.serve import training
 
 pytestmark = [pytest.mark.gate("G-V01"), pytest.mark.skipif(not h.db_ok(), reason="ml_test_db 없음 — make setup")]
@@ -50,14 +49,7 @@ def world(tmp_path, monkeypatch, request):
     source, short, pack = request.param
     m = h.make_tenant(source, tmp_path)
     base = tmp_path / f"tenants-{m.tenant.code}"
-    orig = tenants.load_and_merge
-
-    def load(code, **kw):          # 임시 회사 코드만 임시 폴더에서, 나머지는 원래대로
-        if code == m.tenant.code:
-            kw.setdefault("tenants_base", base)
-        return orig(code, **kw)
-
-    monkeypatch.setattr(tenants, "load_and_merge", functools.wraps(orig)(load))
+    monkeypatch.setenv(h.TENANTS_DIR_ENV, str(base))     # 등록부 루트 주입 — 환경변수(공식 경로), 코드 바꿔 끼우기 없음
     return SimpleNamespace(m=m, task=f"{m.tenant.code}.{short}", pack=pack, k=h.keys(m), tc=h.client(m), source=source)
 
 

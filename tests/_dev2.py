@@ -246,3 +246,62 @@ def client(m):
 def count(sql: str, params=()) -> int:
     with connect() as c:
         return c.execute(sql, params).fetchone()["n"]
+
+
+# ── 실제 학습기(개발1)로 과제 전부 운영까지 — G-M04 · G-M13 · 호환 시험 공용 ─────────────────────────
+TENANTS_DIR_ENV = "MLP_TENANTS_DIR"   # 개발1 mlcore.data.jobs.tenants_base_for 의 등록부 루트 주입
+
+
+def tenants_base(m) -> Path:
+    """make_tenant 가 만든 임시 등록부 폴더."""
+    return m.tenant.path.parent
+
+
+class use_tenants_dir:
+    """임시 회사 등록부를 학습기 · 작업자가 찾게 환경변수로 알린다(코드 경로는 그대로, 폴더만 주입).
+    **with 블록 안에서만** 붙이고 끝나면 되돌린다 — 다른 시험(개발3 tenants_dir)이 같은 프로세스에서 기본 폴더를 본다."""
+
+    def __init__(self, m):
+        self.base = str(tenants_base(m))
+
+    def __enter__(self):
+        self.prev = os.environ.get(TENANTS_DIR_ENV)
+        os.environ[TENANTS_DIR_ENV] = self.base
+        return self
+
+    def __exit__(self, *exc):
+        if self.prev is None:
+            os.environ.pop(TENANTS_DIR_ENV, None)
+        else:
+            os.environ[TENANTS_DIR_ENV] = self.prev
+        return False
+
+
+def real_production(m, task_id: str, *, source_role: str = "demo"):
+    """개발1 submit → serve.training.run_and_register(작업자 진입점, D-57) → stage → 승인 → production.
+    → (ModelRef, TrainResult). 기준선을 못 이기면 stage 가 InvalidTransition 을 올린다(숨기지 않는다)."""
+    from mlcore import approval
+    from mlcore.serve import training
+    with use_tenants_dir(m):
+        out = training.submit(m.tenant.code, task_id, actor="test-admin", source_role=source_role, seed=None)
+        result, ref = training.run_and_register(out["run_id"])
+    assert result.status == "succeeded" and ref is not None, (task_id, result.status)
+    reg = Registry()
+    reg.stage(m.tenant.code, task_id, ref.version, actor="test-admin")
+    aid = reg.request_promotion(m.tenant.code, task_id, ref.version, actor="test-approver", action="promote", reason=None)
+    approval.decide(aid, actor="test-approver", actor_role="approver", approve=True, reason="시험")
+    return reg.get(m.tenant.code, task_id), result
+
+
+def lock_of(ref) -> dict:
+    return json.loads((artifacts.resolve_dir(ref.artifact_path) / "features.lock.json").read_text(encoding="utf-8"))
+
+
+def mid_inputs(lock: dict, names) -> dict:
+    """산출물 lock 의 보정값(학습 구간 중앙값 · 최빈값) — 학습 범위 한가운데."""
+    out = {}
+    for n in names:
+        item = lock["features"][n]
+        v = item["fill"]
+        out[n] = int(round(v)) if item["dtype"] == "int" else v
+    return out

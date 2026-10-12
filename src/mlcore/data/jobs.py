@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+from pathlib import Path
 from typing import Sequence
 
 from ..settings import get_settings
@@ -22,6 +24,31 @@ class TrainBusy(Exception):
 
 class NoTarget(Exception):
     """지도학습 과제인데 목표 열이 없다 — doctor · 학습은 `목표 없음` 으로 보인다."""
+
+
+TENANTS_DIR_ENV = "MLP_TENANTS_DIR"   # 등록부 루트 주입 (이슈 #4) — 값은 폴더 경로(os.pathsep 로 여러 개)
+
+
+def tenants_base_for(tenant_id: str, tenants_base: str | Path | None = None) -> Path | None:
+    """회사 등록부 `<code>.yaml` 이 있는 폴더. 순서: 인자 → 환경변수 MLP_TENANTS_DIR(여러 폴더면 앞에서부터
+    `<code>.yaml` 이 있는 첫 폴더) → None(= 로더 기본 `tenants/`). API · 작업자 · 시험이 같은 규칙을 쓴다.
+    폴더를 찾지 못하면 None 을 돌려 기본 폴더로 간다(없는 회사는 로더가 그대로 실패를 보인다)."""
+    if tenants_base is not None:
+        return Path(tenants_base)
+    for d in (os.environ.get(TENANTS_DIR_ENV) or "").split(os.pathsep):
+        if d and (Path(d) / f"{tenant_id}.yaml").is_file():
+            return Path(d)
+    return None
+
+
+def load_merged(tenant_id: str, tenants_base: str | Path | None = None):
+    """registry.tenants.load_and_merge 를 주입된 등록부 루트로 부른다(없으면 로더 기본값)."""
+    from ..registry import tenants
+
+    base = tenants_base_for(tenant_id, tenants_base)
+    if base is None and os.environ.get(TENANTS_DIR_ENV):
+        base = tenants.TENANTS_DIR          # 환경변수 폴더들에 이 회사가 없다 → 저장소 tenants/ (여러 폴더 값을 로더가 한 경로로 읽지 않게)
+    return tenants.load_and_merge(tenant_id, tenants_base=base) if base is not None else tenants.load_and_merge(tenant_id)
 
 
 def config_hash(def_hash: str, seed: int, code_version: str, candidates: Sequence[str], candidate_params: dict) -> str:
@@ -52,11 +79,10 @@ def source_name_for(cfg: dict, source_role: str | None) -> str:
     return name
 
 
-def read_frame(tenant_id: str, task_id: str, *, source_role: str | None = None):
+def read_frame(tenant_id: str, task_id: str, *, source_role: str | None = None,
+               tenants_base: str | Path | None = None):
     """(merged, task, frame, source_ref, synthetic) — 회사 등록부대로 소스를 골라 표준 프레임을 읽는다."""
-    from ..registry.tenants import load_and_merge
-
-    m = load_and_merge(tenant_id)
+    m = load_merged(tenant_id, tenants_base)
     if task_id not in m.tasks:
         raise KeyError(f"과제 {task_id} 가 켜져 있지 않다")
     task = m.tasks[task_id]
@@ -83,12 +109,18 @@ def read_frame(tenant_id: str, task_id: str, *, source_role: str | None = None):
 
 
 def submit(tenant_id: str, task_id: str, *, actor: str, source_role: str | None = None, seed: int | None = None,
-           test: bool = False) -> str:
+           test: bool = False, tenants_base: str | Path | None = None) -> str:
+    """접수 → run_id. 같은 스냅숏 + 설정이면 기존 run_id(멱등).
+
+    재시도 정책(D-49 후속, progress-dev1.md §1.1): run_id 가 결정적이라 같은 스냅숏 · 설정의 **failed** 실행은
+    새 행을 만들 수 없다. 그래서 같은 요청이 다시 오면 그 행을 `queued` 로 되돌린다(started_at · finished_at ·
+    report · error 비움, 이전 오류는 log 에 남김) + `mlp_audit` 에 `train.retry` 1행(같은 트랜잭션).
+    succeeded · queued · running 은 그대로 돌려준다. 회사에 다른 queued · running 이 있으면 TrainBusy."""
     import psycopg
 
     from ..db.conn import connect
 
-    m, task, frame, ref, synthetic = read_frame(tenant_id, task_id, source_role=source_role)
+    m, task, frame, ref, synthetic = read_frame(tenant_id, task_id, source_role=source_role, tenants_base=tenants_base)
     snap = snapshot.freeze(frame, tenant_id=tenant_id, task=task, source_ref=ref, synthetic=synthetic)
     snapshot.record(snap, test=test)
     s = default_seed(task, m.pack.meta) if seed is None else int(seed)
@@ -97,14 +129,71 @@ def submit(tenant_id: str, task_id: str, *, actor: str, source_role: str | None 
     h = config_hash(task.def_hash, s, code_version, cands, params)
     rid = run_id_for(tenant_id, task_id, snap.snapshot_id, h)
     with connect(test) as c:
-        row = c.execute("SELECT run_id FROM mlp_train_run WHERE tenant_id=%s AND task_id=%s AND snapshot_id=%s "
-                        "AND config_hash=%s", (tenant_id, task_id, snap.snapshot_id, h)).fetchone()
-        if row:
+        row = c.execute("SELECT run_id, status, error, log FROM mlp_train_run WHERE tenant_id=%s AND task_id=%s "
+                        "AND snapshot_id=%s AND config_hash=%s", (tenant_id, task_id, snap.snapshot_id, h)).fetchone()
+        if row and row["status"] != "failed":
             return row["run_id"]
         try:
+            if row:
+                return _requeue_failed(c, row, tenant_id=tenant_id, actor=actor)
             c.execute("INSERT INTO mlp_train_run (run_id, tenant_id, task_id, snapshot_id, config_hash, seed, code_version, "
                       "status, created_by) VALUES (%s,%s,%s,%s,%s,%s,%s,'queued',%s)",
                       (rid, tenant_id, task_id, snap.snapshot_id, h, s, code_version, actor))
         except psycopg.errors.UniqueViolation as e:
             raise TrainBusy(f"{tenant_id}: 진행 중인 학습이 있다") from e
     return rid
+
+
+def _requeue_failed(c, row: dict, *, tenant_id: str, actor: str) -> str:
+    from .. import audit
+
+    prev = row.get("error")
+    note = f"재시도 접수 ({actor}) — 이전 오류: {json.dumps(prev, ensure_ascii=False, default=str) if prev else '없음'}"
+    log = ((row.get("log") or "") + "\n" + note).strip()
+    c.execute("UPDATE mlp_train_run SET status='queued', started_at=NULL, finished_at=NULL, report=NULL, error=NULL, "
+              "log=%s, created_by=%s WHERE run_id=%s AND status='failed'", (log, actor, row["run_id"]))
+    audit.write(tenant_id=tenant_id, actor=actor, action="train.retry", target=row["run_id"],
+                detail={"rule": "failed_requeue", "previous_error": prev}, conn=c)
+    return row["run_id"]
+
+
+def _iso(ts):
+    from datetime import timedelta, timezone
+
+    return ts.astimezone(timezone(timedelta(hours=9))).isoformat(timespec="seconds") if ts is not None else None
+
+
+def run_view(run_id: str, *, tenant_id: str | None = None, test: bool = False) -> dict | None:
+    """GET /runs/{id} 응답 본문(contracts/api-contract.md §4). 없거나 다른 회사면 None(→ 404, 존재를 숨긴다).
+    DB 행만 읽는다 — 학습 코드를 import 하지 않는다(API 가 불러도 G-M06 그대로).
+    계약 키 + 화면 4 용 덧붙임(`report` 요약: 선정 사유 · 기준선 · 구간 · 보정 · 중요도 · 잔차 · 보정 곡선)."""
+    from ..db.conn import connect
+
+    with connect(test) as c:
+        r = c.execute("SELECT r.*, s.rows, s.ts_from, s.ts_to, s.sha256, s.synthetic FROM mlp_train_run r "
+                      "JOIN mlp_snapshot s ON s.snapshot_id = r.snapshot_id WHERE r.run_id=%s", (run_id,)).fetchone()
+        if r is None or (tenant_id is not None and r["tenant_id"] != tenant_id):
+            return None
+        v = c.execute("SELECT version, stage FROM mlp_model_version WHERE run_id=%s", (run_id,)).fetchone()
+    rep = r["report"] or {}
+    test_part = rep.get("test") or {}
+    return {
+        "run_id": r["run_id"], "status": r["status"], "task": r["task_id"],
+        "snapshot": {"snapshot_id": r["snapshot_id"], "rows": r["rows"], "ts_from": _iso(r["ts_from"]),
+                     "ts_to": _iso(r["ts_to"]), "sha256": r["sha256"], "synthetic": r["synthetic"]},
+        "champion": rep.get("champion"), "valid_metrics": rep.get("valid_metrics") or {},
+        "test_metrics": rep.get("test_metrics") or {}, "beats_baseline": rep.get("beats_baseline"),
+        "version": v["version"] if v else None, "stage": v["stage"] if v else None,
+        "warnings": rep.get("warnings") or ([] if r["status"] != "failed" else
+                                            [{"code": "train_failed", "message": "학습 실패", "detail": r["error"] or {}}]),
+        "seed": r["seed"], "code_version": r["code_version"], "config_hash": r["config_hash"],
+        "created_at": _iso(r["created_at"]), "started_at": _iso(r["started_at"]), "finished_at": _iso(r["finished_at"]),
+        "error": r["error"],
+        "report": {k: rep.get(k) for k in ("selection_metric", "selection_reason", "valid_baseline", "baseline",
+                                           "baseline_value", "baselines_compared", "beats_baseline_rule", "interval",
+                                           "threshold", "threshold_rule", "calibration", "search", "outliers",
+                                           "outliers_removed", "split", "task_type")}
+        | {"permutation_importance": test_part.get("permutation_importance"),
+           "residuals": test_part.get("residuals"), "error_by_category": test_part.get("error_by_category"),
+           "calibration_curve": test_part.get("calibration_curve")},
+    }

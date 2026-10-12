@@ -11,7 +11,7 @@ params:
   reserve_hours:   {label: 확보할 수명 여유, unit: h,  default: 12,  min: 1, max: 150}
   max_delay_hours: {label: 최대 정비 대기,   unit: h,  default: 48,  min: 0, max: 72}
   max_cost_index:  {label: 비용지수 상한,    unit: 지수, default: 140, min: 1, max: 500}
-formulas: {maintenance_cost: maintenance_cost}     # formulas/maintenance_cost.py — TODO(개발3, M3)
+formulas: {maintenance_cost: maintenance_cost}     # formulas/maintenance_cost.py::cost — 원천 PLAN_COST 식 이관(M3, packs/press/tests/test_press_formulas.py)
 objective: {minimize: maintenance_cost, tiebreak: [{maximize: stop_after_hours}]}
 constraints:
   - {name: reserve,  expr: "remaining_hours - stop_after_hours >= reserve_hours"}

@@ -1,0 +1,36 @@
+/* 공용 컴포넌트 스타일 (개발2). 1024px 태블릿 폭에서 가로 스크롤이 생기지 않게 모든 표 · 폼은 줄바꿈한다. */
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+.badge-ok { background: #e3f4ea; color: #17633a; }
+.badge-watch { background: #fff4d6; color: #7a5a00; }
+.badge-review { background: #ffe5d0; color: #8a3a00; }
+.badge-out_of_range { background: #ece6f7; color: #4b2a85; }
+.badge-rejected { background: #fde2e2; color: #9b1c1c; }
+.badge-needs_approval { background: #e1ecfb; color: #1d4e89; }
+.badge-synthetic { background: #f1f1f1; color: #555; border-color: #ccc; }
+.muted { color: #67736d; }
+.error { border: 1px solid #f0b4b4; background: #fff5f5; color: #7f1d1d; border-radius: 6px; padding: 8px 12px; margin: 8px 0; overflow-wrap: anywhere; }
+.notice { font-size: 13px; color: #45524b; border-left: 3px solid #b8c4be; padding-left: 8px; }
+.conn { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
+.conn input { max-width: 100%; }
+.picker select { max-width: 100%; }
+.card { background: #fff; border: 1px solid #e3e8e5; border-radius: 8px; padding: 16px; margin: 12px 0; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+table.grid { border-collapse: collapse; width: 100%; table-layout: auto; font-size: 13px; }
+table.grid th, table.grid td { border-bottom: 1px solid #e3e8e5; padding: 4px 6px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+table.grid caption { text-align: left; font-weight: 600; padding: 4px 0; }
+.table-wrap { max-width: 100%; overflow-x: auto; }
+.feature-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.field input, .field select { width: 100%; box-sizing: border-box; padding: 4px 6px; }
+.field-imputed input, .field-imputed select { outline: 2px solid #f2c94c; }
+.field-oor input, .field-oor select { outline: 2px solid #8e6bd1; }
+.field .req { color: #b42318; margin-left: 2px; }
+.unit { color: #67736d; font-weight: normal; }
+.warnings { margin: 4px 0; padding-left: 18px; }
+.warnings li { overflow-wrap: anywhere; }
+button.primary { background: #1f6f4a; color: #fff; border: 0; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+button.primary:disabled { background: #9db8aa; cursor: default; }
+button.danger { background: #fff; color: #9b1c1c; border: 1px solid #f0b4b4; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; font-size: 13px; }
+.kv dt { color: #67736d; } .kv dd { margin: 0; overflow-wrap: anywhere; }

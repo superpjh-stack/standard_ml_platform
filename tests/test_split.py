@@ -157,9 +157,7 @@ def test_learned_task_under_guard(trained, tenant, tid):
 
 @pytest.mark.parametrize("tenant,tid", COMPOSITE)
 def test_composite_tasks_are_not_trained(tenant, tid):
-    from mlcore.registry.tenants import load_and_merge
-
-    t = load_and_merge(tenant).tasks[tid]
+    t = jobs.load_merged(tenant).tasks[tid]          # 학습기와 같은 등록부 루트 규칙(MLP_TENANTS_DIR → 기본 tenants/)
     with pytest.raises(NotTrainable):
         StandardTrainer().train(TrainConfig(t, "snp_0000000000000000", 1, "dev", (), {}))
 

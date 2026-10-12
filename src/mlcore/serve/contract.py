@@ -29,6 +29,22 @@ class PredictBody(BaseModel):
     model_version: Optional[StrictStr] = Field(default=None, pattern=r"^v[1-9][0-9]*$")
 
 
+class BatchBody(BaseModel):
+    model_config = _STRICT
+    items: list[PredictBody] = Field(min_length=1, max_length=500)    # 501건 이상 → 422 invalid_input
+
+
+Number = Union[StrictInt, StrictFloat]
+
+
+class OptimizeBody(BaseModel):
+    model_config = _STRICT
+    fixed: dict[str, InputValue]
+    current: Optional[dict[str, InputValue]] = None
+    params: Optional[dict[str, Number]] = None
+    entity_id: Optional[StrictStr] = Field(default=None, max_length=128)
+
+
 class ActualBody(BaseModel):
     model_config = _STRICT
     entity_id: StrictStr = Field(min_length=1, max_length=128)

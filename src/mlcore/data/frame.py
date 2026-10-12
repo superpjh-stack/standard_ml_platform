@@ -97,3 +97,20 @@ def standardize(raw: pd.DataFrame, spec: "ReadSpec", *, kind: str, source_ref: s
 def missing_rates(frame: pd.DataFrame, names) -> dict[str, float]:
     n = len(frame)
     return {c: (float(frame[c].isna().mean()) if n else 0.0) for c in names if c in frame.columns}
+
+
+def health_from_frame(kind: str, frame: pd.DataFrame, spec: "ReadSpec", ok_message: str, *, lag: bool = True):
+    """표준 프레임 → SourceHealth (doctor 용 — 행 수 · 기간 · 지연 · 변수 대응률 · 결측률 · 목표 유무)."""
+    from .sources.base import SourceHealth
+
+    names = [f.name for f in spec.features]
+    cover = sum(bool(frame[n].notna().any()) for n in names if n in frame.columns) / len(names) if names else None
+    needs_target = bool((spec.task.raw.get("target") or {}).get("name"))
+    has_target = ("target" in frame.columns and bool(frame["target"].notna().any())) if needs_target else None
+    ts = frame["ts"].dropna() if "ts" in frame.columns else pd.Series([], dtype=object)
+    lag_s = None
+    if lag and len(ts):
+        lag_s = max(0.0, (pd.Timestamp.now(tz=ts.dt.tz) - ts.max()).total_seconds())
+    return SourceHealth(kind, True, len(frame), ts.min().to_pydatetime() if len(ts) else None,
+                        ts.max().to_pydatetime() if len(ts) else None, lag_s, cover, missing_rates(frame, names),
+                        has_target, "목표 없음" if has_target is False else ok_message)

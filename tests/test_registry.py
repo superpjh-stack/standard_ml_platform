@@ -9,6 +9,7 @@ import psycopg
 import pytest
 
 import _dev2 as h
+from mlcore.serve.errors import MissingRequired
 from mlcore import approval
 from mlcore.db.conn import connect
 from mlcore.registry import artifacts
@@ -163,8 +164,9 @@ def test_rollback_needs_reason_and_restores_archived(ks):
     reg = Registry()
     h.to_production(ks, tid(ks))
     h.to_production(ks, tid(ks), seed=9)
-    with pytest.raises(InvalidTransition):
+    with pytest.raises(MissingRequired) as e:          # D-54: 사유 없음은 입력 누락 → 422 missing_required
         reg.request_promotion(ks.tenant.code, tid(ks), "v1", actor="a", action="rollback", reason="")
+    assert (e.value.status, e.value.code, e.value.detail["field"]) == (422, "missing_required", "reason")
     aid = reg.request_promotion(ks.tenant.code, tid(ks), "v1", actor="a", action="rollback", reason="v2 성능 저하")
     out = approval.decide(aid, actor="b", actor_role="approver", approve=True, reason="확인")
     assert out["production_version"] == "v1"

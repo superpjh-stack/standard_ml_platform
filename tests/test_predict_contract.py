@@ -127,3 +127,123 @@ def test_roles_and_tenant_scope(tmp_path):
     r = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.nope/predict", headers=h.hdr(k["operator"]), json=body)
     assert r.status_code == 404 and r.json()["error"]["code"] == "not_found"
     assert h.count("SELECT count(*) AS n FROM mlp_prediction WHERE tenant_id=%s", (m.tenant.code,)) == 0
+
+
+# ── G-M04 B — 켜진 과제 8 전부 (개발3 과제 정의 · 개발1 학습기 · 실제 production) ──────────────────────────
+# ks 4 · sw 4 를 원본 등록부 그대로(코드만 새로) 띄우고, 학습 과제 6 은 개발1 실제 학습 → 승인 → production,
+# 최적화 2 는 그 production 을 uses 로 쓴다. 각 과제의 predict(최적화는 optimize) · predict:batch 응답을 §5 스키마로 본다.
+import itertools  # noqa: E402
+
+from mlcore.serve.catalog import TaskCatalog  # noqa: E402
+
+VALIDATOR = jsonschema.Draft202012Validator(SCHEMA)
+ALLOWED = {"regression": {"ok", "watch", "review", "out_of_range", "rejected"},
+           "risk": {"ok", "watch", "review", "out_of_range", "rejected"},
+           "anomaly": {"ok", "review", "out_of_range", "rejected"}, "optimize": {"needs_approval", "review"}}
+
+
+@pytest.fixture(scope="module")
+def eight(tmp_path_factory):
+    worlds = {}
+    for source in ("ks", "sw"):
+        m = h.make_tenant(source, tmp_path_factory.mktemp(f"g04-{source}"))
+        refs = {t: h.real_production(m, t)[0] for t, td in m.tasks.items() if td.type != "optimize"}
+        worlds[source] = (m, refs, h.keys(m))
+    return worlds
+
+
+CASES8 = [(s, i) for s in ("ks", "sw") for i in range(4)]
+
+
+def _case(eight, source, i):
+    m, refs, k = eight[source]
+    task = sorted(m.tasks)[i]
+    return m, refs, k, task, m.tasks[task]
+
+
+def _inputs(m, refs, task) -> dict:
+    spec = TaskCatalog(m).get(m.tenant.code, task)
+    ref = refs.get(task) or refs[next(t for t, d in m.tasks.items() if d.pack_id == m.tasks[task].raw["uses"][0])]
+    names = [f.name for f in spec.defs if m.tasks[task].type != "optimize" or f.name in m.tasks[task].raw["fixed"]]
+    return h.mid_inputs(h.lock_of(ref), names)
+
+
+def test_eight_enabled_tasks_cover_four_types(eight):
+    types = sorted(td.type for s in eight.values() for td in s[0].tasks.values())
+    assert len(types) == 8 and set(types) == set(ALLOWED) and all(types.count(t) == 2 for t in ALLOWED)
+
+
+@pytest.mark.parametrize("source,i", CASES8, ids=[f"{s}-{i}" for s, i in CASES8])
+def test_enabled_task_predict_matches_schema(eight, source, i):
+    m, refs, k, task, td = _case(eight, source, i)
+    tc = h.client(m)
+    base = f"/api/v1/tenants/{m.tenant.code}/tasks/{task}"
+    inputs = _inputs(m, refs, task)
+    if td.type == "optimize":
+        r = tc.post(f"{base}/optimize", headers=h.hdr(k["operator"]), json={"fixed": inputs})
+        assert tc.post(f"{base}/predict", headers=h.hdr(k["operator"]), json={"inputs": inputs}).status_code == 404
+    else:
+        r = tc.post(f"{base}/predict", headers=h.hdr(k["operator"]), json={"inputs": inputs, "entity_id": "E-8", "explain": True})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert not [e.message for e in VALIDATOR.iter_errors(body)]
+    assert list(body) == SCHEMA["required"] and body["type"] == td.type and body["status"] in ALLOWED[td.type]
+    if td.type == "optimize":
+        uses = {t: refs[t].version for t, d in m.tasks.items() if d.pack_id in td.raw["uses"]}
+        assert {u["task"]: u["version"] for u in body["uses"]} == uses        # uses 과제의 production 버전
+    else:
+        assert body["model"]["version"] == refs[task].version and body["prediction_id"].startswith("prd_")
+        with connect() as c:
+            row = c.execute("SELECT outputs, status FROM mlp_prediction WHERE prediction_id = %s", (body["prediction_id"],)).fetchone()
+        assert row["outputs"] == body and row["status"] == body["status"]
+
+
+@pytest.mark.parametrize("source,i", CASES8, ids=[f"{s}-{i}" for s, i in CASES8])
+def test_enabled_task_batch_matches_schema(eight, source, i):
+    m, refs, k, task, td = _case(eight, source, i)
+    tc = h.client(m)
+    url = f"/api/v1/tenants/{m.tenant.code}/tasks/{task}/predict:batch"
+    inputs = _inputs(m, refs, task)
+    if td.type == "optimize":                                                 # 최적화 과제에는 predict 가 없다
+        r = tc.post(url, headers=h.hdr(k["operator"]), json={"items": [{"inputs": inputs}]})
+        assert r.status_code == 404 and r.json()["error"]["code"] == "not_found"
+        return
+    items = [{"inputs": inputs, "entity_id": "B-0"}, {"inputs": {**inputs, "nope": 1}}, {"inputs": inputs, "entity_id": "B-2"}]
+    r = tc.post(url, headers=h.hdr(k["operator"]), json={"items": items})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert set(body) == {"items", "next_cursor"} and body["next_cursor"] is None and len(body["items"]) == 3
+    ok = [body["items"][0], body["items"][2]]
+    for it in ok:
+        assert not [e.message for e in VALIDATOR.iter_errors(it)] and it["status"] in ALLOWED[td.type]
+    assert [it["entity_id"] for it in ok] == ["B-0", "B-2"]                   # 요청 순서
+    assert body["items"][1] == {"index": 1, "error": {"code": "invalid_input", "message": "알 수 없는 입력 변수입니다",
+                                                       "detail": {"field": "nope", "rule": "unknown_key"}}}
+    single = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{task}/predict", headers=h.hdr(k["operator"]),
+                     json={"inputs": inputs, "entity_id": "B-0"}).json()
+    strip = lambda d: {k2: v for k2, v in d.items() if k2 != "prediction_id"}   # noqa: E731
+    assert strip(ok[0]) == strip(single)                                      # 단건과 같은 답
+    with connect() as c:
+        n = c.execute("SELECT count(*) AS n FROM mlp_prediction WHERE prediction_id = ANY(%s)",
+                      ([it["prediction_id"] for it in ok],)).fetchone()["n"]
+    assert n == 2
+
+
+def test_batch_limits(eight):
+    m, refs, k, task, td = _case(eight, "sw", 0)
+    if td.type == "optimize":
+        task = next(t for t, d in m.tasks.items() if d.type == "regression")
+    tc = h.client(m)
+    url = f"/api/v1/tenants/{m.tenant.code}/tasks/{task}/predict:batch"
+    inputs = _inputs(m, refs, task)
+    r = tc.post(url, headers=h.hdr(k["operator"]), json={"items": [{"inputs": inputs}] * 501})
+    assert r.status_code == 422 and r.json()["error"]["code"] == "invalid_input"
+    assert tc.post(url, headers=h.hdr(k["operator"]), json={"items": []}).status_code == 422
+    assert tc.post(url, headers=h.hdr(k["viewer"]), json={"items": [{"inputs": inputs}]}).status_code == 403
+    import time
+    t0 = time.perf_counter()
+    r = tc.post(url, headers=h.hdr(k["operator"]), json={"items": [{"inputs": inputs, "entity_id": f"L-{j}"} for j in range(500)]})
+    elapsed = time.perf_counter() - t0
+    assert r.status_code == 200 and len(r.json()["items"]) == 500
+    assert all("error" not in it for it in r.json()["items"])
+    assert elapsed <= 3.0, f"batch 500 {elapsed:.2f}s"                        # G-M14 기준 (참고 측정 — 정식은 make bench)

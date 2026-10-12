@@ -16,7 +16,7 @@ from typing import Any, Literal
 
 from .. import audit
 from ..db.conn import connect
-from ..serve.errors import NotFound, ServeError
+from ..serve.errors import MissingRequired, NotFound, ServeError
 from ..serve.ids import new_id
 from .artifacts import ArtifactMismatch, artifact_sha256, resolve_dir, store_path
 
@@ -183,8 +183,8 @@ class Registry:
                           role: str | None = None, request_id: str | None = None) -> str:
         if action not in ("promote", "rollback"):
             raise InvalidTransition("알 수 없는 승인 동작입니다", {"rule": "action"})
-        if action == "rollback" and not (reason or "").strip():
-            raise InvalidTransition("되돌리기는 사유가 필요합니다", {"rule": "rollback_reason", "field": "reason"})
+        if action == "rollback" and not (reason or "").strip():   # 전이 문제가 아니라 입력 누락 (D-54)
+            raise MissingRequired("되돌리기는 사유가 필요합니다", {"field": "reason", "rule": "required"})
         with connect() as c:
             row = c.execute("SELECT mv.stage, mv.metrics, mv.synthetic, mv.promoted_at, t.approver_role "
                             "FROM mlp_model_version mv JOIN mlp_task t ON t.tenant_id = mv.tenant_id AND t.task_id = mv.task_id "
@@ -199,7 +199,8 @@ class Registry:
             cur = c.execute("SELECT version, metrics FROM mlp_model_version WHERE tenant_id=%s AND task_id=%s AND stage = %s",
                             (tenant_id, task_id, PROD)).fetchone()
             evidence = {"target": {"version": version, "metrics": row["metrics"], "synthetic": row["synthetic"]},
-                        "production": ({"version": cur["version"], "metrics": cur["metrics"]} if cur else None)}
+                        "production": ({"version": cur["version"], "metrics": cur["metrics"]} if cur else None),
+                        "shadow": shadow_diff(c, tenant_id, task_id, version, cur["version"] if cur else None)}
             approval_id = new_id("apr")
             got = c.execute(
                 "INSERT INTO mlp_approval (approval_id, tenant_id, task_id, kind, ref_id, action, approver_role, state, "
@@ -213,3 +214,44 @@ class Registry:
             audit.write(tenant_id=tenant_id, actor=actor, role=role, action=f"approval.request.{action}",
                         target=f"{task_id}@{version}", detail={"approval_id": approval_id}, request_id=request_id, conn=c)
         return approval_id
+
+
+SHADOW_N = 200
+
+
+def shadow_diff(c, tenant_id: str, task_id: str, target: str, production: str | None) -> dict | None:
+    """그림자 예측 차이 — 최근 운영 입력(mlp_prediction.inputs, 최대 200건)을 대상 버전과 현재 production 으로 같이 채점한
+    차이 {n, mean_abs_diff, max_abs_diff, basis}. 시험 구간은 쓰지 않는다(운영 입력만). production · 운영 입력이 없으면 None.
+    산출물 불일치 등 실패는 숨기지 않고 {error: code} 로 남긴다(승인자가 본다)."""
+    if production is None:
+        return None
+    rows = c.execute("SELECT inputs FROM mlp_prediction WHERE tenant_id = %s AND task_id = %s AND status <> 'rejected' "
+                     "ORDER BY ts DESC LIMIT %s", (tenant_id, task_id, SHADOW_N)).fetchall()
+    if not rows:
+        return None
+    import numpy as np
+    import pandas as pd
+
+    from ..serve.validate import impute
+    from ..tasks.base import kind_for
+    from .artifacts import load_artifacts
+    try:
+        refs = {v: Registry().get(tenant_id, task_id, v) for v in (target, production)}
+        task_type = c.execute("SELECT type FROM mlp_task WHERE tenant_id=%s AND task_id=%s", (tenant_id, task_id)).fetchone()["type"]
+        kind = kind_for(task_type)
+        vals = {}
+        for v, ref in refs.items():
+            ld = load_artifacts(ref)
+            order = ld.lock["order"]
+            feats = {n: {"dtype": (ld.lock["features"][n] or {}).get("dtype", "float"), "label": n, "required": False}
+                     for n in order}
+            frame = []
+            for r in rows:
+                filled, _ = impute({k: r["inputs"].get(k) for k in order}, feats, ld.lock, len(order))
+                frame.append({n: filled[n] for n in order})
+            vals[v] = np.asarray(kind.values(ld, pd.DataFrame(frame, columns=order)), dtype=float)
+        d = np.abs(vals[target] - vals[production])
+        return {"n": int(len(d)), "mean_abs_diff": round(float(d.mean()), 6), "max_abs_diff": round(float(d.max()), 6),
+                "basis": "recent_operating_inputs"}
+    except ServeError as e:
+        return {"error": e.code, "detail": e.detail}

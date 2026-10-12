@@ -32,7 +32,8 @@ def impute(inputs, features, lock: dict, max_imputed: int) -> tuple[dict, list[s
 def range_check(inputs: dict, lock: dict, skip: Iterable[str] = ()) -> tuple[list[str], list[str]]   # (oor, near)
 ```
 
-`features` 는 `FeatureDef` 대신 **features.yaml 항목 dict**(병합 후, `values_from: tenant` 는 회사 `categories` 로 채움)다 — `mlcore/types.py` 가 아직 없어서다. `types.py` 가 생기면 그 `FeatureDef` 를 받도록 바꾼다(모양은 같다).
+`features` 는 계약대로 **`Sequence[FeatureDef]`**(`mlcore.data.features`, D-47 — 웨이브 A 에서 바꿈). 병합된 features.yaml dict(`{이름: 정의}`)도 `serve.validate.as_defs()` 로 같은 FeatureDef 로 바꿔 받는다. 과제 목록 `serve.catalog.TaskSpec.defs` = 과제 변수 순서의 FeatureDef(최적화 과제는 fixed + controls).
+`predict_batch(…) -> {"items": [응답 | {index, error}], "next_cursor": None}` — 1~500건, 건별 422 는 그 자리만, 503 은 전체 실패, 기록은 한 트랜잭션(웨이브 A 구현).
 
 ### 1.2 응답 모델 — `mlcore/serve/contract.py` (pydantic 2)
 
@@ -96,6 +97,41 @@ class AlreadyDecided(Exception)   # 409 already_decided (이미 결정 · 만료
 | `POST …/train` | `api/routers/train.py` → `serve/training.py` | admin — 개발1 `mlcore.data.jobs.submit`(없으면 `mlcore.train.trainer.submit`)을 **요청 처리 중에만** 지연 import 해 부른다(기동 경로 0). 202 queued · 멱등 200 `reused: true` |
 
 작업자 접착부: `serve/training.py::run_and_register(run_id)` = `mlcore.train.jobs.execute(run_id)` → 성공이면 `Registry.register()` (D-57).
+
+### 1.6.1 최적화 · 호환 (웨이브 A 공표)
+
+```python
+# mlcore/tasks/optimize.py — interfaces §8
+@dataclass(frozen=True) class OptimizeRequest: fixed: dict; current: dict | None = None; params: dict | None = None; entity_id: str | None = None
+class Optimizer:
+    def __init__(self, catalog: TaskCatalog, registry: Registry | None = None): ...
+    def space(self, task, locks: list[dict], params: dict, defs: dict[str, FeatureDef]) -> SearchSpace   # axes · kinds · ranges · size · strategy · points
+    def optimize(self, tenant_id, task_id, req: OptimizeRequest, *, caller: str, channel: str = "api") -> dict   # 18키 (recommendation)
+def load_formula(merged, module) -> Callable   # tenants/<code>/formulas/ 우선, 없으면 packs/<pack>/formulas/<module>.py::cost(row, params)
+
+# mlcore/serve/compat/__init__.py — 호환 (D-18)
+class Compat: resolve(method, path) · predict(body) · optimize(body) · overview() · records(query) · record(lot_id) · health()
+# 경로 = tenants/<code>.yaml compat.routes, 옛 요청 키 = compat.input_rename, 상태 문구 = compat.status_text,
+# 반올림 = compat.round (D-W2-02), 장비 = compat.equipment_by_<변수>, 옛 회귀 키 = 과제 target.name
+```
+API: `POST …/predict:batch`(operator) · `POST …/optimize`(operator, `{fixed, current?, params?, entity_id?}`) · 호환 `/api/{rest}`(app 맨 끝, compat.routes 만).
+`approval.decide()` 는 kind=recommendation 도 결정한다(→ `mlp_recommendation.status`, production 불변 — D-W2-05). `request_promotion` evidence 에 `shadow` (D-W2-06).
+
+### 1.7 웹 공용 컴포넌트 — `web/src/components/` (웨이브 A 첫 공표, 2026-10-12)
+
+화면 1~6 은 **`import {…} from '../components'`** 로만 쓴다(같은 것을 화면 안에 다시 만들지 않는다). 회사 · 팩 이름 0.
+
+| 모듈 | 내보내는 것 | 쓰임 |
+|---|---|---|
+| `api.ts` | `api<T>(method, path, body?)` — `/api/v1` + `X-API-Key`, 오류 봉투 → `ApiError{status, code, message, detail}` · `tpath('/tasks')` → `/tenants/{t}/tasks` · `useApi<T>(path\|null, deps)` → `{data, error, loading, reload}` · `useConnection()` · `getConnection()` | 연결(회사 코드 · 키)은 브라우저 localStorage 에만 |
+| `types.ts` | `Status` · `FeatureMeta` · `ParamMeta` · `TaskInfo` · `PredictResponse`(18키) · `Recommendation` · `Candidate` · `Warning` · `Metric{value, baseline, delta_vs_baseline}` · `ListResponse<T>{items, next_cursor, total?}` · `named(x)` (dict/배열 메타 → 배열) | |
+| `StatusBadge.tsx` | `<StatusBadge status labels?/>` (상태 6) · `<SyntheticBadge synthetic/>` · `<RangeBadge inRange? rate?/>` · `<StateBadge state/>` (승인 pending… · 단계 candidate…) · `STATUS_LABEL` | |
+| `MetricTable.tsx` | `<MetricTable metrics caption? compare?/>` — 값 · 기준선 · Δ · "기준선 이김/못 이김" (+ 비교 열, 예: production) · `fmt(v)` · `beats(name, m)` | 화면 1 · 4 · 5 |
+| `FeatureForm.tsx` | `<FeatureForm features values onChange highlight?={imputed, outOfRange} disabled?/>` · `initialValues(features)` · `toInputs(features, values)` (빈 칸 → null = 보정 대상) | 화면 2 · 3 (features.yaml 로 폼 생성) |
+| `Common.tsx` | `<ConnectionBar/>` · `<ErrorBox error/>`(503 model_not_ready → "운영 모델 없음 (model_not_ready)", 숨기지 않음) · `<TaskPicker value onChange types? exclude?/>` · `<Warnings warnings/>` · `<Notice text/>` | |
+| `components.css` | `.card` `.row` `.cols` `table.grid` `.badge-*` `.kv` `button.primary` — 1024px 에서 줄바꿈(가로 스크롤 0) | |
+
+**개발3 에 요청(B02):** `GET /tenants/{t}/tasks` → `{items: [{task, type, title, …}], next_cursor}`, `GET /tenants/{t}/tasks/{task}` → `{task, type, title, features: [FeatureMeta…](과제 변수 순서, values_from: tenant 는 회사 categories 로 채운 values), controls?, fixed?, params?, decision_vars?, uses?, approver_role, …}`. `FeatureMeta` = features.yaml 항목 + `name`. 폼은 배열 · dict 둘 다 받는다(`named()`). 서버 쪽 같은 모양은 `mlcore.serve.catalog.TaskSpec.features`(이름 → 병합 정의) 를 그대로 쓰면 된다.
 
 ## §2 웨이브 A0 실측 (2026-10-12)
 
@@ -168,3 +204,57 @@ class AlreadyDecided(Exception)   # 409 already_decided (이미 결정 · 만료
 | `OMP_NUM_THREADS=1 uv run pytest -q tests/test_vertical_slice.py` | 2 passed (2.7 s) |
 | `OMP_NUM_THREADS=1 uv run pytest -q` | **162 passed** (전 160 + 2) |
 | `make gate` | **G-V01 PASS** · 합계 PASS 11 · FAIL 12 · BLOCKED 1 (전 PASS 10 — 다른 PASS 전부 유지: G-S01 · S02 · S06×2 · S07 · M01 · M03 · M05 · M06 · M07) |
+
+## §4 웨이브 A 실측 (2026-10-12, 기준 커밋 7d583cf, 커밋 안 함)
+
+### 한 일 (담당 파일만)
+
+| 항목 | 파일 | 내용 |
+|---|---|---|
+| 공용 컴포넌트(먼저 공표 §1.7) | `web/src/components/{api,types}.ts` · `{StatusBadge,MetricTable,FeatureForm,Common}.tsx` · `components.css` · `index.ts` | 상태 배지 · 지표 표(기준선 이김/못 이김) · features.yaml 폼 생성기 · 연결 · 오류 상자(503 그대로) · 과제 선택 |
+| 화면 2 · 3 · 5 | `web/src/screens/{Predict,Optimize,Approvals}.tsx` | 예측 시험(18키 · 경고 · 보정 · 범위 강조) · 조건 추천(후보 5 · 제약 충족표 · 학습 범위 배지 · least_violation 상자 · "설비로 내려가지 않음") · 승인 대기열(모델 · 추천 카드 · 지표 비교 · 그림자 차이 · 사유 · 409 처리 · 커서) — `_placeholder` 0 |
+| anomaly 추론 | `tasks/anomaly.py` | 점수(`-score_samples`) · flag(lock threshold ≥) · 기여 변수(보정값 국소 치환, 상위 5) · watch 없음 |
+| optimize | `tasks/optimize.py` | 학습 범위 ∩ min/max · step 격자, decision_vars [min, max_param], grid/random 자동(seed 고정), 제약 식(+ − × 만, ast 검사), violation Σ/|rhs|, 목적+tiebreak lexsort, 상위 5, current · improvement, least_violation + review, uses production 버전, mlp_recommendation + 승인 요청 |
+| batch · 검증 | `serve/predict.py` · `serve/validate.py` · `serve/catalog.py` · `serve/contract.py` | predict:batch ≤ 500 · FeatureDef 입력(D-47) · 모르는 키 field 반사 제한(D-W2-07) |
+| D-54 후속 | `registry/models.py` · `serve/training.py` | rollback 사유 없음 → 422 `missing_required`(field reason) · TrainBusy detail `{rule: tenant_concurrency}` · 꺼진 과제 → 404 |
+| 승인 | `approval/__init__.py` · `api/routers/models.py` · `registry/models.py` | 추천 결정 · 역할 먼저(operator decide 403) · 그림자 예측 차이 |
+| 인증 · CORS | `api/main.py` | CORS 설정 목록만(`*` 무시) · 기동 등록부 루트 = `data.jobs.load_merged`(MLP_TENANTS_DIR) · 개발3 `ops` 라우터 등록(요청 이행) · 호환 잡이 맨 끝 |
+| 호환 라우터 | `serve/compat/__init__.py` · `api/routers/compat.py` | 옛 경로 5 (health · 묶음 predict · optimize · overview · records(+상세)) · 옛 키 · 옛 422 `{"detail": […]}` |
+| 시험 | `tests/test_optimize.py`(11) · `test_auth.py`(18) · `test_api_contract.py`(38) · `test_compat.py`(38, skip 3) · `test_predict_contract.py`(+18 → 27) · `test_approval.py`(+1) · `test_registry.py`(D-54) · `test_vertical_slice.py`(monkeypatch 제거) · `_dev2.py`(real_production) · `compat_expected.yaml`(원천 파일:줄 기대값) | |
+
+### 실측
+
+| 항목 | 실측 | 명령 |
+|---|---|---|
+| 전체 시험 | **369 passed · 3 failed · 3 skipped** (40 s). 실패 3 = 남의 몫: `test_api_contract::test_phase1_route_exists[B08 GET /runs/{run_id}]`(개발1 미구현) · `test_compat::test_bundle_predict_old_keys_and_values[ks · sw]`(개발3 `compat.round` 미기입 — D-W2-02, 값은 120.933399 대 원천 규칙 120.93) | `OMP_NUM_THREADS=1 uv run pytest -q -p no:cacheprovider` |
+| 개발2 시험 | optimize 11 · auth 18 · api_contract 37/38 · compat 33/35(+3 skip) · predict_contract 27 · predict_validation 17 · registry 13 · approval 14 · trace 9 · vertical_slice 2 | 파일별 pytest |
+| 켜진 과제 8 predict 계약 (G-M04 B) | 8/8 — 학습 6(개발1 실제 학습 → 승인 → production: ks gbr · rf_clf · isolation_forest / sw extra_trees · gbc · isolation_forest) predict · batch 스키마 통과, 최적화 2 optimize 스키마 통과 · uses = production 버전 · predict 는 404 | `tests/test_predict_contract.py` |
+| ks.maintenance_timing (1차원) | grid **97점**(원천 candidate_count 97 과 같음) · in_train_range_rate 1.0 · 상위 5 = 독립 재계산(의존 모델 직접 → 비용식 → 제약 → 비용 ↑ · 대기 ↓)과 일치 · 불가능(reserve 150 · cost 1) → feasible false · n_feasible 0 · review · least_violation = 전수 최소 | `tests/test_optimize.py` |
+| sw.print_setpoint (5차원) | grid **1,080점**(원천 8,400 — 학습 범위 ∩ 로 끝점 제외, D-31) · 학습 범위 밖 점 **0** · 학습 범위 안 격자점 누락 0 · best = 전수 독립 계산 최소 비용(동률 ΔE) · 불가능 제약 충족 후보 **0** | 같은 파일 |
+| 10,000 점 | random 10,000점 2회 0.15 s(≤ 10 s), 같은 시드 → 같은 best | `test_ten_thousand_points_within_ten_seconds_and_random_is_deterministic` |
+| batch 500 | 500건 200 · 오류 0 · 0.22 s (≤ 3 s, 참고 — 정식 G-M14 는 make bench) · 501건 422 · 0건 422 · 건별 422 는 `{index, error}` | `test_batch_limits` |
+| 역할 4 | goal §6 표 7영역 × 4역할 = roles.yaml · `auth.allowed` · 실제 HTTP 11경로 모두 일치, trace admin 만, own_task 403, staging 지정 예측 approver+ | `tests/test_auth.py` |
+| 회사 범위 | 다른 회사 키 → 404 (predict · models · approvals · promote · tasks · trace · decide — decide 뒤 승인 pending 그대로) | 같은 파일 |
+| CORS | 설정 원점만 허용 · `*` 는 설정에 있어도 무시 · 목록 비면 헤더 0 | `test_cors_only_configured_origins` |
+| 오류 계약 | 401 · 403 · 404 · 422(5종) · 409(already_decided · invalid_transition · train_busy) · 422 missing_required(rollback reason) · 501(2차 8경로) · 503 model_not_ready 봉투 `{error:{code,message,detail}}` + X-Request-Id · 입력값 반사 0 | `tests/test_api_contract.py` |
+| 호환 | ks · sw 옛 경로 5 · 옛 키 순서 그대로(묶음 predict · optimize · overview · records · health) · 옛 422 `{"detail":[{loc,msg,type}]}` · 원천 시험 케이스(잘못된 값 5·6 · 결측 · Infinity · 페이징 6) 재현 · 키 없음 401 · viewer 403 · 다른 회사 404 | `tests/test_compat.py` |
+| vertical slice | monkeypatch(코드 바꿔 끼우기) 제거 → 개발1 공식 주입(`MLP_TENANTS_DIR`, monkeypatch.setenv) — 2 passed | `tests/test_vertical_slice.py` |
+| 웹 | `npm run build` 성공(tsc -b + vite, 271 kB js) · G-M01 PASS(코어 95파일 위반 0) · 화면 6 파일 `Placeholder` 0 | `cd web && npm run build` · `uv run python gates/check_core_terms.py` |
+
+### make gate 변화
+
+| 게이트 | 전 (7d583cf, PASS 11) | 후 |
+|---|---|---|
+| G-M13 | FAIL — test_optimize.py 없음 | **PASS** — 11 passed |
+| G-M04 | FAIL — test_compat.py 없음 | FAIL — A 91/91 · B **27 passed(과제 8)** · C 33 passed / **2 failed(개발3 compat.round)** |
+| G-S04 | FAIL — 5/12 | FAIL — **11/12**(없음 B08 개발1) · test_api_contract 37 passed / 1 failed(B08) |
+| G-M11 | FAIL — test_auth.py 없음 | FAIL — test_auth **18 passed** · `docker-compose.yml 없음`(개발2 몫 아님) |
+| G-S03 | FAIL — placeholder 6/6 | FAIL — placeholder 0 · `tests/e2e/ 없음`(D-W2-08) |
+| 합계 | PASS 11 · FAIL 12 · BLOCKED 1 | **PASS 18 · FAIL 5 · BLOCKED 1** (개발1 · 3 몫 포함, 기존 PASS 전부 유지) |
+
+### §5 요청 · 남은 일
+
+- 개발3: `tenants/{ks,sw}.yaml compat.round` (D-W2-02 — 이것만 들어오면 G-M04 PASS 기대) · 선택 `compat.optimize_rename`.
+- 개발1: `GET /api/v1/runs/{run_id}` (B08 — G-S04 마지막 1묶음). 라우터 파일을 만들면 `api/main.py` 등록은 개발2 가 한다(ops 처럼).
+- 아키텍트: `MLP_TENANTS_DIR` 한 규칙(D-W2-03) · optimize 범위 밖 상태(D-W2-04) · 추천 승인(D-W2-05) · `docker-compose.yml`(G-M11 배포 부분).
+- 개발2 다음: `tests/e2e/` 1024px(D-W2-08, Playwright 의존성) · 호환 records 를 B12 행 함수로(D-W2-09) · anomaly 기여 변수의 batch 속도(행마다 치환 프레임).

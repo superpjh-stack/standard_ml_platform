@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -19,6 +21,27 @@ from ..settings import ROOT
 from .packs import PACKS_DIR, Pack, SynthSpec, def_hash, load_pack, load_synth, sha256_file, synth_spec, task_schema
 
 TENANTS_DIR = ROOT / "tenants"
+TENANTS_ENV = "MLP_TENANTS_DIR"            # 등록부 루트 덮어쓰기(시험 · 새 회사 연습을 임시 폴더로 격리 — G-M10)
+
+
+def tenants_dirs() -> list[Path]:
+    """MLP_TENANTS_DIR 의 폴더 목록(os.pathsep 로 여러 개, 호출 시점). 없으면 빈 목록."""
+    return [Path(x) for x in (os.environ.get(TENANTS_ENV) or "").split(os.pathsep) if x]
+
+
+def tenants_dir() -> Path:
+    """등록부 루트(새 회사를 만드는 곳 · 회사 목록을 세는 곳) — MLP_TENANTS_DIR 의 첫 폴더, 없으면 저장소 tenants/."""
+    dirs = tenants_dirs()
+    return dirs[0] if dirs else TENANTS_DIR
+
+
+def tenant_base(code: str) -> Path:
+    """회사 하나의 등록부 폴더 — MLP_TENANTS_DIR 목록 중 `<code>.yaml` 이 있는 첫 폴더, 없으면 저장소 tenants/.
+    `mlcore.data.jobs.tenants_base_for` 와 같은 규칙(decisions.md D-W1-06)."""
+    for d in tenants_dirs():
+        if (d / f"{code}.yaml").is_file():
+            return d
+    return TENANTS_DIR
 CODE_RE = re.compile(r"^[a-z][a-z0-9]{1,7}$")
 ENV_RE = re.compile(r"^MLP_[A-Z0-9_]+$")
 TEMPLATE_CODE = "tpl"                       # _template.yaml 검증용 대입 코드
@@ -70,8 +93,11 @@ def _env_names(obj, path="") -> list[tuple[str, object]]:
     return out
 
 
-def load_tenant(code_or_path: str | Path, base: Path = TENANTS_DIR) -> Tenant:
-    path = Path(code_or_path) if isinstance(code_or_path, Path) or str(code_or_path).endswith(".yaml") else base / f"{code_or_path}.yaml"
+def load_tenant(code_or_path: str | Path, base: Path | None = None) -> Tenant:
+    is_path = isinstance(code_or_path, Path) or str(code_or_path).endswith(".yaml")
+    if base is None and not is_path:
+        base = tenant_base(str(code_or_path))
+    path = Path(code_or_path) if is_path else Path(base) / f"{code_or_path}.yaml"
     text = path.read_text(encoding="utf-8")
     is_template = path.stem == "_template"
     if is_template:
@@ -102,8 +128,10 @@ def load_tenant(code_or_path: str | Path, base: Path = TENANTS_DIR) -> Tenant:
     return Tenant(code, path, cfg, overrides, formulas)
 
 
-def all_codes(base: Path = TENANTS_DIR, include_template: bool = False) -> list[str]:
-    codes = sorted(p.stem for p in base.glob("*.yaml"))
+def all_codes(base: Path | None = None, include_template: bool = False) -> list[str]:
+    """등록부의 회사 코드. MLP_TENANTS_DIR 가 있으면 그 폴더들만(시험 · 새 회사 격리), 없으면 저장소 tenants/."""
+    bases = [Path(base)] if base is not None else (tenants_dirs() or [TENANTS_DIR])
+    codes = sorted({p.stem for b in bases for p in b.glob("*.yaml")})
     return [c for c in codes if include_template or not c.startswith("_")]
 
 
@@ -184,7 +212,7 @@ def merge(pack: Pack, tenant: Tenant,
     return Merged(tenant, pack, tasks, disabled, warnings)
 
 
-def load_and_merge(code: str, *, tenants_base: Path = TENANTS_DIR, packs_base: Path = PACKS_DIR,
+def load_and_merge(code: str, *, tenants_base: Path | None = None, packs_base: Path = PACKS_DIR,
                    production_synthetic: Callable[[str], bool | None] | None = None) -> Merged:
     t = load_tenant(code, tenants_base)
     return merge(load_pack(t.config["pack"], packs_base), t, production_synthetic)
@@ -236,3 +264,53 @@ def synth_call(merged: Merged, task_id: str, role: str = "demo") -> SynthCall:
     ref = {"kind": "synthetic", "role": role, "module": rel_path, "seed": seed, "rows": rows,
            "synth_sha256": digest.hexdigest()}
     return SynthCall(merged.tenant.code, task_id, spec, seed, rows, cats, target, ref, merged.pack)
+
+
+# ── 새 회사 (make tenant NEW=<code> PACK=<pack> [CSV=<path>] — G-M10 · spec §17-9 · D-51) ────────────
+
+class TenantExists(Exception):
+    pass
+
+
+def scaffold(code: str, pack: str = "_template", *, csv: str | Path | None = None, name: str | None = None,
+             base: Path | None = None, packs_base: Path = PACKS_DIR) -> Path:
+    """`tenants/_template.yaml` 을 복사해 `<base>/<code>.yaml` **하나만** 만든다(코드 수정 0줄).
+
+    - `pack` 의 `pack.yaml tasks` 를 전부 켠다(`<code>.<task>`). `values_from: tenant` 범주는 빈 목록 + `# 미확인`
+      (값을 지어내지 않는다 — 비어 있으면 병합 규칙 R2 가 거부한다).
+    - `csv` 를 주면 `sources.eval.path` 가 그 파일(절대 경로)을 가리키고 `mode: eval` 이다. CSV 는 복사하지 않는다(T4).
+    - 만든 뒤 병합 규칙 5 로 다시 읽어 보고, 거부되면 파일을 지우고 RegistryRejected 를 올린다.
+    """
+    base = tenants_dir() if base is None else base
+    if not CODE_RE.match(code or "") or code == TEMPLATE_CODE:
+        raise RegistryRejected("T0", f"회사 코드 {code!r} 는 ^[a-z][a-z0-9]{{1,7}}$ 이어야 한다")
+    target = base / f"{code}.yaml"
+    if target.exists() or (base / code).exists():
+        raise TenantExists(f"{target.name} 가 이미 있다 — 덮어쓰지 않는다")
+    p = load_pack(pack, packs_base)
+    text = (TENANTS_DIR / "_template.yaml").read_text(encoding="utf-8")
+    head = (f"# 회사 등록부 — `make tenant NEW={code} PACK={pack}` 로 만들었다 (contracts/tenant-contract.md).\n"
+            "# 비밀값은 환경변수 이름만(MLP_<CODE>_*). 확인 못 한 값은 null + \"# 미확인\".\n")
+    text = re.sub(r"\A(#[^\n]*\n)+", head, text)
+    text = text.replace("__code__", code)
+    text = re.sub(r"^name: __name__[^\n]*", f"name: {name}" if name else f"name: {code}                      # 미확인",
+                  text, flags=re.M)
+    text = re.sub(r"^pack: \S+", f"pack: {pack}", text, flags=re.M)
+    enable = ", ".join(f"{code}.{t}" for t in p.meta.get("tasks") or sorted(p.tasks))
+    text = re.sub(r"^  enable: \[[^\]]*\]", f"  enable: [{enable}]", text, flags=re.M)
+    cats = [f for f, d in p.features.items() if isinstance(d, dict) and d.get("values_from") == "tenant"]
+    if cats:
+        body = "\n".join(f"  {f}: []                    # 미확인 — 회사 값 목록" for f in cats)
+        text = re.sub(r"^categories: \{\}", "categories:\n" + body, text, flags=re.M)
+    if csv is not None:
+        path = json.dumps(str(Path(csv).resolve()), ensure_ascii=False)     # YAML 큰따옴표 문자열(공백 · : 안전)
+        text = re.sub(r"^(  eval:\s+\{kind: csv, path: )[^}]*\}", lambda m: f"{m.group(1)}{path}}}", text, flags=re.M)
+        text = re.sub(r"^mode: \w+", "mode: eval", text, flags=re.M)
+    base.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    try:
+        load_and_merge(code, tenants_base=base, packs_base=packs_base)
+    except Exception:
+        target.unlink()
+        raise
+    return target

@@ -1,0 +1,73 @@
+# 호환 라우터 기대값 — 원천 저장소 파일을 **읽어서** 옮긴 것(실행하지 않음). 개발2 시험 데이터(tests/test_compat.py).
+# 근거는 각 항목의 src(파일:줄). 원천은 고치지 않는다. 표준이 다르게 정한 것은 differs 에 사유와 함께 둔다.
+ks:
+  source_repo: "../KwangSung ML AI"
+  routes:                                        # api/main.py:71,76,81,86,91,102
+    health: /api/health
+    predict: /api/maintenance/predict
+    optimize: /api/ml/optimize
+    overview: /api/ml/overview
+    records: /api/data/records
+  predict_keys: [remaining_hours, risk_probability, anomaly, status, warnings, imputed_fields, model, risk_model, version, notice]   # api/ml_service.py:127-129
+  round: {remaining_hours: 2, risk_probability: 4}                                   # api/ml_service.py:127
+  status_text: {review: 점검 검토, ok: 추가 징후 없음}                                  # api/ml_service.py:128
+  request_rename: {machine: machine_code, product: product_type}                     # api/main.py:42-51 (D-34)
+  default_record: {press_force: 245, vibration: 2.1, motor_current: 48, equip_temp: 47, mold_temp: 39, cycle_time: 9.5, shot_count: 65000, machine: PRS-01, product: FRONT SHELL}   # tests/test_api.py:17-18 · api/config.py:6-14
+  invalid_422: [[vibration, -1], [equip_temp, 90], [machine, PRS-18], [product, 김치], [shot_count, 12345.5]]   # tests/test_api.py:38
+  missing_ok: [vibration, mold_temp, motor_current]          # tests/test_api.py:44-50 (3개 결측 200, 4개째 422)
+  missing_fail_extra: equip_temp
+  optimize_keys: [feasible, prediction, candidate_count, feasible_count, recommendation, alternatives, unmet_constraints, objective, notice]   # api/ml_service.py:146-148
+  optimize_params: {reserve_hours: 12, max_delay_hours: 48, max_cost_index: 140}     # tests/test_api.py:79
+  optimize_infeasible: {reserve_hours: 150, max_cost_index: 1}                       # tests/test_api.py:86
+  optimize_candidate_count: 97                                                       # tests/test_api.py:82
+  optimize_invalid_422: [[reserve_hours, 0], [max_delay_hours, 73], [max_cost_index, 0]]   # tests/test_api.py:100
+  overview_keys: [data_mode, version, rows, champion, risk_champion, metrics, risk_metrics, test_metrics, risk_test_metrics, split, features]   # api/ml_service.py:160-169 (부분)
+  overview_metric_keys: [model, mae, rmse, r2]                                       # api/ml_service.py:50
+  overview_risk_metric_keys: [model, roc_auc, pr_auc, brier]                         # api/ml_service.py:54
+  split: {train: 432, validation: 144, test: 144}                                    # api/ml_service.py:166 · tests/test_api.py:25
+  records_keys: [total, limit, offset, records]                                      # api/main.py:99
+  record_detail_keys: [record, source]                                               # api/main.py:107
+  records_bad_queries: ["limit=0", "limit=101", "offset=-1", "machine=PRS-18", "product=invalid", "search=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]   # tests/test_api.py:63
+  records_total: 720
+  health_keys: [status, model_ready, data_mode, version]                             # api/main.py:73
+  error_shape: detail_list                                                           # api/main.py:25-31 {"detail": [{loc, msg, type}]}
+  differs:
+    model: "옛 응답은 표시 이름(Gradient Boosting), 표준은 후보 코드(gbr) — std/candidates.yaml"
+    version: "옛 MODEL_VERSION 상수(api/config.py:3), 표준은 등록부 버전(v<n>) — 코드 안 버전 상수 금지"
+    warnings: "문구는 표준 경고 메시지(+ 변수 라벨). 보정 한 줄 문구만 옛 형식"
+sw:
+  source_repo: "../SongWol ML AI"
+  routes:                                        # api/main.py:71,76,81,86,91,102
+    health: /api/health
+    predict: /api/quality/predict
+    optimize: /api/ml/optimize
+    overview: /api/ml/overview
+    records: /api/data/records
+  predict_keys: [delta_e, risk_probability, anomaly, status, warnings, imputed_fields, equipment, model, risk_model, version, notice]   # api/ml_service.py:149-151
+  round: {delta_e: 3, risk_probability: 4}                                           # api/ml_service.py:149
+  status_text: {review: 품질 검토, ok: 추가 징후 없음}                                  # api/ml_service.py:150
+  request_rename: {}
+  default_record: {set_temp: 175, set_pressure: 4, line_speed: 14, ink_usage: 18, dwell_time: 50, absorb_rate: 82, fabric_strength: 340, print_type: 나염, color_tone: 진한 색상}   # tests/test_api.py:20-21 · api/config.py:10-20
+  equipment: {나염: 나염기, 승화: 승화전사기, DTF: DTF 프린터}                             # api/config.py:6 · api/ml_service.py:151
+  invalid_422: [[set_temp, 230], [line_speed, 2], [absorb_rate, 101], [print_type, 자수], [color_tone, 형광], [set_temp, null]]   # tests/test_api.py:47
+  missing_ok: [absorb_rate, fabric_strength]                 # api/main.py:58-61 (원단 측정만 결측 허용)
+  missing_fail_extra: set_pressure
+  optimize_keys: [feasible, current, current_cost_index, candidate_count, feasible_count, recommendation, alternatives, unmet_constraints, warnings, objective, notice]   # api/ml_service.py:189-192
+  optimize_params: {max_delta_e: 2.5, max_risk: 0.2, min_line_speed: 12}             # tests/test_api.py (기본값) · config.py
+  optimize_infeasible: {max_delta_e: 0.5, max_risk: 0.01, min_line_speed: 24}
+  optimize_candidate_count: 8400                                                     # tests/test_api.py:107 — 표준은 학습 범위 ∩ (D-31)
+  optimize_invalid_422: [[max_delta_e, 0.1], [max_risk, 0], [max_risk, 1], [min_line_speed, 30]]   # tests/test_api.py:133
+  overview_keys: [data_mode, version, rows, champion, risk_champion, metrics, risk_metrics, test_metrics, risk_test_metrics, split, features]   # api/ml_service.py:206-215 (부분)
+  overview_metric_keys: [model, mae, rmse, r2]                                       # api/ml_service.py:69
+  overview_risk_metric_keys: [model, roc_auc, pr_auc, brier]                         # api/ml_service.py:73
+  split: {train: 432, validation: 144, test: 144}
+  records_keys: [total, limit, offset, records]                                      # api/main.py:99
+  record_detail_keys: [record, source]                                               # api/main.py:107
+  records_bad_queries: ["limit=0", "limit=101", "offset=-1", "print_type=자수", "color_tone=invalid", "search=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]   # tests/test_api.py:79
+  records_total: 720
+  health_keys: [status, model_ready, data_mode, version]                             # api/main.py:73
+  error_shape: detail_list
+  differs:
+    optimize_candidate_count: "원천 전수 8,400점(학습 범위 무시) ↔ 표준 학습 범위 ∩ min/max (D-31) — 이관 보고서 사유"
+    model: "표시 이름 ↔ 후보 코드"
+    version: "옛 상수 ↔ 등록부 버전"

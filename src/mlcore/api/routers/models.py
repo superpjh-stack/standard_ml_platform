@@ -45,7 +45,7 @@ def stage(t: str, task: str, v: str, request: Request):
 
 
 def _request(t: str, task: str, v: str, request: Request, action: str, reason: str | None):
-    p = principal(request)
+    p = auth.require(principal(request), "approve")
     spec = catalog(request).get(t, task_id(t, task))
     auth.require_own_task(p, "approve", spec.task.raw["approver_role"])
     aid = Registry().request_promotion(t, spec.task.id, v, actor=actor(p), action=action, reason=reason,
@@ -88,7 +88,7 @@ def list_approvals(t: str, request: Request, state: str | None = Query(default=N
 
 @router.post("/approvals/{approval_id}/decide")
 def decide(approval_id: str, body: DecideBody, request: Request):
-    p = principal(request)
+    p = auth.require(principal(request), "approve")            # 역할 밖(operator · viewer)은 승인 유무와 상관없이 403
     row = approval.get(approval_id)                            # 없으면 404
     if row["tenant_id"] != p.tenant_id:                       # 다른 회사 → 없는 것과 같다
         raise NotFound("승인을 찾을 수 없습니다")
