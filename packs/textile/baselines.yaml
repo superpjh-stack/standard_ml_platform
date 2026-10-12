@@ -1,0 +1,5 @@
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만. Phase 0: 값 없음 → 기준선 회귀 게이트 FAIL 이 정상.
+delta_e:        {metric: mae,   value: null, measured_by: null, source_reported: 0.557}
+defect_risk:    {metric: brier, value: null, measured_by: null, source_reported: 0.127}
+print_ood:      {metric: flag_rate, value: null, measured_by: null, source_reported: null}
+print_setpoint: {metric: constraint_satisfaction_rate, value: null, measured_by: null, source_reported: null}

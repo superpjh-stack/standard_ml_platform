@@ -1,0 +1,15 @@
+id: _template.target_value
+type: regression
+title: 목표값 예측
+entity: lot
+time_key: ts
+group_key: null
+target: {name: target_value, unit: "-", direction: lower_is_better}
+features: [x1, x2, c1]
+thresholds: {}
+interval: {method: split_conformal, alpha: 0.1}
+candidates: [ridge, random_forest]
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: quality

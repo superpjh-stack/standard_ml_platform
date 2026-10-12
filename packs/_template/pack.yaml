@@ -1,0 +1,10 @@
+# 빈 팩 — 새 업종은 이 폴더를 복사해 변수 사전 · 과제 2 · 합성 생성기 · 기준선부터 채운다 (spec §2.2 · intro §5-6).
+code: _template
+name: 빈 팩
+version: 0.1.0
+core_min: 0.1.0
+synth: {module: synth/template_rows.py, seed: 42, rows: 600}   # TODO(개발3): 단순 선형 합성 생성기
+notice: "예측값은 참고용이며 공정 변경은 담당자 확인 후 진행합니다."
+status_labels: {}
+monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}
+tasks: [target_value, target_risk]

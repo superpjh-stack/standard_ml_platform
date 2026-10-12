@@ -1,0 +1,21 @@
+# 표준 응답 상태 6 (spec §2.3). 코드는 바꿀 수 없고 문구만 팩 · 회사가 바꾼다.
+statuses:
+  ok:             {label: 정상,      meaning: 기준 안 · 학습 범위 안}
+  watch:          {label: 주의,      meaning: "기준 근접(과제 watch_band) 또는 범위 근접"}
+  review:         {label: 검토 필요, meaning: 기준 초과 · 위험 등급 높음 · 이상 입력 · 제약 미충족(least_violation)}
+  out_of_range:   {label: 범위 밖,   meaning: "입력이 학습 범위 밖. 예측은 하되 신뢰 낮음 (Q7)"}
+  rejected:       {label: 예측 불가, meaning: 거부 정책 과제에서 범위 밖 · 필수 변수 누락}
+  needs_approval: {label: 승인 필요, meaning: 최적화 추천 · 견적 초안 · 재학습 후보가 승인 대기}
+# 오류 코드 (HTTP 오류 봉투 {error:{code,message,detail}} — goal §2.3 · spec §7.3)
+error_codes:
+  invalid_input:           422
+  missing_required:        422
+  out_of_bounds:           422
+  model_not_ready:         503
+  model_artifact_mismatch: 503
+  source_disconnected:     503
+  auth_required:           401
+  forbidden:               403
+  not_found:               404
+  already_decided:         409
+  not_implemented:         501

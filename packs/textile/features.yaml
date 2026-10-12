@@ -1,0 +1,12 @@
+# 날염 팩 변수 사전 (contracts/feature-contract.md). 원천 이관 근거: migration/source_inventory.md §2.2
+# 범위 · step 은 원천 값이다. spec §3.1 예시 값과 다르다 → decisions.md D-30.
+set_temp:        {label: 설정 온도,     unit: "℃",   dtype: float, min: 140, max: 210, default: 175, required: true,  controllable: true,  step: 10}
+set_pressure:    {label: 설정 압력,     unit: bar,    dtype: float, min: 2,   max: 6,   default: 4,   required: true,  controllable: true,  step: 1}
+line_speed:      {label: 라인속도,      unit: m/min,  dtype: float, min: 6,   max: 24,  default: 14,  required: true,  controllable: true,  step: 3}
+ink_usage:       {label: 잉크 사용량,   unit: "g/m²", dtype: float, min: 10,  max: 30,  default: 18,  required: true,  controllable: true,  step: 4}
+dwell_time:      {label: 가열 유지시간, unit: s,      dtype: float, min: 20,  max: 80,  default: 50,  required: true,  controllable: true,  step: 15}
+absorb_rate:     {label: 원단 흡수율,   unit: "%",    dtype: float, min: 60,  max: 98,  default: 82,  required: false, impute: median, controllable: false}
+fabric_strength: {label: 원단 강도,     unit: N,      dtype: float, min: 220, max: 480, default: 340, required: false, impute: median, controllable: false}
+print_type:      {label: 인쇄 방식,     dtype: category, values: [나염, 승화, DTF], default: 나염, required: true, controllable: false}
+color_tone:      {label: 색상 계열,     dtype: category, values: [연한 색상, 중간 색상, 진한 색상], default: 진한 색상, required: true, controllable: false}
+std_name: {set_temp: temp_set_c, set_pressure: pressure_set_bar}   # spec §3.1 예시 — 허브 std/fields.yaml 대조는 개발3 (미확인)

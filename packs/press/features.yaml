@@ -1,0 +1,12 @@
+# 프레스 팩 변수 사전 (contracts/feature-contract.md). 원천 이관 근거: migration/source_inventory.md §1.2
+# 센서 7 은 모두 결측 허용(보정), 과제 max_imputed: 3 (원천 "센서값 최소 4개").
+press_force:   {label: 프레스 하중,   unit: ton,  dtype: float, min: 180,  max: 320,    default: 245,   required: false, impute: median, controllable: false}
+vibration:     {label: 진동,          unit: mm/s, dtype: float, min: 0.4,  max: 8,      default: 2.1,   required: false, impute: median, controllable: false}
+motor_current: {label: 모터 전류,     unit: A,    dtype: float, min: 30,   max: 85,     default: 48,    required: false, impute: median, controllable: false}
+equip_temp:    {label: 설비 온도,     unit: "°C", dtype: float, min: 30,   max: 85,     default: 47,    required: false, impute: median, controllable: false}
+mold_temp:     {label: 금형 온도,     unit: "°C", dtype: float, min: 25,   max: 70,     default: 39,    required: false, impute: median, controllable: false}
+cycle_time:    {label: 사이클 타임,   unit: s,    dtype: float, min: 6,    max: 15,     default: 9.5,   required: false, impute: median, controllable: false}
+shot_count:    {label: 금형 누적 샷,  unit: 회,   dtype: int,   min: 5000, max: 180000, default: 65000, required: false, impute: median, controllable: false, integer: true}
+machine_code:  {label: 설비,          dtype: category, values_from: tenant, required: true, controllable: false}
+product_type:  {label: 품목,          dtype: category, values_from: tenant, required: true, controllable: false}
+std_name: {}   # 미확인 — 허브 std/fields.yaml 대응은 개발3 (A)

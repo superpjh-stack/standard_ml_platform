@@ -1,0 +1,37 @@
+# 지표 사전 (spec §2.4). 모든 지표는 {value, baseline, delta_vs_baseline} 으로 저장 · 표시한다.
+# direction: lower | higher — delta_vs_baseline 의 "이김" 판정 방향
+metrics:
+  mae:               {direction: lower,  types: [regression]}
+  rmse:              {direction: lower,  types: [regression]}
+  r2:                {direction: higher, types: [regression]}
+  mape:              {direction: lower,  types: [regression], when: "target > 0"}
+  interval_coverage: {direction: target, types: [regression], target_from: "1 - interval.alpha"}
+  brier:             {direction: lower,  types: [risk]}
+  roc_auc:           {direction: higher, types: [risk]}
+  pr_auc:            {direction: higher, types: [risk], note: "average_precision_score(AP). 원천 ks·sw 의 pr_auc 키와 같은 정의"}
+  logloss:           {direction: lower,  types: [risk]}
+  ece:               {direction: lower,  types: [risk]}
+  grade_precision:   {direction: higher, types: [risk]}
+  grade_recall:      {direction: higher, types: [risk]}
+  flag_rate:         {direction: target, types: [anomaly], target_from: contamination}
+  precision_at_k:    {direction: higher, types: [anomaly], when: "라벨 있음"}
+  macro_f1:          {direction: higher, types: [extract]}
+  class_f1:          {direction: higher, types: [extract]}
+  confusion_matrix:  {direction: none,   types: [extract]}
+  iou:               {direction: higher, types: [extract]}
+  constraint_satisfaction_rate: {direction: higher, types: [optimize]}
+  predicted_improvement:        {direction: higher, types: [optimize]}
+  n_candidates:                 {direction: none,   types: [optimize]}
+  in_train_range_rate:          {direction: higher, types: [optimize]}
+  queue_size:        {direction: none,   types: [review_queue]}
+  hit_rate:          {direction: higher, types: [review_queue]}
+  human_edit_rate:   {direction: lower,  types: [quote]}
+  edit_amount:       {direction: lower,  types: [quote]}
+  cost_error:        {direction: lower,  types: [quote]}
+baselines:
+  train_mean:          {types: [regression], how: "학습 구간 목표 평균"}
+  last_value:          {types: [regression], how: "time_key 정렬 직전 행 목표값 (시계열일 때)"}
+  train_positive_rate: {types: [risk], how: "학습 구간 양성률 상수"}
+  contamination:       {types: [anomaly], how: "과제의 기대 오염률"}
+  current_condition:   {types: [optimize], how: "요청의 현재 조절 변수 값"}
+  labels_none:         {types: [extract], how: "라벨 없으면 지표 없음 + labels: none"}

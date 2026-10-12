@@ -1,0 +1,5 @@
+# 빈 팩 변수 사전 — 이름 · 범위는 예시다. 새 팩에서 바꾼다.
+x1: {label: 변수 1, unit: "-", dtype: float, min: 0, max: 100, default: 50, required: true,  controllable: false}
+x2: {label: 변수 2, unit: "-", dtype: float, min: 0, max: 100, default: 50, required: false, impute: median, controllable: false}
+c1: {label: 범주 1, dtype: category, values: [A, B, C], default: A, required: true, controllable: false}
+std_name: {}

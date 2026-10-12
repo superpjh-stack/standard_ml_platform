@@ -1,0 +1,16 @@
+id: press.sensor_ood
+type: anomaly
+title: 센서 분포 이탈 탐지
+entity: lot
+time_key: recorded_at
+group_key: null
+features: [press_force, vibration, motor_current, equip_temp, mold_temp, cycle_time, shot_count, machine_code, product_type]
+contamination: 0.08
+candidates: [isolation_forest]
+candidate_params:
+  isolation_forest: {n_estimators: 100}
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: maintenance_lead
+seed: 42

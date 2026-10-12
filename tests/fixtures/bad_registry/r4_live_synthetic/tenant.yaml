@@ -1,0 +1,8 @@
+code: zz4
+name: 불량픽스처4
+pack: textile
+mode: live
+tasks: {enable: [zz4.delta_e]}
+sources: {train: {kind: csv, path: null}}
+feature_map: {T.A: set_temp, T.B: set_pressure, T.C: line_speed, T.D: ink_usage, T.E: dwell_time, T.F: print_type, T.G: color_tone}
+# R4 — 시험은 production_synthetic(zz4.delta_e) = True 로 부른다 (production 모델이 합성 스냅숏)

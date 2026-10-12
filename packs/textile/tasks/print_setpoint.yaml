@@ -1,0 +1,21 @@
+id: textile.print_setpoint
+type: optimize
+title: 인쇄 조건 추천
+entity: lot
+uses: [textile.delta_e, textile.defect_risk]
+controls: [set_temp, set_pressure, line_speed, ink_usage, dwell_time]
+fixed: [absorb_rate, fabric_strength, print_type, color_tone]
+params:
+  max_delta_e:    {label: 목표 색차 상한, unit: "ΔE",  default: 2.5, min: 0.5,  max: 8}
+  max_risk:       {label: 불량 위험 상한, unit: 확률,  default: 0.2, min: 0.01, max: 0.9}
+  min_line_speed: {label: 최소 라인속도,  unit: m/min, default: 12,  min: 6,    max: 24}
+formulas: {process_cost: process_cost}             # formulas/process_cost.py — TODO(개발3, M3)
+objective: {minimize: process_cost, tiebreak: [{minimize: delta_e}]}   # 원천: 비용 최소, 동률이면 ΔE (spec §3.2 예시는 delta_e 최소 — D-30)
+constraints:
+  - {name: max_delta_e,    expr: "delta_e <= max_delta_e"}
+  - {name: max_risk,       expr: "defect_risk <= max_risk"}
+  - {name: min_line_speed, expr: "line_speed >= min_line_speed"}
+search: {strategy: grid, max_points: 10000}
+on_infeasible: least_violation
+out_of_range: predict_with_warning
+approver_role: line_lead

@@ -1,0 +1,5 @@
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (goal §4.1). Phase 0: 값 없음 → 기준선 회귀 게이트는 FAIL 이 정상.
+remaining_hours:    {metric: mae,     value: null, measured_by: null, source_reported: 5.568}
+failure_24h:        {metric: brier,   value: null, measured_by: null, source_reported: 0.0576}
+sensor_ood:         {metric: flag_rate, value: null, measured_by: null, source_reported: null}
+maintenance_timing: {metric: constraint_satisfaction_rate, value: null, measured_by: null, source_reported: null}

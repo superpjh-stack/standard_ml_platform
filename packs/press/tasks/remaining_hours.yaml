@@ -1,0 +1,23 @@
+id: press.remaining_hours
+type: regression
+title: 잔여수명 예측
+entity: lot
+time_key: recorded_at
+group_key: null                 # 원천은 설비가 전 구간에 섞인 독립 LOT — 그룹 경계 없음 (source_inventory §1.3)
+target: {name: remaining_hours, unit: h, direction: higher_is_better}
+features: [press_force, vibration, motor_current, equip_temp, mold_temp, cycle_time, shot_count, machine_code, product_type]
+thresholds: {}                  # 원천에 회귀 검토 기준 없음
+clip: {min: 0}
+interval: {method: split_conformal, alpha: 0.1}
+candidates: [ridge, random_forest, extra_trees, gbr]
+candidate_params:
+  ridge: {alpha: 3}
+  random_forest: {n_estimators: 100, min_samples_leaf: 3}
+  extra_trees: {n_estimators: 100, min_samples_leaf: 3}
+  gbr: {n_estimators: 120, max_depth: 2}
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: maintenance_lead
+seed: 42
+monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, perf_window_days: 30}

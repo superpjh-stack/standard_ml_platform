@@ -1,0 +1,6 @@
+code: zz5
+name: 불량픽스처5
+pack: textile
+mode: demo
+tasks: {enable: [zz5.delta_e, zz5.defect_risk, zz5.print_setpoint]}
+sources: {demo: {kind: synthetic, seed: 42}}

@@ -1,0 +1,21 @@
+# 후보 모델 이름 사전 (spec §5.2). 과제 YAML 의 candidates 는 여기 이름만 쓴다.
+# enabled_by_default: false 는 선택 의존성 (D-02)
+candidates:
+  ridge:            {impl: sklearn.linear_model.Ridge,                  types: [regression], scale: true,  defaults: {alpha: 3.0}}
+  svr:              {impl: sklearn.svm.SVR,                             types: [regression], scale: true}
+  decision_tree:    {impl: sklearn.tree.DecisionTreeRegressor,          types: [regression], scale: false}
+  random_forest:    {impl: sklearn.ensemble.RandomForestRegressor,      types: [regression], scale: false, defaults: {n_estimators: 100, min_samples_leaf: 3}}
+  extra_trees:      {impl: sklearn.ensemble.ExtraTreesRegressor,        types: [regression], scale: false, defaults: {n_estimators: 100, min_samples_leaf: 3}}
+  gbr:              {impl: sklearn.ensemble.GradientBoostingRegressor,  types: [regression], scale: false}
+  hist_gb:          {impl: sklearn.ensemble.HistGradientBoostingRegressor, types: [regression], scale: false}
+  logreg:           {impl: sklearn.linear_model.LogisticRegression,     types: [risk, extract], scale: true,  defaults: {max_iter: 1000}}
+  rf_clf:           {impl: sklearn.ensemble.RandomForestClassifier,     types: [risk, extract], scale: false, defaults: {n_estimators: 100, min_samples_leaf: 5}}
+  et_clf:           {impl: sklearn.ensemble.ExtraTreesClassifier,       types: [risk, extract], scale: false}
+  gbc:              {impl: sklearn.ensemble.GradientBoostingClassifier, types: [risk, extract], scale: false, defaults: {n_estimators: 80, max_depth: 2}}
+  hist_gb_clf:      {impl: sklearn.ensemble.HistGradientBoostingClassifier, types: [risk, extract], scale: false}
+  isolation_forest: {impl: sklearn.ensemble.IsolationForest,            types: [anomaly], scale: true, defaults: {n_estimators: 100}}
+  lightgbm:         {impl: lightgbm.LGBMRegressor,  types: [regression], scale: false, enabled_by_default: false, optional_dependency: lightgbm}
+  lightgbm_clf:     {impl: lightgbm.LGBMClassifier, types: [risk],       scale: false, enabled_by_default: false, optional_dependency: lightgbm}
+search:
+  max_random_trials_per_candidate: 20   # spec §5.2 [가설]
+calibration: {method: CalibratedClassifierCV, fit_on: valid, optional: true}

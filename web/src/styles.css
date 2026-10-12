@@ -1,0 +1,9 @@
+:root { font-family: system-ui, "Apple SD Gothic Neo", sans-serif; color: #1d2421; background: #f6f8f7; }
+body { margin: 0; }
+.shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+nav { display: flex; flex-direction: column; gap: 4px; padding: 16px; background: #fff; border-right: 1px solid #e3e8e5; }
+nav button { text-align: left; padding: 8px 10px; border: 0; background: none; border-radius: 6px; cursor: pointer; }
+nav button[aria-current="page"] { background: #e6f1ec; font-weight: 600; }
+main { padding: 24px; min-width: 0; }
+.placeholder { border: 1px dashed #b8c4be; border-radius: 8px; padding: 24px; background: #fff; }
+@media (max-width: 1024px) { .shell { grid-template-columns: 1fr; } nav { flex-direction: row; flex-wrap: wrap; } }

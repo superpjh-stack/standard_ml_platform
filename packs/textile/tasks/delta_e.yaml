@@ -1,0 +1,23 @@
+id: textile.delta_e
+type: regression
+title: 색차(ΔE) 예측
+entity: lot
+time_key: recorded_at
+group_key: null                 # spec §3.2 예시는 fabric_lot — 원천 합성 데이터에 원단 LOT 열이 없다 (D-30)
+target: {name: delta_e, unit: "ΔE", direction: lower_is_better}
+features: [set_temp, set_pressure, line_speed, ink_usage, dwell_time, absorb_rate, fabric_strength, print_type, color_tone]
+thresholds: {review_above: 3.5}
+clip: {min: 0}
+interval: {method: split_conformal, alpha: 0.1}
+candidates: [ridge, random_forest, extra_trees, gbr]
+candidate_params:
+  ridge: {alpha: 3}
+  random_forest: {n_estimators: 100, min_samples_leaf: 3}
+  extra_trees: {n_estimators: 100, min_samples_leaf: 3}
+  gbr: {n_estimators: 200, max_depth: 3, learning_rate: 0.05}
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: quality
+seed: 42
+monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, perf_window_days: 30}

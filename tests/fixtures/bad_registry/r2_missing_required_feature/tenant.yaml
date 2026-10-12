@@ -1,0 +1,7 @@
+code: zz2
+name: 불량픽스처2
+pack: textile
+mode: live
+tasks: {enable: [zz2.delta_e]}
+sources: {train: {kind: csv, path: null}}      # 합성 소스 없음
+feature_map: {SRC_TABLE.TEMP: set_temp}        # R2 위반 — 필수 set_pressure 등 원천 없음

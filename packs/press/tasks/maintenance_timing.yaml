@@ -1,0 +1,22 @@
+id: press.maintenance_timing
+type: optimize
+title: 정비 시점 탐색
+entity: lot
+uses: [press.remaining_hours]
+controls: []                    # 센서값은 조절하지 않는다 — 결정 변수만 탐색
+fixed: [press_force, vibration, motor_current, equip_temp, mold_temp, cycle_time, shot_count, machine_code, product_type]
+decision_vars:
+  stop_after_hours: {label: 정비까지 대기, unit: h, min: 0, max_param: max_delay_hours, step: 0.5}
+params:
+  reserve_hours:   {label: 확보할 수명 여유, unit: h,  default: 12,  min: 1, max: 150}
+  max_delay_hours: {label: 최대 정비 대기,   unit: h,  default: 48,  min: 0, max: 72}
+  max_cost_index:  {label: 비용지수 상한,    unit: 지수, default: 140, min: 1, max: 500}
+formulas: {maintenance_cost: maintenance_cost}     # formulas/maintenance_cost.py — TODO(개발3, M3)
+objective: {minimize: maintenance_cost, tiebreak: [{maximize: stop_after_hours}]}
+constraints:
+  - {name: reserve,  expr: "remaining_hours - stop_after_hours >= reserve_hours"}
+  - {name: max_cost, expr: "maintenance_cost <= max_cost_index"}
+search: {strategy: grid, max_points: 10000}
+on_infeasible: least_violation
+out_of_range: predict_with_warning
+approver_role: maintenance_lead

@@ -1,0 +1,2 @@
+id: textile.delta_e
+type: risk            # R1 위반 — type 은 덮어쓸 수 없다

@@ -1,0 +1,16 @@
+id: textile.print_ood
+type: anomaly
+title: 인쇄 조건 분포 이탈 탐지
+entity: lot
+time_key: recorded_at
+group_key: null
+features: [set_temp, set_pressure, line_speed, ink_usage, dwell_time, absorb_rate, fabric_strength, print_type, color_tone]
+contamination: 0.08
+candidates: [isolation_forest]
+candidate_params:
+  isolation_forest: {n_estimators: 100}
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: quality
+seed: 42

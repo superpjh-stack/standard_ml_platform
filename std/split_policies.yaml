@@ -1,0 +1,32 @@
+# 분할 정책 4 (spec §5.3) — 바꿀 수 없는 누수 규칙. 회사 덮어쓰기로 바꿀 수 없다 (§3.3 · §11.3-1).
+# 공통 절차: 학습 구간 → 후보 학습 / 검증 구간 → 선정 · 예측구간 · 확률 보정 / 학습+검증 → 재적합 / 시험 구간 → 1회 평가
+policies:
+  time_60_20_20:
+    when: "time_key 존재 (강제)"
+    order: time
+    fractions: {train: 0.6, valid: 0.2, test: 0.2}
+    group_boundary: true          # group_key 가 경계를 넘지 않게 자른다
+    seeded: false
+  time_cv5:
+    when: "time_key 존재 · 행 < 500 (D-05)"
+    order: time
+    folds: 5                      # 시간순 확장 창
+    test_fraction: 0.2            # 마지막 20% 시험
+    group_boundary: true
+    seeded: false
+  stratified_60_20_20:
+    when: "time_key 없음 · 분류(risk)"
+    order: stratified
+    fractions: {train: 0.6, valid: 0.2, test: 0.2}
+    seeded: true
+  random_60_20_20:
+    when: "time_key 없음 · 회귀"
+    order: random
+    fractions: {train: 0.6, valid: 0.2, test: 0.2}
+    seeded: true
+rules:
+  time_key_forces_time_order: true
+  small_rows_threshold: 500
+  test_used_once: true
+  forbidden_uses_of_test: [selection, calibration, interval, threshold, queue_scoring, baseline]
+  in_sample_evaluation: forbidden   # 평창식 전체 재적합 후 같은 데이터 채점 (F5)

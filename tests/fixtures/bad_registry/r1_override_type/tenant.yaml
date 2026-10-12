@@ -1,0 +1,6 @@
+code: zz1
+name: 불량픽스처1
+pack: textile
+mode: demo
+tasks: {enable: [zz1.delta_e]}
+sources: {demo: {kind: synthetic, seed: 42}}

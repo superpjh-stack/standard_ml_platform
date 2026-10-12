@@ -1,0 +1,20 @@
+id: press.failure_24h
+type: risk
+title: 24시간 고장 위험
+entity: lot
+time_key: recorded_at
+group_key: null
+target: {name: failure_24h, positive: 1}
+features: [press_force, vibration, motor_current, equip_temp, mold_temp, cycle_time, shot_count, machine_code, product_type]
+thresholds: {review_prob: 0.5}
+calibration: {method: none}
+candidates: [logreg, rf_clf, gbc]
+candidate_params:
+  logreg: {max_iter: 500}
+  rf_clf: {n_estimators: 100, min_samples_leaf: 5}
+  gbc: {n_estimators: 80, max_depth: 2}
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: maintenance_lead
+seed: 42

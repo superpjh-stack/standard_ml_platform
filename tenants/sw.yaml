@@ -1,0 +1,39 @@
+# 회사 등록부 — 송월타월 (contracts/tenant-contract.md). 비밀값은 환경변수 이름만. 확인 못 한 값은 null + "# 미확인".
+code: sw
+name: 송월타월
+pack: textile
+mode: demo                      # 1차 루프는 demo/eval 만 (D-13)
+hub_company: sw
+aliases: [송월, SongWol, Songwol]  # 코어 · 팩 금지어 검사용 별칭 (G-M01 · G-S06)
+tasks:
+  enable: [sw.delta_e, sw.defect_risk, sw.print_ood, sw.print_setpoint]
+categories: {}
+sources:
+  demo:    {kind: synthetic, seed: 42}       # spec §11.2 예시는 20260917 — 원천 시드는 42 (D-30)
+  eval:    {kind: csv, path: tests/fixtures/sw/snapshot.csv}          # TODO(개발3): fixture 생성
+  train:   {kind: dataplatform, view: null, url_env: MLP_SW_DP_URL, key_env: MLP_SW_DP_KEY}   # 뷰 이름 미확인 (spec 예시 sw_gold.print_quality_daily 는 실재 미확인)
+  gateway: {kind: gateway, table: PRC_MONITOR_DATA, dsn_env: MLP_SW_GW_RO_DSN}
+  actuals: {kind: mes, tables: [PRT_QUALITY_HISTORY, PRT_PRINT_RESULTS, PRT_PRINT_CONDS, RCV_MATERIAL_LOTS], dsn_env: MLP_SW_MES_RO_DSN}
+feature_map:                    # 원천 열 → 팩 변수 (source_inventory §3)
+  PRT_PRINT_CONDS.SET_TEMP: set_temp
+  PRT_PRINT_CONDS.SET_PRESSURE: set_pressure
+  PRT_PRINT_CONDS.LINE_SPEED: line_speed
+  PRT_PRINT_CONDS.INK_USAGE: ink_usage
+  PRT_PRINT_CONDS.PRINT_TYPE: print_type
+  RCV_MATERIAL_LOTS.ABSORB_RATE: absorb_rate
+  RCV_MATERIAL_LOTS.STRENGTH_VALUE: fabric_strength
+target_map:
+  PRT_QUALITY_HISTORY.DELTA_E: delta_e
+  PRT_QUALITY_HISTORY.JUDGE_RESULT: defect     # 불량 정의 미확인 (JUDGE_RESULT 대 DEFECT_QTY) — D-32
+unmapped:
+  dwell_time: "PRT_PRINT_CONDS 에 유지시간 열 없음"
+  color_tone: "색상 코드 미수집"
+approvers: {quality: [], line_lead: []}       # 미확인 — 사람 확인 필요 (D-04)
+notify: {webhook_env: MLP_SW_SLACK_WEBHOOK}
+compat:
+  entity_prefix: "SW-DEMO-"
+  equipment_by_print_type: {나염: [EQ_SCREEN_01, 나염기], 승화: [EQ_SUBLIM_01, 승화전사기], DTF: [EQ_DTF_01, DTF 프린터]}
+  routes: [/api/health, /api/quality/predict, /api/ml/optimize, /api/ml/overview, /api/data/records]
+  status_text: {review: 품질 검토, ok: 추가 징후 없음}
+  mes_prediction_views: {delta_e: PRT_COLOR_PREDICTIONS.PRED_DELTA_E, defect_risk: PRT_QUALITY_PREDICTIONS.DEFECT_PROB}   # D-11 — db/compat/sw.sql 뷰 정의만
+labels: {}

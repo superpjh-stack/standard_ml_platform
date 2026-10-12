@@ -1,0 +1,10 @@
+# 업종 팩 — 프레스 · 금형 (contracts/pack-contract.md). 회사 · 원천 테이블 이름을 두지 않는다.
+code: press
+name: 프레스 · 금형
+version: 0.1.0
+core_min: 0.1.0
+synth: {module: synth/press_lots.py, seed: 42, rows: 720}   # TODO(개발3, A0): 원천 demo_data() 이관 — migration/source_inventory.md §1.2 생성 순서 그대로
+notice: "예측값은 참고용이며 설비 정지 · 정비 · 금형 교체는 현장 점검 후 담당자가 결정합니다."
+status_labels: {}
+monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}
+tasks: [remaining_hours, failure_24h, sensor_ood, maintenance_timing]

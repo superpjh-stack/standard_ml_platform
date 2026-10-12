@@ -1,0 +1,23 @@
+# 회사 등록부 틀 — `make tenant NEW=<code> PACK=<pack>` 이 이 파일을 복사해 tenants/<code>.yaml 을 만든다.
+# 규칙: 비밀값은 환경변수 이름만(MLP_<CODE>_*). 확인 못 한 값은 null + "# 미확인". 다른 회사 이름 · 경로 금지.
+code: __code__
+name: __name__                  # 미확인
+pack: _template
+mode: demo
+hub_company: __code__
+aliases: []                     # 회사명 별칭(한글 약칭 · 영문) — 금지어 검사용
+tasks:
+  enable: [__code__.target_value, __code__.target_risk]
+categories: {}
+sources:
+  demo:    {kind: synthetic, seed: 42}
+  eval:    {kind: csv, path: tests/fixtures/__code__/snapshot.csv}
+  train:   {kind: csv, path: null}            # 미확인
+  actuals: {kind: csv, path: null}            # 미확인
+feature_map: {}
+target_map: {}
+unmapped: {}
+approvers: {quality: []}
+notify: {webhook_env: null}
+compat: {}
+labels: {}

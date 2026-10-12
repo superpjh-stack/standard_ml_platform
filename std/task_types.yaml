@@ -1,0 +1,59 @@
+# 과제 유형 — 분류의 유일한 출처 (spec §2.1 · §2.4). 코어 코드는 이 파일을 읽어서만 유형을 안다.
+# phase: 1 = 1차 구현 대상, 2 = 코드 골격만(호출 시 501 not_implemented)
+types:
+  regression:
+    label: 품질 · 수치 예측
+    phase: 1
+    output: [value, unit, interval]
+    selection_metric: mae
+    report_metrics: [mae, rmse, r2, mape, interval_coverage]
+    baselines: [train_mean, last_value]        # last_value 는 time_key 가 있을 때
+    composite: false
+  risk:
+    label: 위험 분류
+    phase: 1
+    output: [probability, grade, baseline]
+    selection_metric: brier
+    report_metrics: [brier, roc_auc, pr_auc, logloss, ece, grade_precision, grade_recall]
+    baselines: [train_positive_rate]
+    composite: false
+  anomaly:
+    label: 이상 · 분포 밖 탐지
+    phase: 1
+    output: [score, flag, contributors]
+    selection_metric: null                       # 비지도
+    report_metrics: [flag_rate, precision_at_k]
+    baselines: [contamination]
+    composite: false
+  optimize:
+    label: 조건 최적화
+    phase: 1
+    output: [conditions, predictions, constraints, n_candidates]
+    selection_metric: null
+    report_metrics: [constraint_satisfaction_rate, predicted_improvement, n_candidates, in_train_range_rate]
+    baselines: [current_condition]
+    composite: true                              # uses: 로 의존 과제 선언
+  review_queue:
+    label: 검토 대기열
+    phase: 2
+    output: [items, reason, priority]
+    selection_metric: null
+    report_metrics: [queue_size, hit_rate]
+    baselines: []
+    composite: true
+  extract:
+    label: 문서 · 도면 추출
+    phase: 2
+    output: [regions, objects, bom_rows, confidence]
+    selection_metric: macro_f1
+    report_metrics: [macro_f1, class_f1, confusion_matrix, iou]
+    baselines: [labels_none]
+    composite: false
+  quote:
+    label: 원가 · 견적 계산
+    phase: 2
+    output: [lines, total, overrides]
+    selection_metric: null
+    report_metrics: [human_edit_rate, edit_amount, cost_error]
+    baselines: []
+    composite: true

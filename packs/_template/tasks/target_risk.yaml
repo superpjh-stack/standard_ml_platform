@@ -1,0 +1,14 @@
+id: _template.target_risk
+type: risk
+title: 목표 위험
+entity: lot
+time_key: ts
+group_key: null
+target: {name: target_risk, positive: 1}
+features: [x1, x2, c1]
+thresholds: {review_prob: 0.5}
+candidates: [logreg, rf_clf]
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: quality

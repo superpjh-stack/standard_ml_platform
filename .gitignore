@@ -1,0 +1,29 @@
+# 비밀 — 절대 커밋하지 않는다 (D-20)
+.env
+.env.*
+!.env.example
+
+# 실행 산출물 — 스냅숏 · 모델 산출물은 등록부 + var/ 에만
+var/
+*.joblib
+*.parquet
+!tests/fixtures/**/*.parquet
+!tests/fixtures/**/*.joblib
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Web
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+
+# 기타
+.DS_Store
+.claude/scheduled_tasks.lock
+outputs/gate-latest.md

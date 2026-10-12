@@ -1,0 +1,37 @@
+[project]
+name = "mlcore"
+version = "0.1.0"
+description = "표준 ML 플랫폼 — 업종 무관 코어 한 벌 + 과제 유형 + 업종 팩 + 회사 등록부"
+requires-python = "==3.12.*"
+# 정확한 버전 고정(G-S07). 수치 스택(numpy · pandas · scikit-learn)은 원천 ks · sw 가 검증한 버전과 같게 둔다 (D-21)
+dependencies = [
+    "fastapi==0.143.0",
+    "pydantic==2.14.1",
+    "psycopg[binary]==3.3.6",
+    "scikit-learn==1.6.1",
+    "numpy==1.26.4",
+    "pandas==2.3.3",
+    "pyarrow==21.0.0",
+    "joblib==1.6.0",
+    "pyyaml==6.0.3",
+    "uvicorn==0.54.0",
+    "apscheduler==3.11.3",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "httpx==0.28.1", "jsonschema==4.26.0"]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mlcore"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests", "packs"]
+markers = ["gate(gate_id): 이 테스트가 검증하는 게이트 ID (goal.md §2)"]
