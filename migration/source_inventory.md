@@ -1,7 +1,8 @@
-# 원천 조사 — ks · sw 기존 ML 서비스 인벤토리 (Phase 0)
+# 원천 조사 — 6개사 기존 ML 서비스 인벤토리 (1차 Phase 0: ks · sw / 2차 Phase P0: krs · pc · ot · kd)
 
 > 조사: 아키텍트, 2026-10-12. 방법: 원천 저장소 파일을 **직접 열어** 줄 번호로 셌다. 원천 코드는 실행하지 않았다(읽기 전용).
 > 원천: `../KwangSung ML AI`(ks) · `../SongWol ML AI`(sw). MES 열 대응의 보조 근거: `../SongWol AI Platform/src/songwol/db/schema.sql` · `../KwangSung AI Platform/db/schema.sql` · `../Standard Data Hub/companies/{ks,sw}.yaml`.
+> 2차 4개사 절은 §7~§12(아키텍트, 2026-10-13 — 원천 HEAD: 고려솔더 `b101cfc` · 평창 `75568aa` · 원터치 `8a2250e` · 경동 `0073ecf`).
 > **이 표가 G-M02 의 분모, G-M12 의 대조값이다.** 표기 `파일:줄`. 원천의 배포 문서에 있는 주소 · 호스트명은 공개 저장소 위생(D-20)에 따라 옮기지 않았다.
 
 ## 0. 요약 (수)
@@ -269,3 +270,458 @@ ks 와 같은 구조. 차이: GBR 200 / depth 3 / lr 0.05 (`:98`) · LogReg max_
 | S8 | ks · sw | 오류 응답이 FastAPI 기본 `{"detail": [...]}` — 표준 봉투와 다름(호환 라우터가 재현) | `main.py:25-31` |
 | S9 | sw | 최적화 격자가 학습 범위와 교차하지 않아 끝단 외삽 — 원천도 경고로만 처리 | `docs/methodology.md:40` |
 | S10 | ks · sw | 목록 페이징 `offset` · 키 `records` · 기본 15 (표준 `cursor` · `items` · 20) | `main.py:91-99` |
+
+
+---
+
+# 2차 — 4개사 (Phase P0, 아키텍트 2026-10-13)
+
+> 방법은 1차와 같다: 원천 파일을 **직접 열어** 줄 번호로 셌다. 원천 코드 · 시험은 실행하지 않았다. 원천 SQLite 견적 이력은 `sqlite3 "file:…?mode=ro"` 읽기 전용으로 행 수 · 금액만 읽었다.
+> 원천: `../Koreal Solder ML AI`(krs) · `../PyoungChang ML AI`(pc) · `../OneTouch ML AI`(ot) · `../KyungDong ML AI`(kd). 원천 문서의 포트 · 주소 · 사업자번호 · 고객사명은 옮기지 않았다(D-20).
+> 표기 `파일:줄`. 같은 줄 번호가 계속 나오면 앞 표의 파일을 가리킨다.
+
+## 7. 요약 (수) — 4개사
+
+| 항목 | krs | pc | ot | kd | 근거 |
+|---|---|---|---|---|---|
+| API 엔드포인트 (`/api/*`) | **7** | **6** | **11** | **11** | krs `api/main.py:36,41,47,54,62,67,76` · pc `api/main.py:27,30,36,39,42,49` · ot `api/main.py:47,52,56,69,74,82,94,101,109,114,126` · kd `api/main.py:70,74,78,82,89,100,107,113,129,135,142` |
+| 화면 진입 (`/`) | 1 (`/{path:path}` SPA, `main.py:85-92`) | 1 (웹 컨테이너 nginx `web/nginx.conf:15`, API 는 `/api/` 만 `:7`) | 1 (`main.py:146-149`) | 1 (`main.py:154-157`) | |
+| 입력 변수 | 8 (수치 7 + 범주 1) | 11 (수치 9 + 범주 2) | 8 (수치 6 + 범주 2) | 7 (수치 5 + 범주 2) | krs `ml_service.py:20-22` · pc `ml_service.py:21-24` · ot `config.py:10-20` · kd `config.py:8-17` |
+| `FEATURE_META` dict | 없음 (`FEATURES` 목록 + `LIMITS` `:20-27`) | 없음 (`LIMITS` `:27-31`) | 있음 `config.py:10-17` | 있음 `config.py:8-14` | 표준에서는 0(G-M03) — 팩 `features.yaml` 로 |
+| 목표 | `joint_strength_mpa` | `sensory_score` | `minutes`(개당 가공 분) + 객체 라벨 4 | `hours`(대당 제조공수) | krs `:22` · pc `:20` · ot `ml_service.py:53,16` · kd `ml_service.py:24` |
+| 학습 모델 묶음 | **1** (회귀) | **1** (회귀) | **2** (회귀 · 객체 분류) | **1** (회귀) | |
+| 후보 수 | 5 | 3 | 4 + 3 | 4 | krs `:97-103` · pc `:72-73` · ot `:77-79,90-91` · kd `:48-50` |
+| 최적화 | 무작위 5,000 | 무작위 3,500 (수락 표본) | — | — | krs `ml_service.py:125-145` · pc `ml_service.py:90-106` |
+| 검토 대기열 | \|잔차\| ≥ 4 MPa | 잔차 상위 10% (표시 8) | — | — | krs `:169-195` · pc `ml_service.py:79` · `main.py:42-47` |
+| 추출기 | — | — | 기하 추출 + 객체 분류 + 기하 규칙 검증 | 영역 3종(규칙) · BOM 텍스트(규칙) | ot `api/cad.py:38-137` · kd `api/cad.py:50-123` |
+| 견적식 | — | — | `Decimal` · `ROUND_HALF_UP` (구성 금액마다) | Python `round`(짝수 반올림) · float | ot `api/quote.py:6-35` · kd `api/quote.py:5-23` |
+| 화면 | **3** | **4** | **4** | **4** | krs `web/src/App.tsx:6,12` · pc `web/src/App.tsx:5,16` · ot `web/src/App.tsx:9` · kd `web/src/App.tsx:9` |
+| 시험 함수 / 케이스 | **6 / 6** | **4 / 4** | **11 / 26** | **10 / 21** | krs `tests/test_api.py:9-48` · pc `tests/test_api.py:8-24` · ot `tests/test_api.py:33-169` (parametrize 14 + 3) · kd `tests/test_api.py:30-125` (parametrize 12) · kd `docs/verification.md:8` "21개" |
+| 합성 행 · 결측 셀 · 시드 | 720 · 24 (+이상치 5) · 20260917 | 420 · 15 · 42 | 작업 900 · 12 / 객체 1,600 · 0 · 42 | 작업 900 · 12 · 42 | krs `:31-56` · pc `:36-55` · ot `ml_service.py:19-58` · kd `ml_service.py:15-29` |
+| 분할 | 무작위 80/20 (`random_state=42`), **선정도 시험 구간** | 무작위 78/22, **선정도 시험 구간** + 전체 재적합 | 작업: 행 순서 540/180/180 · 객체: 층화 960/320/320 | 행 순서 540/180/180 | krs `:96,116-117` · pc `:71,78` · ot `:76,88-89` · kd `:47` |
+| 기동 학습 | `@lru_cache train_models()` 첫 호출 | `@lru_cache state()` 첫 호출 | `lifespan` → `ml.state()` | `lifespan` → `ml.state()` | krs `:92` · pc `:69` · ot `main.py:17-20` · kd `main.py:16-19` (표준 금지 — F3) |
+
+## 8. krs — `../Koreal Solder ML AI` (팩 `solder`)
+
+### 8.1 엔드포인트
+
+| ID | 메서드 · 경로 | 파일:줄 | 입력 | 출력 키 |
+|---|---|---|---|---|
+| KRS-E1 | `GET /api/health` | `api/main.py:36-38` | — | `status` · `model_ready`(상수 true) |
+| KRS-E2 | `GET /api/ml/overview` | `:41-44` → `ml_service.py:121` | — | `quality` · `models`(5) · `champion` · `statistics` · `features` · `target` · `data_mode` |
+| KRS-E3 | `GET /api/ml/samples` | `:47-51` | `limit`(12, 1~100) · `offset` | `total` · `items` |
+| KRS-E4 | `POST /api/ml/optimize` | `:54-59` → `ml_service.py:125-145` | `OptimizeRequest` `{target_strength 30~70 (48), max_cost 0~200 \| null, supplier A\|B\|C}` (`:19-22`) | `feasible` · `model` · `target_strength` · `predicted_strength` · `cost_index` · `composition`(5) · `process` · `notice` (8) · 결과 없음 422 (`:57-58`, 실제로는 도달 불가 — 대체 행이 항상 있다) |
+| KRS-E5 | `GET /api/quality/overview` | `:62-64` → `ml_service.py:169-195` | `limit`(12, 1~50) | `model` · `evaluated_lots` · `normal_lots` · `flagged_lots` · `mean_absolute_error` · `review_threshold`(4.0) · `flagged[]` · `notice` |
+| KRS-E6 | `POST /api/quality/predict` | `:67-73` → `ml_service.py:148-166` | `QualityPredictRequest` 8 필드 (`:25-33`) · 조성 합 100 ± 0.1 아니면 422 (`:70-72`) | `model` · `predicted_strength` · `status`(주의 · 정상) · `warnings` · `notice` (5) |
+| KRS-E7 | `GET /api/data/records` | `:76-82` → `ml_service.py:198-229` | `limit`(20, 1~100) · `offset` · `q`(≤40) · `supplier` · `state`(정상 · 결측 · 이상) | `total` · `offset` · `limit` · `items` · `summary` |
+| KRS-E8 | `GET /{path:path}` (+ `/assets`) | `:85-92` | — | `web/dist` SPA (없으면 경로 없음) |
+
+오류: FastAPI 기본 `{"detail": …}` (처리기 없음). 요청 모델에 `extra=forbid` · `allow_inf_nan=False` 가 **없다**(`main.py:19-33`) — 모르는 키를 조용히 버린다(원천 결함 K3).
+
+### 8.2 변수 (`ml_service.py:20-27` · 요청 경계 `main.py:25-33` · 생성 범위 `:33-40`)
+
+| 변수 | 요청 min~max | 데이터 상태 `LIMITS` | 합성 생성 | 결측 주입 | 비고 |
+|---|---|---|---|---|---|
+| `sn_pct` | 90~100 | 93.0~99.2 | `100 - ag - cu - sb - flux` | — | 조성(합 100) |
+| `ag_pct` | 0~6 | 0.3~4.2 | U(0.35, 4.0) | 8 행 | 조성 |
+| `cu_pct` | 0~3 | 0.1~1.2 | U(0.15, 1.05) | — | 조성 |
+| `sb_pct` | 0~3 | 0.0~2.0 | U(0, 1.7) | — | 조성 |
+| `flux_pct` | 0~2 | 0.05~0.8 | U(0.08, 0.72) | — | 조성 |
+| `temperature_c` | 150~350 | 225~270 | N(246, 8) clip 226~268 | 8 행 + 이상치 5 (145 · 352, `:55`) | 공정 |
+| `mixing_min` | 5~150 | 20~90 | N(53, 14) clip 20~88 | 8 행 | 공정 |
+| `supplier` | A · B · C | — | choice p = .45/.35/.2 (`:40`) | — | 범주(공급사 — 팩 중립 값으로, 회사 값은 `categories`) |
+| 목표 `joint_strength_mpa` | — | — | `31 + 5.8ag + 2.4cu + 1.25sb − 2(flux−.28)² − .055(T−246)² − .009(m−54)² + 공급사(1.1/.3/−.7) + N(0,1.8)` (`:41-46`) | — | MPa |
+
+합성 생성 순서(`:31-56`): `default_rng(20260917)` → ag · cu · sb · flux `uniform` → sn = 100 − 합 → temp `normal` clip → mixing `normal` clip → supplier `choice(p)` → 목표 `normal` → `lot_id = KS-2024xxxx`(`:48`, **1차 ks 접두와 겹친다** — 표준은 팩 중립 `DEMO-`, 옛 접두는 `compat.entity_prefix`) → 결측(ag · temp · mixing 각 `choice(720, 8)`) → 이상치 temp `choice(720,5)` ← `choice([145,352],5)`. **이 RNG 순서를 바꾸면 G-M12 행 일치가 깨진다.**
+
+### 8.3 전처리 · 후보 · 선정 · 분할
+
+| 항목 | 값 | 줄 |
+|---|---|---|
+| 이상치 제거 | 수치 7 열 IQR(1.5) — **분할 전 전체 데이터**에서 경계 계산 · 행 제거 | `:59-73`, 호출 `:95` (누수 — D2-03: 표준은 학습 구간에서만) |
+| 전처리 | 수치 median → **RobustScaler**, 범주 most_frequent → OneHot(ignore) | `:76-80` |
+| 후보 (이름 → 표준) | Decision Tree→`decision_tree`(depth 8 · leaf 5) · SVR→`svr`(C 20 · ε .15) · Random Forest→`random_forest`(180 · depth 10) · Gradient Boosting→`gbr`(180 · depth 3 · lr .04) · Extra Trees→`extra_trees`(180 · depth 12) · `random_state=42` | `:97-103` |
+| 분할 | `train_test_split(cleaned, test_size=.2, random_state=42)` — 검증 구간 없음 | `:96` |
+| 선정 | **시험 구간 RMSE 최소** (`scores.sort(rmse)`) — 시험으로 선정(누수, 원천 결함 K1) | `:116-117` |
+| 재적합 | 없음 (학습 80% 모델 그대로) | `:104-110` |
+| 보고 | 5 후보 시험 R² · MAE · RMSE (소수 4 · 3 · 3) | `:111-115` |
+| 표준 분할 | `time_key` 없음 → `random_60_20_20`(seeded) · 선정은 검증 RMSE · 시험 1회 | D2-03 · std/split_policies.yaml |
+
+### 8.4 보고 지표
+
+**원천 문서에 기록된 수치 없음** (`README.md:1-34` 에 지표 없음 · `docs/` 없음). 시험은 `rmse` 순서 · 5 모델만 본다(`tests/test_api.py:9-13`). → G-M12 대조값은 **원천 절차 재현값**(원천 코드를 읽어 같은 시드 · 같은 절차를 이관 도구로 다시 계산 — 원천 실행 아님, D2-12). 표준 재측정 값과 나란히 적는다.
+
+### 8.5 최적화 — 배합 무작위 탐색 (`ml_service.py:125-145`)
+
+| 항목 | 값 |
+|---|---|
+| 결정 변수 | ag · cu · sb · flux ~ U(생성 범위) · sn = 100 − 합(조성 등식 제약) · temp U(232, 260) · mixing U(35, 75) (`:130-131`) |
+| 고정 | `supplier` (요청) |
+| 표본 | 5,000 (`trials` `:125`) · 시드 `int(target × 100) + ord(supplier)` (`:127`) |
+| 의존 예측 | 챔피언 회귀 접합강도 (`:133`) |
+| 비용식 | `cost_index = Σ pct × 단가 / 100`, 단가 sn 31 · ag 1220 · cu 14 · sb 22 · flux 85 (`COST :28`, `:134`) |
+| 제약 | `predicted ≥ target_strength` · (있으면) `cost ≤ max_cost` (`:135-137`) |
+| 정렬 | 충족: 비용 ↑, 강도 ↓ · **미충족: 전체 표본을 같은 정렬**(위반량을 보지 않는다 — 원천 결함 K2, 표준은 `least_violation`) (`:138`) |
+| 출력 | 추천 1 (후보 5 아님) |
+
+### 8.6 검토 대기열 (`ml_service.py:169-195` · `main.py:62-64`)
+
+| 항목 | 값 |
+|---|---|
+| 대상 | `bundle.cleaned` **전체**(학습 80% 포함) 를 학습 모델로 채점 (`:171-172`) — 학습 구간 잔차 사용(원천 결함 K4, 표준 금지 · G2-R01) |
+| 규칙 | `|실측 − 예측| ≥ 4` MPa → `주의` (`:173-174`, `review_threshold: 4.0` `:193`) |
+| 정렬 · 수 | 절대 오차 ↓ 상위 `limit`(12, ≤ 50) (`:175`) |
+| 항목 키 | `lot_id` · `supplier` · `actual_strength` · `predicted_strength` · `absolute_error` · `temperature_c` · `mixing_min` · `status` (`:178-186`) |
+| 표준 | `review_queue` 규칙 `abs_residual_ge: 4.0` (D2-11), 대상 = 시험 구간 잔차 + 실측이 붙은 운영 예측 잔차만 |
+
+### 8.7 화면 (`web/src/App.tsx:6,12`)
+
+| ID | 화면 | 사용 API | 표준 화면 |
+|---|---|---|---|
+| KRS-S1 | 배합최적화 (지표 · 모델 비교표 포함 `:20,46`) | E2 · E4 | 3 조건 추천 + 4 모델 비교 |
+| KRS-S2 | 품질예측 (예측 폼 + 주의 LOT 표 `:29,47`) | E5 · E6 | 2 예측 시험 + 8 검토 대기열 |
+| KRS-S3 | 데이터 관리 (검색 · 공급사 · 상태 필터 · CSV `:36`) | E7 | 7 데이터 소스 + B12 records |
+
+### 8.8 시험 (`tests/test_api.py`, 6 함수 · 6 케이스)
+
+`test_overview_has_five_ranked_models` · `test_optimize_composition_is_balanced` · `test_validation_rejects_invalid_target` · `test_quality_dashboard_and_prediction` · `test_quality_prediction_rejects_unbalanced_composition` · `test_data_records_filter_and_paging`.
+
+### 8.9 상수 · 문구
+
+`review_threshold 4.0` (`:193`) · 권장 온도 232~260 · 혼합 35~75 · 내부 검토 기준 35 MPa (`:154-159` — 경고 문구, 팩 `thresholds`) · 상태 "주의"/"정상" (`:163`) · CSV 내보내기에 **수식 주입 방지 없음**(`web/src/App.tsx:36` 단순 `join(',')`, BOM 만 붙임 — 원천 결함 K5).
+
+## 9. pc — `../PyoungChang ML AI` (팩 `kimchi`)
+
+### 9.1 엔드포인트
+
+| ID | 메서드 · 경로 | 파일:줄 | 입력 | 출력 키 |
+|---|---|---|---|---|
+| PC-E1 | `GET /api/health` | `api/main.py:27-28` | — | `status` · `model_ready` · `data_mode` · `product` |
+| PC-E2 | `GET /api/ml/overview` | `:30-34` | — | `data_mode` · `rows` · `missing_cells` · `duplicate_lots` · `features` · `target` · `champion` · `metrics`(3) · `limits` · `warning` (10) |
+| PC-E3 | `POST /api/ml/optimize` | `:36-37` → `ml_service.py:90-106` | `OptimizeInput {target_score 65~95, max_material_cost 45~100, cabbage_origin, line}` (`:23-25`) | `feasible` · `prediction_score` · `material_cost_index` · `settings`(9) · `context` · `unmet_constraints` · `model` · `notice` (8) |
+| PC-E4 | `POST /api/quality/predict` | `:39-40` → `ml_service.py:82-87` | `ProcessInput` 11 필드 (`:13-17`) · 배합 합 98~102 아니면 422 (`:18-21`) | `prediction_score` · `status`(검토 필요 · 예측 범위 양호) · `warnings` · `model` · `notice` (5) |
+| PC-E5 | `GET /api/quality/overview` | `:42-47` | — | `evaluated` · `demo_review_score` · `residual_review_threshold` · `priority_queue`(8) · `notice` (화면이 부르지 않는다 — `web/src/App.tsx` 에 경로 없음) |
+| PC-E6 | `GET /api/data/records` | `:49-59` | `limit`(25, 1~100) · `offset` · `line` · `cabbage_origin` · `search`(≤30) | `total` · `limit` · `offset` · `records` |
+| PC-E7 | `GET /` (웹 컨테이너) | `web/nginx.conf:15` (API 프록시 `:7`) | — | 정적 콘솔 |
+
+### 9.2 변수 (`ml_service.py:21-31` · 요청 경계 `main.py:14-17`)
+
+| 변수 | 요청 min~max | `LIMITS`(생성 · 탐색) | 결측 주입 | 비고 |
+|---|---|---|---|---|
+| `cabbage_pct` | 55~85 | 66~76 | — | 배합 |
+| `radish_pct` | 0~20 | 5~11 | — | 배합 |
+| `seasoning_pct` | 8~35 | 15~23 (= 100 − 나머지, 범위 밖이면 재추출 `:39-43`) | — | 배합 |
+| `salt_pct` | 0.5~5 | 1.2~2.6 | — | 배합 |
+| `brine_salinity_pct` | 5~18 | 9~13 | 5 행 | 절임 |
+| `brining_hours` | 3~24 | 8~16 | — | 절임 |
+| `fermentation_temp_c` | −2~15 | 2~8 | 5 행 | 숙성 |
+| `fermentation_hours` | 6~120 | 18~72 | — | 숙성 |
+| `storage_temp_c` | −5~10 | −1~4 | 5 행 | 저장 |
+| `cabbage_origin` | 3값 | choice p .68/.20/.12 (`:46`) | — | 범주(원료 산지 — 회사 값은 `categories`) |
+| `line` | 2값 | choice p .58/.42 | — | 범주(라인 — 회사 값) |
+| 목표 `sensory_score` | — | `86 − |염도−11.1|·2 − |절임−12|·.65 − |숙성온도−4.8|·1.15 − |숙성시간−42|·.13 − |저장−1|·.8 − |양념−19.5|·.45 + 산지 .8 + 라인 .25 + N(0,1.8)` (`:47-49`) | — | 점 |
+
+합성 순서(`:36-55`): `default_rng(42)` → cabbage · radish · salt `uniform(LIMITS, 420)` → seasoning = 100 − 합 → **범위 밖 행 재추출 루프**(`:41-43`, 같은 RNG) → salinity · brining · ferment_temp · ferment_hours · storage `uniform` → origin `choice(p)` → line `choice(p)` → 목표 `normal` → `lot_id = PC-K-0001…` · `produced_at = 2025-01-02` 부터 **12시간 간격**(`:50`) → 결측(염도 · 숙성온도 · 저장온도 각 `choice(420, 5)`). `produced_at` 이 있으므로 표준은 `time_key` 를 둔다 → `time_60_20_20` 강제(D2-02).
+
+### 9.3 후보 · 선정 · 분할 (`ml_service.py:69-79`)
+
+| 항목 | 값 |
+|---|---|
+| 전처리 | 수치 median → StandardScaler · 범주 most_frequent → OneHot(ignore) (`:58-61`) |
+| 후보 | 릿지 회귀→`ridge`(α 1) · 엑스트라 트리→`extra_trees`(180 · leaf 3) · 그래디언트 부스팅→`gbr`(140 · depth 2) · seed 42 (`:72-73`) |
+| 분할 | `train_test_split(test_size=.22, random_state=42)` — 무작위, 검증 없음 (`:71`) |
+| 선정 | **시험 구간 MAE 최소** (`:78`) — 원천 결함 P1 |
+| 재적합 | 챔피언을 **전체 420 행**으로 재적합(`:78`) → 운영 모델 · 대기열 · 임계값이 모두 이 모델 |
+| 평가 | 보고 지표 = 재적합 전 시험 구간 지표(`:77`) — 그러나 대기열 · 임계값은 **전체 재적합 모델로 같은 데이터 채점**(표본 내, `:79`) — 원천 결함 P2 (`std/split_policies.yaml rules.in_sample_evaluation: forbidden`, G2-R01 거부 픽스처의 원형) |
+
+### 9.4 보고 지표
+
+**원천 문서에 기록된 수치 없음**(`README.md:1-24` · docs 없음). 시험은 `len(metrics) == 3` 만 본다(`tests/test_api.py:10`). D2-02: 평창은 표준 절차 재측정 값이 정본, 원천 절차 재현값은 병기만 · ±10% 대조 제외.
+
+### 9.5 최적화 — 배합 · 숙성 무작위 탐색 (`ml_service.py:90-106`)
+
+| 항목 | 값 |
+|---|---|
+| 결정 변수 | 배합 4(cabbage · radish · salt U(LIMITS), seasoning = 100 − 합 · 범위 안만 수락) + 공정 5 U(LIMITS) (`:93-96`) |
+| 고정 | `cabbage_origin` · `line` (`:97`) |
+| 표본 | 수락 3,500 (`:92`) · 시드 `42 + int(target×10) + int(max_cost)` (`:91`) |
+| 비용식 | `material_cost = Σ pct × 단가` (배추 .55 · 무 .32 · 양념 1.55 · 소금 .12, `COST :32`) |
+| 제약 | `prediction ≥ target_score` · `cost ≤ max_material_cost` (`:99`) |
+| 위반 | `max(0, target − pred)/3 + max(0, cost − max)/5` (`:98`) — 표준 `least_violation`(정규화 = \|rhs\|)과 가중이 다르다(사유 기록) |
+| 정렬 | 충족: 비용 ↑, 예측 ↓ · 미충족: 위반 ↑, 비용 ↑ (`:100`) · 추천 1 |
+| 미충족 문구 | "목표 품질점수 N점 미달" · "원재료비 지수 상한 초과" (`:102-103`) — 호환 `optimize_unmet_text` |
+
+### 9.6 검토 대기열 (`ml_service.py:79` · `main.py:42-47`)
+
+임계값 = 전체 재적합 모델의 표본 내 \|잔차\| **0.9 분위**(`:79`). 화면 대기열 = 같은 잔차 내림차순 **상위 8** (`main.py:44`) — 임계값을 쓰지 않는다. 항목 키 `lot_id` · `measured_score` · `predicted_score` · `residual_score` (`:45`). 표준: `review_queue` 규칙 `top_quantile: 0.10`(D2-11), 분위는 **검증 구간 잔차**에서 정하고(시험 구간 · 운영 잔차에 적용) 학습 구간 · 표본 내 잔차는 쓰지 않는다.
+
+### 9.7 화면 (`web/src/App.tsx:5,16`)
+
+| ID | 화면 | 사용 API | 표준 화면 |
+|---|---|---|---|
+| PC-S1 | 운영 개요 (지표 · 챔피언 `:24`) | E2 | 1 개요 + 4 모델 비교 |
+| PC-S2 | 배합·숙성 최적화 | E3 | 3 조건 추천 |
+| PC-S3 | 품질 예측 | E4 | 2 예측 시험 |
+| PC-S4 | LOT 데이터 (`:31`) | E6 | 7 데이터 소스 + B12 records |
+
+E5(잔차 우선순위)는 API 만 있고 화면이 없다 → 표준 화면 8 이 대응.
+
+### 9.8 시험 (`tests/test_api.py`, 4 함수 · 4 케이스)
+
+`test_health_and_models` · `test_predict_and_unbalanced_recipe_rejected` · `test_optimization_recipe_is_balanced_and_fallback_labeled` · `test_records_are_bounded_filtered_and_json_safe`.
+
+### 9.9 상수 · 문구
+
+`DEMO_REVIEW_SCORE = 78.0` (`:33` — 예측 < 78 이면 "검토 필요", 팩 `thresholds.review_below`) · 배합 합 경고 99.7~100.3 (`:84`) · 요청 거부 98~102 (`main.py:20`) · 상태 "검토 필요"/"예측 범위 양호" (`:86`).
+
+## 10. ot — `../OneTouch ML AI` (팩 `rollform-quote`)
+
+### 10.1 엔드포인트
+
+| ID | 메서드 · 경로 | 파일:줄 | 입력 | 출력 |
+|---|---|---|---|---|
+| OT-E1 | `GET /api/health` | `api/main.py:47-49` | — | `status` · `model_ready` · `version` · `mode` |
+| OT-E2 | `GET /api/ml/overview` | `:52-53` → `ml_service.py:101-111` | — | `version` · `mode` · `job_rows` · `object_rows` · `missing_cells` · `champion` · `metrics`(4) · `test_metrics` · `recognition_champion` · `recognition_metrics`(3) · `recognition_test{accuracy, macro_f1, confusion_matrix, classes}` · `split` · `trend`(시험 끝 24) · `features` · `materials` · `profiles` · `cost` · `warning` |
+| OT-E3 | `GET /api/data/demo` | `:56-66` | — | `manifest` · `cad`(20) · `quotes`(20) — `data/demo/*.json` |
+| OT-E4 | `GET /api/cad/sample.dxf` | `:69-71` | — | 합성 DXF(1200×160 · 홀 6 · 슬롯 2, `cad.py:11-23`) |
+| OT-E5 | `POST /api/cad/demo` | `:74-79` | — | 도면 분석(저장) |
+| OT-E6 | `POST /api/cad/analyze` | `:82-91` | multipart `file` · `unit_override` mm\|inch | 415(.dxf 아님) · 413(> 5 MiB) · 422(파싱 · 규칙) · 200 도면 분석 `{filename, unit, source_unit, objects[], counts, bbox, dimensions, skipped, warnings, entity_count, data_mode, id, created_at}` |
+| OT-E7 | `GET /api/cad/{drawing_id}` | `:94-98` | — | 저장된 분석 · 404 |
+| OT-E8 | `POST /api/quotes` | `:101-106` → `quote.py:10-35` | `QuoteInput` (`:31-44`, `extra=forbid` · `allow_inf_nan=False`) — `reviewed: Literal[True]` · `review_note` 5~500 | 견적 초안 스냅숏(저장) |
+| OT-E9 | `GET /api/quotes` | `:109-111` → `storage.py:48-54` | `search`(≤80) · `offset` · `limit`(10, 1~100) | `total` · `offset` · `limit` · `records` |
+| OT-E10 | `GET /api/quotes/{quote_id}` | `:114-118` | — | 견적 · 404 |
+| OT-E11 | `GET /api/quotes/{quote_id}/csv` | `:126-139` | — | UTF-8 BOM CSV · 수식 주입 방지 `safe_cell` (`:121-123`: `= + - @ \t \r` 앞 `'`) |
+| OT-E12 | `GET /` (+ `/assets`) | `:142-149` | — | 콘솔 · 없으면 503 |
+
+오류: 422 처리기가 `loc` · `msg` · `type` 만(입력값 되풀이 없음, `:26-28`).
+
+### 10.2 변수 (`api/config.py:4-20` `FEATURE_META`)
+
+| 변수 | 라벨 | 단위 | min | max | default | 비고 |
+|---|---|---|---|---|---|---|
+| `length` | 제품 길이 | mm | 100 | 6000 | 1200 | 도면 외곽에서 초기값(`cad.py:135`) |
+| `width` | 전개 폭 | mm | 30 | 600 | 160 | 도면 외곽 · 학습 결측 12 (`ml_service.py:57`, 앞 540 행 안) |
+| `thickness` | 소재 두께 | mm | 0.5 | 6 | 2 | 사람 입력 |
+| `holes` | 홀 수 | 개/제품 | 0 | 100 | 6 | 도면 `counts.hole` · 정수 |
+| `slots` | 슬롯 수 | 개/제품 | 0 | 50 | 2 | 도면 `counts.slot` · 정수 |
+| `bends` | 성형 굽힘 수 | 개/단면 | 0 | 12 | 2 | 사람 입력 · 정수 |
+| `material` | 재질 | 범주 | — | — | — | 3값 (`MATERIALS :4-8`, 밀도 · kg 단가 포함) |
+| `profile` | 제품 형상 | 범주 | — | — | — | 4값 (`PROFILES :9`) |
+| 목표 `minutes` | 개당 통합 가공시간 | 분 | — | — | — | `(.3 + L/2200 + W/1400 + 홀·.028 + 슬롯·.095 + 굽힘·.16 + t^1.45·.12 + 형상) × 재질계수 + N(0,.16)` (`ml_service.py:50-54`) · 예측 하한 0.05 (`:122`) |
+
+합성 순서(`ml_service.py:43-58`): `default_rng(42)` → `FEATURE_META` 순서로 `uniform(min,max,900)` → holes · slots · bends 반올림 정수 → material `choice` → profile `choice` → 목표 `normal` → `job_id = OT-SYN-0001…` → 결측 width `choice(540, 12)`.
+객체 설명자(`:19-40`): `default_rng(42)` → 클래스 `outer · hole · slot · other` 순서로 각 400 행, 특징 6 `circle · closed · aspect · relative_area · circularity · curved` (`:15`). **합계 1,600** (G2-E01 "1,600 합성 설명자").
+
+### 10.3 후보 · 선정 · 분할 (`ml_service.py:73-111`)
+
+| 묶음 | 분할 | 후보 (→ 표준) | 선정 | 재적합 · 평가 |
+|---|---|---|---|---|
+| OT-M1 가공시간 회귀 | 행 순서 `iloc[:540]` / `[540:720]` / `[720:]` (`:76`) — 시간순 아님(독립 합성 행) | Ridge→`ridge`(α 1) · Random Forest→`random_forest`(100 · leaf 2) · Extra Trees→`extra_trees`(100 · leaf 2) · Gradient Boosting→`gbr`(180 · depth 3) (`:77-79`) | 검증 MAE 최소, 동률 이름순 (`:84`) | 학습+검증 720 재적합(`:86`) · 시험 1회(`:103`) |
+| OT-M2 객체 분류 (4 클래스) | 층화 `test 0.2` → dev 중 `valid 0.25` → 960 / 320 / 320 (`:88-89`) | Logistic Regression→`logreg`(max_iter 2000) · Random Forest→`rf_clf`(100) · Extra Trees→`et_clf`(100) — StandardScaler 공통 (`:90-94`) | 검증 macro-F1 최대, 동률 이름순 (`:97`) | dev 1,280 재적합(`:99`) · 시험 1회 accuracy · macro-F1 · 혼동행렬(`:100-106`) |
+
+표준: OT-M1 → `regression` · `random_60_20_20`(time_key 없음) — 원천 행 순서 분할과 다르므로 차이 사유를 기록. OT-M2 → `extract` 의 모델 기반 추출기 학습, `stratified_60_20_20`(다중 클래스로 확장 — 표준 변경 요청 D2-15). 정답 라벨은 **합성 설명자의 생성 라벨**뿐이다 — 실제 도면 정답이 아니므로 실도면 평가는 `labels: none`.
+
+### 10.4 보고 지표
+
+**원천 문서에 기록된 수치 없음.** `README.md:98` 이 `docs/verification.md` 를 가리키지만 그 파일이 없다(원천 결함 O1). 원천 시험이 확인하는 값: 후보 4 · 3, 분할 합 = 행 수, 혼동행렬 합 320, 결측 12, 시험 끝 첫 id `OT-SYN-0877`(`tests/test_api.py:147-160`). 저장 견적 1건(`data/onetouch.sqlite3` quotes 1행): 수량 100 · 개당 1.3286 분 · 재료비 423,222 · 가공비 119,576 · 가산 86,145 · 부가세 66,044 · **합계 726,487 원** · 모델 Ridge · `ot-cad-demo-2026.09`. → G-M12 대조값은 원천 절차 재현값(D2-12), 견적 대조는 G2-Q01 fixture.
+
+### 10.5 추출 규칙 — 기하 추출 + 객체 분류 (`api/cad.py:38-137`)
+
+| # | 규칙 | 줄 |
+|---|---|---|
+| X1 | 바이너리 DXF 거부 · UTF-8 → cp949 해독 · ezdxf 읽기 실패 → 오류 | `:39-46` |
+| X2 | 단위 `$INSUNITS` 1 inch · 4 mm · 5 cm · 6 m → mm, 0 이면 `unit_override` 필수, 그 밖 단위 거부 | `:47-54` |
+| X3 | 모델 공간 요소 **≤ 2,000** (`MAX_ENTITIES` `config.py:25`) — 경동(20,000)과 다르다 | `:55-56` |
+| X4 | 지원 요소 LINE · CIRCLE · ARC · LWPOLYLINE, 그 밖은 `skipped` 집계 | `:59-63` |
+| X5 | 비평면(extrusion ≠ (0,0,1) · Z ≠ 0) 제외 | `:64-67, :80-82` |
+| X6 | 폴리라인 꼭짓점 ≤ 500 · 곡선 평탄화 0.2 mm · 요소당 ≤ 2,000 점 · 전체 ≤ 60,000 점 · 좌표 유한 · \|v\| ≤ 1e7 | `:69-87, :104` |
+| X7 | 객체 = 면적 · 둘레 · bbox · 폭 · 높이, 외곽 = 가장 큰 폐합 LWPOLYLINE | `:90-107` |
+| X8 | 특징 6 → 분류기 `classify` (확률 최대 · 점수) | `:108-112`, `ml_service.py:114-117` |
+| X9 | 기하 검증 8 사유 → `other`(검토 대상): 열린 도형 · 외곽 없음 · 외곽 밖/교차 · 점수 < 0.8 · 외곽 불일치 · 추가 외곽 · 원 아닌 홀 · 곡선 없는 슬롯 | `:113-124` |
+| X10 | `counts{outer, hole, slot, other}` · `dimensions{length, width}`(외곽 bbox 긴 변 · 짧은 변) · 경고 문구 | `:127-135` |
+
+### 10.6 견적식 (`api/quote.py:6-35` · `config.py:4-8,21` · `README.md:68-77`)
+
+```
+won(x)   = int(Decimal(str(x)).quantize(Decimal("1"), ROUND_HALF_UP))          # :6-7 — 입력 x 는 float 곱의 결과
+minutes  = round(predict_time(record), 4)                                       # :13 (Python round, 소수 4)
+weight   = length × width × thickness / 1e9 × density                           # :16 (float, 개당 kg)
+material = won(weight × price_kg × (1 + scrap 0.08) × q)                        # :17
+processing = won(minutes × machine_per_min 900 × q)                             # :18
+setup    = won(setup_minutes 35 × 900)                                          # :19 (주문당 1회 = 31,500)
+base     = material + processing + setup ; markup = won(base × 0.15)            # :20-21
+subtotal = base + markup ; vat = won(subtotal × 0.10) ; total = subtotal + vat  # :22-23, :31
+unit_price = round(subtotal / q, 2)                                             # :31 (float — 원천 결함 O2)
+```
+
+`overrides`: 도면 인식값(`holes` · `slots` · `length` · `width`)과 확정 입력이 0.001 넘게 다르면 `{field, recognized, confirmed}` (`:24-27`) — 시험 `[{'field':'holes','recognized':6,'confirmed':7}]` (`tests/test_api.py:59`). 단가 · 계수 스냅숏 `assumptions` (`:33`). 원천 시험값: `weight_per_piece 3.0144` · `setup_cost 31500` (`tests/test_api.py:51-52`). **float 곱 → Decimal 반올림**이라 "Decimal 만" 은 아니다 — 표준 이관은 같은 수식을 Decimal 로 계산하고 원천 fixture 와 원 단위 대조(차이 나는 행은 사유, D2-07a). `scripts/generate_sample_data.py:21-22` 의 `won()` 은 `int(round(x))`(짝수 반올림)로 `quote.py` 와 다르다(원천 결함 O3) → `data/demo/quote_candidates_20.json` 은 견적식 대조 fixture 로 쓰지 않는다(쓰면 사유 표기).
+
+### 10.7 화면 (`web/src/App.tsx:9`)
+
+| ID | 화면 | 사용 API | 표준 화면 |
+|---|---|---|---|
+| OT-S1 | CAD 객체인식 (업로드 · 미리보기 · 유형 필터 · 객체 목록 `:68-71`) | E4 · E5 · E6 · E7 | 9 도면 추출 |
+| OT-S2 | 견적자동화 (인식값 수정 · 검토 메모 · CSV `:37,73`) | E8 · E11 | 9 견적 |
+| OT-S3 | 견적 이력 (검색 · 상세 `:74,77`) | E9 · E10 | 9 견적 이력 (B11 목록) |
+| OT-S4 | 모델 비교·검증 | E2 | 4 모델 비교 |
+
+### 10.8 시험 (`tests/test_api.py`, 11 함수 · 26 케이스)
+
+`test_demo_geometry_and_storage` · `test_quote_accounting_and_csv` · `test_quote_rejects_invalid_inputs`(14) · `test_nonfinite_input_returns_json_error`(3) · `test_upload_types_size_and_corruption` · `test_unitless_and_inches` · `test_open_outside_and_unsupported_are_reviewed` · `test_planarity_and_entity_budget` · `test_paging_search_and_missing_ids` · `test_models_preprocessing_health_and_real_holdout` · `test_production_entrypoint`.
+
+## 11. kd — `../KyungDong ML AI` (팩 `eto`)
+
+### 11.1 엔드포인트
+
+| ID | 메서드 · 경로 | 파일:줄 | 입력 | 출력 |
+|---|---|---|---|---|
+| KD-E1 | `GET /api/health` | `api/main.py:70-71` | — | `status` · `model_ready` · `version` · `mode` |
+| KD-E2 | `GET /api/ml/overview` | `:74-75` → `ml_service.py:59-67` | — | `version` · `mode` · `job_rows` · `missing_cells` · `duplicates` · `champion` · `metrics`(4) · `test_metrics` · `split` · `seed` · `trend` · `features` · `materials` · `products` · `cost` · `recognition{method, labels(3), measured_accuracy: null, reason}` · `warning` |
+| KD-E3 | `GET /api/cad/sample.dxf` | `:78-79` | — | 합성 도면(표제란 · BOM표 · 리비전표 · 장비 외형, `cad.py:16-39`) |
+| KD-E4 | `POST /api/cad/demo` | `:82-86` | — | 도면 분석(저장) |
+| KD-E5 | `POST /api/cad/analyze` | `:89-97` | multipart `file` · `unit_override` | 415 · 413(> 5 MiB) · 422(`ValueError` · `TypeError` · `OverflowError`) · 200 `{filename, sha256, unit, scale_to_mm, unit_source, mode, bbox, paths, texts, objects[], bom[], counts, unsupported, warnings, entity_count, id, created_at}` |
+| KD-E6 | `GET /api/cad/{drawing_id}` | `:100-104` | — | 저장된 분석 · 404 |
+| KD-E7 | `POST /api/quotes` | `:107-110` → `quote.py:5-23` | `QuoteInput` (`:47-67`): `bom` 1~100 행(`BomRow :34-44`) · `quantity` 1~1000 · `cut_m` · `weld_m` · `thickness_mm` · `complexity` · `labor_rate` · `outsource_cost` · `reviewed: Literal[True]` · `review_note` 5~500 · 총중량 10~10,000 · 대표 재질 ∈ BOM | 견적 초안 스냅숏(저장) |
+| KD-E8 | `GET /api/quotes` | `:113-115` | `search` · `offset` · `limit`(10, 1~100) | `total` · `offset` · `limit` · `records` |
+| KD-E9 | `GET /api/quotes/export/csv` | `:129-132` | 같은 검색 · 페이지 | 보이는 페이지 CSV(BOM · `safe_cell`) |
+| KD-E10 | `GET /api/quotes/{quote_id}` | `:135-139` | — | 견적 · 404 |
+| KD-E11 | `GET /api/quotes/{quote_id}/csv` | `:142-147` | — | 견적 + 품목 행 CSV (`safe_cell` `:118-120`) |
+| KD-E12 | `GET /` (+ `/assets`) | `:150-157` | — | 콘솔 · 없으면 503 |
+
+### 11.2 변수 (`api/config.py:4-17` `FEATURE_META`)
+
+| 변수 | 라벨 | 단위 | min | max | default | 비고 |
+|---|---|---|---|---|---|---|
+| `mass_kg` | BOM 총중량 | kg/대 | 10 | 10000 | 650 | 견적 때 = Σ BOM 개당중량 × 수량 (`quote.py:6-8`) |
+| `cut_m` | 확인한 절단 길이 | m/대 | 0 | 500 | 24 | 학습 결측 12 (`ml_service.py:28`) |
+| `weld_m` | 확인한 용접 길이 | m/대 | 0 | 300 | 18 | |
+| `thickness_mm` | 대표 판재 두께 | mm | 1 | 30 | 6 | |
+| `complexity` | 조립 난이도 (데모 척도) | 1–5 | 1 | 5 | 3 | |
+| `material` | 대표 재질 | 범주 | — | — | — | 8값 + 별칭 6 (`MATERIALS :5` · `ALIASES :6`, 고객 회신 D-160 ② 재질 통합) |
+| `product` | 제품군 | 범주 | — | — | — | 6값 (`PRODUCTS :4`) |
+| 목표 `hours` | 대당 통합 제조공수 | h | — | — | — | `8 + mass^.8·.05 + cut·.09 + weld·.8 + t^1.4·.3 + 난이도·5 + 재질 i·3 + 제품 j·5 + N(0,4)` clip ≥ 1 (`ml_service.py:24-26`) · 예측 하한 0.1 (`:71`) |
+
+합성 순서(`ml_service.py:15-29`): `default_rng(42)` → `FEATURE_META` 순서 `uniform(900)` → material `choice` → product `choice` → 목표 `normal` → `job_id = KD-SYN-0001…` → 결측 cut_m `choice(540, 12)`.
+
+### 11.3 후보 · 선정 · 분할 (`ml_service.py:44-67`)
+
+행 순서 540/180/180 (`:47`) · Ridge→`ridge`(α 1) · Random Forest→`random_forest`(100 · leaf 2) · Extra Trees→`extra_trees`(100 · leaf 2) · Gradient Boosting→`gbr`(160 · depth 3) (`:48-50`) · 검증 MAE 최소, 동률 이름순 (`:55`) · 학습+검증 720 재적합 (`:57`) · 시험 1회 (`:58-62`). 표준: `regression` · `random_60_20_20`(time_key 없음, 원천 문서도 "시간순 실적 검증이 아니다" `docs/methodology.md:23`).
+
+### 11.4 보고 지표 (`docs/verification.md:23,29` — 2026-09-19 실측)
+
+| 과제 | 챔피언 | **시험 (G-M12 대조값)** | 그 밖 |
+|---|---|---|---|
+| 공수 회귀 | Ridge (`ridge`) | **MAE 4.1071 h · RMSE 5.0456 h · R² 0.9956** | 샘플 조건 예측 58.146 h/대 · 샘플 1대 합계 **8,486,493 원** (`:29`) |
+| 영역 인식 | 규칙 | **지표 없음** — `measured_accuracy: null`, 사유 "3종 영역 정답 라벨 미확보"(`ml_service.py:65`, `docs/methodology.md:15`) | G2-E01 `labels: none` 의 원형 |
+
+저장 견적(`data/kyungdong.sqlite3` quotes 2행): `kd-cad-demo-2026.09.1` 1대 · 58.146 h · 소재 4,092,120 · 가공 2,616,570 · 외주 0 · 가산 1,006,304 · 부가세 771,499 · 합계 8,486,493 / 이전 버전 `kd-cad-demo-2026.09` 1대 · 1.0275 h · 합계 5,235,023(버전별 금액 보존 — 확정 스냅숏 불변의 원형, `docs/methodology.md:27`).
+
+### 11.5 추출 규칙 — 영역 3종 · BOM 텍스트 (`api/cad.py:11-123`)
+
+**영역 3종(KD-X1, D2-06 = 고객 회신 D-160 ④ `title_block` · `bom_table` · `rev_table`, `data/reference/customer_answers.json:40-49`)**
+
+| # | 규칙 | 줄 |
+|---|---|---|
+| R1 | 해독 UTF-8-sig → cp949 → cp1252, 바이너리 DXF 거부 | `:42-47` |
+| R2 | 모델 공간 요소 **≤ 20,000** (`MAX_ENTITIES` `config.py:20`) · 업로드 ≤ 5 MiB (`config.py:19`, `main.py:93-94`) | `:54` |
+| R3 | 단위 `$INSUNITS` 1 · 4 · 5 · 6 → mm 환산, 그 밖 · 0 이면 `override`(mm · inch) 필수, 헤더가 있으면 헤더 우선 | `:55-60` |
+| R4 | 좌표 유한 · \|v\| ≤ 1e8 · TEXT/MTEXT 2,000자 자름 · LWPOLYLINE ≤ 4,000 꼭짓점 · bulge 있는 폴리라인은 `unsupported` | `:62-75` |
+| R5 | 사각형 후보 = 닫힌 4점 축 정렬 LWPOLYLINE | `:81` |
+| R6 | 키워드(대문자 비교): title_block `DRAWING NO` · `DRAWING NUMBER` · `DWG NO` · `도면번호` · `도면명` / bom_table `BILL OF MATERIAL` · `PARTS LIST` · `BOM` · `부품표` · `자재명세` / rev_table `REVISION` · `REV.` · `리비전` · `개정이력` | `:11-13` |
+| R7 | 키워드 텍스트 삽입점을 포함하는 **가장 작은** 사각형을 영역으로, 같은 사각형은 한 번만 | `:94-100` |
+| R8 | 영역 안 텍스트 전부의 키워드 종류가 하나면 그 라벨, 둘 이상이면 `other` · 상태 `검토 필요` | `:101-104` |
+| R9 | 텍스트 · 사각형이 없으면 영역을 만들지 않는다(가짜 후보 0) · INSERT 등은 `unsupported` 로 공개 | `:117-122`, 시험 `tests/test_api.py:83-88` |
+
+**BOM 텍스트(KD-X2)** — `bom_table` 영역의 각 텍스트를 `|` 로 나눠 정확히 4칸 `품명 | 재질 | 수량 | 개당중량kg` (`:108-111`) → 재질 대문자 + 별칭 통합(`:112`) → 재질 ∈ 8종 · 수량 정수 1~1,000 · 중량 유한 0.01~10,000 만 행으로(`:113-116`), 머리 행 · 다른 형식은 버린다. 행 키 `name`(80자) · `material` · `quantity` · `mass_kg` · `source`(영역 id). 샘플 결과: 영역 3(각 1) · BOM 4 행 · Σ 650 kg (`tests/test_api.py:30-35`, `docs/verification.md:9`).
+
+### 11.6 견적식 (`api/quote.py:5-23` · `README.md:65-77`)
+
+```
+mass      = Σ mass_kg × quantity                               # :6 → 회귀 입력 mass_kg
+hours     = round(predict_hours(features), 4)                  # :9
+line.cost = round(mass_kg × qty × price_kg × 1.08 × 대수)       # :11 (Python round = 짝수 반올림, float)
+material  = Σ line.cost                                        # :12
+labor     = round(hours × labor_rate × 대수)                    # :13
+outsource = round(outsource_cost × 대수)                         # :14
+markup    = round((material + labor + outsource) × 0.15)        # :15
+subtotal  = material + labor + outsource + markup ; vat = round(subtotal × 0.10) ; total = subtotal + vat   # :16-18
+```
+
+`README.md:77` "Python `round` 기준". **Decimal · ROUND_HALF_UP 이 아니다** — goal2 G2-Q01(Decimal · HALF_UP) · D2-07("원천 단계별 반올림 순서 그대로")와 맞물려 정확히 .5 인 단계에서 1원 차이가 날 수 있다(정본 결함 D2-07a). `overrides` 는 없다 — 대신 도면 BOM(`source_bom`)과 확정 BOM(`input.bom`) · 원본 `source_sha256` 을 함께 저장(`:19`). 확정 · 잠금 · 승인은 없다(검토 체크는 서명이 아님 `README.md:37`).
+
+### 11.7 화면 (`web/src/App.tsx:9`)
+
+| ID | 화면 | 사용 API | 표준 화면 |
+|---|---|---|---|
+| KD-S1 | CAD 객체인식 (3종 후보 · 미리보기) | E3 · E4 · E5 · E6 | 9 도면 추출 |
+| KD-S2 | BOM · 견적자동화 (BOM 편집 · 검토 메모 · CSV) | E7 · E11 | 9 견적 |
+| KD-S3 | 견적 이력 (검색 · 페이지 CSV · 상세) | E8 · E9 · E10 | 9 견적 이력 |
+| KD-S4 | 모델 비교·검증 | E2 | 4 모델 비교 |
+
+### 11.8 시험 (`tests/test_api.py`, 10 함수 · 21 케이스 = `docs/verification.md:8`)
+
+`test_sample_has_three_regions_and_traceable_bom` · `test_quote_arithmetic_persistence_and_csv` · `test_invalid_quote_rejected`(12) · `test_bom_mass_limits_and_category` · `test_unit_confirmation_and_known_unit_precedence` · `test_no_text_does_not_invent_regions_and_blocks_disclosed` · `test_malformed_upload_and_size` · `test_pagination_search_export_matches_visible` · `test_models_split_missing_preprocessing_and_finite_json` · `test_production_frontend_is_served`.
+
+## 12. 기능 단위 목록 — 6개사 합계 task-map 분모 (2차 G-M02)
+
+1차 방법 그대로: 엔드포인트(+ `/`) + 학습 모델 묶음 + 최적화 + 화면, 2차 유형용으로 **대기열 규칙 · 추출기 · 견적식** 을 단위로 더한다.
+
+| 회사 | 엔드포인트 | 모델 묶음 | 최적화 | 대기열 | 추출기 | 견적식 | 화면 | 합 |
+|---|---|---|---|---|---|---|---|---|
+| ks (1차) | 7 | 3 | 1 | — | — | — | 5 | 16 |
+| sw (1차) | 7 | 3 | 1 | — | — | — | 5 | 16 |
+| krs | 8 | 1 | 1 | 1 | — | — | 3 | **14** |
+| pc | 7 | 1 | 1 | 1 | — | — | 4 | **14** |
+| ot | 12 | 2 | — | — | 1 | 1 | 4 | **20** |
+| kd | 12 | 1 | — | — | 2 | 1 | 4 | **20** |
+| **합** | | | | | | | | **100** (1차 32 + 2차 68) |
+
+| ID | 원천 기능 | 표준 대응 (예정) |
+|---|---|---|
+| KRS-E1~E8 | 위 §8.1 의 8 | B01 · B06/B07 · B12 · B04 `krs.recipe_optimize` · B09 `krs.residual_review` · B03 `krs.joint_strength` · B12 · 콘솔 `/app/*` + 호환 |
+| KRS-M1 | 접합강도 회귀 (후보 5) | `krs.joint_strength` regression |
+| KRS-O1 | 배합 무작위 5,000 | `krs.recipe_optimize` optimize(random) |
+| KRS-Q1 | \|잔차\| ≥ 4 MPa 대기열 | `krs.residual_review` review_queue |
+| KRS-S1~S3 | 화면 3 | 화면 3 · 4 / 2 · 8 / 7 |
+| PC-E1~E7 | 위 §9.1 의 7 | B01 · B06 · B04 · B03 · B09 · B12 · 콘솔 + 호환 |
+| PC-M1 | 관능점수 회귀 (후보 3) | `pc.sensory_score` regression (재측정 — D2-02) |
+| PC-O1 | 배합 · 숙성 무작위 3,500 | `pc.recipe_optimize` optimize(random) |
+| PC-Q1 | 잔차 상위 10% 대기열 | `pc.residual_review` review_queue |
+| PC-S1~S4 | 화면 4 | 화면 1 · 4 / 3 / 2 / 7 |
+| OT-E1~E12 | 위 §10.1 의 12 | B01 · B07 · B12 · B10 · B11 · 콘솔 + 호환 |
+| OT-M1 | 가공시간 회귀 (후보 4) | `ot.machining_minutes` regression |
+| OT-M2 | 객체 분류 (후보 3, 1,600 설명자) | `ot.cad_objects` extract(모델 기반 추출기) |
+| OT-X1 | 기하 추출 + 기하 검증 규칙 X1~X10 | `ot.cad_objects` extract(추출기 `extractors/geometry_objects.py`) |
+| OT-C1 | Decimal 견적식 + overrides | `ot.quote` quote (`formulas/quote.py`) |
+| OT-S1~S4 | 화면 4 | 화면 9 · 9 · 9 · 4 |
+| KD-E1~E12 | 위 §11.1 의 12 | B01 · B07 · B10 · B11 · 콘솔 + 호환 |
+| KD-M1 | 공수 회귀 (후보 4) | `kd.labor_hours` regression |
+| KD-X1 | 영역 3종 규칙 R1~R9 | `kd.drawing_regions` extract(`extractors/cad_regions.py`) |
+| KD-X2 | BOM 텍스트 규칙 | `kd.drawing_regions` extract(`extractors/bom_text.py`) |
+| KD-C1 | 견적식(공수 · 소재 · 외주 · 가산 · VAT) | `kd.quote` quote (`formulas/quote.py`) |
+| KD-S1~S4 | 화면 4 | 화면 9 · 9 · 9 · 4 |
+
+## 13. 원천 결함 · 차이 — 4개사 (이관 보고서 재료, 원천은 고치지 않는다)
+
+| # | 회사 | 내용 | 근거 |
+|---|---|---|---|
+| K1 | krs | 모델 선정을 시험 구간 RMSE 로 한다(검증 구간 없음) — 시험 구간 재사용 | `ml_service.py:96,116-117` |
+| K2 | krs | 최적화 미충족 시 위반량을 보지 않고 전체 표본 중 최저 비용을 고른다 | `:138` |
+| K3 | krs | 요청 모델에 `extra=forbid` · `allow_inf_nan` 없음 · 422 기본 모양 | `main.py:19-33` |
+| K4 | krs | 검토 대기열이 학습 구간 행까지 채점(표본 내 잔차) | `:171-175` |
+| K5 | krs | CSV 수식 주입 방지 없음 | `web/src/App.tsx:36` |
+| K6 | krs | IQR 이상치 경계를 분할 전 전체 데이터에서 계산 | `:59-73,95` |
+| K7 | krs | `lot_id` 접두 `KS-` 가 1차 ks(광성) 과 겹친다 | `:48` |
+| P1 | pc | 모델 선정을 시험 구간 MAE 로 한다 | `ml_service.py:71,78` |
+| P2 | pc | 전체 재적합 모델로 같은 데이터를 채점해 임계값 · 대기열을 만든다(표본 내 평가) | `:78-79` · `main.py:44` |
+| P3 | pc | 시간 열(`produced_at`)이 있는데 무작위 분할 | `:50,71` |
+| P4 | pc | 대기열 임계값(상위 10%)을 계산하고 화면 대기열은 상위 8 고정 | `:79` · `main.py:44-46` |
+| O1 | ot | README 가 가리키는 `docs/verification.md` 가 없다 — 보고 수치 없음 | `README.md:98` |
+| O2 | ot | `unit_price` 를 float `round(…, 2)` 로 낸다 · 반올림 입력이 float 곱 | `quote.py:7,17-23,31` |
+| O3 | ot | 샘플 생성기 `won()` 이 짝수 반올림(`int(round())`) — 견적식과 다르다 | `scripts/generate_sample_data.py:21-22` |
+| O4 | ot | 요소 상한 2,000 (kd 20,000 과 다름) — 표준은 팩 기본값으로 두고 spec 상한 20,000 을 넘지 않게 | `config.py:25` |
+| D1 | kd | 견적식이 float + Python `round`(짝수 반올림) | `quote.py:11-17` · `README.md:77` |
+| D2 | kd | 확정 · 잠금 · 수정 이력(`overrides`) 없음 — 검토 체크만 | `README.md:37` · `quote.py:18-23` |
+| D3 | kd | 영역 인식 정답 라벨 0 — 지표를 내지 않는다(올바름, 표준 `labels: none` 원형) | `ml_service.py:65` |
+| D4 | kd | 원천 참조 파일에 사업자번호 · 고객사명이 있다 — 표준 저장소로 옮기지 않음 | `data/reference/customer_answers.json:56-66` |
+| C1 | ot · kd | 기동 학습 · 코드 안 버전 상수 · SQLite 단일 파일 저장 | ot `main.py:17-20` · `config.py:3` · kd `main.py:16-19` · `config.py:3` |

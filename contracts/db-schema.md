@@ -341,3 +341,24 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 ## 5. 보존 (D-10)
 
 예측 · 감사 1년 · 감시 집계 영구 · production 이었던 버전의 산출물 영구 · 나머지 스냅숏 · 산출물 90일. 추가만 테이블의 1년 경과 삭제는 별도 보존 작업(소유자 권한, 트리거를 우회하지 않고 파티션 분리 방식으로 — 2차 설계).
+
+## 6. 2차 — 16 테이블로 충분한가 (Phase P0 아키텍트, goal2 §3.1-2)
+
+**판정: 테이블은 16 그대로 충분하다(새 테이블 0).** 대기열 · 문서 · 견적 · 견적 승인 자리는 1차에 이미 있다(`mlp_review_item` · `mlp_document` · `mlp_quote` · `mlp_approval.kind=quote · action=confirm`). 다만 **열이 모자란다** — `decisions.md` D2-13 `표준 변경 요청`. 아래 열은 웨이브 P 에서 `schema.sql`(아키텍트) + 위 §2 표에 함께 넣고, 기존 DB 는 비파괴 `ALTER TABLE … ADD COLUMN IF NOT EXISTS`(`make db-grants` 와 같은 멱등 구간)로 맞춘다 — 스키마 재생성(데이터 삭제) 없이. 그 전까지 §2 표 · DB 는 1차 그대로다(G-S01 이 표 = DB 를 본다).
+
+| 테이블 | 더할 열 | 형 · NULL | 왜 |
+|---|---|---|---|
+| `mlp_quote` | `status` | text N · CHECK draft · pending_confirm · confirmed | 추가만 테이블이라 상태 전이 = 새 행. 409 `quote_locked` 판정 |
+| `mlp_quote` | `revision` · `supersedes` | integer N · text Y | 같은 견적의 행 계열 · 사람 수정 이력(overrides 누적) |
+| `mlp_quote` | `inputs` · `costs` · `rates` | jsonb N | 확정 입력 · 구성 금액(원 단위 10진 문자열) · 단가 스냅숏 — `lines` 는 품목 행만 |
+| `mlp_quote` | `prediction_ids` | jsonb N | 견적에 쓴 작업시간 예측(`mlp_prediction`) — 추적(화면 10) |
+| `mlp_quote` | `approval_id` · `confirmed_by` · `confirmed_at` · `created_by` | text Y · text Y · timestamptz Y · text Y | 확정 = 승인(D2-04) 결과 기록 |
+| `mlp_review_item` | `version` · `rule` · `threshold` | text N · text N · double precision N | 어느 모델 · 규칙 · 임계값으로 만든 항목인가(재현) |
+| `mlp_review_item` | `decided_by` · `decided_at` · `note` | text Y · timestamptz Y · text Y | PATCH 검토 결과 · 409 `already_decided` |
+| `mlp_document` | `size_bytes` · `entity_count` · `labels` | bigint N · integer N · text N (CHECK none · synthetic · provided) | 상한 · `labels: none` 을 열로(검색 · 감사) |
+
+- `mlp_quote.total` 은 이미 `numeric` — Decimal 그대로. 금액 열에 `double precision` 을 쓰지 않는다(G2-Q01).
+- `mlp_review_item.origin` CHECK(test_split · live_residual)는 1차 그대로 — 학습 구간 값은 DB 가 거부한다.
+- 원본 파일 `mlp_document.raw_path` = `var/documents/<tenant>/<raw_sha256>.dxf`(D2-05, `.gitignore` · 커밋 금지), 보존 1년(§5 와 같은 감사 등급).
+- ID 접두: `rvw_` · `doc_` · `qte_` (+ ULID, `serve/ids.py` 규칙).
+- Agent 호출 · 허브 내보내기는 테이블을 더하지 않는다 — Agent 호출은 `mlp_prediction.caller`(키의 `consumer`) · `mlp_audit` 로 남고, 허브 일 호출 수는 `mlp_prediction` 을 날짜 · 과제별로 센다(`hub-export.md`).

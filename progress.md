@@ -1,5 +1,84 @@
 # progress.md — 검증된 현황의 유일한 진실
 
+## 2차 — Phase P0 (아키텍트, 2026-10-13, 기준 커밋 40a67c7) — 판정 기준 `goal2.md`, 명령 `make gate2`
+
+### 지금 해야 할 것 (웨이브 P — 코어 확장, 개발 3 병렬 · 끝에 `core-freeze-2`)
+
+1. **웨이브 P 시작.** 판정은 `make gate2`. 1차 게이트는 지금 PASS 23 · BLOCKED 1 — 웨이브 P 내내 유지. 웨이브 P 의 끝 = 1차 게이트 전부 + G2-T01 · G2-R01 · G2-H01 PASS → 오케스트레이터가 `git tag core-freeze-2`(로컬).
+2. **개발1 (데이터 · 학습 / 화면 7):** `review_queue` 잔차 계산(guard 경유 — `test_split` 은 `final_eval` 결과만, top_quantile 임계값은 검증 잔차 분위, task-contract §6.1) · `extract` 모델 기반 추출기 학습(층화 · macro-F1 선정 · `majority_class` 기준선 · 라벨 없으면 지표 null) · F13-1(DEF-QA1-006 다른 문법 6종 — check_leakage 는 아키텍트와) · 화면 7 `web/src/screens/Sources.tsx` · 시험 `tests/test_review_queue.py`(G2-R01 — 평창식 전체 재적합 채점 픽스처 거부 포함).
+3. **개발2 (추론 · API / 화면 8 · 9 · 10 · 공용 부품):** B09 · B10 · B11 (api-contract §6 — 업로드 상한 · `invalid_document` · `document_too_large` · `quote_locked` · 확정 = 승인 경유 D2-19) · 추출기 인터페이스(task-contract §6.2 → `interfaces.md` 공표) · `quote` 흐름(Decimal 만 · overrides 누적 · 스냅숏 · 금액 문자열 · CSV) · Agent 어댑터 `mlcore/integrations/agent_tools.py` 4 도구(agent-tools.md) · optimize `request_approval` · trace `?view=explain` · 2차 유형 predict 404 `type_route` · 열린 #16 · #19 · #20 항목(F7-4 · F7-11 · F7-12 · F16-8 · F16-9 · F19-3 · F20-1 · F20-2 · F20-5) · 화면 8 · 9 · 10 + `web/src/components/` 문서 뷰어 · 금액 표 · 시험 `tests/test_types_phase2.py` · `test_extract.py` · `test_quote.py` · `test_agent_tools.py`.
+4. **개발3 (팩 · 회사 · 감시 · 이관):** 로더가 유형 3 키 검사(`search` 검사는 optimize 만 · `material_aliases`) · 대기열 일정 작업(감시 뒤 `live_residual`) · `make export-hub`(hub-export.md) + `tests/test_export_hub.py` · F7-7 D-123 compose 앱 계정 · F7-8 시험 DB 정리 · F20-4 덮어쓰기 모르는 키 · (A0-2 준비) 팩 `eto` · `kimchi` 최소분.
+5. **아키텍트 (웨이브 P 중):** D2-13 열 추가(schema.sql + db-schema §2 + 비파괴 ALTER) · D2-15 std 6건 · 웨이브 P 끝에 api-contract §1 B09~B11 단계 1 · screen-map 7~10 `○` · F7-5 `make image` · F20-3 CONFIRM 명령줄 인자만 · F13-1 check_leakage.
+6. 사람 확인 대기(그대로): D-27 · D-30 · D-32 · D-33 · D-04 · D-82 · D-130 + 새 D2-07a(반올림 차이 처리) · D2-16(Agent 팀) · D2-17(허브 팀).
+
+### P0 실측
+
+| 항목 | 실측 | 검증 방법 |
+|---|---|---|
+| 원천 조사 4사 | krs 엔드포인트 7(+SPA) · 화면 3 · 시험 6/6 · 후보 5 · 무작위 5,000 · \|잔차\| ≥ 4 / pc 6(+nginx) · 4 · 4/4 · 3 · 무작위 3,500 · 상위 10% / ot 11(+/) · 4 · 11/26 · 4+3 · Decimal 견적 · 객체 1,600 / kd 11(+/) · 4 · 10/21 · 4 · 영역 3종 + BOM 텍스트 · float `round` 견적 | `migration/source_inventory.md` §7~§13 (파일:줄) |
+| 원천 보고 지표 | kd Ridge 시험 MAE 4.1071 · RMSE 5.0456 · R² 0.9956 · 샘플 견적 8,486,493원(58.146 h) / krs · pc · ot **기록 없음**(D2-12) · ot 저장 견적 726,487원 | `KyungDong ML AI/docs/verification.md:23,29` · 원천 SQLite 읽기 전용 |
+| task-map 분모 | **6개사 100** = 1차 32(ks 16 · sw 16) + krs 14 · pc 14 · ot 20 · kd 20 | `gates/check_task_cover.py` `units("phase2")` = 100 |
+| 계약 | task(§6 유형 3 키 + task-schema 블록) · predict(§8 스키마 3) · api(§6 경로 11 · 오류 8) · screen-map(7~10 소유자 · 필수 요소) · db-schema(§6 — 16 테이블 충분 · 열 추가 요청 D2-13) · tenant(§3 회사 4) · pack(§6 팩 4) · **새** agent-tools · hub-export | `contracts/*.md` · JSON Schema 5 블록 `Draft202012Validator.check_schema` 통과 |
+| 게이트 | 새 `check_core_freeze` · `check_decimal` · `check_followups` · `gate2.py` · `check_contract.run_phase2` · `check_migration.run_phase2` · `check_registry/check_tasks/check_task_cover(scope)` · gatelib 등록부 목록 | `make gate2` |
+| 1차 잔여 고정 목록 | 33 항목(해결 18 · 열림 15) | `docs/followups.md` ← `gh issue view 7 13 16 19 20` |
+| 시험 | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` **459 passed · 3 skipped** (1차와 같음) | 이번 회전 |
+| make gate | **PASS 23 · BLOCKED 1** (유지) | `make gate` |
+
+### make gate2 판정표 (P0 — 원문)
+
+```
+## 1차 게이트 (gates/gate.py — 1차 기대값)
+G-V01   수직 관통             PASS     tests/test_vertical_slice.py: 2 passed, 1 warning in 3.44s
+G-S01   스키마               PASS     테이블 16 = spec 16 = 계약 16 = DB(ml_db 16 · ml_test_db 16) · 열 191 일치 · tenant_id 16/16 · production 부분 고유 · 추가만 3 UPDATE/DELETE/TRUNCATE 거부 · live+synthetic 거부 · 평문 키 거부
+G-S02   팩·등록부 로드          PASS     팩 3 (_template(2) · press(4) · textile(4)) · 회사 3 로드 · 켜진 과제 8 · 불량 픽스처 5/5 거부(R4=과제 끄기 · 실기동 경로 tests/test_r4_live_path.py, D-27 · D-120)
+G-S03   화면                PASS     화면 6/6 /app 200 · _placeholder 0 · e2e(ks·sw, 1024px 화면 2·3 가로 스크롤 0 · 폼=features.yaml) tests/e2e/test_console.py: 8 passed, 1 warning in 13.60s
+G-S04   API               PASS     1차 12/12 · 2차 501 3/3 · tests/test_api_contract.py: 38 passed, 1 warning in 1.25s
+G-S05   읽기 전용 소스          PASS     어댑터 5/5 · 정적 위반 0 · tests/test_source_contract.py: 18 passed, 1 warning in 1.09s
+G-S06   비밀값               PASS     추적 파일 482 · 키 0 · IP 0 · 호스트 0 · .env 비추적 · 등록부 환경변수 이름 9개(값 0)
+G-S06   회사 격리             PASS     회사 2 · 회사 파일 10개 교차 오염 0 · 폴더 밖 데이터 파일 0 · 코드 폴더 회사명 0
+G-S07   의존성 고정            PASS     uv.lock · package-lock.json 있음 · Python 16개 == 고정 · JS 8개 정확 버전 · Python 3.12 하나
+G-M01   코어 순수성            PASS     코어 95파일 · 팩 34파일 위반 0 (금지어 팩 30 · 회사 9 · 테이블 9 · 범주값 10)
+G-M02   과제 대응             PASS     대응 32/32 (ks 16 · sw 16) · 미대응 0
+G-M03   과제 정의             PASS     팩 3 · 과제 YAML 10 스키마 통과 · 덮어쓰기 불변 7/7 거부 · synth · baselines 있음
+G-M04   예측 계약             PASS     A 스키마 자체 시험 91/91 · B tests/test_predict_contract.py: 27 passed, 6 warnings in 5.96s · C tests/test_compat.py: 35 passed, 3 skipped, 3 warnings in 7.50s
+G-M05   누수 없는 평가          PASS     A 래퍼 자체 시험 20/20 · B 정적 위반 0 · C/D tests/test_split.py: 20 passed, 2 warnings in 3.37s
+G-M06   재현·등록부            PASS     A tests/test_determinism.py: 9 passed, 4 warnings in 5.89s · B 기동 경로 학습 코드 0건 · C tests/test_registry.py: 13 passed, 1 warning in 1.86s
+G-M07   예측 추적             PASS     tests/test_trace.py: 9 passed, 1 warning in 1.68s
+G-M08   소스·doctor         PASS     tests/test_doctor.py: 9 passed in 0.69s
+G-M08   doctor-live       BLOCKED  실연결은 사람이 .env 에 키를 넣은 뒤 (D-13)
+G-M09   감시·승인             PASS     production 쓰기 경로 1 (decide 안 1 · 밖 0) · decide 호출처 1 (models.py 1) · tests/test_approval.py: 14 passed, 1 warning in 1.98s · tests/test_monitor.py: 15 passed in 2.68s
+G-M10   새 회사              PASS     tests/test_new_tenant.py: 3 passed, 3 warnings in 1.75s
+G-M11   보안·배포             PASS     docker compose config(MLP_GIT_SHA=40a67c7): 서비스 app·db · DB 포트 0 · 앱 포트 1(8200) · 헬스체크 2/2 · 768MB·CPU 1 · OMP 1 · 태그=SHA 필수 변수 · 비밀 env_file 만 · Dockerfile 3단계 [node:24.18.1-bookworm-slim → ghcr.io/astral-sh/uv:0.12.1 → python:3.12.13-slim-bookworm] · tests/test_auth.py: 18 passed, 1 warning in 1.38s
+G-M12   이관 대조             PASS     과제 8 대조 · 행 일치 100%
+G-M13   최적화               PASS     tests/test_optimize.py: 11 passed, 2 warnings in 3.54s
+G-M14   비기능               PASS     최악값(ks·sw 과제 6) 단건 p95 34.0ms(≤200) · batch500 0.334s(≤3) · 기동 1.725s(≤15) · RSS 249.3MB(≤768) — docker compose 제한 아래(app 768MB · CPU 1 · OMP_NUM_THREADS=1, 이미지 = 커밋 SHA)
+소계 24행 — PASS 23 · BLOCKED 1
+
+## 1차 게이트 · 6개사로 넓힌 판정 (goal2 §2 머리말)
+G-S02   팩·등록부(6사)         FAIL     2건: 팩 없음 ['eto', 'kimchi', 'rollform-quote', 'solder']; 회사 없음 ['kd', 'krs', 'ot', 'pc']
+G-M03   과제 정의(6사)         FAIL     팩 3 · 과제 YAML 10 스키마 통과 · 덮어쓰기 불변 7/7 거부 · 위반 1: 팩 없음 ['eto', 'kimchi', 'rollform-quote', 'solder']
+G-M02   과제 대응(6사)         FAIL     대응 32/100 · 미대응 68 ['KD-C1', 'KD-E1', 'KD-E10', 'KD-E11', 'KD-E12', 'KD-E2']
+G-M12   이관 대조(6사)         FAIL     합성 생성기 없음 ['solder', 'kimchi', 'rollform-quote', 'eto']; 과제 행 없음 12/20 (krs.joint_strength, krs.recipe_optimize, krs.residual_review …)
+소계 4행 — FAIL 4
+
+## 2차 게이트 G2-*
+G2-C01  코어 동결             FAIL     태그 전 — `core-freeze-2` 없음(HEAD 40a67c7). 판정 대상 없음: 웨이브 P(유형 3 · B09~B11 · 화면 7~10 공용부 · 연동 · 1차 잔여)가 끝나고 1차 게이트 + G2-T01 · G2-R01 · G2-H01 PASS 뒤 오케스트레이터가 찍는다
+G2-V01  2차 수직 관통          FAIL     tests/test_vertical_slice_2.py 없음 (대상 미구현)
+G2-T01  유형 3 계약           FAIL     std 유형 phase≠1 ['review_queue', 'extract', 'quote']; api-contract §1 의 B09~B11 이 아직 단계 2(501) 7행; tests/test_types_phase2.py 없음 (대상 미구현)
+G2-R01  대기열 누수            FAIL     tests/test_review_queue.py 없음 (대상 미구현)
+G2-E01  추출                FAIL     tests/test_extract.py 없음 (대상 미구현)
+G2-Q01  견적                FAIL     정적 FAIL: 대상 없음 — packs/*/formulas/quote*.py · src/mlcore/**/quote*.py 0개(웨이브 P 개발2 · A2 개발3) · tests/test_quote.py 없음 (대상 미구현)
+G2-P01  팩·회사 4            FAIL     2건: 팩 없음 ['eto', 'kimchi', 'rollform-quote', 'solder']; 회사 없음 ['kd', 'krs', 'ot', 'pc']; 팩 3 · 과제 YAML 10 스키마 통과 · 덮어쓰기 불변 7/7 거부 · 위반 1: 팩 없음 ['eto', 'kimchi', 'rollform-quote', 'solder']; baselines 비었음 ['solder', 'kimchi', 'rollform-quote', 'eto']
+G2-S01  화면 7~10           FAIL     screen-map 화면 7~10 중 판정 대상(○) 0/4 — 웨이브 P 끝에 아키텍트가 켠다; 화면 파일 없음 ['web/src/screens/Sources.tsx', 'web/src/screens/Review.tsx', 'web/src/screens/Quotes.tsx', 'web/src/screens/Trace.tsx']
+G2-A01  API 15            FAIL     계약 §1 단계 1 묶음 12/15 (B09~B11 은 웨이브 P 끝에 단계 1 로)
+G2-I01  Agent 도구          FAIL     tests/test_agent_tools.py 없음 (대상 미구현)
+G2-I02  허브 내보내기           FAIL     make export-hub 미구현; tests/test_export_hub.py 없음 (대상 미구현)
+G2-H01  1차 잔여             FAIL     항목 33 — 해결 18 · 사유 0 · 열림 15 · 열림 ['F13-1', 'F16-8', 'F16-9', 'F19-3', 'F20-1', 'F20-2'] …
+G2-L01  실데이터              BLOCKED  키가 없다 — 사람이 .env 에 넣은 뒤 make train-live (D-13)
+소계 13행 — FAIL 12 · BLOCKED 1
+합계 41행 — PASS 23 · FAIL 16 · BLOCKED 2
+```
+
 ## 최종 보고 — 1차 종료 (2026-10-13, 기준 커밋 1ec05e6)
 
 goal §4.4 종료 조건 4개를 모두 만족해 루프를 멈춘다.

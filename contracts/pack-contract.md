@@ -63,3 +63,16 @@ def generate(rows: int = <pack.yaml synth.rows>, seed: int = <pack.yaml synth.se
 | `press` | `remaining_hours` · `failure_24h` · `sensor_ood` · `maintenance_timing` | spec §2.2 · ks |
 | `textile` | `delta_e` · `defect_risk` · `print_ood` · `print_setpoint` | spec §2.2 · sw |
 | `_template` | `target_value`(regression) · `target_risk`(risk) | spec §2.2 `regression 1 · risk 1` |
+
+## 6. 2차 팩 4 (Phase P0 아키텍트, goal2 G2-P01)
+
+| 팩 | 과제 (≥ 2) | 합성 생성기 `synth/` | 플러그인 | 원천 |
+|---|---|---|---|---|
+| `solder` | `joint_strength` · `recipe_optimize` · `residual_review` | `synth/solder_lots.py` — krs `make_sample_data()` 이관(seed 20260917 · 720 행 · 결측 24 · 이상치 5, RNG 순서 그대로) | `formulas/material_cost.py`(조성 단가) | source_inventory §8 |
+| `kimchi` | `sensory_score` · `recipe_optimize` · `residual_review` | `synth/kimchi_lots.py` — pc `_demo_data()` 이관(seed 42 · 420 행 · 재추출 루프 포함 · 12h 시각) | `formulas/material_cost.py` | §9 |
+| `rollform-quote` | `machining_minutes` · `cad_objects` · `quote` | `synth/jobs.py`(ot `demo_jobs()` 900) · `synth/geometry.py`(`geometry_training_data()` 1,600) | `extractors/geometry_objects.py`(rule+model) · `formulas/quote.py`(Decimal) | §10 |
+| `eto` | `labor_hours` · `drawing_regions` · `quote` | `synth/jobs.py`(kd `demo_jobs()` 900) · 샘플 DXF 생성기(`synth/sample_dxf.py`, 원천 `cad.sample_bytes()` 이관 — 시험용) | `extractors/cad_regions.py` · `extractors/bom_text.py` · `formulas/quote.py` | §11 |
+
+- **새 플러그인 폴더 `extractors/`** — 모양은 `task-contract.md` §6.2. `formulas/quote.py` 는 `def quote(inputs, lines, predicted, rates) -> dict` 이고 `Decimal` 만 쓴다(`gates/check_decimal.py` 가 `packs/*/formulas/quote.py` · `src/mlcore/tasks/quote*.py` 를 정적 검사).
+- 팩 키워드 · 재질 · 제품군 같은 범주 기본값은 업종 중립으로 두고(예: 재질 `M1`…), 원천의 회사 값은 회사 등록부 `categories` 로만(§4 규칙 그대로). 영역 키워드(DRAWING NO 등)는 업종(도면) 공통 어휘라 팩에 둔다.
+- 2차 4 팩의 `baselines.yaml` 은 Phase P0 에 비어 있다(`value: null`) — 이관 대조 뒤 아키텍트가 적는다. 비어 있으면 G2-P01 FAIL.

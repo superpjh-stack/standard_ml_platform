@@ -27,3 +27,4 @@ web/*.tsbuildinfo
 .DS_Store
 .claude/scheduled_tasks.lock
 outputs/gate-latest.md
+outputs/gate2-latest.md

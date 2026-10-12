@@ -1,7 +1,7 @@
 # 계약 — 공개 API `/api/v1` (API Contract)
 
 > **정본.** 출처: `spec.md` §12.2(묶음 15) · §7 · §8.1 · §6.1 · goal §2.3(오류 계약) · goal §6(역할). 검사: `gates/check_routes.py`(G-S04) · `tests/test_api_contract.py`.
-> 1차 = 묶음 **12** (B09 review · B10 documents · B11 quotes 제외 — 이 셋은 경로는 두되 **501 `not_implemented`**).
+> 1차 = 묶음 **12** (B09 review · B10 documents · B11 quotes 제외 — 이 셋은 경로는 두되 **501 `not_implemented`**). 2차 상세 경로 · 오류는 §6(웨이브 P 끝에 §1 로 합친다).
 > 인증: 헤더 `X-API-Key`. 키는 `mlp_api_key.key_hash` 로만 저장된다(평문 0). `GET /api/v1/health` 만 인증 없음. 키의 `tenant_id` 와 경로 `{t}` 가 다르면 **404 `not_found`**(존재 숨김).
 
 ## 1. 묶음 15 (기계 판독 — `check_routes.py` 가 이 표를 읽는다)
@@ -93,3 +93,53 @@
 `MLP_TENANT` 가 켠 회사의 `tenants/<code>.yaml: compat.routes` 만 붙는다. 옛 키 대응은 `contracts/predict-contract.md` §7. 1차 대상: `/api/maintenance/predict`(ks) · `/api/quality/predict`(sw) · `/api/ml/optimize` · `/api/ml/overview` · `/api/data/records` · `/api/data/records/{lot_id}` · `/api/health`(옛 모양).
 
 **인증(D-59 확정 — 사람 결정 2026-10-12).** 옛 health 꼴(`/api/health`)만 키 없이 연다. 나머지 호환 경로는 표준과 같이 `X-API-Key` + `std/roles.yaml` 역할 판정 · 다른 회사 키 404. 키 없는 옛 클라이언트는 401(옛 오류 모양 `{"detail": …}`) — 열어 두지 않는다. 회사 고유 값: `tenants/<code>.yaml compat.round`(옛 응답 반올림 자리, 없으면 반올림 안 함 · 위험 확률만 기본 4) · `compat.optimize_rename`(선택, D-71).
+
+## 6. 2차 — B09 review · B10 documents · B11 quotes 상세 (Phase P0 아키텍트, goal2 §2 · §2.1 · §6)
+
+> **§1 표(기계 판독)는 지금 그대로 둔다** — 1차 게이트 G-S04 가 §1 의 단계 2 행을 501 로 확인하기 때문이다(`tests/test_api_contract.py::test_phase2_routes_are_501`).
+> **웨이브 P 끝(코어 동결 전)** 아키텍트가 §1 의 B09~B11 행을 단계 `1` 로 바꾸고 아래 표의 행을 §1 에 합친다. 그 뒤 `test_contract_counts` 의 기대값은 1차 15 · 2차 0 이 된다(묶음 수 15 는 그대로). 아래 표의 단계 열 `P` = 웨이브 P 에서 구현.
+> 응답 모양은 `predict-contract.md` §8, 키는 `task-contract.md` §6, 역할은 goal2 §6(→ `std/roles.yaml` 웨이브 P 반영).
+
+| 묶음 | 단계 | 메서드 | 경로 | 최소 역할 | 요청 → 응답 |
+|---|---|---|---|---|---|
+| B09 review | P | GET | `/api/v1/tenants/{t}/tasks/{task}/review` | operator(조회) | `?state=&cursor=&limit=` → `{items: [ReviewItem], next_cursor, total}` (viewer ✕ — goal2 §6) |
+| B09 review | P | PATCH | `/api/v1/tenants/{t}/tasks/{task}/review/{item_id}` | approver(own_task) | `{state: confirmed_issue\|false_alarm, note}` → 200 ReviewItem · 닫힘 409 `already_decided` |
+| B10 documents | P | POST | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | multipart `file` · `unit_override?` → 201 DocumentExtraction |
+| B10 documents | P | GET | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | `?search=&cursor=&limit=` → `{items: [DocumentExtraction 요약], next_cursor, total}` (화면 9 목록) |
+| B10 documents | P | GET | `/api/v1/tenants/{t}/tasks/{task}/documents/{doc_id}` | operator | → DocumentExtraction · 다른 회사 · 없음 404 |
+| B11 quotes | P | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `{doc_id?, inputs, lines?, reviewed, review_note}` → 201 Quote(`draft`) |
+| B11 quotes | P | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `?search=&cursor=&limit=` → `{items: [Quote], next_cursor, total}` |
+| B11 quotes | P | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}` | operator | → Quote(최신 revision) |
+| B11 quotes | P | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/revisions` | operator | Quote 와 같은 본문 → 201 Quote(revision+1, `draft`) · 확정 견적 409 `quote_locked` |
+| B11 quotes | P | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/confirm` | operator(요청) | `{reviewed: true, review_note}` → 202 `{approval_id, state: pending}` · 검토 없음 422 `missing_required` · 이미 확정 409 `quote_locked`. **확정 결정은 B13 decide(approver 이상 — D2-04)** |
+| B11 quotes | P | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}.csv` | operator | UTF-8 BOM · 수식 주입 방지 · 금액 문자열 그대로 |
+
+### 6.1 오류 계약 추가 (goal2 §2.1 — `std/statuses.yaml error_codes` 에 웨이브 P 가 추가)
+
+| 상황 | HTTP | code |
+|---|---|---|
+| DXF 아님(확장자 · 바이너리 DXF · 파싱 실패 · 단위 미지정인데 `unit_override` 없음) | 422 | `invalid_document` (detail.rule = `format` · `binary` · `parse` · `unit`) — 원천 415 는 호환 라우터만 |
+| 5 MiB · 20,000 엔티티(또는 과제 `document` 상한) 초과 · 좌표 · 꼭짓점 상한 초과 | 413 | `document_too_large` (detail.rule = `bytes` · `entities` · `vertices` · `points`) |
+| 정답 라벨 없음(평가 요청) | 200 | `labels: "none"` · `metrics: null` |
+| 검토 없는 견적 확정 | 422 | `missing_required` (detail.field = `reviewed` · `review_note`) |
+| 확정된 견적 수정 · 재확정 | 409 | `quote_locked` |
+| 대기열 항목 재검토(닫힘) | 409 | `already_decided` |
+| 2차 유형 과제에 `predict` · `optimize` | 404 | `not_found` (detail.rule = `type_route`) |
+| 견적의 `uses` 과제 production 없음 | 503 | `model_not_ready` (견적 초안을 만들지 않는다 — 대체 금액 0) |
+
+업로드는 스트림으로 `max_bytes + 1` 까지만 읽는다(원천 kd `main.py:93`). 파일 이름은 경로를 떼고 150자(원천 `:91`). 원본은 `var/documents/<tenant>/<sha256>.dxf`(커밋 금지, D2-05).
+
+### 6.2 Agent 도구 · 허브 내보내기
+
+Agent `ml.*` 도구는 위 공개 API 위의 얇은 어댑터다 — 정본 `contracts/agent-tools.md`. 허브 내보내기 파일 형식은 `contracts/hub-export.md`. 둘 다 새 HTTP 경로를 만들지 않는다(묶음 15 그대로).
+
+### 6.3 호환 라우터 (2차 4개사 — D-18, `tenants/<code>.yaml compat.routes`)
+
+| 회사 | 옛 경로 (원천 `api/main.py`) |
+|---|---|
+| krs | `/api/health` · `/api/ml/overview` · `/api/ml/samples` · `/api/ml/optimize` · `/api/quality/overview` · `/api/quality/predict` · `/api/data/records` |
+| pc | `/api/health` · `/api/ml/overview` · `/api/ml/optimize` · `/api/quality/predict` · `/api/quality/overview` · `/api/data/records` |
+| ot | `/api/health` · `/api/ml/overview` · `/api/data/demo` · `/api/cad/sample.dxf` · `/api/cad/demo` · `/api/cad/analyze` · `/api/cad/{id}` · `/api/quotes` · `/api/quotes/{id}` · `/api/quotes/{id}/csv` |
+| kd | `/api/health` · `/api/ml/overview` · `/api/cad/sample.dxf` · `/api/cad/demo` · `/api/cad/analyze` · `/api/cad/{id}` · `/api/quotes` · `/api/quotes/export/csv` · `/api/quotes/{id}` · `/api/quotes/{id}/csv` |
+
+호환 인증 규칙은 §5(D-59) 그대로 — 옛 health 만 키 없이. 옛 견적 경로는 원천에 확정이 없으므로 `draft` 만 만들고, 확정은 표준 경로 · 승인으로만.

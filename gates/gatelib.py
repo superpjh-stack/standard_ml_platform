@@ -105,3 +105,28 @@ def tenant_words(include_tables: bool = True) -> tuple[dict[str, re.Pattern], di
             for pair in eq.values():
                 cats[str(pair[0])] = word_pattern(str(pair[0]))
     return names, tables, cats
+
+
+# ── 2차 (goal2) — 판정 대상 목록은 등록부에서 읽는다 ─────────────────────────────────────────────
+PHASE1_PACKS = {"press", "textile", "_template"}
+PHASE1_TENANTS = {"ks", "sw", "_template"}
+# goal2 §1 표 "규모 (2차 끝)" — 판정 기준(기대값)은 정본에서, 실제 목록은 등록부 디렉터리에서.
+PHASE2_PACKS = PHASE1_PACKS | {"solder", "kimchi", "rollform-quote", "eto"}
+PHASE2_TENANTS = PHASE1_TENANTS | {"krs", "pc", "ot", "kd"}
+
+
+def registered_packs() -> set[str]:
+    """packs/<code>/pack.yaml 이 있는 팩 코드 전부 (`_template` 포함)."""
+    return {p.parent.name for p in (ROOT / "packs").glob("*/pack.yaml")}
+
+
+def registered_tenants() -> set[str]:
+    """tenants/<code>.yaml 의 회사 코드 전부 (`_template` 포함, 덮어쓰기 폴더 제외)."""
+    return {p.stem for p in (ROOT / "tenants").glob("*.yaml")}
+
+
+def expected_scope(scope: str) -> tuple[set[str], set[str]]:
+    """(기대 팩, 기대 회사). phase1 = 1차 게이트, phase2 = gate2 의 6개사 판정."""
+    if scope == "phase2":
+        return PHASE2_PACKS, PHASE2_TENANTS
+    return PHASE1_PACKS, PHASE1_TENANTS

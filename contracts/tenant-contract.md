@@ -63,3 +63,17 @@ labels: {}                    # 회사 문구 덮어쓰기
 | R5 | 같은 이름 · 다른 구현의 플러그인(비용식 · 추출기) 금지 | `r5_plugin_conflict.yaml` |
 
 R4 는 "기동 거부" 가 아니라 "과제 끄기" 다(spec §11.3-4). G-S02 의 "불량 픽스처 5종은 전부 기동 거부" 와 어긋난다 → `decisions.md` D-27.
+
+## 3. 2차 — 회사 4 (krs · pc · ot · kd) (Phase P0 아키텍트, goal2 §1 · §7)
+
+| 회사 | 팩 | mode | 소스 | 과제(enable) | 회사 값(등록부에만) |
+|---|---|---|---|---|---|
+| `krs` | `solder` | demo | `demo: synthetic`(seed 20260917, rows 720) · `eval: csv` — **`live` 불가**(실데이터 없음, D2-01 — `sources.train` 을 두지 않고 doctor 는 "live 불가 (D2-01)") | joint_strength · recipe_optimize · residual_review | `categories.supplier`(원천 A · B · C) · `compat.entity_prefix: "KS-"`(1차 ks 와 겹침 주의 — source_inventory K7) |
+| `pc` | `kimchi` | demo | `demo: synthetic`(seed 42, rows 420) · `eval: csv` | sensory_score · recipe_optimize · residual_review | `categories.cabbage_origin` · `categories.line` · `compat.entity_prefix: "PC-K-"` |
+| `ot` | `rollform-quote` | demo | `demo: synthetic`(seed 42, 작업 900 · 설명자 1,600) · 문서 = 업로드(B10) | machining_minutes · cad_objects · quote | `categories.material` · `categories.profile` · 견적 `rates` 덮어쓰기(단가 — 원천 예시값, 승인 단가 아님) |
+| `kd` | `eto` | demo | `demo: synthetic`(seed 42, 900) · 문서 = 업로드(B10) | labor_hours · drawing_regions · quote | `categories.material`(8) · `categories.product`(6) · `material_aliases`(STS=SUS 통합 — 고객 회신 D-160 ②, 팩이 아니라 회사 값) · 견적 `rates` |
+
+- 등록부 키는 §1 그대로다. 2차에 **새 최상위 키는 `material_aliases` 하나**(선택 — 범주 값 정규화 표 `{<별칭>: <정규 값>}`, 추출기 · 견적 입력 검증 전에 적용). 웨이브 P 개발3 이 로더에 넣는다.
+- 과제 덮어쓰기(`tenants/<code>/tasks/<task>.yaml`)로 대기열 `rule` 값 · 견적 `rates` 값 · `document` 상한(낮추기만)을 바꿀 수 있다(`task-contract.md` §6.4).
+- 4개사 모두 1차와 같이 `demo` 로 기동한다. 실데이터 키가 들어오기 전 `live` 는 없다(D-13 · G2-L01).
+- 회사 등록부 · 팩에 원천 저장소의 고객사명 · 사업자번호 · 포트 · 주소를 옮기지 않는다(D-20, source_inventory D4).

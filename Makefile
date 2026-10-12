@@ -16,8 +16,9 @@ confirm = @test "$(CONFIRM)" = 1 || { echo "$@: ml_db · ml_test_db 의 mlp 데�
 GRANTS  = sed -n '/^-- @grants-begin/,$$p' src/mlcore/db/schema.sql
 
 .PHONY: setup db-schema db-grants db-seed db-reset run web build test gate gate-full doctor doctor-live train train-live \
-        worker tenant monitor bench bench-local bench-compose e2e image compose-config \
-        check-routes check-schema check-registry check-deploy check-security check-leakage
+        worker tenant monitor bench bench-local bench-compose e2e image compose-config gate2 export-hub \
+        check-routes check-schema check-registry check-deploy check-security check-leakage \
+        check-core-freeze check-decimal check-followups
 
 setup:            ## DB 생성 · 스키마(없는 DB 만) · 보호 구간 · 표준 시드 · Python/웹 의존성 — 기존 데이터는 지우지 않는다
 	@for db in ml_db ml_test_db; do createdb -h /tmp $$db 2>/dev/null || true; done
@@ -57,6 +58,12 @@ test:
 
 gate:             ## 판정표 → outputs/gate-latest.md (goal §2)
 	$(UV) python gates/gate.py
+
+gate2:            ## 2차 판정표 = 1차 게이트 전부 + 6개사로 넓힌 판정 + G2-* → outputs/gate2-latest.md (goal2 §2). 대상 없는 2차 게이트는 FAIL
+	$(UV) python gates/gate2.py
+
+export-hub:       ## G2-I02 — 6개사 과제 · 변수 · 소스 · 일 호출 수 → var/export/hub/<date>.json (contracts/hub-export.md, 웨이브 P 개발3)
+	@echo "미구현 — 웨이브 P 개발3 가 contracts/hub-export.md 대로 채운다 (G2-I02 FAIL)"; exit 2
 
 gate-full:        ## 스키마 재생성(데이터 삭제 — CONFIRM=1 필수) + (A) 과제 8 재학습 2회 · 이관 대조 · 새 회사 · 승인 경합 · bench → 판정
 	$(confirm)
@@ -109,3 +116,6 @@ check-registry: ; $(UV) python gates/check_registry.py
 check-deploy:   ; $(UV) python gates/check_deploy.py
 check-leakage:  ; $(UV) python gates/check_leakage.py
 check-security: ; $(UV) python gates/check_secrets.py && $(UV) python gates/check_tenant_bleed.py && $(UV) python gates/check_core_terms.py
+check-core-freeze: ; $(UV) python gates/check_core_freeze.py
+check-decimal:  ; $(UV) python gates/check_decimal.py
+check-followups: ; $(UV) python gates/check_followups.py

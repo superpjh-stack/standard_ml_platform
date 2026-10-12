@@ -6,14 +6,17 @@ import re
 
 import yaml
 
-from gatelib import ROOT, Line, read, show
-
-PACKS = ("press", "textile", "_template")
+from gatelib import ROOT, Line, expected_scope, read, registered_packs, show
 
 
-def run() -> list[Line]:
+def run(scope: str = "phase1") -> list[Line]:
+    """등록부의 팩 전부를 검사한다. 기대 팩(scope)이 없으면 FAIL — phase2 = goal2 팩 6 + _template."""
     from mlcore.registry import packs, tenants
     problems, ok_tasks = [], 0
+    expected = expected_scope(scope)[0]
+    PACKS = sorted(registered_packs())
+    if expected - set(PACKS):
+        problems.append(f"팩 없음 {sorted(expected - set(PACKS))}")
     for code in PACKS:
         d = ROOT / "packs" / code
         try:
@@ -51,10 +54,11 @@ def run() -> list[Line]:
     for f in (ROOT / "src").rglob("*.py"):
         if re.search(r"FEATURE_META\s*=|CONTROL_META\s*=", read(f)):
             problems.append(f"{f.relative_to(ROOT)}: 코드 안 변수 사전")
+    item = "과제 정의" if scope == "phase1" else "과제 정의(6사)"
     msg = f"팩 {len(PACKS)} · 과제 YAML {ok_tasks} 스키마 통과 · 덮어쓰기 불변 {rejected}/{len(variants)} 거부"
     if problems:
-        return [Line("G-M03", "과제 정의", "FAIL", msg + f" · 위반 {len(problems)}: " + "; ".join(problems[:4]))]
-    return [Line("G-M03", "과제 정의", "PASS", msg + " · synth · baselines 있음")]
+        return [Line("G-M03", item, "FAIL", msg + f" · 위반 {len(problems)}: " + "; ".join(problems[:4]))]
+    return [Line("G-M03", item, "PASS", msg + " · synth · baselines 있음")]
 
 
 if __name__ == "__main__":

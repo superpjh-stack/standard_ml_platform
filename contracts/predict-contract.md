@@ -387,3 +387,137 @@ candidate = {
 | ks · sw | `GET /api/data/records` | `GET .../records` | `{total, limit, offset, records}` ← `{items, next_cursor, total}` (offset 은 커서로 환산) |
 
 옛 오류 모양(`{"detail": [...]}` 422)도 호환 라우터가 재현한다. 원천 응답과의 일치는 `tests/test_compat.py` 가 원천 저장소 파일에서 읽은 키 목록으로 확인한다.
+
+## 8. 2차 유형 응답 — 대기열 · 추출 · 견적 (Phase P0 아키텍트, goal2 G2-T01)
+
+> **18키 원칙과의 관계.** §2 의 18키 응답은 `predict` · `predict:batch` · `optimize` 의 모양이다 — 그대로 둔다(§5 스키마 · `type` enum 4 · G-M04 변경 0).
+> `review_queue` · `extract` · `quote` 는 **예측이 아니라 자원**(대기열 항목 · 문서 · 견적)을 돌려주므로 각자 B09 · B10 · B11 경로와 아래 스키마를 쓴다. 이 세 유형 과제에 `POST …/predict` · `optimize` 를 부르면 **404 `not_found`**(detail.rule `type_route` — optimize 가 아닌 과제의 `/optimize` 와 같은 규칙).
+> 수치 예측은 언제나 18키다: 견적의 작업시간 · 대기열의 잔차 예측은 `uses` regression 과제의 `prediction_id`(mlp_prediction 1행)로 연결한다 — 대기열 항목 · 견적이 그 ID 를 근거로 갖는다.
+> 세 스키마의 키도 **빠지지 않는다**(없는 값은 `null`). 아래 블록은 `tests/test_types_phase2.py`(웨이브 P, 개발2)가 읽는다.
+
+### 8.1 검토 대기열 항목 (`GET …/review` 의 `items[]` · `PATCH …/review/{item_id}` 응답)
+
+```json review-item-schema
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewItem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item_id", "task", "entity_id", "prediction_id", "model_version", "predicted", "actual", "residual",
+               "rule", "threshold", "reason", "origin", "state", "decided_by", "decided_at", "note", "created_at"],
+  "properties": {
+    "item_id":       {"type": "string", "pattern": "^rvw_[0-9A-Z]{26}$"},
+    "task":          {"type": "string"},
+    "entity_id":     {"type": "string"},
+    "prediction_id": {"type": ["string", "null"], "description": "live_residual 이면 필수(prd_…), test_split 이면 null"},
+    "model_version": {"type": "string", "description": "잔차를 낸 uses 과제 모델 버전"},
+    "predicted":     {"type": "number"},
+    "actual":        {"type": "number"},
+    "residual":      {"type": "number", "description": "actual − predicted"},
+    "rule":          {"enum": ["abs_residual_ge", "top_quantile"]},
+    "threshold":     {"type": "number", "description": "abs_residual_ge 값 또는 검증 구간 잔차 분위로 정한 임계값"},
+    "reason":        {"type": "string"},
+    "origin":        {"enum": ["test_split", "live_residual"]},
+    "state":         {"enum": ["open", "confirmed_issue", "false_alarm"]},
+    "decided_by":    {"type": ["string", "null"]},
+    "decided_at":    {"type": ["string", "null"], "format": "date-time"},
+    "note":          {"type": ["string", "null"]},
+    "created_at":    {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {"if": {"properties": {"origin": {"const": "live_residual"}}}, "then": {"properties": {"prediction_id": {"type": "string"}}}},
+    {"if": {"properties": {"state": {"const": "open"}}}, "then": {"properties": {"decided_by": {"type": "null"}, "decided_at": {"type": "null"}}}}
+  ]
+}
+```
+
+PATCH 요청 `{"state": "confirmed_issue" | "false_alarm", "note": "<≥ 1자>"}` · 닫힌 항목 → 409 `already_decided`. 목록은 `{items, next_cursor, total}` · `?state=open&cursor=&limit=`.
+
+### 8.2 문서 추출 결과 (`POST …/documents` 201 · `GET …/documents/{doc_id}`)
+
+```json document-schema
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DocumentExtraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["doc_id", "task", "filename", "raw_sha256", "unit", "entity_count", "regions", "objects", "bom_rows",
+               "counts", "dimensions", "confidence", "labels", "metrics", "extractor", "warnings", "created_at"],
+  "properties": {
+    "doc_id":       {"type": "string", "pattern": "^doc_[0-9A-Z]{26}$"},
+    "task":         {"type": "string"},
+    "filename":     {"type": "string", "maxLength": 150},
+    "raw_sha256":   {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "unit":         {"const": "mm"},
+    "entity_count": {"type": "integer", "minimum": 0, "maximum": 20000},
+    "regions":  {"type": "array", "items": {"type": "object", "required": ["id", "label", "bbox", "texts", "evidence", "status"],
+                 "properties": {"label": {"enum": ["title_block", "bom_table", "rev_table", "other"]}, "bbox": {"type": "array", "minItems": 4, "maxItems": 4}}}},
+    "objects":  {"type": "array", "items": {"type": "object", "required": ["id", "label", "model_label", "confidence", "bbox", "review_reason"],
+                 "properties": {"label": {"enum": ["outer", "hole", "slot", "other"]}, "confidence": {"type": ["number", "null"]}}}},
+    "bom_rows": {"type": "array", "items": {"type": "object", "required": ["name", "material", "quantity", "mass_kg", "source"]}},
+    "counts":       {"type": "object", "additionalProperties": {"type": "integer"}},
+    "dimensions":   {"type": ["object", "null"]},
+    "confidence":   {"type": ["number", "null"], "description": "모델 추출기 평균 점수 — 규칙만이면 null. 보정된 확률이 아니다"},
+    "labels":       {"enum": ["none", "synthetic", "provided"]},
+    "metrics":      {"type": ["object", "null"], "description": "labels=none 이면 반드시 null (IoU · F1 을 만들지 않는다)"},
+    "extractor":    {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["name", "version", "kind"],
+                     "properties": {"kind": {"enum": ["rule", "model"]}, "model_version": {"type": ["string", "null"]}}}},
+    "warnings":     {"type": "array", "items": {"type": "string"}},
+    "created_at":   {"type": "string", "format": "date-time"}
+  },
+  "allOf": [{"if": {"properties": {"labels": {"const": "none"}}}, "then": {"properties": {"metrics": {"type": "null"}}}}]
+}
+```
+
+`regions` 는 kd 규칙(영역 3종), `objects` 는 ot 기하 + 객체 분류, `bom_rows` 는 kd BOM 텍스트 — 그 과제가 쓰지 않는 칸은 빈 배열. 원본 바이트는 응답에 넣지 않는다(`raw_sha256` 만, 파일은 D2-05).
+
+### 8.3 견적 (`POST …/quotes` 201 · `GET …/quotes/{quote_id}` · 목록 `items[]`)
+
+```json quote-schema
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Quote",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["quote_id", "task", "status", "revision", "supersedes", "doc_id", "inputs", "lines", "costs", "total",
+               "currency", "rates", "predictions", "model_versions", "overrides", "reviewed", "review_note",
+               "reviewed_by", "approval_id", "confirmed_by", "confirmed_at", "synthetic", "notice", "created_at"],
+  "properties": {
+    "quote_id":    {"type": "string", "pattern": "^qte_[0-9A-Z]{26}$"},
+    "task":        {"type": "string"},
+    "status":      {"enum": ["draft", "pending_confirm", "confirmed"]},
+    "revision":    {"type": "integer", "minimum": 1},
+    "supersedes":  {"type": ["string", "null"]},
+    "doc_id":      {"type": ["string", "null"]},
+    "inputs":      {"type": "object", "description": "사람이 확정한 입력(과제 inputs)"},
+    "lines":       {"type": "array", "items": {"type": "object", "required": ["name", "amount"], "properties": {"amount": {"$ref": "#/$defs/won"}}}},
+    "costs":       {"type": "object", "additionalProperties": {"$ref": "#/$defs/won"}, "description": "구성 금액(소재 · 가공 · 외주 · 준비 · 가산 · 공급가 · 부가세) — 원 단위 정수 문자열"},
+    "total":       {"$ref": "#/$defs/won"},
+    "currency":    {"const": "KRW"},
+    "rates":       {"type": "object", "additionalProperties": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$"}},
+    "predictions": {"type": "array", "items": {"type": "object", "required": ["task", "prediction_id", "value", "unit"],
+                    "properties": {"value": {"type": "string", "description": "견적에 쓴 그대로의 10진 문자열(원천: 소수 4자리)"}}}},
+    "model_versions": {"type": "array", "items": {"type": "object", "required": ["task", "version", "synthetic"]}},
+    "overrides":   {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["field", "recognized", "confirmed"],
+                    "properties": {"field": {"type": "string"}, "recognized": {}, "confirmed": {}}}},
+    "reviewed":    {"type": "boolean"},
+    "review_note": {"type": ["string", "null"]},
+    "reviewed_by": {"type": ["string", "null"]},
+    "approval_id": {"type": ["string", "null"]},
+    "confirmed_by": {"type": ["string", "null"]},
+    "confirmed_at": {"type": ["string", "null"], "format": "date-time"},
+    "synthetic":   {"type": "boolean"},
+    "notice":      {"type": "string"},
+    "created_at":  {"type": "string", "format": "date-time"}
+  },
+  "$defs": {"won": {"type": "string", "pattern": "^-?[0-9]+$", "description": "원 단위 정수의 10진 문자열 — JSON number(float) 로 내지 않는다"}},
+  "allOf": [{"if": {"properties": {"status": {"const": "confirmed"}}},
+             "then": {"properties": {"reviewed": {"const": true}, "review_note": {"type": "string", "minLength": 5},
+                                     "confirmed_by": {"type": "string"}, "confirmed_at": {"type": "string"}}}}]
+}
+```
+
+- **금액은 문자열**이다(`"8486493"`). JSON 숫자로 내면 소비자가 float 로 읽는다 — G2-Q01 의 float 경로 0 은 응답까지다. CSV 는 같은 문자열을 그대로 쓴다.
+- 상태: `draft`(초안 — 사람이 고칠 수 있다) → `POST …/quotes/{id}/confirm` → `pending_confirm`(승인 대기 `mlp_approval kind=quote action=confirm`) → B13 decide → `confirmed`. `mlp_quote` 는 추가만이라 **상태가 바뀔 때마다 새 행**(같은 `quote_id` 계열 · `revision` +1 · `supersedes`)이고, 조회는 최신 revision 을 돌려준다.
+- 확정 요청에 `reviewed: true` · `review_note` ≥ 5자(공백 제외)가 없으면 422 `missing_required`(detail.field). `confirmed` 견적에 새 revision 을 만들면 409 `quote_locked`. 확정 금액은 모델 · 단가가 바뀌어도 그대로(스냅숏).
+- `overrides` 는 인식값(`from_extract` 결과)과 확정 입력이 다른 칸마다 1항목 — 지우지 않고 revision 마다 누적한다(사람 수정 이력 소실 = 치명, goal2 §3.3).

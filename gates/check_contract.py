@@ -71,5 +71,43 @@ def run() -> list[Line]:
     return [Line("G-M04", "예측 계약", "PASS" if ok else "FAIL", head + f" · B {t.measured} · C {c.measured}")]
 
 
+# ── 2차 — G2-T01 유형 3 계약 (goal2 §2) ──────────────────────────────────────────────────────────
+PHASE2_TYPES = ("review_queue", "extract", "quote")
+PHASE2_SCHEMAS = ("review-item-schema", "document-schema", "quote-schema")
+
+
+def run_phase2() -> list[Line]:
+    """유형 3 이 std · 계약에 있고(phase 1 로 켜짐), 응답 스키마 3 이 유효하고, 2차 유형 경로의 501 이 0 이며
+    tests/test_types_phase2.py(입력 · 출력 · 상태 전이 · 오류 계약 시험)가 통과."""
+    import jsonschema
+    import yaml
+    probs = []
+    types = (yaml.safe_load(read(ROOT / "std" / "task_types.yaml")) or {}).get("types", {})
+    off = [t for t in PHASE2_TYPES if (types.get(t) or {}).get("phase") != 1]
+    if off:
+        probs.append(f"std 유형 phase≠1 {off}")
+    tc = read(ROOT / "contracts" / "task-contract.md")
+    by_type = (yaml.safe_load(re.search(r"```yaml task-schema\n(.*?)```", tc, re.S).group(1)) or {}).get("by_type", {})
+    if [t for t in PHASE2_TYPES if t not in by_type]:
+        probs.append("task-schema by_type 에 2차 유형 없음")
+    pc = read(ROOT / "contracts" / "predict-contract.md")
+    for name in PHASE2_SCHEMAS:
+        m = re.search(rf"```json {name}\n(.*?)```", pc, re.S)
+        if not m:
+            probs.append(f"{name} 없음")
+            continue
+        jsonschema.Draft202012Validator.check_schema(json.loads(m.group(1)))
+    still_501 = [ln for ln in read(ROOT / "contracts" / "api-contract.md").splitlines()
+                 if re.match(r"^\| B(09|10|11) [a-z]+ \| 2 \|", ln)]
+    if still_501:
+        probs.append(f"api-contract §1 의 B09~B11 이 아직 단계 2(501) {len(still_501)}행")
+    t = pytest_gate("G2-T01", "유형 3 계약", "tests/test_types_phase2.py")
+    if t.status != "PASS":
+        probs.append(t.measured)
+    if probs:
+        return [Line("G2-T01", "유형 3 계약", "FAIL", "; ".join(probs[:4]))]
+    return [Line("G2-T01", "유형 3 계약", "PASS", f"유형 3 phase 1 · 스키마 3 유효 · 501 0 · {t.measured}")]
+
+
 if __name__ == "__main__":
     raise SystemExit(show(run()))
