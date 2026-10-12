@@ -45,7 +45,8 @@ POST /api/v1/tenants/{t}/tasks/{task}/optimize          // type=optimize 과제�
   "fixed":   {"<controllable:false 변수>": <값>, ...},  // 고정 변수. 빠지면 422 missing_required(보정 규칙은 predict 와 같다)
   "current": {"<controllable:true 변수>": <값>, ...},   // 선택. 현재 조건 — 개선량 계산용
   "params":  {"<과제 params 이름>": <값>, ...},         // 선택. 과제 YAML params 의 min/max 로 검증, 없으면 default
-  "entity_id": null
+  "entity_id": null,
+  "request_approval": true                                // 선택(2차 D2-15 ⑥ · D2-08). false = mlp_recommendation 기록만, mlp_approval 요청 0 (Agent ml.calculate_recommendation). 웨이브 P 개발2 구현
 }
 ```
 

@@ -35,3 +35,4 @@ baselines:
   contamination:       {types: [anomaly], how: "과제의 기대 오염률"}
   current_condition:   {types: [optimize], how: "요청의 현재 조절 변수 값"}
   labels_none:         {types: [extract], how: "라벨 없으면 지표 없음 + labels: none"}
+  majority_class:      {types: [extract], how: "학습 구간 최빈 클래스 상수 예측의 macro-F1 · accuracy (모델 추출기 기준선, D2-15)"}

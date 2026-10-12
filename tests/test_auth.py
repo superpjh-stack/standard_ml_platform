@@ -1,6 +1,6 @@
 """G-M11(일부) — 인증 · 역할 4 · 회사 범위 · CORS (goal §6 · spec §17 · contracts/api-contract.md). 소유 개발2.
 
-기대값은 **goal §6 표를 그대로 옮긴 것**이다(std/roles.yaml 이 아니다) — roles.yaml · auth · 실제 HTTP 가 모두 이 표와 같아야 한다.
+기대값은 **goal §6 표 + goal2 §6 표를 그대로 옮긴 것**이다(std/roles.yaml 이 아니다) — roles.yaml · auth · 실제 HTTP 가 모두 이 표와 같아야 한다.
 배포 쪽(docker compose: DB 포트 · 앱 포트 · 헬스체크 · 768MB)은 gates/check_deploy.py 가 본다.
 """
 
@@ -27,6 +27,10 @@ GOAL_TABLE = {
     "approve":  {"admin": "○", "approver": "O", "operator": "R", "viewer": "✕"},
     "monitor":  {"admin": "○", "approver": "○", "operator": "R", "viewer": "✕"},
     "trace":    {"admin": "○", "approver": "✕", "operator": "✕", "viewer": "✕"},
+    # goal2 §6 (2차 — 화면 7 · 8 · 9, 화면 10 은 위 trace) — D2-15 아키텍트 반영
+    "sources":  {"admin": "○", "approver": "R", "operator": "✕", "viewer": "✕"},
+    "review":   {"admin": "○", "approver": "O", "operator": "R", "viewer": "✕"},
+    "quotes":   {"admin": "○", "approver": "○", "operator": "○", "viewer": "✕"},
 }
 ROLES = ("viewer", "operator", "approver", "admin")
 

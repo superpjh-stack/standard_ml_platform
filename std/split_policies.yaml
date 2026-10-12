@@ -15,7 +15,7 @@ policies:
     group_boundary: true
     seeded: false
   stratified_60_20_20:
-    when: "time_key 없음 · 분류(risk)"
+    when: "time_key 없음 · 분류(risk) · 다중 클래스(extract 모델 추출기 — D2-15)"
     order: stratified
     fractions: {train: 0.6, valid: 0.2, test: 0.2}
     seeded: true

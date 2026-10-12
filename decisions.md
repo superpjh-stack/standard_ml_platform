@@ -259,3 +259,10 @@ D-120a(개발3 요청)는 개발2 가 구현했다: 꺼진 과제 predict · bat
 | D2-20 | 18키와 2차 유형 | 2차 유형 3 은 예측이 아니라 자원을 돌려준다 | 18키 응답 · §5 스키마 · `type` enum 은 바꾸지 않는다(G-M04 그대로). 2차 유형 과제에 predict · optimize 는 404 `not_found`(rule `type_route`). 수치 예측은 `uses` regression 의 `prediction_id` 로 연결 | `predict-contract.md` §8 | 확정 |
 | D2-21 | 분할 정책 (2차 회귀 4) | 원천은 krs 무작위 80/20 · pc 무작위 78/22 · ot/kd 행 순서 540/180/180 — 모두 시간순이 아니다 | `time_key` 없음 → `random_60_20_20`(krs · ot · kd), pc 는 D2-02(`time_60_20_20`). 원천 분할과 다르므로 이관 보고서에 사유. 원천 행 순서를 시간으로 꾸미지 않는다(가짜 `ts` 금지) | `task-contract.md` §6.5 | 가설 |
 | D2-22 | 추출 상한 | ot 원천 요소 상한 2,000(`config.py:25`) · kd 20,000(`config.py:20`) — spec §8.3 은 20,000 | 코어 상한 = 5 MiB · 20,000(spec). 팩 · 회사 `document.max_entities` 는 낮추기만 — ot 팩 기본 2,000 | `task-contract.md` §6.2 | 가설 |
+
+## 2차 웨이브 P 선행 — 아키텍트 반영 (2026-10-13)
+
+| # | 내용 | 한 곳 | 상태 |
+|---|---|---|---|
+| D2-13 | 반영: `schema.sql` `-- @migrate-begin` 구간(ADD COLUMN IF NOT EXISTS 20열 — review_item 6 · document 3 · quote 11) · `make db-migrate`(비파괴 · 멱등 · CONFIRM 불필요, `make setup` 도 기존 DB 에 적용) · ml_db · ml_test_db 적용(2회 실행 — 두 번째는 skip 만) · `db-schema.md` §2 · §3 동기화. 근거 없는 열은 NULL 허용(기존 행 값 지어내기 0). 테이블 16 · 열 211 | `src/mlcore/db/schema.sql` · `Makefile` · `contracts/db-schema.md` | 확정 |
+| D2-15 | 반영: ① task_types 유형 3 phase 1 ② stratified when + extract 다중 클래스 ③ metrics `majority_class`(+ extract baselines) ④ error_codes `invalid_document` 422 · `document_too_large` 413 · `quote_locked` 409 ⑤ roles `sources` · `review` · `quotes`(+ `confirm` 하위 = approver 이상) · `trace` screen 10 + `explain_view`(operator — Agent) ⑥ predict-contract §1 optimize `request_approval`(코드는 개발2). `tests/test_auth.py` GOAL_TABLE 에 goal2 §6 3행(기대값 출처 = 정본 표) | `std/*` · `contracts/predict-contract.md` §1 · `tests/test_auth.py` | 확정 |

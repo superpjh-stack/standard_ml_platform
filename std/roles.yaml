@@ -14,8 +14,17 @@ permissions:
                   admin: allow, approver: own_task, operator: read, viewer: deny}
   monitor:       {screen: 6, apis: ["GET .../monitor", "GET /doctor"],
                   admin: allow, approver: allow, operator: read, viewer: deny}
-  trace:         {screen: null, apis: ["GET /predictions/{id}/trace", "audit"],
-                  admin: allow, approver: deny, operator: deny, viewer: deny}
+  trace:         {screen: 10, apis: ["GET /predictions/{id}/trace", "audit"],
+                  admin: allow, approver: deny, operator: deny, viewer: deny,
+                  explain_view: {apis: ["GET /predictions/{id}/trace?view=explain"], admin: allow, approver: allow, operator: allow, viewer: deny}}   # Agent ml.get_explanation (D2-15 ⑤)
+  # ── 2차 (goal2 §6 — G2-A01 기대값, D2-15) ──
+  sources:       {screen: 7, apis: ["GET /doctor", "GET /runs/{id}", "snapshots"],
+                  admin: allow, approver: read, operator: deny, viewer: deny}
+  review:        {screen: 8, apis: ["GET .../review", "PATCH .../review/{id}"],
+                  admin: allow, approver: own_task, operator: read, viewer: deny}
+  quotes:        {screen: 9, apis: ["POST .../documents", "GET .../documents*", "POST .../quotes", "GET .../quotes*", "POST .../quotes/{id}/revisions", "POST .../quotes/{id}/confirm"],
+                  admin: allow, approver: allow, operator: allow, viewer: deny,
+                  confirm: {admin: allow, approver: allow, operator: deny, viewer: deny}}   # 확정 결정 = approver 이상 (D2-04) — operator 는 요청만
 notes:
   - "staging 승격(ML 담당)은 1차에서 admin 이 맡는다. 별도 ml_engineer 역할은 표준 변경 요청 대상 (goal §6)."
   - "다른 회사 키로의 접근은 403 이 아니라 404 not_found (존재 여부 숨김)."

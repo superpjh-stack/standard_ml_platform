@@ -1,5 +1,5 @@
 # 과제 유형 — 분류의 유일한 출처 (spec §2.1 · §2.4). 코어 코드는 이 파일을 읽어서만 유형을 안다.
-# phase: 1 = 1차 구현 대상, 2 = 코드 골격만(호출 시 501 not_implemented)
+# phase: 1 = 구현 대상(1차 4 + 2차 웨이브 P 3 — D2-15), 2 = 코드 골격만(호출 시 501 not_implemented)
 types:
   regression:
     label: 품질 · 수치 예측
@@ -35,7 +35,7 @@ types:
     composite: true                              # uses: 로 의존 과제 선언
   review_queue:
     label: 검토 대기열
-    phase: 2
+    phase: 1
     output: [items, reason, priority]
     selection_metric: null
     report_metrics: [queue_size, hit_rate]
@@ -43,15 +43,15 @@ types:
     composite: true
   extract:
     label: 문서 · 도면 추출
-    phase: 2
+    phase: 1
     output: [regions, objects, bom_rows, confidence]
     selection_metric: macro_f1
     report_metrics: [macro_f1, class_f1, confusion_matrix, iou]
-    baselines: [labels_none]
+    baselines: [labels_none, majority_class]   # 모델 추출기(라벨 있음) = majority_class · 라벨 없음 = labels_none (D2-15)
     composite: false
   quote:
     label: 원가 · 견적 계산
-    phase: 2
+    phase: 1
     output: [lines, total, overrides]
     selection_metric: null
     report_metrics: [human_edit_rate, edit_amount, cost_error]

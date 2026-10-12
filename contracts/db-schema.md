@@ -8,7 +8,7 @@
 
 | 항목 | 값 | 구현 | 검사 |
 |---|---|---|---|
-| 테이블 수 | **16** (spec §10.1 행 수와 같다) | `CREATE TABLE mlp_*` 16 | `check_schema`: 계약 표 수 = DB 수 = spec 행 수 |
+| 테이블 수 | **16** (spec §10.1 행 수와 같다 · 2차 열 추가 후에도 16 — §6) | `CREATE TABLE mlp_*` 16 | `check_schema`: 계약 표 수 = DB 수 = spec 행 수 |
 | 전 테이블 `tenant_id` | 16/16 | 각 표 `tenant_id` 열 | `information_schema.columns` |
 | 추가만 3 | `mlp_prediction` · `mlp_audit` · `mlp_quote` | `BEFORE UPDATE OR DELETE` 행 트리거 + `BEFORE TRUNCATE` 문 트리거 `mlp_append_only()` · 역할 `mlp_app` 에 `SELECT, INSERT` 만 | 트리거 존재 + 실제 UPDATE/DELETE 시도(롤백)가 거부되는지 |
 | production 하나 | 과제당 1 | 부분 고유 색인 `mlp_model_version_one_production ON (tenant_id, task_id) WHERE stage='production'` | `pg_indexes` |
@@ -206,6 +206,12 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 | `state` | text | N |
 | `created_at` | timestamp with time zone | N |
 | `updated_at` | timestamp with time zone | N |
+| `version` | text | Y |
+| `rule` | text | Y |
+| `threshold` | double precision | Y |
+| `decided_by` | text | Y |
+| `decided_at` | timestamp with time zone | Y |
+| `note` | text | Y |
 
 ### 11. `mlp_document`
 
@@ -222,6 +228,9 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 | `extractor_version` | text | Y |
 | `created_by` | text | Y |
 | `created_at` | timestamp with time zone | N |
+| `size_bytes` | bigint | Y |
+| `entity_count` | integer | Y |
+| `labels` | text | N |
 
 ### 12. `mlp_quote`
 
@@ -239,6 +248,17 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 | `reviewed_by` | text | Y |
 | `review_note` | text | Y |
 | `created_at` | timestamp with time zone | N |
+| `status` | text | N |
+| `revision` | integer | N |
+| `supersedes` | text | Y |
+| `inputs` | jsonb | N |
+| `costs` | jsonb | N |
+| `rates` | jsonb | N |
+| `prediction_ids` | jsonb | N |
+| `approval_id` | text | Y |
+| `confirmed_by` | text | Y |
+| `confirmed_at` | timestamp with time zone | Y |
+| `created_by` | text | Y |
 
 ### 13. `mlp_monitor_daily`
 
@@ -321,6 +341,9 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 | `mlp_recommendation.status` | needs_approval · approved · rejected · applied · dismissed |
 | `mlp_review_item.state` | open · confirmed_issue · false_alarm |
 | `mlp_review_item.origin` | test_split · live_residual (학습 구간 잔차 금지) |
+| `mlp_review_item.rule` | abs_residual_ge · top_quantile (2차, D2-13) |
+| `mlp_document.labels` | none · synthetic · provided (2차 — none 이면 지표 null) |
+| `mlp_quote.status` | draft · pending_confirm · confirmed (2차 — 상태가 바뀌면 새 행, D2-19) |
 | `mlp_monitor_daily.metric` | psi · oor_rate · missing_rate · live_perf · volume · error_rate · source_health |
 | `mlp_monitor_daily.level` | ok · warn · retrain |
 | `mlp_approval.kind` | model · recommendation · quote |
@@ -344,7 +367,7 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 
 ## 6. 2차 — 16 테이블로 충분한가 (Phase P0 아키텍트, goal2 §3.1-2)
 
-**판정: 테이블은 16 그대로 충분하다(새 테이블 0).** 대기열 · 문서 · 견적 · 견적 승인 자리는 1차에 이미 있다(`mlp_review_item` · `mlp_document` · `mlp_quote` · `mlp_approval.kind=quote · action=confirm`). 다만 **열이 모자란다** — `decisions.md` D2-13 `표준 변경 요청`. 아래 열은 웨이브 P 에서 `schema.sql`(아키텍트) + 위 §2 표에 함께 넣고, 기존 DB 는 비파괴 `ALTER TABLE … ADD COLUMN IF NOT EXISTS`(`make db-grants` 와 같은 멱등 구간)로 맞춘다 — 스키마 재생성(데이터 삭제) 없이. 그 전까지 §2 표 · DB 는 1차 그대로다(G-S01 이 표 = DB 를 본다).
+**판정: 테이블은 16 그대로 충분하다(새 테이블 0).** **반영됨(웨이브 P 선행, 2026-10-13):** 아래 열을 `schema.sql` 의 `-- @migrate-begin` 구간(비파괴 `ADD COLUMN IF NOT EXISTS`)과 §2 표에 넣고 `make db-migrate` 로 ml_db · ml_test_db 에 적용했다. 근거 없는 열(review 의 version · rule · threshold, document 의 size_bytes · entity_count)은 기존 행에 값을 지어내지 않도록 NULL 허용으로 두었다 — 앱은 새 행에 반드시 채운다(predict-contract §8 스키마가 필수). 대기열 · 문서 · 견적 · 견적 승인 자리는 1차에 이미 있다(`mlp_review_item` · `mlp_document` · `mlp_quote` · `mlp_approval.kind=quote · action=confirm`). 다만 **열이 모자란다** — `decisions.md` D2-13 `표준 변경 요청`. 아래 열은 웨이브 P 에서 `schema.sql`(아키텍트) + 위 §2 표에 함께 넣고, 기존 DB 는 비파괴 `ALTER TABLE … ADD COLUMN IF NOT EXISTS`(`make db-grants` 와 같은 멱등 구간)로 맞춘다 — 스키마 재생성(데이터 삭제) 없이. 그 전까지 §2 표 · DB 는 1차 그대로다(G-S01 이 표 = DB 를 본다).
 
 | 테이블 | 더할 열 | 형 · NULL | 왜 |
 |---|---|---|---|
@@ -353,9 +376,9 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 | `mlp_quote` | `inputs` · `costs` · `rates` | jsonb N | 확정 입력 · 구성 금액(원 단위 10진 문자열) · 단가 스냅숏 — `lines` 는 품목 행만 |
 | `mlp_quote` | `prediction_ids` | jsonb N | 견적에 쓴 작업시간 예측(`mlp_prediction`) — 추적(화면 10) |
 | `mlp_quote` | `approval_id` · `confirmed_by` · `confirmed_at` · `created_by` | text Y · text Y · timestamptz Y · text Y | 확정 = 승인(D2-04) 결과 기록 |
-| `mlp_review_item` | `version` · `rule` · `threshold` | text N · text N · double precision N | 어느 모델 · 규칙 · 임계값으로 만든 항목인가(재현) |
+| `mlp_review_item` | `version` · `rule` · `threshold` | text Y · text Y (CHECK abs_residual_ge · top_quantile) · double precision Y — 새 행은 앱이 반드시 채운다 | 어느 모델 · 규칙 · 임계값으로 만든 항목인가(재현) |
 | `mlp_review_item` | `decided_by` · `decided_at` · `note` | text Y · timestamptz Y · text Y | PATCH 검토 결과 · 409 `already_decided` |
-| `mlp_document` | `size_bytes` · `entity_count` · `labels` | bigint N · integer N · text N (CHECK none · synthetic · provided) | 상한 · `labels: none` 을 열로(검색 · 감사) |
+| `mlp_document` | `size_bytes` · `entity_count` · `labels` | bigint Y · integer Y · text N 기본 none (CHECK none · synthetic · provided) | 상한 · `labels: none` 을 열로(검색 · 감사) |
 
 - `mlp_quote.total` 은 이미 `numeric` — Decimal 그대로. 금액 열에 `double precision` 을 쓰지 않는다(G2-Q01).
 - `mlp_review_item.origin` CHECK(test_split · live_residual)는 1차 그대로 — 학습 구간 값은 DB 가 거부한다.

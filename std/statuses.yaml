@@ -21,3 +21,7 @@ error_codes:
   invalid_transition:      409   # 등록부 전이 규칙 위반 (D-54, detail.rule)
   train_busy:              409   # 회사당 동시 학습 1 (spec §5.5, D-54)
   not_implemented:         501
+  # 2차 (goal2 §2.1 · D2-15)
+  invalid_document:        422   # DXF 아님 · 바이너리 · 깨짐 · 단위 미지정 (detail.rule)
+  document_too_large:      413   # 5 MiB · 20,000 엔티티 · 과제 document 상한 초과 (detail.rule)
+  quote_locked:            409   # 확정된 견적 수정 · 재확정

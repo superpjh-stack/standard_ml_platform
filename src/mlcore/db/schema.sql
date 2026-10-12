@@ -322,6 +322,32 @@ CREATE TABLE mlp_api_key (
     CONSTRAINT mlp_api_key_no_plain CHECK (key_hash ~ '^(pbkdf2_sha256\$|sha256\$)')
 );
 
+-- @migrate-begin ── 2차 열 추가 (decisions.md D2-13 · contracts/db-schema.md §6) ─────────────────────────────────
+-- **비파괴 · 멱등**: ADD COLUMN IF NOT EXISTS 만(DROP · TRUNCATE · UPDATE 0). 새 DB 는 위 CREATE 뒤 여기서 같은 열을 얻고,
+-- 기존 DB 는 `make db-migrate`(CONFIRM 불필요 · 데이터 삭제 0)가 이 구간만 적용한다. 열 순서 = 계약 §2 표 순서.
+-- 기존 행에 값을 지어내지 않는다: 근거가 없는 열은 NULL 허용, 기본값은 사실인 것만(초안 · revision 1 · 빈 jsonb · labels none).
+ALTER TABLE mlp_review_item ADD COLUMN IF NOT EXISTS version     text;
+ALTER TABLE mlp_review_item ADD COLUMN IF NOT EXISTS rule        text CHECK (rule IN ('abs_residual_ge', 'top_quantile'));
+ALTER TABLE mlp_review_item ADD COLUMN IF NOT EXISTS threshold   double precision;
+ALTER TABLE mlp_review_item ADD COLUMN IF NOT EXISTS decided_by  text;
+ALTER TABLE mlp_review_item ADD COLUMN IF NOT EXISTS decided_at  timestamptz;
+ALTER TABLE mlp_review_item ADD COLUMN IF NOT EXISTS note        text;
+ALTER TABLE mlp_document    ADD COLUMN IF NOT EXISTS size_bytes   bigint CHECK (size_bytes >= 0);
+ALTER TABLE mlp_document    ADD COLUMN IF NOT EXISTS entity_count integer CHECK (entity_count >= 0);
+ALTER TABLE mlp_document    ADD COLUMN IF NOT EXISTS labels       text NOT NULL DEFAULT 'none' CHECK (labels IN ('none', 'synthetic', 'provided'));
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS status         text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending_confirm', 'confirmed'));
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS revision       integer NOT NULL DEFAULT 1 CHECK (revision >= 1);
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS supersedes     text;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS inputs         jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS costs          jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS rates          jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS prediction_ids jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS approval_id    text;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS confirmed_by   text;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS confirmed_at   timestamptz;
+ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS created_by     text;
+-- @migrate-end
+
 -- @grants-begin ── 보호 구간: 추가만 트리거 + 권한 분리 (DEF-QA2-009 · decisions.md D-123) ──────────────────────
 -- 이 아래는 **멱등 · 비파괴**다(DROP · TRUNCATE 0). 기존 DB 에는 `make db-grants` 가 이 구간만 다시 적용한다.
 -- 앱은 DB 소유자가 아니라 `mlp_app` 의 구성원(LOGIN 역할, 비밀번호는 배포 비밀)으로 붙는다 — 소유자 · 슈퍼유저는
