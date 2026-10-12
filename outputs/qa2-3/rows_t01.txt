@@ -1,0 +1,95 @@
+T01  ks.remaining_hours train 접수  PASS  HTTP 202 {'run_id': 'run_07db9a8cae333dfa', 'status': 'queued'}
+T01  ks.failure_24h train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  ks.sensor_ood train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  ks 작업자  PASS  <scratch>/art/ks/ks.remaining_hours/run_07db9a8cae333dfa", "version": "v1", "stage": "candidate"} | 
+T01  ks.remaining_hours 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  ks.remaining_hours stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.remaining_hours promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSFYTZ0EY2570PA6QNWF5R', 'state': 'pending'}
+T01  ks.remaining_hours 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSFYTZ0EY2570PA6QNWF5R', 'state': 'approved', 'production_version': 'v1'}
+T01  ks health model_ready  PASS  [('ks.remaining_hours', True), ('ks.failure_24h', False), ('ks.sensor_ood', False), ('ks.maintenance_timing', False)]
+T01  sw.delta_e train 접수  PASS  HTTP 202 {'run_id': 'run_17912735c4e81f79', 'status': 'queued'}
+T01  sw.defect_risk train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  sw.print_ood train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  sw 작업자  PASS  <scratch>/art/sw/sw.delta_e/run_17912735c4e81f79", "version": "v1", "stage": "candidate"} | 
+T01  sw.delta_e 학습  PASS  status=succeeded champion=extra_trees beats=True v=v1 err=None
+T01  sw.delta_e stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.delta_e promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG1N3K9EP2Q2X3RZ6DFPV', 'state': 'pending'}
+T01  sw.delta_e 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG1N3K9EP2Q2X3RZ6DFPV', 'state': 'approved', 'production_version': 'v1'}
+T01  sw health model_ready  PASS  [('sw.delta_e', True), ('sw.defect_risk', False), ('sw.print_ood', False), ('sw.print_setpoint', False)]
+T01  krs.joint_strength train 접수  PASS  HTTP 202 {'run_id': 'run_92d255512def8101', 'status': 'queued'}
+T01  krs.residual_review train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  krs 작업자  PASS  <scratch>/art/krs/krs.joint_strength/run_92d255512def8101", "version": "v1", "stage": "candidate"} | 
+T01  krs.joint_strength 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  krs.joint_strength stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  krs.joint_strength promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG4G8Z2KECGGBH3XC8YVK', 'state': 'pending'}
+T01  krs.joint_strength 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG4G8Z2KECGGBH3XC8YVK', 'state': 'approved', 'production_version': 'v1'}
+T01  krs health model_ready  PASS  [('krs.joint_strength', True), ('krs.recipe_optimize', False), ('krs.residual_review', False)]
+T01  pc.sensory_score train 접수  PASS  HTTP 202 {'run_id': 'run_dccd4bcbabb791fb', 'status': 'queued'}
+T01  pc.residual_review train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  pc 작업자  PASS  <scratch>/art/pc/pc.sensory_score/run_dccd4bcbabb791fb", "version": "v1", "stage": "candidate"} | 
+T01  pc.sensory_score 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  pc.sensory_score stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  pc.sensory_score promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG7CPS0A20XT1G3N13R52', 'state': 'pending'}
+T01  pc.sensory_score 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG7CPS0A20XT1G3N13R52', 'state': 'approved', 'production_version': 'v1'}
+T01  pc health model_ready  PASS  [('pc.sensory_score', True), ('pc.recipe_optimize', False), ('pc.residual_review', False)]
+T01  ot.machining_minutes train 접수  PASS  HTTP 202 {'run_id': 'run_3d886787fb207a3c', 'status': 'queued'}
+T01  ot.cad_objects train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  ot 작업자  PASS  <scratch>/art/ot/ot.machining_minutes/run_3d886787fb207a3c", "version": "v1", "stage": "candidate"} | 
+T01  ot.machining_minutes 학습  PASS  status=succeeded champion=ridge beats=True v=v1 err=None
+T01  ot.machining_minutes stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ot.machining_minutes promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG9ZA5C8W7ETG2FKTGTN9', 'state': 'pending'}
+T01  ot.machining_minutes 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG9ZA5C8W7ETG2FKTGTN9', 'state': 'approved', 'production_version': 'v1'}
+T01  ot health model_ready  PASS  [('ot.machining_minutes', True), ('ot.cad_objects', False), ('ot.quote', False)]
+T01  kd.labor_hours train 접수  PASS  HTTP 202 {'run_id': 'run_3996ffaa15182ea6', 'status': 'queued'}
+T01  kd.drawing_regions train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  kd 작업자  PASS  <scratch>/art/kd/kd.labor_hours/run_3996ffaa15182ea6", "version": "v1", "stage": "candidate"} | 
+T01  kd.labor_hours 학습  PASS  status=succeeded champion=ridge beats=True v=v1 err=None
+T01  kd.labor_hours stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  kd.labor_hours promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGCEZXPJZCS9S1KDG7WCP', 'state': 'pending'}
+T01  kd.labor_hours 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGCEZXPJZCS9S1KDG7WCP', 'state': 'approved', 'production_version': 'v1'}
+T01  kd health model_ready  PASS  [('kd.labor_hours', True), ('kd.drawing_regions', False), ('kd.quote', False)]
+T01  ks.failure_24h train 접수  PASS  HTTP 202 {'run_id': 'run_28e5e4926e00e84d', 'status': 'queued'}
+T01  ks.failure_24h 작업자  PASS  Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/ks/ks.failure_24h/run_28e5e4926e00e84d", "version": "v1", "stage": "candidate"} | 
+T01  ks.sensor_ood train 접수  PASS  HTTP 202 {'run_id': 'run_dd020686539cc620', 'status': 'queued'}
+T01  ks.sensor_ood 작업자  PASS  -Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/ks/ks.sensor_ood/run_dd020686539cc620", "version": "v1", "stage": "candidate"} | 
+T01  ks.failure_24h 학습  PASS  status=succeeded champion=rf_clf beats=True v=v1 err=None
+T01  ks.failure_24h stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.failure_24h promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGVVPTX7KCV3NKSC47VFS', 'state': 'pending'}
+T01  ks.failure_24h 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGVVPTX7KCV3NKSC47VFS', 'state': 'approved', 'production_version': 'v1'}
+T01  ks.sensor_ood 학습  PASS  status=succeeded champion=isolation_forest beats=True v=v1 err=None
+T01  ks.sensor_ood stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.sensor_ood promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGVX8YB2VFXNCA5KQW2N1', 'state': 'pending'}
+T01  ks.sensor_ood 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGVX8YB2VFXNCA5KQW2N1', 'state': 'approved', 'production_version': 'v1'}
+T01  ks health model_ready  PASS  [('ks.remaining_hours', True), ('ks.failure_24h', True), ('ks.sensor_ood', True), ('ks.maintenance_timing', False)]
+T01  sw.defect_risk train 접수  PASS  HTTP 202 {'run_id': 'run_9ee3915b13c0cee6', 'status': 'queued'}
+T01  sw.defect_risk 작업자  PASS  Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/sw/sw.defect_risk/run_9ee3915b13c0cee6", "version": "v1", "stage": "candidate"} | 
+T01  sw.print_ood train 접수  PASS  HTTP 202 {'run_id': 'run_94302387fadce1a4', 'status': 'queued'}
+T01  sw.print_ood 작업자  PASS  I-Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/sw/sw.print_ood/run_94302387fadce1a4", "version": "v1", "stage": "candidate"} | 
+T01  sw.defect_risk 학습  PASS  status=succeeded champion=gbc beats=True v=v1 err=None
+T01  sw.defect_risk stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.defect_risk promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGZF7AKFQP23R2QB5ETKZ', 'state': 'pending'}
+T01  sw.defect_risk 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGZF7AKFQP23R2QB5ETKZ', 'state': 'approved', 'production_version': 'v1'}
+T01  sw.print_ood 학습  PASS  status=succeeded champion=isolation_forest beats=True v=v1 err=None
+T01  sw.print_ood stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.print_ood promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGZGS186VQ3Y316J61TX2', 'state': 'pending'}
+T01  sw.print_ood 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGZGS186VQ3Y316J61TX2', 'state': 'approved', 'production_version': 'v1'}
+T01  sw health model_ready  PASS  [('sw.delta_e', True), ('sw.defect_risk', True), ('sw.print_ood', True), ('sw.print_setpoint', False)]
+T01  krs.residual_review train 접수  PASS  HTTP 202 {'run_id': 'run_fa95898ba833c93e', 'status': 'queued'}
+T01  krs.residual_review 작업자  FAIL  {"run_id": "run_fa95898ba833c93e", "status": "error", "error": "NotTrainable: krs.residual_review: review_queue 는 학습 과제가 아니다(extract 는 model: 추출기만)"} | 
+T01  krs.residual_review 학습  WARN  status=failed champion=None beats=None v=None err={'type': 'NotTrainable', 'message': 'krs.residual_review: review_queue 는 학습 과제가 
+T01  krs health model_ready  PASS  [('krs.joint_strength', True), ('krs.recipe_optimize', False), ('krs.residual_review', False)]
+T01  pc.residual_review train 접수  PASS  HTTP 202 {'run_id': 'run_e6222d7460f96f14', 'status': 'queued'}
+T01  pc.residual_review 작업자  FAIL  {"run_id": "run_e6222d7460f96f14", "status": "error", "error": "NotTrainable: pc.residual_review: review_queue 는 학습 과제가 아니다(extract 는 model: 추출기만)"} | 
+T01  pc.residual_review 학습  WARN  status=failed champion=None beats=None v=None err={'type': 'NotTrainable', 'message': 'pc.residual_review: review_queue 는 학습 과제가 아
+T01  pc health model_ready  PASS  [('pc.sensory_score', True), ('pc.recipe_optimize', False), ('pc.residual_review', False)]
+T01  ot.cad_objects train 접수  PASS  HTTP 202 {'run_id': 'run_9f8d86feb50ece0c', 'status': 'queued'}
+T01  ot.cad_objects 작업자  PASS  Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/ot/ot.cad_objects/run_9f8d86feb50ece0c", "version": "v1", "stage": "candidate"} | 
+T01  ot.cad_objects 학습  PASS  status=succeeded champion=logreg beats=True v=v1 err=None
+T01  ot.cad_objects stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ot.cad_objects promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSH5XGPTXZY4TSHSWVEFTT', 'state': 'pending'}
+T01  ot.cad_objects 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSH5XGPTXZY4TSHSWVEFTT', 'state': 'approved', 'production_version': 'v1'}
+T01  ot health model_ready  PASS  [('ot.machining_minutes', True), ('ot.cad_objects', True), ('ot.quote', False)]
+T01  kd.drawing_regions train 접수  PASS  HTTP 202 {'run_id': 'run_761ad907489c7c64', 'status': 'queued'}
+T01  kd.drawing_regions 작업자  FAIL  {"run_id": "run_761ad907489c7c64", "status": "error", "error": "NotTrainable: kd.drawing_regions: extract 는 학습 과제가 아니다(extract 는 model: 추출기만)"} | 
+T01  kd.drawing_regions 학습  WARN  status=failed champion=None beats=None v=None err={'type': 'NotTrainable', 'message': 'kd.drawing_regions: extract 는 학습 과제가 아니다(ex
+T01  kd health model_ready  PASS  [('kd.labor_hours', True), ('kd.drawing_regions', False), ('kd.quote', False)]

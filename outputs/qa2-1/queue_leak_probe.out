@@ -1,0 +1,130 @@
+  from starlette.testclient import TestClient as TestClient  # noqa
+{
+ "split": {
+  "policy": "time_cv5",
+  "sizes": {
+   "test": 84,
+   "train": 336,
+   "valid": 0
+  },
+  "folds": [
+   {
+    "train": 56,
+    "valid": 56
+   },
+   {
+    "train": 112,
+    "valid": 56
+   },
+   {
+    "train": 168,
+    "valid": 56
+   },
+   {
+    "train": 224,
+    "valid": 56
+   },
+   {
+    "train": 280,
+    "valid": 56
+   }
+  ]
+ },
+ "threshold": {
+  "rule": "top_quantile",
+  "value": 4.23381182426332,
+  "from": "valid",
+  "n": 280,
+  "q": 0.1
+ },
+ "valid_abs_quantiles": {
+  "q90_pooled": 4.23381182426332,
+  "n": 280
+ },
+ "test_share_over_thr": 0.03571428571428571,
+ "actual_status": [
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200,
+  200
+ ],
+ "A_train_rows_predicted": 20,
+ "A_in_sample_abs_resid": [
+  0.0054,
+  0.0828,
+  0.2068,
+  0.2073,
+  0.3692,
+  0.4941,
+  0.6282,
+  0.6948,
+  0.8929,
+  0.972,
+  1.0462,
+  1.2002,
+  1.3469,
+  1.3766,
+  1.5552,
+  1.6395,
+  1.843,
+  2.0333,
+  2.0874,
+  2.6765
+ ],
+ "C_second_prediction": 200,
+ "B_actual_first_status": 200,
+ "B_predict_status": 200,
+ "run_review": [
+  {
+   "tenant_id": "t2a0ee5",
+   "task_id": "t2a0ee5.residual_review",
+   "day": "2026-10-03",
+   "origin": "live_residual",
+   "uses": "t2a0ee5.sensory_score",
+   "rule": "top_quantile",
+   "version": "v1",
+   "threshold": 4.23381182426332,
+   "threshold_from": "valid",
+   "pairs": 22,
+   "created": 1,
+   "test_split": {
+    "origin": "test_split",
+    "version": "v1",
+    "created": 3,
+    "threshold": 4.23381182426332
+   }
+  }
+ ],
+ "items": {
+  "total": 4,
+  "live": 1,
+  "test_split": 3,
+  "live_from_train_segment_entities": [],
+  "live_pre_actual": [
+   "QA21-PRE-ACTUAL"
+  ],
+  "live_same_entity_count": 0
+ },
+ "pairs": {
+  "n": 22,
+  "train_segment_pairs": 21,
+  "pre_actual_paired": true,
+  "same_entity_pairs": 2
+ }
+}

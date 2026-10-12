@@ -127,12 +127,14 @@ export function useList<T>(path: string | null, deps: unknown[] = []) {
   const [next, setNext] = useState<string | null>(null);
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState<Record<string, unknown>>({});   // 목록 응답의 items 밖 키(예 B09 can_decide)
   const fetchPage = useCallback(async (cursor: string | null) => {
-    if (!path) { setItems([]); setNext(null); setTotal(null); return; }
+    if (!path) { setItems([]); setNext(null); setTotal(null); setMeta({}); return; }
     setLoading(true); setError(null);
     const url = cursor ? `${path}${path.includes('?') ? '&' : '?'}cursor=${encodeURIComponent(cursor)}` : path;
     try {
-      const r = await api<{items: T[]; next_cursor: string | null; total?: number}>('GET', url);
+      const r = await api<{items: T[]; next_cursor: string | null; total?: number} & Record<string, unknown>>('GET', url);
+      if (!cursor) { const {items: _i, next_cursor: _n, total: _t, ...rest} = r; void _i; void _n; void _t; setMeta(rest); }
       setItems(prev => cursor ? [...prev, ...r.items] : r.items);
       setNext(r.next_cursor ?? null);
       setTotal(typeof r.total === 'number' ? r.total : null);
@@ -141,7 +143,7 @@ export function useList<T>(path: string | null, deps: unknown[] = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, ...deps]);
   useEffect(() => { void fetchPage(null); }, [fetchPage]);
-  return {items, total, next, error, loading, reload: () => fetchPage(null), loadMore: () => next ? fetchPage(next) : Promise.resolve()};
+  return {items, total, next, error, loading, meta, reload: () => fetchPage(null), loadMore: () => next ? fetchPage(next) : Promise.resolve()};
 }
 
 /** JSON 본문을 **문자열 그대로** 보낸다 — 금액 · 수치 입력을 브라우저 Number(float)로 바꾸지 않기 위해(견적). */

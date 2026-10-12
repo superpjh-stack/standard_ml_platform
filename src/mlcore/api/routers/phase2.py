@@ -36,10 +36,17 @@ def _spec(request: Request, t: str, task: str):
 def list_review(t: str, task: str, request: Request,
                 state: str | None = Query(default=None, pattern="^(open|confirmed_issue|false_alarm)$"),
                 limit: int = Query(default=20, ge=1, le=100), cursor: str | None = Query(default=None, pattern=CURSOR)):
-    auth.require(principal(request), "review", write=False)
+    p = auth.require(principal(request), "review", write=False)
     spec = _spec(request, t, task)
     documents.check_type(spec, "review_queue")
-    return review.list_items(t, spec.task.id, state=state, limit=limit, cursor=cursor)
+    out = review.list_items(t, spec.task.id, state=state, limit=limit, cursor=cursor)
+    try:                       # 화면 8 이 결정 버튼을 보일지 — PATCH 와 같은 판정(C2 D2-93 · DEF-QA23-004). 서버 판정은 그대로 PATCH 가 한다
+        auth.require(p, "review")
+        auth.require_own_task(p, "review", spec.task.raw["approver_role"])
+        out["can_decide"] = True
+    except auth.Forbidden:
+        out["can_decide"] = False
+    return out
 
 
 @router.patch("/tenants/{t}/tasks/{task}/review/{item_id}")

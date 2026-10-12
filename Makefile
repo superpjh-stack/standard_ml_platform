@@ -94,9 +94,9 @@ worker:           ## API 밖 작업자 — queued 학습 실행 전부를 run_an
 train-live:
 	@echo "BLOCKED (D-13) — 실데이터 학습은 사람이 키를 넣은 뒤 돌린다"; exit 2
 
-tenant:           ## make tenant NEW=<code> PACK=<pack> [CSV=<path>] — 등록부 <code>.yaml 만 만든다(코드 수정 0, D-51 · D-W3-07)
+tenant:           ## make tenant NEW=<code> PACK=<pack> [CSV=<path>] [CATEGORIES=<yaml>] — 등록부 <code>.yaml 만 만든다(코드 수정 0, D-51 · D-W3-07 · D2-100)
 	$(call need,NEW,make tenant NEW=yn PACK=_template CSV=<path>)
-	$(UV) python migration/make_tenant.py --new $(NEW) --pack $(PACK) $(if $(CSV),--csv $(CSV))
+	$(UV) python migration/make_tenant.py --new $(NEW) --pack $(PACK) $(if $(CSV),--csv $(CSV)) $(if $(CATEGORIES),--categories $(CATEGORIES))
 
 monitor:          ## make monitor TENANT=<code> — 감시 1회(어제 KST, 후보까지만 — production 은 승인으로만). 상주는 --once 빼고 직접
 	$(call need,TENANT,make monitor TENANT=ks)

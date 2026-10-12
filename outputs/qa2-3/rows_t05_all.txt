@@ -1,0 +1,59 @@
+NEW  press: make tenant NEW=qn1 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  textile: make tenant NEW=qn2 → 등록부 1 파일  PASS  rc=0 files=['qn2.yaml'] out=<scratch>/tenreg-qn2/qn2.yaml  pack=textil
+NEW  textile: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 4}
+NEW  textile: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn2/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  textile: 기동 · model_ready 전부 false  PASS  [('qn2.delta_e', False), ('qn2.defect_risk', False), ('qn2.print_ood', False), ('qn2.print_setpoint', False)]
+NEW  textile: qn2.delta_e 학습(demo) → stage → 승인 → production  PASS  champion=extra_trees beats=True 200/202/200
+NEW  textile: qn2.delta_e predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  textile: qn2.defect_risk 학습(demo) → stage → 승인 → production  PASS  champion=gbc beats=True 200/202/200
+NEW  textile: qn2.defect_risk predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  textile: qn2.print_ood 학습(demo) → stage → 승인 → production  PASS  champion=isolation_forest beats=True 200/202/200
+NEW  textile: qn2.print_ood predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  solder: make tenant NEW=qn3 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  kimchi: make tenant NEW=qn4 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  rollform-quote: make tenant NEW=qn5 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  eto: make tenant NEW=qn6 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  press: 우회 — 스캐폴드 + categories 채움(출처 ks.yaml) → 병합 통과  PASS  files=['qn1.yaml'] ok ['qn1.remaining_hours', 'qn1.failure_24h', 'qn1.sensor_ood', 'qn1.maintenance_timing']
+NEW  press: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 4}
+NEW  press: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn1/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  press: 기동 · model_ready 전부 false  PASS  [('qn1.remaining_hours', False), ('qn1.failure_24h', False), ('qn1.sensor_ood', False), ('qn1.maintenance_timing', False)]
+NEW  press: qn1.remaining_hours 학습(demo) → stage → 승인 → production  PASS  champion=gbr beats=True 200/202/200
+NEW  press: qn1.remaining_hours predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  press: qn1.failure_24h 학습(demo) → stage → 승인 → production  PASS  champion=rf_clf beats=True 200/202/200
+NEW  press: qn1.failure_24h predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  press: qn1.sensor_ood 학습(demo) → stage → 승인 → production  PASS  champion=isolation_forest beats=True 200/202/200
+NEW  press: qn1.sensor_ood predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  solder: 우회 — 스캐폴드 + categories 채움(출처 krs.yaml) → 병합 통과  PASS  files=['qn3.yaml'] ok ['qn3.joint_strength', 'qn3.recipe_optimize', 'qn3.residual_review']
+NEW  solder: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  solder: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn3/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  solder: 기동 · model_ready 전부 false  PASS  [('qn3.joint_strength', False), ('qn3.recipe_optimize', False), ('qn3.residual_review', False)]
+NEW  solder: qn3.joint_strength 학습(demo) → stage → 승인 → production  PASS  champion=svr beats=True 200/202/200
+NEW  solder: qn3.joint_strength predict 200 · 18키  PASS(정상 거부)  HTTP 422 status=None invalid_input — QA 가 고른 중간값 조성 합 > 100 → detail field=composition_sum rule=input_rule (팩 input_rules 가 막은 것, 결함 아님)
+NEW  solder: 감시 1회 → 대기열 항목(test_split)  PASS  rc=0 total=15
+NEW  kimchi: 우회 — 스캐폴드 + categories 채움(출처 pc.yaml) → 병합 통과  PASS  files=['qn4.yaml'] ok ['qn4.sensory_score', 'qn4.recipe_optimize', 'qn4.residual_review']
+NEW  kimchi: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  kimchi: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn4/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  kimchi: 기동 · model_ready 전부 false  PASS  [('qn4.sensory_score', False), ('qn4.recipe_optimize', False), ('qn4.residual_review', False)]
+NEW  kimchi: qn4.sensory_score 학습(demo) → stage → 승인 → production  PASS  champion=gbr beats=True 200/202/200
+NEW  kimchi: qn4.sensory_score predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  kimchi: 감시 1회 → 대기열 항목(test_split)  PASS  rc=0 total=3
+NEW  rollform-quote: 우회 — 스캐폴드 + categories 채움(출처 ot.yaml) → 병합 통과  PASS  files=['qn5.yaml', 'qn5/tasks/quote.yaml'] ok ['qn5.machining_minutes', 'qn5.cad_objects', 'qn5.quote']
+NEW  rollform-quote: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  rollform-quote: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn5/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  rollform-quote: 기동 · model_ready 전부 false  PASS  [('qn5.machining_minutes', False), ('qn5.cad_objects', False), ('qn5.quote', False)]
+2.1  rollform-quote: uses 운영 모델 없음 견적 → 503 model_not_ready  N/A(입력 불완전)  HTTP 422 code=missing_required (기대 503 model_not_ready) — QA 본문이 quantity 만이라 입력 검사가 먼저. 완전한 입력으로 다시 잰 행 = rows_t06.txt PASS
+NEW  rollform-quote: qn5.machining_minutes 학습(demo) → stage → 승인 → production  PASS  champion=ridge beats=True 200/202/200
+NEW  rollform-quote: qn5.machining_minutes predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  rollform-quote: qn5.cad_objects 학습(demo) → stage → 승인 → production  PASS  champion=logreg beats=True 200/202/200
+NEW  rollform-quote: 도면 업로드  PASS  HTTP 201  labels=synthetic
+NEW  rollform-quote: 견적 초안  PASS  HTTP 201  total=46650
+NEW  eto: 우회 — 스캐폴드 + categories 채움(출처 kd.yaml) → 병합 통과  PASS  files=['qn6.yaml'] ok ['qn6.labor_hours', 'qn6.drawing_regions', 'qn6.quote']
+NEW  eto: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  eto: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn6/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  eto: 기동 · model_ready 전부 false  PASS  [('qn6.labor_hours', False), ('qn6.drawing_regions', False), ('qn6.quote', False)]
+2.1  eto: uses 운영 모델 없음 견적 → 503 model_not_ready  N/A(입력 불완전)  HTTP 422 code=missing_required (기대 503 model_not_ready) — QA 본문이 quantity 만이라 입력 검사가 먼저. 완전한 입력으로 다시 잰 행 = rows_t06.txt PASS
+NEW  eto: qn6.labor_hours 학습(demo) → stage → 승인 → production  PASS  champion=ridge beats=True 200/202/200
+NEW  eto: qn6.labor_hours predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  eto: qn6.drawing_regions 학습(demo)  PASS  status=failed err={'type': 'NotTrainable', 'message': 'qn6.drawing_regions: extract 는 학습 과제가 아니다(extract 는 model: 추출기만)'}
+NEW  eto: 도면 업로드  PASS  HTTP 201  labels=none
+NEW  eto: 견적 초안  WARN  HTTP 422 out_of_bounds {'error': {'code': 'out_of_bounds', 'message': '입력 값이 허용 범위(min/max) 밖입니다', 'detail': {'field': 'total_mass_kg', 'rule': 'min'}}} — QA 가 만든 합성 도면 BOM 합 중량이 features.yaml min 밖(입력 검사 정상). kd 실 예시 도면 흐름은 rows_t02_kd.txt PASS

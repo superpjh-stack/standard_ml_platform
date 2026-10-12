@@ -479,19 +479,52 @@ class TenantExists(Exception):
     pass
 
 
-def scaffold(code: str, pack: str = "_template", *, csv: str | Path | None = None, name: str | None = None,
-             base: Path | None = None, packs_base: Path = PACKS_DIR) -> Path:
-    """`tenants/_template.yaml` 을 복사해 `<base>/<code>.yaml` **하나만** 만든다(코드 수정 0줄).
+DRAFT_SUFFIX = ".yaml.draft"
+FILL_KEYS = ("categories", "material_aliases", "tasks")   # make tenant CATEGORIES=<yaml> 의 최상위 키 (D2-100)
 
-    - `pack` 의 `pack.yaml tasks` 를 전부 켠다(`<code>.<task>`). `values_from: tenant` 범주는 빈 목록 + `# 미확인`
-      (값을 지어내지 않는다 — 비어 있으면 병합 규칙 R2 가 거부한다).
+
+def load_fill(path: str | Path) -> dict:
+    """`make tenant ... CATEGORIES=<yaml>` 의 채움 파일 — 사람이 적은 회사 값(지어내지 않는다, D2-100).
+
+        categories: {<변수>: [값, ...]}          # values_from: tenant 범주 — 필수 칸
+        material_aliases: {<별칭>: <정규 값>}    # 선택
+        tasks: {<과제>: {rates: {...}}}           # 선택 — tenants/<code>/tasks/<과제>.yaml 덮어쓰기(단가표 회사 칸)
+    """
+    data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    if not isinstance(data, dict) or not set(data) <= set(FILL_KEYS):
+        raise RegistryRejected("T0", f"채움 파일 {Path(path).name}: 최상위 키는 {list(FILL_KEYS)} 만")
+    cats = data.get("categories") or {}
+    if not isinstance(cats, dict) or not all(isinstance(v, list) and all(isinstance(x, (str, int)) for x in v)
+                                              for v in cats.values()):
+        raise RegistryRejected("T0", "채움 파일 categories: {<변수>: [값, ...]} 이어야 한다")
+    for key in ("material_aliases", "tasks"):
+        if not isinstance(data.get(key) or {}, dict):
+            raise RegistryRejected("T0", f"채움 파일 {key}: 사전이어야 한다")
+    return data
+
+
+def _flow(v) -> str:
+    return yaml.safe_dump(v, allow_unicode=True, default_flow_style=True, width=10_000).strip()
+
+
+def scaffold(code: str, pack: str = "_template", *, csv: str | Path | None = None, name: str | None = None,
+             fill: dict | None = None, base: Path | None = None, packs_base: Path = PACKS_DIR) -> Path:
+    """`tenants/_template.yaml` 을 복사해 `<base>/<code>.yaml` 을 만든다(코드 수정 0줄).
+
+    - `pack` 의 `pack.yaml tasks` 를 전부 켠다(`<code>.<task>`). `values_from: tenant` 범주는 `fill["categories"]`
+      (사람이 준 채움 파일 — `load_fill`) 값으로, 없으면 빈 목록 + `# 미확인`(값을 지어내지 않는다).
+    - `fill["tasks"]` 는 `<base>/<code>/tasks/<과제>.yaml` 덮어쓰기(예: 단가표의 회사 칸)로 쓴다.
     - `csv` 를 주면 `sources.eval.path` 가 그 파일(절대 경로)을 가리키고 `mode: eval` 이다. CSV 는 복사하지 않는다(T4).
-    - 만든 뒤 병합 규칙 5 로 다시 읽어 보고, 거부되면 파일을 지우고 RegistryRejected 를 올린다.
+    - 만든 뒤 병합 규칙 5 로 다시 읽어 보고, 거부되면 **초안을 `<code>.yaml.draft` 로 남기고**(회사 목록에 잡히지 않는다)
+      채울 칸을 적은 RegistryRejected 를 올린다(D2-100 — 1차는 파일을 지웠다, #28).
     """
     base = tenants_dir() if base is None else base
+    fill = fill or {}
     if not CODE_RE.match(code or "") or code == TEMPLATE_CODE:
         raise RegistryRejected("T0", f"회사 코드 {code!r} 는 ^[a-z][a-z0-9]{{1,7}}$ 이어야 한다")
     target = base / f"{code}.yaml"
+    draft = base / f"{code}{DRAFT_SUFFIX}"
+    over_dir = base / code / "tasks"
     if target.exists() or (base / code).exists():
         raise TenantExists(f"{target.name} 가 이미 있다 — 덮어쓰지 않는다")
     p = load_pack(pack, packs_base)
@@ -506,18 +539,51 @@ def scaffold(code: str, pack: str = "_template", *, csv: str | Path | None = Non
     enable = ", ".join(f"{code}.{t}" for t in p.meta.get("tasks") or sorted(p.tasks))
     text = re.sub(r"^  enable: \[[^\]]*\]", f"  enable: [{enable}]", text, flags=re.M)
     cats = [f for f, d in p.features.items() if isinstance(d, dict) and d.get("values_from") == "tenant"]
+    given = {str(k): [str(x) for x in v] for k, v in (fill.get("categories") or {}).items()}
+    extra = sorted(set(given) - set(cats))
+    if extra:
+        raise RegistryRejected("T0", f"채움 파일 categories {extra}: 팩 {pack} 의 회사 범주(values_from: tenant)가 아니다 "
+                                     f"— 받는 칸 {cats}")
+    missing = [f for f in cats if not given.get(f)]
     if cats:
-        body = "\n".join(f"  {f}: []                    # 미확인 — 회사 값 목록" for f in cats)
-        text = re.sub(r"^categories: \{\}", "categories:\n" + body, text, flags=re.M)
+        body = "\n".join(f"  {f}: {_flow(given[f])}" if given.get(f) else f"  {f}: []                    # 미확인 — 회사 값 목록"
+                         for f in cats)
+        text = re.sub(r"^categories: \{\}", lambda _m: "categories:\n" + body, text, flags=re.M)
+    if fill.get("material_aliases"):
+        aliases = _flow({str(k): str(v) for k, v in fill["material_aliases"].items()})
+        text = re.sub(r"^(categories:(?:\n  [^\n]*)*)", lambda m: f"{m.group(1)}\n{ALIASES_KEY}: {aliases}",
+                      text, count=1, flags=re.M)
     if csv is not None:
         path = json.dumps(str(Path(csv).resolve()), ensure_ascii=False)     # YAML 큰따옴표 문자열(공백 · : 안전)
         text = re.sub(r"^(  eval:\s+\{kind: csv, path: )[^}]*\}", lambda m: f"{m.group(1)}{path}}}", text, flags=re.M)
         text = re.sub(r"^mode: \w+", "mode: eval", text, flags=re.M)
     base.mkdir(parents=True, exist_ok=True)
     target.write_text(text, encoding="utf-8")
+    written: list[Path] = []
+    for short, over in (fill.get("tasks") or {}).items():
+        over_dir.mkdir(parents=True, exist_ok=True)
+        f = over_dir / f"{short}.yaml"
+        f.write_text(f"# {code}.{short} 덮어쓰기 — `make tenant CATEGORIES=` 채움 파일에서 (사람이 적은 값)\n"
+                     + yaml.safe_dump(over, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        written.append(f)
     try:
         load_and_merge(code, tenants_base=base, packs_base=packs_base)
+    except RegistryRejected as e:
+        os.replace(target, draft)                       # 초안은 남긴다 — *.yaml 이 아니라 회사 목록 · 시드에 잡히지 않는다
+        for f in written:                               # 덮어쓰기는 채움 파일에서 다시 만든다(<code>/ 가 남으면 재실행이 막힌다)
+            f.unlink()
+        for d in (over_dir, base / code):
+            if d.is_dir() and not any(d.iterdir()):
+                d.rmdir()
+        hint = (f" — 채울 칸: {', '.join('categories.' + m for m in missing)}" if missing else "")
+        raise RegistryRejected(e.rule, f"{e.detail}{hint} — 초안 {draft.name} 를 남겼다. 값을 채움 파일"
+                                       f"(categories: {{<변수>: [값, ...]}}, 단가표는 tasks: {{<과제>: {{rates: ...}}}})로 적어 "
+                                       f"`make tenant NEW={code} PACK={pack} CATEGORIES=<yaml>` 로 다시 실행") from None
     except Exception:
         target.unlink()
+        for f in written:
+            f.unlink()
         raise
+    if draft.exists():
+        draft.unlink()                                  # 통과하면 전 실행의 초안은 지운다
     return target

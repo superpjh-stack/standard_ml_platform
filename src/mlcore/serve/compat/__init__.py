@@ -368,7 +368,7 @@ class Compat:
             return spec, None, None
         return spec, ref, load_artifacts(ref)
 
-    def overview(self) -> dict:
+    def overview(self, *, metric_digits: int = 3) -> dict:
         rs, rref, rld = self._prod("regression")
         ks_, kref, kld = self._prod("risk")
         if rref is None:
@@ -376,13 +376,13 @@ class Compat:
 
         def table(ld, keys: tuple, sort_key: str) -> list[dict]:
             rows = [{"model": name, **{k: (None if v.get(k) is None or (isinstance(v.get(k), float) and math.isnan(v[k]))
-                                          else round(float(v[k]), 3 if k in ("mae", "rmse") else 4)) for k in keys}}
+                                          else round(float(v[k]), metric_digits if k in ("mae", "rmse") else 4)) for k in keys}}
                     for name, v in (ld.report.get("valid_metrics") or {}).items()]
             return sorted(rows, key=lambda r: (r[sort_key] if r[sort_key] is not None else math.inf, r["model"]))
 
         def test(ld, keys: tuple) -> dict:
             tm = ld.report.get("test_metrics") or {}
-            return {k: round(float(tm[k]["value"]), 3 if k in ("mae", "rmse") else 4) for k in keys if k in tm}
+            return {k: round(float(tm[k]["value"]), metric_digits if k in ("mae", "rmse") else 4) for k in keys if k in tm}
 
         sizes = ((rld.report.get("split") or {}).get("boundaries") or {}).get("sizes") or {}
         snap = rld.report.get("snapshot") or {}

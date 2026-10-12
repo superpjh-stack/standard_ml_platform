@@ -1,4 +1,4 @@
-"""G-S06(비밀) — 키 문자열 · .env 추적 · IP · 호스트명 0, 등록부에는 환경변수 이름만 (goal §2.1 · D-20).
+"""G-S06(비밀) — 키 문자열 · .env 추적 · IP · 호스트명 · 홈 디렉터리 절대 경로 0, 등록부에는 환경변수 이름만 (goal §2.1 · D-20).
 
 검사 대상은 커밋될 수 있는 파일 전부(git ls-files --cached --others --exclude-standard).
 """
@@ -25,6 +25,9 @@ KEY_RE = {k: re.compile(v) for k, v in KEY_PATTERNS.items()}
 IPV4 = re.compile(r"(?<![\d.])(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?![\d.])")
 URL = re.compile(r"[a-z][a-z0-9+.\-]*://([A-Za-z0-9.\-]+)")
 HOSTLIKE = re.compile(r"(?<![A-Za-z0-9.\-])(srv\d+\.[a-z.]+|[a-z0-9\-]+\.(?:hstgr\.cloud|amazonaws\.com|azure\.com|cloudapp\.net|ngrok\.io|internal|lan|corp))(?![A-Za-z0-9\-])")
+# 홈 디렉터리 절대 경로(OS 사용자 이름 노출) — `/Users/<name>/` · `/home/<name>/`. 자리표시 `<local>` · `<name>` 은 통과 (D2-105)
+HOME_PATH = re.compile(r"(?<![A-Za-z0-9_.\-])/(?:Users|home)/[A-Za-z0-9._\-]+/")
+HUMAN_ONLY = {"intro.md", "problem.md", "spec.md", "goal.md", "goal2.md"}   # 사람만 고치는 정본 — 홈 경로는 WARN(사람에게 요청, D2-105)
 SAFE_IPS = {"127.0.0.1", "0.0.0.0"}
 SAFE_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "json-schema.org"}
 LOCK_HOSTS = {"pypi.org", "files.pythonhosted.org", "registry.npmjs.org", "github.com", "opencollective.com", "tidelift.com"}  # 잠금 파일의 패키지 출처 · 후원 링크
@@ -49,6 +52,7 @@ def run() -> list[Line]:
     files = tracked_files()
     rels = [rel(f) for f in files]
     problems: list[str] = []
+    human: list[str] = []
     if any(r == ".env" or (r.startswith(".env.") and r != ".env.example") for r in rels):
         problems.append(".env 가 추적됨")
     if ".env" not in read(ROOT / ".gitignore").split():
@@ -74,6 +78,8 @@ def run() -> list[Line]:
             break
         if HOSTLIKE.search(txt):
             problems.append(f"호스트명: {r}")
+        if HOME_PATH.search(txt):
+            (human if r in HUMAN_ONLY else problems).append(f"홈 경로(사용자 이름): {r}")
     # 등록부 — *_env 는 MLP_ 이름, 비밀처럼 보이는 키에 값 0
     env_names = 0
     for f in sorted((ROOT / "tenants").rglob("*.yaml")):
@@ -104,6 +110,9 @@ def run() -> list[Line]:
         problems.append(f".env.example 에 값 또는 MLP_ 아닌 이름 {len(bad_ex)}줄")
     if problems:
         return [Line("G-S06", "비밀값", "FAIL", f"{len(problems)}건: " + "; ".join(problems[:6]) + (" …" if len(problems) > 6 else ""))]
+    if human:
+        return [Line("G-S06", "비밀값", "WARN", "키 0 · IP 0 · 호스트 0 — 사람만 고치는 정본에 " + "; ".join(human)
+                     + " (<local> 로 바꿔 달라고 요청 — D2-105)")]
     return [Line("G-S06", "비밀값", "PASS", f"추적 파일 {len(files)} · 키 0 · IP 0 · 호스트 0 · .env 비추적 · 등록부 환경변수 이름 {env_names}개(값 0)")]
 
 

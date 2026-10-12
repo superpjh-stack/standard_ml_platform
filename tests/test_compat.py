@@ -770,7 +770,8 @@ def test_krs_predict_old_keys_rules_and_warnings(krs):
     assert body["status"] == (e["predict_status"]["warn"] if body["warnings"] else e["predict_status"]["ok"])
     no_sup = {kk: v for kk, v in e["predict_record"].items() if kk != "supplier"}
     assert tc.post(url, headers=h.hdr(k["operator"]), json=no_sup).json()["predicted_strength"] == body["predicted_strength"]   # 기본 A
-    _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["predict_record"], **e["predict_unbalanced"]}))   # :38-42
+    r = tc.post(url, headers=h.hdr(k["operator"]), json={**e["predict_record"], **e["predict_unbalanced"]})   # tests/test_api.py:38-42
+    assert r.status_code == 422 and r.json()["detail"].startswith("조성비 합계가 100%여야 합니다. 현재 "), r.text   # main.py:72 문자열 (DEF-QA22-008)
     _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["predict_record"], "supplier": "D"}))
     w = tc.post(url, headers=h.hdr(k["operator"]), json={**e["predict_record"], "temperature_c": e["recommended_warn"]["temperature_c"]}).json()
     assert e["recommended_warn"]["text"] in w["warnings"] and w["status"] == e["predict_status"]["warn"]
@@ -852,3 +853,53 @@ def test_krs_records_old_filters_state_and_summary(krs):
     q = tc.get(url, headers=h.hdr(k["viewer"]), params={"q": f"  {lot}  "}).json()
     assert q["total"] == 1 and q["items"][0]["lot_id"] == lot                            # q 앞뒤 공백 제거(main.py:82)
     _old_422(tc.get(url, headers=h.hdr(k["viewer"]), params={"q": "x" * (e["records_q_max"] + 1)}))
+
+
+# ── 웨이브 C2 — DEF-QA22-006 ~ 008 (원천 코드를 읽어 맞춤 · 남는 차이는 compat_expected differs) ─────────────
+def _bind(m):
+    """모듈 fixture 마다 h.client 가 app.state.registry 를 바꾼다 — 이 시험의 회사로 되돌린다."""
+    from mlcore.api.main import app
+    app.state.registry, app.state.catalog = m, None
+
+def test_c2_kd_quote_missing_drawing_old_404(kd):
+    """원천 main.py:103 · :109 — 없는 도면은 404 '도면 분석을 찾을 수 없습니다.'(원천 꼴 id 도 422 · loc doc_id 가 아니다)."""
+    m, k, tc, ref, raw, e = kd
+    _bind(m)
+    d = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("KD-demo-reactor.dxf", raw)}).json()
+    for bad in ("CAD-0123456789ab", "doc_00000000000000000000000000"):
+        r = tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json={**_kd_quote_input(e, d), "drawing_id": bad})
+        assert r.status_code == 404 and r.json() == {"detail": "도면 분석을 찾을 수 없습니다."}, r.text
+        assert "doc_id" not in r.text
+
+
+def test_c2_kd_overview_digits_warning_and_export_name(kd):
+    m, k, tc, ref, raw, e = kd
+    _bind(m)
+    d = tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).json()
+    vals = [x[kk] for x in d["metrics"] for kk in ("mae", "rmse")] + [d["test_metrics"][kk] for kk in ("mae", "rmse")]
+    assert all(round(v, 4) == v for v in vals) and any(round(v, 3) != v for v in vals), vals   # ml_service.py:41 round 4
+    assert d["warning"] == "합성 작업 900건으로 학습한 공수 예측입니다. 실측 견적 정확도·객체 인식률·납기 정확도를 의미하지 않습니다."
+    ex = tc.get(e["routes"]["export_csv"], headers=h.hdr(k["operator"]))
+    assert 'filename="kyungdong-visible-quotes.csv"' in ex.headers.get("content-disposition", ""), ex.headers   # main.py:132
+
+
+def test_c2_ot_quote_missing_drawing_old_404_and_overview(ot):
+    m, k, tc, ref, e = ot
+    _bind(m)
+    d = tc.post(e["routes"]["demo"], headers=h.hdr(k["operator"])).json()
+    r = tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json={**_ot_payload(e, d), "drawing_id": "CAD-0123456789ab"})
+    assert r.status_code == 404 and r.json() == {"detail": "먼저 CAD 도면을 분석하세요."}, r.text      # main.py:103
+    o = tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).json()
+    vals = [x[kk] for x in o["metrics"] for kk in ("mae", "rmse")]
+    assert all(round(v, 4) == v for v in vals) and any(round(v, 3) != v for v in vals), vals   # ml_service.py:70 round 4
+    assert o["warning"].startswith("객체 분류는 합성 기하 특징")                                       # ml_service.py:110
+
+
+def test_c2_pc_recipe_sum_old_shape_and_warning(pc):
+    m, k, tc, ref, before, e = pc
+    _bind(m)
+    r = tc.post(e["routes"]["predict"], headers=h.hdr(k["operator"]), json={**e["valid_record"], **e["recipe_reject"]})
+    assert r.status_code == 422 and r.json()["detail"] == [
+        {"loc": ["body"], "msg": "Value error, 배추·무·양념·소금 배합 합계는 98~102% 범위여야 합니다", "type": "value_error"}], r.text
+    o = tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).json()
+    assert o["warning"] == "합성 데모 데이터의 성능이며 실제 김치 품질 성능이 아닙니다."                  # main.py:34

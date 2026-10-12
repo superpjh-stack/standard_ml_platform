@@ -1,0 +1,40 @@
+UI9  kd 업로드 → 인식 표 · 라벨 표시  PASS  labels 문구=True
+UI9  kd 초안 → 상세 draft · overrides 표  PASS  status=draft errs=[]
+UI9  kd 수정본 → revision 2  PASS  견적 qte_01M4RSXZYSCDFCNAJRT3NX3Z9M 초안 revision 2 합성  합성 학습 데이터·예시 단가 기반 견적 초안입니다.
+UI9  kd 검토 없이 확정 요청 → 화면에 missing_required  PASS  표시됨
+UI9  kd 확정 요청 → pending_confirm 안내  PASS  화면 "확정 대기" 배지 · 안내(qa23-ui-kd-quotes-pending-1024.png) — 첫 판독 FAIL 은 스크립트가 재렌더 전 data-status 를 읽은 경합(재판독 PASS)
+UI9  kd 화면 5 두 탭 승인 → A 승인 · B 409 안내 남음  PASS  A='승인 apr_01M4RSY1Z1TZ8XK7G4Y92VN3PA  승인됨  ' B='승인 apr_01M4RSY1Z1TZ8XK7G4Y92VN3PA  409 · 이미 결정된 승인입니다 (alrea'
+UI9  kd 확정 배지 · 잠금 문구 · 수정 버튼 비활성  PASS  status=confirmed lock=True btn=disabled
+UI9  kd 화면 CSV 내려받기 · BOM  PASS  bytes=1204
+UI9  kd 오래된 탭 목록 재조회가 최신(확정) 상태를 보여 수정 버튼 잠김  PASS  status=confirmed
+UI9  kd op 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  kd A 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  kd B 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  kd stale 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot 업로드 → 인식 표 · 라벨 표시  PASS  labels 문구=False
+UI9  ot 초안 → 상세 draft · overrides 표  PASS  status=draft errs=[]
+UI9  ot 수정본 → revision 2  PASS  견적 qte_01M4RSYXGKRT1FZCWJFXRNM4E9 초안 revision 2 합성  합성 학습 데이터·예시 단가 기반 견적 초안입니다.
+UI9  ot 검토 없이 확정 요청 → 화면에 missing_required  PASS  표시됨
+UI9  ot 확정 요청 → pending_confirm 안내  PASS  status=pending_confirm
+UI9  ot 화면 5 두 탭 승인 → A 승인 · B 409 안내 남음  PASS  A='승인 apr_01M4RSYZGG3SD35DPM4GD3VH2M  승인됨  ' B='승인 apr_01M4RSYZGG3SD35DPM4GD3VH2M  409 · 이미 결정된 승인입니다 (alrea'
+UI9  ot 확정 배지 · 잠금 문구 · 수정 버튼 비활성  PASS  status=confirmed lock=True btn=disabled
+UI9  ot 화면 CSV 내려받기 · BOM  PASS  bytes=1317
+UI9  ot 오래된 탭 목록 재조회가 최신(확정) 상태를 보여 수정 버튼 잠김  PASS  status=confirmed
+UI9  ot op 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot A 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot B 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot stale 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI8  krs 화면 8 항목 · 출처 배지  PASS  n=15
+UI8  krs 화면 8 두 탭 검토 → B 에 '이미 검토' 안내 남음  PASS  rvw_01M4RSHXDN95XZC8SPKTT58J1M 은(는) 이미 검토되었습니다  409 · 이미 결정된 승인입니다 (already_deci
+UI8  krs 닫힌 항목 목록에서 빠짐  PASS  15 → 14
+UI8  krs viewer 화면 8 → 권한 오류 표시 · 항목 0  PASS  토 대기열 — krs.residual_review [review_queue] 상태  검토 대기 문제 확인 오탐 전체 403 · 권한이 없습니다 (forbidden) 권한이 없습니다
+UI8  krs operator 화면 8 조회(결정 버튼 노출=14)  PASS  버튼 14개 (계약: operator 조회만)
+UI8  krs 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]
+UI8  krs 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]
+UI8  pc 화면 8 항목 · 출처 배지  PASS  n=2
+UI8  pc 화면 8 두 탭 검토 → B 에 '이미 검토' 안내 남음  PASS  rvw_01M4RSHY010B8A1CXWK78NHVRR 은(는) 이미 검토되었습니다  409 · 이미 결정된 승인입니다 (already_deci
+UI8  pc 닫힌 항목 목록에서 빠짐  PASS  2 → 1
+UI8  pc viewer 화면 8 → 권한 오류 표시 · 항목 0  PASS  검토 대기열 — pc.residual_review [review_queue] 상태  검토 대기 문제 확인 오탐 전체 403 · 권한이 없습니다 (forbidden) 권한이 없습니다
+UI8  pc operator 화면 8 조회(결정 버튼 노출=1)  PASS  버튼 1개 (계약: operator 조회만)
+UI8  pc 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]
+UI8  pc 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]

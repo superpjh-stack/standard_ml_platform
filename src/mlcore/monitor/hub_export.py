@@ -68,7 +68,13 @@ def _applies(types: set[str], wanted) -> bool:
 
 
 def api_path(code: str, td: tenants.TaskDef) -> str:
-    return f"/api/v1/tenants/{code}/tasks/{td.id.split('.', 1)[1]}/{TYPE_PATH[td.type]}"
+    """실제 요청 경로와 같은 모양 — 과제 칸은 `<t>.<task>` 전체 id(감사 target = request.url.path, D2-104 · DEF-QA22-005)."""
+    return f"/api/v1/tenants/{code}/tasks/{td.id}/{TYPE_PATH[td.type]}"
+
+
+def _under(target: str, ap: str) -> bool:
+    """감사 target 이 그 과제 경로(하위 경로 · `:batch` 포함)인가 — 이름 접두가 같은 다른 과제는 아니다."""
+    return target == ap or target.startswith(ap + "/") or target.startswith(ap + ":")
 
 
 # ── 소비자 ────────────────────────────────────────────────────────────────────
@@ -206,7 +212,7 @@ def api_usage(m: tenants.Merged, day: date, *, conn) -> dict:
         if not recorded:
             out[ap] = {"calls": None, "errors": None, "p95_ms": None, "ref": f"mlp_prediction@{day.isoformat()}", "basis": "미확인"}
             continue
-        hits = [a for a in audits if str(a["target"] or "").startswith(ap)]
+        hits = [a for a in audits if _under(str(a["target"] or ""), ap)]
         errors = sum(1 for a in hits if int((a["detail"] or {}).get("status", 200)) >= 400)
         if td.type in ("regression", "risk", "anomaly", "optimize"):
             ch = by_task.get(td.id, {})

@@ -52,6 +52,8 @@ def shape_health(res: dict, info: dict) -> dict:
             "product": _cfg(info).get("name")}                                    # main.py:28
 
 
+OLD_WARNING = "합성 데모 데이터의 성능이며 실제 김치 품질 성능이 아닙니다."   # 원천 main.py:34 — 합성 모델일 때만(실데이터 모델이면 표준 문구 그대로, DEF-QA22-007)
+
 def shape_overview(o: dict, info: dict) -> dict:
     """main.py:30-34. metrics 키는 원천 이름(mae_score · rmse_score) · 원천 정렬(MAE ↑). limits(합성 생성 범위)는 내지 않는다(differs)."""
     cfg = _cfg(info)
@@ -62,7 +64,7 @@ def shape_overview(o: dict, info: dict) -> dict:
             "features": list(o["features"]) + cats, "target": {"name": "sensory_score", "unit": "점"},
             "champion": o["champion"],
             "metrics": [{"model": m["model"], "r2": m["r2"], "mae_score": m["mae"], "rmse_score": m["rmse"]} for m in o["metrics"]],
-            "warning": o["warning"]}
+            "warning": OLD_WARNING if o["data_mode"] in ("synthetic_demo", "demo") else o["warning"]}
 
 
 # ── 예측 ─────────────────────────────────────────────────────────────────────────────────
@@ -189,3 +191,17 @@ def parse_records(query: dict, info: dict) -> dict:
         raise CompatError(422, {"detail": [{"loc": ["query", "search"], "msg": f"{RECORDS_SEARCH_MAX}자 이하",
                                             "type": "string_too_long"}]})
     return q
+
+
+# ── 오류 ─────────────────────────────────────────────────────────────────────────────────
+RECIPE_SUM_MSG = "Value error, 배추·무·양념·소금 배합 합계는 98~102% 범위여야 합니다"   # main.py:18-21 model_validator(pydantic 문구)
+
+
+def shape_error(status: int, body: Any, info: dict) -> tuple[int, Any]:
+    """배합 합 거부 — 표준 input_rules(recipe_sum) 422 를 원천 pydantic model_validator 항목 모양(loc [body] · value_error)으로
+    (DEF-QA22-008). 그 밖 오류는 그대로."""
+    if status == 422 and isinstance(body, dict) and isinstance(body.get("detail"), list):
+        items = [{"loc": ["body"], "msg": RECIPE_SUM_MSG, "type": "value_error"}
+                 if isinstance(d, dict) and d.get("loc") == ["body", "recipe_sum"] else d for d in body["detail"]]
+        return 422, {"detail": items}
+    return status, body

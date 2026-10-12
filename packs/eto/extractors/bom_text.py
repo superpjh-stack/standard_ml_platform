@@ -72,8 +72,9 @@ def rows_from(regions: list[dict], *, materials: list[str] | None = None,
 def extract(raw: bytes, filename: str, *, unit: str, limits: dict, model=None, context: dict | None = None,
             **_ignored) -> dict:
     """→ 추출 결과. 영역은 cad_regions 가 내므로 여기서는 bom_rows 만(합칠 때 영역이 두 번 들어가지 않게)."""
-    a = _regions_module().analyze(raw, unit=unit, limits=limits)
     ctx = context or {}
+    reg = _regions_module()
+    a = reg.analyze(raw, unit=unit, limits=limits, max_region_texts=reg._cap(ctx.get("params")))   # 같은 도면이면 cad_regions 분석 재사용
     materials = list(((ctx.get("categories") or {}).get(MATERIAL_CATEGORY)) or []) or None
     rows = rows_from(a["regions"], materials=materials, aliases=ctx.get("material_aliases"))
     warnings = [WARN_FORMAT] + ([] if materials else [WARN_NO_MATERIALS])

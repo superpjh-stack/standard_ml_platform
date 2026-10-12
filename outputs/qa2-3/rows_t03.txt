@@ -1,0 +1,34 @@
+R  krs open 목록 operator 조회  PASS  HTTP 200 n=16 total=16
+R  krs 항목 출처 = test_split/live_residual 만  PASS  ['test_split']
+R  krs 규칙 abs_residual_ge · |잔차| ≥ 임계값  PASS  thr=4.0 min|r|=4.302
+R  krs viewer 목록(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  krs 커서 페이지 겹침 0  PASS  p1=5 p2=5 cursor=있음
+R  krs operator 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  krs 다른 과제 approver 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  krs 모르는 state  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+R  krs 빈 메모(계약 ≥1자)  PASS  HTTP 422 code=invalid_input
+R  krs 다른 회사 키로 검토  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  krs 다른 회사 경로 + 자기 키  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  krs 두 탭 동시 검토 → 200 1 · 409 1 · 결과 = 이긴 쪽  PASS  codes=[200, 409] db=false_alarm
+R  krs 닫힌 항목 재검토  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+R  krs 닫힌 항목 open 목록에서 빠짐  PASS  16 → 15
+2.1  krs review 경로를 회귀 과제로(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  krs 대기열 과제에 predict(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  krs 없는 항목  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  pc open 목록 operator 조회  PASS  HTTP 200 n=3 total=3
+R  pc 항목 출처 = test_split/live_residual 만  PASS  ['test_split']
+R  pc 규칙 top_quantile · |잔차| ≥ 임계값  PASS  thr=4.23381182426332 min|r|=4.328
+R  pc viewer 목록(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  pc 커서 페이지 겹침 0  PASS  p1=3 p2=0 cursor=없음
+R  pc operator 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  pc 다른 과제 approver 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  pc 모르는 state  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+R  pc 빈 메모(계약 ≥1자)  PASS  HTTP 422 code=invalid_input
+R  pc 다른 회사 키로 검토  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  pc 다른 회사 경로 + 자기 키  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  pc 두 탭 동시 검토 → 200 1 · 409 1 · 결과 = 이긴 쪽  PASS  codes=[200, 409] db=confirmed_issue
+R  pc 닫힌 항목 재검토  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+R  pc 닫힌 항목 open 목록에서 빠짐  PASS  3 → 2
+2.1  pc review 경로를 회귀 과제로(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  pc 대기열 과제에 predict(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  pc 없는 항목  PASS  HTTP 404 code=not_found (기대 404 not_found)

@@ -26,7 +26,7 @@ import pandas as pd
 
 from ..data import snapshot as snapshots
 from ..data.features import FeatureDef, feature_defs
-from ..data.taskview import has_model, learn_view
+from ..data.taskview import TRAINABLE, has_model, learn_view, trainable  # noqa: F401  TRAINABLE — 옛 이름
 from ..data.jobs import config_hash as _config_hash
 from ..data.jobs import default_seed, run_id_for, submit, task_candidates  # noqa: F401  submit 은 interfaces §4 이름
 from ..settings import ROOT, get_settings
@@ -39,7 +39,6 @@ from .guard import AccessLedger, InSampleEvaluation, TestLeak
 from .report import test_report
 
 calls = 0                      # 학습 호출 계측 (G-M06: API 기동 후 0)
-TRAINABLE = ("regression", "risk", "anomaly", "extract")   # extract = model: 블록이 있는 모델 추출기만 (D2-15)
 
 
 class TrainRefused(ValueError):
@@ -229,7 +228,7 @@ class StandardTrainer:
         global calls
         calls += 1
         task = cfg.task
-        if task.type not in TRAINABLE or (task.type == "extract" and not has_model(task)):
+        if not trainable(task):
             raise NotTrainable(f"{task.id}: {task.type} 는 학습 과제가 아니다(extract 는 model: 추출기만)")
         tenant = tenant_of(task)
         run_id = run_id_for(tenant, task.id, cfg.snapshot_id, cfg.config_hash())
@@ -554,11 +553,14 @@ class StandardTrainer:
         queue = None
         if supervised and ttype != "extract":
             pv, yv_ = oof[champion]
-            valid_abs = sorted(float(x) for x in np.abs(np.asarray(yv_, float) - np.asarray(pv, float)))
+            # time_cv5: 폴드 잔차를 합치지 않고 마지막(시험 직전) 검증 블록만 — 학습 행이 가장 많은 폴드 모델(D2-80)
+            last = len(folds[-1][1])
+            pv, yv_ = np.asarray(pv, float)[-last:], np.asarray(yv_, float)[-last:]
+            valid_abs = sorted(float(x) for x in np.abs(yv_ - pv))
             queue = {"origin": "test_split", "source": "final_eval", "test": queue_test,
-                     "valid_abs": valid_abs, "valid_rows": len(valid_abs),
+                     "valid_abs": valid_abs, "valid_rows": len(valid_abs), "valid_block": "last",
                      "valid_sha256": hashlib.sha256(np.asarray(valid_abs, float).tobytes()).hexdigest(),
-                     "valid_source": "학습 구간 모델의 검증 구간 |실측 − 예측| (표본 밖)",
+                     "valid_source": "학습 구간 모델의 검증 구간 |실측 − 예측| (표본 밖 · time_cv5 는 마지막 검증 블록)",
                      "residual": "actual - predicted"}
 
         # ── 4) 보고 · 산출물 ────────────────────────────

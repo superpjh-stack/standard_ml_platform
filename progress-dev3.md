@@ -234,3 +234,16 @@ def synth_call(merged: Merged, task_id: str, role: str = "demo") -> SynthCall
 | 계약 | task-contract §1 group_key(D-85) · §2 warn_with = `extrapolation`(D-131) · §3 · §4 approver_role · target(D-121) / tenant-contract §1 D-132 키 · read_role(D-88) / interfaces §2.2 해시 v2(D-87) | — |
 | 정리 | `ml_grants_check_db` · `ml_grants_fresh_db` dropdb(내가 만든 것만). `tests/test_schema_grants.py` 는 다음 실행 때 `ml_grants_check_db` 를 새로 만든다(새 DB 확인 경로) | — |
 | 전체 | pytest 459 passed · 3 skipped · e2e 10 passed · make gate 2회 PASS 23 · BLOCKED 1 | — |
+
+## 2차 웨이브 C2 — 개발3 + 아키텍트 권한(코어 재진입) 결함 수정 (2026-10-13, 기준 ad8e979 · 커밋 안 함 · 결정 D2-100~107)
+
+| 결함 | 고친 것 | 실측 |
+|---|---|---|
+| DEF-QA23-001 #28 (중대) | `make tenant NEW= PACK= CATEGORIES=<yaml>` · 거부 시 `<code>.yaml.draft` 보존 + 채울 칸 안내 (D2-100) | `tests/test_new_tenant.py` 16 통과 — 6팩 빈 등록부 → make tenant → seed → doctor → train(demo) → 승인 → predict 18키 · 5팩 범주 없이 → 초안 남김 · rollform-quote 단가표 없이 R2 → 초안, 채워 재실행 통과. CLI 실행 확인(press: 거부 + qz.yaml.draft → CATEGORIES 로 통과) |
+| DEF-QA22-001 #30 (중대, 팩 부분) | cad_regions numpy 색인 · 분석 1회 공유 · params `max_region_texts: 20000` → 413 region_texts (D2-101) | 격자 19,998 엔티티 0.42 s · RSS 110 MB(영역 6,666 · BOM 6,666) / 겹친 20,000 0.34 s · 111 MB → 413 (1차 174 s · 2.26 GB · 500). 1차 알고리즘 대조 6도면 · `test_extract_eto.py` 원천 일치 그대로 |
+| DEF-QA21-004 #27 | CSV 표기 규칙(반올림 없음, 왕복 오차 상대 ≤ 1e-12) · 6사 등록부 주석 정정 (D2-102) | 재생성 바이트 = 커밋 바이트 6/6 · 최대 오차 1.8e-12(kd) |
+| DEF-QA23-003 · 006 #29 | records `ts` NaT → null · doctor = sources 권한(goal2 정본, operator 403) · roles.yaml · api-contract · 화면 6 안내 (D2-103) | `tests/test_ops_api.py` · `test_auth.py` 통과 · `tsc --noEmit` 0 |
+| DEF-QA22-005 · 009 #32 | 허브 api_usage 키 = 실제 경로(`<t>.<task>`) (D2-104) · outputs 홈 경로 → `<local>` · G-S06 HOME_PATH 조이기 (D2-105) | `test_export_hub.py` 14 · `test_check_secrets_hosts.py` 21 통과. `check_secrets.py` 남은 FAIL 3 = QA 비추적 파일(docs.pytest.org · probe_quote 'x') — 내 변경 무관. goal.md 17 · 309행 홈 경로 → 사람 대기(WARN) |
+| 개발1 후속 | `test_monitor_review.py` 실측 시각 now+1h · kimchi queue_size 3 → 6 · `reproduce.py --phase2` 재실행(pc 임계 3.5984 · 대기열 6) · 이관 보고서 pc 행 (D2-106) · not_trainable 전용 코드 두지 않음 (D2-107) | `test_monitor_review.py` 9 통과 |
+
+pytest(--ignore=tests/e2e): 1077 통과 · 6 실패 — 전부 개발2 진행 중(`serve/quotes.py` 수정 중: test_quote 2 · test_rollform_quote_pack 1 · test_freeze_readiness eto 1 · test_c2_dev2 2(재실행 시 통과)). 코어 재진입 파일: `registry/tenants.py` · `api/routers/ops.py` · `monitor/hub_export.py` · `std/roles.yaml` · `contracts/api-contract.md` · `gates/check_secrets.py` — **재태그 필요**.

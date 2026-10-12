@@ -1,0 +1,23 @@
+# 회사 등록부 — `make tenant NEW=qn2 PACK=textile` 로 만들었다 (contracts/tenant-contract.md).
+# 비밀값은 환경변수 이름만(MLP_<CODE>_*). 확인 못 한 값은 null + "# 미확인".
+code: qn2
+name: qn2                      # 미확인
+pack: textile
+mode: demo
+hub_company: qn2
+aliases: []                     # 회사명 별칭(한글 약칭 · 영문) — 금지어 검사용
+tasks:
+  enable: [qn2.delta_e, qn2.defect_risk, qn2.print_ood, qn2.print_setpoint]
+categories: {}
+sources:
+  demo:    {kind: synthetic, seed: 42}
+  eval:    {kind: csv, path: tests/fixtures/qn2/snapshot.csv}
+  train:   {kind: csv, path: null}            # 미확인
+  actuals: {kind: csv, path: null}            # 미확인
+feature_map: {}
+target_map: {}
+unmapped: {}
+approvers: {quality: []}
+notify: {webhook_env: null}
+compat: {}
+labels: {}

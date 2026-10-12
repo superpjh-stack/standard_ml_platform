@@ -4,6 +4,7 @@
   - `test_split`: uses 과제 run 의 시험 구간 잔차. 학습기가 **final_eval 안에서** 계산해 보고서 `queue_residuals` 에
     남긴 것만 쓴다(여기서 시험 구간을 다시 보지 않는다 — 새 guard 접근 0).
   - `live_residual`: 실측(`mlp_actual`)이 붙은 운영 예측(`mlp_prediction`) — prediction_id 필수.
+    짝은 예측 뒤 관측된 실측만 · 실측 1 : 예측 1 · 학습 스냅숏 재적합 구간 entity 제외(`live_pairs`, D2-80 · D2-81).
 학습 · 검증 구간 잔차 · 전체 재적합 후 같은 데이터 채점(표본 내 평가, source_inventory P2)은 `QueueLeak` /
 `InSampleEvaluation` 으로 거부하고 guard ledger 에 `queue_scoring` 으로 남긴다.
 임계값: `abs_residual_ge: x` 는 그 값, `top_quantile: q` 는 **검증 구간 잔차**(학습 구간 모델의 표본 밖 잔차)의
@@ -16,6 +17,8 @@ from __future__ import annotations
 
 import hashlib
 import math
+from collections import Counter
+from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
 import numpy as np
@@ -188,18 +191,70 @@ def residuals(predict: Callable, frame, *, fit_idx: Iterable[int], score_idx: It
             for e, a, p in zip(sub["entity_id"], act, pred)]
 
 
-def live_pairs(conn, tenant_id: str, uses_task_id: str, *, version: str | None = None, since=None) -> list[dict]:
-    """운영 예측 + 실측 짝 (DB 읽기만). 예측마다 같은 entity 의 가장 최근 실측 1건. entity_id 없는 예측은 짝이 없다."""
-    sql = ("SELECT p.prediction_id, p.entity_id, p.version AS model_version, "
-           "(p.outputs->'prediction'->>'value')::float AS predicted, a.value AS actual "
-           "FROM mlp_prediction p JOIN LATERAL (SELECT value FROM mlp_actual a WHERE a.tenant_id=p.tenant_id "
-           "AND a.task_id=p.task_id AND a.entity_id=p.entity_id ORDER BY observed_at DESC LIMIT 1) a ON true "
-           "WHERE p.tenant_id=%s AND p.task_id=%s AND p.entity_id IS NOT NULL")
+def fit_entities(conn, tenant_id: str, task_id: str, version: str) -> frozenset[str]:
+    """production(또는 그) 버전 모델 학습 스냅숏의 **재적합 구간(학습 + 검증)** entity — 표본 내 잔차가 되는 entity (D2-80).
+    재적합 구간 = 스냅숏의 목표가 있는 행 − run 보고서 시험 구간 행(`queue_residuals.test`, final_eval 결과 — 새 시험 접근 0).
+    같은 entity 가 두 구간에 다 있으면 재적합 구간으로 본다(보수적). 스냅숏 · 보고서를 못 읽으면 InSampleEvaluation(fail closed)."""
+    import pandas as pd
+
+    from ..settings import ROOT
+
+    row = conn.execute(
+        "SELECT mv.snapshot_id, s.path, r.report FROM mlp_model_version mv JOIN mlp_train_run r ON r.run_id = mv.run_id "
+        "JOIN mlp_snapshot s ON s.snapshot_id = mv.snapshot_id WHERE mv.tenant_id=%s AND mv.task_id=%s AND mv.version=%s",
+        (tenant_id, task_id, version)).fetchone()
+    test_rows = ((((row or {}).get("report") or {}).get("queue_residuals") or {}).get("test")) if row else None
+    if row is None or test_rows is None:
+        raise InSampleEvaluation(f"{task_id} {version}: run 보고서 · 스냅숏이 없어 학습 구간 소속을 확인할 수 없다")
+    p = Path(row["path"] or "")
+    p = p if p.is_absolute() else ROOT / p
+    try:
+        frame = pd.read_parquet(p, columns=["entity_id", "target"])
+    except Exception as e:  # noqa: BLE001 — 확인 못 하면 짝을 만들지 않는다
+        from ..data import snapshot
+
+        try:
+            frame = snapshot.load(row["snapshot_id"])[["entity_id", "target"]]
+        except Exception:  # noqa: BLE001
+            raise InSampleEvaluation(f"{task_id} {version}: 학습 스냅숏을 읽을 수 없다({type(e).__name__})") from e
+    allc = Counter(str(x) for x in frame.loc[frame["target"].notna(), "entity_id"])
+    testc = Counter(str(r["entity_id"]) for r in test_rows)
+    return frozenset(e for e, n in allc.items() if n > testc.get(e, 0))
+
+
+def live_pairs(conn, tenant_id: str, uses_task_id: str, *, version: str | None = None, since=None,
+               ledger: AccessLedger | None = None) -> list[dict]:
+    """운영 예측 + 실측 짝 (DB 읽기만 · task-contract §6.1 · D2-80 · D2-81).
+    - 실측은 **예측 뒤에 관측된 것**(`observed_at > ts`)만 — 예측마다 그 뒤 가장 이른 실측 1건.
+    - 실측 하나는 예측 하나에만 — 같은 실측을 가리키는 예측이 여럿이면 그 실측 직전의 마지막 예측.
+    - 그 예측 버전 모델 학습 스냅숏의 재적합 구간(학습 + 검증) entity 는 뺀다(표본 내 잔차) — ledger `queue_scoring`.
+    entity_id 없는 예측은 짝이 없다."""
+    sql = ("WITH m AS (SELECT p.prediction_id, p.entity_id, p.version AS model_version, p.ts, "
+           "(p.outputs->'prediction'->>'value')::float AS predicted, a.actual_id, a.value AS actual "
+           "FROM mlp_prediction p JOIN LATERAL (SELECT actual_id, value FROM mlp_actual a WHERE a.tenant_id=p.tenant_id "
+           "AND a.task_id=p.task_id AND a.entity_id=p.entity_id AND a.observed_at > p.ts "
+           "ORDER BY a.observed_at, a.actual_id LIMIT 1) a ON true "
+           "WHERE p.tenant_id=%s AND p.task_id=%s AND p.entity_id IS NOT NULL), "
+           "r AS (SELECT m.*, row_number() OVER (PARTITION BY actual_id ORDER BY ts DESC, prediction_id DESC) AS rn FROM m) "
+           "SELECT prediction_id, entity_id, model_version, predicted, actual FROM r WHERE rn = 1")
     args: list = [tenant_id, uses_task_id]
     if version is not None:
-        sql += " AND p.version=%s"
+        sql += " AND model_version=%s"
         args.append(version)
     if since is not None:
-        sql += " AND p.ts >= %s"
+        sql += " AND ts >= %s"
         args.append(since)
-    return [dict(r) for r in conn.execute(sql + " ORDER BY p.ts, p.prediction_id", args).fetchall()]
+    rows = [dict(r) for r in conn.execute(sql + " ORDER BY ts, prediction_id", args).fetchall()]
+    fit: dict[str, frozenset[str]] = {}
+    out, dropped = [], 0
+    for r in rows:
+        v = r["model_version"]
+        if v not in fit:
+            fit[v] = fit_entities(conn, tenant_id, uses_task_id, v)
+        if str(r["entity_id"]) in fit[v]:
+            dropped += 1
+            continue
+        out.append(r)
+    if dropped:
+        _record(ledger, dropped, f"운영 예측 {dropped}건이 학습 스냅숏 재적합 구간(학습 + 검증) entity — 표본 내 잔차라 짝에서 뺐다")
+    return out

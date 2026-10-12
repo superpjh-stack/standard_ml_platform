@@ -56,6 +56,8 @@ def template_frame(rows: int | None = None, seed: int | None = None) -> pd.DataF
 
 
 def to_csv_bytes(frame: pd.DataFrame) -> bytes:
+    """표기 규칙(D2-102): 실수는 반올림하지 않고 pandas 기본(최단 왕복 repr). CSV 어댑터의 `read_csv` 기본 파서가 1 ulp 급
+    오차(상대 ≤ 1e-12)로 읽으므로 eval 스냅숏 해시는 demo 와 다르다 — `tests/test_fixture_csv_rule.py`."""
     out = frame.copy()
     out["ts"] = out["ts"].dt.strftime(TS_FORMAT)
     return out.to_csv(index=False, lineterminator="\n").encode("utf-8-sig")

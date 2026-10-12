@@ -14,7 +14,7 @@ type TaskList = ListResponse<TaskRow> & {tenant?: {code: string; name?: string; 
   disabled?: {task: string; reason: string}[]};
 type Alert = {metric: string; feature: string | null; value: number | null; level: string};
 type OverviewBody = {
-  task: string; type: string; model_ready: boolean;
+  task: string; type: string; model_ready: boolean; model_required?: boolean;
   production: TaskRow['production']; test_metrics: Record<string, number | null> | null;
   baseline: Record<string, number | null> | null; uses: {task: string; version: string | null; synthetic: boolean | null}[] | null;
   predictions_yesterday: number; pending_approvals: number;
@@ -82,10 +82,13 @@ function TaskLine({t, o}: {t: TaskRow; o: OverviewBody | Error | undefined}) {
   return <tr data-task={t.task}>
     <td><strong>{t.title ?? t.task}</strong><div className="muted">{t.task}</div></td>
     <td>{t.type}</td>
-    <td>{t.type === 'optimize'
-      ? (body?.uses ?? []).map(u => <div key={u.task}>{u.task}: {u.version ?? <span className="badge badge-rejected">운영 모델 없음 (model_not_ready)</span>} <SyntheticBadge synthetic={u.synthetic}/></div>)
+    <td data-model-required={body ? String(body.model_required ?? true) : undefined}>{body && body.model_required === false
+      // 자기 모델이 없는 과제(규칙 추출 · 견적 · 대기열 · 최적화) — 의존 과제 상태 또는 "모델 불필요"(C2 D2-94 · DEF-QA23-002)
+      ? (body.uses?.length
+        ? body.uses.map(u => <div key={u.task}>의존 {u.task}: {u.version ?? <span className="badge badge-rejected">운영 모델 없음 (model_not_ready)</span>} <SyntheticBadge synthetic={u.synthetic}/></div>)
+        : <span className="badge badge-ok" data-testid="model-not-required">모델 불필요 (규칙)</span>)
       : prod ? <>{prod.version} · {prod.algo} <SyntheticBadge synthetic={prod.synthetic}/></>
-        : <span className="badge badge-rejected">운영 모델 없음 (model_not_ready)</span>}</td>
+        : body || o instanceof Error ? <span className="badge badge-rejected">운영 모델 없음 (model_not_ready)</span> : '…'}</td>
     <td>{body?.test_metrics && key ? `${key} ${fmt(body.test_metrics[key])} / ${fmt(body.baseline?.[key])}` : '—'}</td>
     <td>{body ? body.predictions_yesterday : '…'}</td>
     <td>{body ? body.pending_approvals : '…'}</td>
@@ -101,7 +104,7 @@ type RecordsBody = ListResponse<Record<string, unknown>>;
 
 export function csvCell(v: unknown): string {
   let s = v === null || v === undefined ? '' : String(v);
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;                    // 수식 주입 방지
+  if (/^[=+\-@\t\r]/.test(s) || /^[=+\-@\t\r]/.test(s.trimStart())) s = `'${s}`;   // 수식 주입 방지 — 앞 공백 · 줄바꿈 뒤도(DEF-QA22-003)
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

@@ -23,7 +23,7 @@ from typing import Any
 from ..db.conn import connect
 from ..settings import ROOT
 from ..tasks import dxf
-from ..tasks.extract import ExtractError, limits_for, load_extractor, merge_results
+from ..tasks.extract import ExtractError, check_result, limits_for, load_extractor, merge_results, run_isolated
 from .errors import NotFound, ServeError
 from .ids import new_id
 
@@ -114,35 +114,34 @@ def upload(spec: Any, catalog: Any, *, filename: str | None, raw: bytes, unit_ov
     except dxf.DocumentError as e:
         raise as_serve_error(e) from None
     sha = hashlib.sha256(raw).hexdigest()
-    # 추출 — 원본을 저장하기 전에 한다(거부된 문서는 남기지 않는다)
-    parts, used = [], []
+    # 추출 — 원본을 저장하기 전에 한다(거부된 문서는 남기지 않는다). 추출기는 자식 프로세스에서 시간 · 결과 상한 안에서만 돈다
+    # (tasks.extract.run_isolated — DEF-QA22-001 · #30 코어 · D2-91). model 산출물(등록부 production)은 여기서 읽어 넘긴다.
     plugin_limits = {"max_bytes": limits["max_bytes"], "max_entities": limits["max_entities"],
                      "unit_override": unit_override}
     base_ctx = extract_context(catalog.merged)
+    jobs, mods, used = [], [], []
     for es in task.raw.get("extractors") or []:
         mod = load_extractor(catalog.merged.pack.path, es)
         model, model_version = None, None
         if mod.KIND == "model":
             ref, model = _model_for(spec.tenant_id, task.id, catalog)
             model_version = ref.version
-        ctx = {**base_ctx, "params": dict(es.get("params") or {}),
-               "previous": merge_results(parts) if parts else None}
-        try:
-            res = call_extractor(mod, raw, name, unit=unit, limits=dict(plugin_limits), model=model, context=ctx)
-        except dxf.DocumentError as e:                         # ExtractError 포함
-            raise as_serve_error(e) from None
-        except ValueError as e:
-            code = getattr(e, "code", None)
-            if code in ("invalid_document", "document_too_large"):
-                raise as_serve_error(dxf.DocumentError(code, getattr(e, "rule", "parse"), str(e))) from None
-            raise
-        parts.append((mod, res))
+        jobs.append((dict(es), model, {**base_ctx, "params": dict(es.get("params") or {})}))
+        mods.append(mod)
         used.append({"name": mod.NAME, "version": str(mod.VERSION), "kind": mod.KIND, "model_version": model_version})
+    try:
+        results = run_isolated(catalog.merged.pack.path, jobs, raw, name, unit=unit, plugin_limits=plugin_limits,
+                               limits=limits)
+        parts = list(zip(mods, results))
+        check_result(merge_results(parts), limits, "merged")
+    except dxf.DocumentError as e:                             # ExtractError 포함
+        raise as_serve_error(e) from None
     merged = merge_results(parts)
     labels = task.raw.get("labels") or "none"
     path = doc_dir() / spec.tenant_id / f"{sha}.dxf"
     path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.is_file():
+    created = not path.is_file()
+    if created:
         tmp = path.with_suffix(".part")
         tmp.write_bytes(raw)
         tmp.replace(path)
@@ -158,14 +157,19 @@ def upload(spec: Any, catalog: Any, *, filename: str | None, raw: bytes, unit_ov
         "confidence": merged["confidence"], "labels": labels, "metrics": None,      # 정답 없는 도면 — 지표를 만들지 않는다
         "extractor": used, "warnings": merged["warnings"], "created_at": None,
     }
-    with connect() as c:
-        row = c.execute(
-            "INSERT INTO mlp_document (doc_id, tenant_id, task_id, filename, raw_sha256, raw_path, result, extractor_name, "
-            "extractor_version, created_by, size_bytes, entity_count, labels) "
-            "VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s) RETURNING created_at",
-            (doc_id, spec.tenant_id, task.id, name, sha, raw_path, json.dumps(body, ensure_ascii=False),
-             ",".join(u["name"] for u in used), ",".join(u["version"] for u in used), actor, len(raw),
-             doc.entity_count, labels)).fetchone()
+    try:
+        with connect() as c:
+            row = c.execute(
+                "INSERT INTO mlp_document (doc_id, tenant_id, task_id, filename, raw_sha256, raw_path, result, extractor_name, "
+                "extractor_version, created_by, size_bytes, entity_count, labels) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s) RETURNING created_at",
+                (doc_id, spec.tenant_id, task.id, name, sha, raw_path, json.dumps(body, ensure_ascii=False),
+                 ",".join(u["name"] for u in used), ",".join(u["version"] for u in used), actor, len(raw),
+                 doc.entity_count, labels)).fetchone()
+    except BaseException:
+        if created:                                            # 행이 없으면 원본도 남기지 않는다(원자적 정리 — DEF-QA22-004)
+            path.unlink(missing_ok=True)
+        raise
     body["created_at"] = _iso(row["created_at"])
     return body
 

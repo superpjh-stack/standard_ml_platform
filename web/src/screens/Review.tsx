@@ -36,13 +36,14 @@ export default function Review() {
     </div>}
     <ErrorBox error={list.error}/>
     {task && !list.loading && !list.error && list.items.length === 0 && <p className="muted" data-testid="review-empty">검토할 항목 없음</p>}
-    {list.items.map(it => <ReviewCard key={it.item_id} item={it}
+    {task && list.meta.can_decide === false && <p className="muted" data-testid="review-readonly">조회 전용 — 검토 결과(문제 확인 · 오탐)는 이 과제의 approver · admin 이 정합니다</p>}
+    {list.items.map(it => <ReviewCard key={it.item_id} item={it} canDecide={list.meta.can_decide === true}
       onDone={o => { setOutcome({id: it.item_id, ...o}); void list.reload(); }}/>)}
     {list.next && <button onClick={() => void list.loadMore()} disabled={list.loading}>더 보기</button>}
   </section>;
 }
 
-function ReviewCard({item, onDone}: {item: ReviewItem; onDone: (o: {text?: string; error?: unknown}) => void}) {
+function ReviewCard({item, canDecide, onDone}: {item: ReviewItem; canDecide: boolean; onDone: (o: {text?: string; error?: unknown}) => void}) {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<unknown>(null);
@@ -52,7 +53,7 @@ function ReviewCard({item, onDone}: {item: ReviewItem; onDone: (o: {text?: strin
       await api('PATCH', tpath(`/tasks/${encodeURIComponent(item.task)}/review/${encodeURIComponent(item.item_id)}`), {state, note});
       onDone({text: `${item.item_id} → ${state === 'confirmed_issue' ? '문제 확인' : '오탐'}`});
     } catch (e) {
-      if (e instanceof ApiError && e.code === 'already_decided') onDone({text: `${item.item_id} 은(는) 이미 검토되었습니다`, error: e});
+      if (e instanceof ApiError && e.code === 'already_decided') onDone({text: `${item.item_id} 은(는) 이미 검토가 끝난 항목입니다 — 다른 사람이 먼저 결정했습니다`, error: e});
       else setErr(e);
     } finally { setBusy(false); }
   };
@@ -71,7 +72,7 @@ function ReviewCard({item, onDone}: {item: ReviewItem; onDone: (o: {text?: strin
       ...(item.decided_by ? [['검토', `${item.decided_by} · ${item.decided_at ?? '—'}`] as [string, string]] : []),
       ...(item.note ? [['메모', item.note] as [string, string]] : []),
     ]}/>
-    {item.state === 'open' && <div style={{marginTop: 8}}>
+    {item.state === 'open' && canDecide && <div style={{marginTop: 8}}>
       <label style={{display: 'block'}}>검토 메모 (필수)
         <textarea rows={2} style={{width: '100%'}} maxLength={2000} value={note} onChange={e => setNote(e.target.value)}/></label>
       <div className="row" style={{marginTop: 6}}>

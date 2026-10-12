@@ -1,0 +1,76 @@
+{
+ "krs": {
+  "source_kinds": {
+   "demo": "synthetic",
+   "eval": "csv"
+  },
+  "csv_unchanged": true,
+  "eval_vs_demo": {
+   "krs.joint_strength": {
+    "rows": [
+     720,
+     720
+    ],
+    "same_hash": false
+   }
+  }
+ },
+ "pc": {
+  "source_kinds": {
+   "demo": "synthetic",
+   "eval": "csv"
+  },
+  "csv_unchanged": true,
+  "eval_vs_demo": {
+   "pc.sensory_score": {
+    "rows": [
+     420,
+     420
+    ],
+    "same_hash": false
+   }
+  }
+ },
+ "ot": {
+  "source_kinds": {
+   "demo": "synthetic",
+   "eval": "csv"
+  },
+  "csv_unchanged": true,
+  "eval_vs_demo": {
+   "ot.cad_objects": {
+    "error": "NoTarget: ot.cad_objects: 목표 없음"
+   },
+   "ot.machining_minutes": {
+    "rows": [
+     900,
+     900
+    ],
+    "same_hash": false
+   }
+  }
+ },
+ "kd": {
+  "source_kinds": {
+   "demo": "synthetic",
+   "eval": "csv"
+  },
+  "csv_unchanged": true,
+  "eval_vs_demo": {
+   "kd.drawing_regions": {
+    "rows": [
+     900,
+     900
+    ],
+    "same_hash": true
+   },
+   "kd.labor_hours": {
+    "rows": [
+     900,
+     900
+    ],
+    "same_hash": false
+   }
+  }
+ }
+}

@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 from typing import Sequence
 
+from ..serve.errors import InvalidInput     # 가벼운 오류 모듈(학습 코드 아님 — G-M06 무관)
 from ..settings import get_settings
 from . import snapshot
 from .features import feature_defs
@@ -20,6 +21,13 @@ from .sources import ReadSpec, SourceDisconnected, SyntheticSource, make_source
 
 class TrainBusy(Exception):
     """회사당 동시 학습 1개(spec §5.5) — 이미 queued · running 인 작업이 있다."""
+
+
+class NotTrainable(InvalidInput):
+    """학습 대상이 아닌 과제(review_queue · 규칙 extract · quote · optimize) — 접수 시점 422, mlp_train_run 0행 (D2-82).
+    API 오류 처리기가 `ServeError` 로 받아 `{"error": {code: invalid_input, detail: {rule: not_trainable, type}}}`."""
+
+    default_message = "학습 대상이 아닌 과제입니다 — uses 과제의 운영 모델을 씁니다"
 
 
 class NoTarget(Exception):
@@ -124,7 +132,12 @@ def submit(tenant_id: str, task_id: str, *, actor: str, source_role: str | None 
     import psycopg
 
     from ..db.conn import connect
+    from .taskview import trainable
 
+    m0 = load_merged(tenant_id, tenants_base)
+    if task_id in m0.tasks and not trainable(m0.tasks[task_id]):        # 소스 · 스냅숏 · 실행 행보다 먼저 거부
+        t0 = m0.tasks[task_id]
+        raise NotTrainable(detail={"rule": "not_trainable", "type": t0.type})
     m, task, frame, ref, synthetic = read_frame(tenant_id, task_id, source_role=source_role, tenants_base=tenants_base)
     snap = snapshot.freeze(frame, tenant_id=tenant_id, task=task, source_ref=ref, synthetic=synthetic)
     snapshot.record(snap, test=test)

@@ -1,0 +1,125 @@
+{
+ "kd": {
+  "champion": "Ridge",
+  "valid": [
+   {
+    "model": "Ridge",
+    "mae": 3.5159,
+    "rmse": 4.5369,
+    "r2": 0.9966
+   },
+   {
+    "model": "Gradient Boosting",
+    "mae": 8.0412,
+    "rmse": 10.3594,
+    "r2": 0.9825
+   },
+   {
+    "model": "Extra Trees",
+    "mae": 12.7764,
+    "rmse": 15.7562,
+    "r2": 0.9594
+   },
+   {
+    "model": "Random Forest",
+    "mae": 13.7213,
+    "rmse": 17.0648,
+    "r2": 0.9524
+   }
+  ],
+  "test": {
+   "mae": 4.1071,
+   "rmse": 5.0456,
+   "r2": 0.9956
+  },
+  "doc": {
+   "mae": 4.1071,
+   "rmse": 5.0456,
+   "r2": 0.9956
+  },
+  "missing_cells": 12
+ },
+ "ot": {
+  "champion": "Ridge",
+  "valid": [
+   {
+    "model": "Ridge",
+    "mae": 0.3421,
+    "rmse": 0.4373,
+    "r2": 0.9772
+   },
+   {
+    "model": "Gradient Boosting",
+    "mae": 0.486,
+    "rmse": 0.6451,
+    "r2": 0.9503
+   },
+   {
+    "model": "Extra Trees",
+    "mae": 0.7405,
+    "rmse": 0.9532,
+    "r2": 0.8916
+   },
+   {
+    "model": "Random Forest",
+    "mae": 0.8388,
+    "rmse": 1.0662,
+    "r2": 0.8643
+   }
+  ],
+  "test": {
+   "mae": 0.3166,
+   "rmse": 0.4099,
+   "r2": 0.9788
+  },
+  "stored_test_mae": 0.3166
+ },
+ "ot_recog": {
+  "champion": "Extra Trees",
+  "valid": [
+   {
+    "model": "Extra Trees",
+    "macro_f1": 1.0
+   },
+   {
+    "model": "Logistic Regression",
+    "macro_f1": 1.0
+   },
+   {
+    "model": "Random Forest",
+    "macro_f1": 1.0
+   }
+  ],
+  "test": {
+   "macro_f1": 1.0,
+   "accuracy": 1.0,
+   "sizes": [
+    960,
+    320,
+    320
+   ],
+   "test_class_counts": {
+    "hole": 80,
+    "other": 80,
+    "outer": 80,
+    "slot": 80
+   }
+  }
+ },
+ "synth": {
+  "kd": {
+   "tasks": [
+    "kd.drawing_regions",
+    "kd.labor_hours",
+    "kd.quote"
+   ]
+  },
+  "ot": {
+   "tasks": [
+    "ot.cad_objects",
+    "ot.machining_minutes",
+    "ot.quote"
+   ]
+  }
+ }
+}

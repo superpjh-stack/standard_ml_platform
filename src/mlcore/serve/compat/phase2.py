@@ -171,7 +171,10 @@ class Phase2:
             if act == "health":
                 res = cmp.health()
             elif act == "overview":
-                res = cmp.overview()
+                # 옛 지표 소수 자리 — 플러그인 상수 OVERVIEW_METRIC_DIGITS(원천 ml_service 의 round 자리, 없으면 1차 그대로 3)
+                mod = load_plugin(self.merged)
+                digits = getattr(mod, "OVERVIEW_METRIC_DIGITS", None) if mod is not None else None
+                res = cmp.overview(metric_digits=digits if isinstance(digits, int) and 0 <= digits <= 8 else 3)
             elif act == "predict":
                 res = cmp.predict(self.parse(route, parse_body(body), info), caller=caller)
             elif act == "optimize":

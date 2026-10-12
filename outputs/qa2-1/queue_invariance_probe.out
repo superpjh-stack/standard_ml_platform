@@ -1,0 +1,121 @@
+{
+ "krs": {
+  "policy": "random_60_20_20",
+  "rule": {
+   "abs_residual_ge": 4.0
+  },
+  "base": {
+   "champion": "gbr",
+   "valid": {
+    "mae": 1.986088667,
+    "rmse": 2.8444872498,
+    "r2": 0.8703394968,
+    "mape": 0.0527403787
+   },
+   "valid_sha": "184f7f4e1ffcc79d19080744db541486e448d230f019f7dec0c80f5b34520c19",
+   "threshold": 4.0,
+   "interval_q": 4.157831170001639,
+   "outliers": {
+    "folds": [
+     5
+    ],
+    "refit": 7
+   },
+   "test_mae": 2.0935478148997637,
+   "items": 16
+  },
+  "test_perturbed_same": {
+   "champion": true,
+   "valid": true,
+   "valid_sha": true,
+   "threshold": true,
+   "interval_q": true,
+   "outliers": true
+  },
+  "test_perturbed_test_mae": 49.93385530490852,
+  "test_perturbed_items": 144,
+  "valid_perturbed_changed": {
+   "valid_sha": true,
+   "threshold": false,
+   "interval_q": true
+  },
+  "items_subset_of_test": true,
+  "items_in_fit": 0,
+  "in_sample_fit_rows": {
+   "n": 576,
+   "ge_threshold": 15,
+   "mae": 1.3288625737656943
+  }
+ },
+ "pc": {
+  "policy": "time_cv5",
+  "rule": {
+   "top_quantile": 0.1
+  },
+  "base": {
+   "champion": "gbr",
+   "valid": {
+    "mae": 1.9264367076,
+    "rmse": 2.5410101973,
+    "r2": 0.2234832728,
+    "mape": 0.0248755318
+   },
+   "valid_sha": "7b61ccd57c2763bf0ea0ace61cce86ace6d1989d6ae5ee47cb429979b3043179",
+   "threshold": 4.23381182426332,
+   "interval_q": 4.299357217680878,
+   "outliers": null,
+   "test_mae": 1.5374734470493745,
+   "items": 3
+  },
+  "test_perturbed_same": {
+   "champion": true,
+   "valid": true,
+   "valid_sha": true,
+   "threshold": true,
+   "interval_q": true,
+   "outliers": true
+  },
+  "test_perturbed_test_mae": 50.186579616350585,
+  "test_perturbed_items": 84,
+  "valid_perturbed_changed": {
+   "valid_sha": true,
+   "threshold": true,
+   "interval_q": true
+  },
+  "items_subset_of_test": true,
+  "items_in_fit": 0,
+  "in_sample_fit_rows": {
+   "n": 336,
+   "ge_threshold": 0,
+   "mae": 1.0591521324288564
+  },
+  "cv5_fold_q90": [
+   {
+    "train": 56,
+    "q90": 6.0156,
+    "mae": 2.4785
+   },
+   {
+    "train": 112,
+    "q90": 3.8263,
+    "mae": 1.7896
+   },
+   {
+    "train": 168,
+    "q90": 4.8022,
+    "mae": 1.9166
+   },
+   {
+    "train": 224,
+    "q90": 4.3558,
+    "mae": 1.9212
+   },
+   {
+    "train": 280,
+    "q90": 3.5984,
+    "mae": 1.5263
+   }
+  ],
+  "test_share_ge_threshold": 0.0357
+ }
+}

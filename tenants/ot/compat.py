@@ -56,6 +56,9 @@ def shape_health(res: dict, info: dict) -> dict:
             "mode": res["data_mode"]}
 
 
+OLD_WARNING = "객체 분류는 합성 기하 특징, 시간 예측은 합성 작업 이력으로 학습했습니다. 표시 성능은 실제 고객 CAD 인식률·견적 정확도가 아닙니다."   # 원천 ml_service.py:110 — 합성 모델일 때만(실데이터 모델이면 표준 문구 그대로, DEF-QA22-007)
+OVERVIEW_METRIC_DIGITS = 4   # 원천 ml_service.py:70 metrics() round(…, 4) — 옛 개요 mae · rmse 소수 자리(DEF-QA22-007)
+
 def shape_overview(o: dict, info: dict) -> dict:
     """ml_service.py:28-38 (가공시간 회귀 부분). 객체 분류 지표(recognition_*) · 객체 설명자 행 수 · 시험 구간 행 단위
     예측(trend) · 예시 단가표(materials) · 견적 계수(cost)는 내지 않는다(differs)."""
@@ -64,7 +67,7 @@ def shape_overview(o: dict, info: dict) -> dict:
             "champion": o["champion"],
             "metrics": [{"model": m["model"], "mae": m["mae"], "rmse": m["rmse"], "r2": m["r2"]} for m in o["metrics"]],
             "test_metrics": o["test_metrics"], "split": {"jobs": [sp.get("train"), sp.get("validation"), sp.get("test")]},
-            "features": o["features"], "profiles": o.get("profiles"), "warning": o["warning"]}
+            "features": o["features"], "profiles": o.get("profiles"), "warning": OLD_WARNING if o["data_mode"] in ("synthetic_demo", "demo") else o["warning"]}
 
 
 # ── 도면 ─────────────────────────────────────────────────────────────────────────────────
@@ -108,12 +111,13 @@ def parse_quote_create(old: Any, info: dict) -> dict:
     note = old["review_note"]
     if not isinstance(note, str) or not 5 <= len(note) <= 500:
         raise _err("review_note", "5자 이상 500자 이하", "string_too_short")                            # :44
-    if len(note.strip()) < 5:
-        raise CompatError(422, {"detail": "확인 내용을 5자 이상 입력하세요."})                           # :105
     q = old["quantity"]
     if isinstance(q, bool) or not isinstance(q, int) or not 1 <= q <= 10000:
         raise _err("quantity", "1~10,000 정수입니다", "greater_than_equal")                              # :42
-    std = {"doc_id": old["drawing_id"], "inputs": {s: old[o] for s, o in OLD.items()}, "lines": [], "reviewed": True,
+    _drawing_or_404(info, old["drawing_id"], "먼저 CAD 도면을 분석하세요.")                                 # :103 (메모 strip 검사보다 먼저)
+    if len(note.strip()) < 5:
+        raise CompatError(422, {"detail": "확인 내용을 5자 이상 입력하세요."})                           # :105
+    std = {"doc_id": old["drawing_id"].strip(), "inputs": {s: old[o] for s, o in OLD.items()}, "lines": [], "reviewed": True,
            "review_note": note}
     return std
 
@@ -123,6 +127,15 @@ def _doc(info: dict, doc_id: str | None) -> dict | None:
         return None
     from mlcore.serve import documents
     return documents.result_of(info["tenant"], doc_id)
+
+def _drawing_or_404(info: dict, drawing_id: Any, message: str) -> None:
+    """원천 순서 — 모양 검사(pydantic, drawing_id 1~60자) 뒤 도면 조회 404(DEF-QA22-006: 표준 꼴이 아닌 id 도 422 · loc doc_id 가
+    아니라 원천 404 문구). 표준 doc_id 꼴이 아니면 없는 도면이다."""
+    if not isinstance(drawing_id, str) or not 1 <= len(drawing_id.strip()) <= 60:
+        raise _err("drawing_id", "1~60자 문자열입니다", "string_too_short")
+    from mlcore.serve import documents
+    if not documents.DOC_ID.match(drawing_id.strip()) or _doc(info, drawing_id.strip()) is None:
+        raise CompatError(404, {"detail": message})
 
 
 def _quote(q: dict, info: dict) -> dict:

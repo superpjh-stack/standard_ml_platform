@@ -30,6 +30,7 @@ BOM_KEYS = ["name", "material", "quantity", "mass_kg", "price_kg"]              
 INPUTS = {"cut_m": "cut_m", "weld_m": "weld_m", "thickness_mm": "thickness_mm", "complexity": "complexity",
           "main_material": "material", "product_family": "product", "quantity": "quantity", "labor_rate": "labor_rate",
           "outsource_cost": "outsource_cost"}                                        # 표준 견적 입력 → 옛 QuoteInput 키
+EXPORT_FILENAME = "kyungdong-visible-quotes"                                         # main.py:132 (DEF-QA22-008)
 EXPORT_HEAD = ["견적번호", "도면명", "제품", "상태", "합계(원)", "모델버전"]            # main.py:132
 
 
@@ -59,6 +60,9 @@ def shape_health(res: dict, info: dict) -> dict:
             "mode": res["data_mode"]}
 
 
+OLD_WARNING = "합성 작업 900건으로 학습한 공수 예측입니다. 실측 견적 정확도·객체 인식률·납기 정확도를 의미하지 않습니다."   # 원천 ml_service.py:66 — 합성 모델일 때만(실데이터 모델이면 표준 문구 그대로, DEF-QA22-007)
+OVERVIEW_METRIC_DIGITS = 4   # 원천 ml_service.py:41 metrics() round(…, 4) — 옛 개요 mae · rmse 소수 자리(DEF-QA22-007)
+
 def shape_overview(o: dict, info: dict) -> dict:
     """ml_service.py:59-66. 시험 구간 행 단위 예측(trend) · 예시 단가표(materials) · 견적 계수(cost) · 특성 중복(duplicates)은
     내지 않는다(differs)."""
@@ -68,7 +72,7 @@ def shape_overview(o: dict, info: dict) -> dict:
             "metrics": [{"model": m["model"], "mae": m["mae"], "rmse": m["rmse"], "r2": m["r2"]} for m in o["metrics"]],
             "test_metrics": o["test_metrics"], "split": [sp.get("train"), sp.get("validation"), sp.get("test")],
             "features": o["features"], "products": o.get("products"), "recognition": dict(RECOGNITION),
-            "warning": o["warning"]}
+            "warning": OLD_WARNING if o["data_mode"] in ("synthetic_demo", "demo") else o["warning"]}
 
 
 # ── 도면 ─────────────────────────────────────────────────────────────────────────────────
@@ -123,8 +127,9 @@ def parse_quote_create(old: Any, info: dict) -> dict:
     lr = old["labor_rate"]
     if isinstance(lr, bool) or not isinstance(lr, (int, Decimal)) or not 1 <= lr <= 1000000:
         raise _err("labor_rate", "1~1,000,000 입니다", "greater_than_equal")            # :57 (표준 견적 입력은 0 이상만 본다)
+    _drawing_or_404(info, old["drawing_id"], MSG_DRAWING_404)                     # :103 · :109
     inputs = {std: old[o] for std, o in INPUTS.items()}
-    return {"doc_id": old["drawing_id"], "inputs": inputs, "lines": [{k: r[k] for k in BOM_KEYS} for r in bom],
+    return {"doc_id": old["drawing_id"].strip(), "inputs": inputs, "lines": [{k: r[k] for k in BOM_KEYS} for r in bom],
             "reviewed": True, "review_note": note.strip()}
 
 
@@ -133,6 +138,15 @@ def _doc(info: dict, doc_id: str | None) -> dict | None:
         return None
     from mlcore.serve import documents
     return documents.result_of(info["tenant"], doc_id)
+
+def _drawing_or_404(info: dict, drawing_id: Any, message: str) -> None:
+    """원천 순서 — 모양 검사(pydantic, drawing_id 1~60자) 뒤 도면 조회 404(DEF-QA22-006: 표준 꼴이 아닌 id 도 422 · loc doc_id 가
+    아니라 원천 404 문구). 표준 doc_id 꼴이 아니면 없는 도면이다."""
+    if not isinstance(drawing_id, str) or not 1 <= len(drawing_id.strip()) <= 60:
+        raise _err("drawing_id", "1~60자 문자열입니다", "string_too_short")
+    from mlcore.serve import documents
+    if not documents.DOC_ID.match(drawing_id.strip()) or _doc(info, drawing_id.strip()) is None:
+        raise CompatError(404, {"detail": message})
 
 
 def _quote(q: dict, info: dict) -> dict:
@@ -210,7 +224,7 @@ def shape_old_quote_export(out: dict, info: dict):
     for q in out["records"]:
         o = _quote(q, info)
         rows.append([o["id"], o["filename"], o["input"]["product"], o["status"], o["total"], o["model_version"]])
-    return _csv(rows, "visible-quotes")
+    return _csv(rows, EXPORT_FILENAME)
 
 
 # ── 오류 ─────────────────────────────────────────────────────────────────────────────────
@@ -225,6 +239,6 @@ def shape_error(status: int, body: Any, info: dict) -> tuple[int, Any]:
         return 422, {"detail": "; ".join(str(d.get("msg")) for d in body["detail"])}               # main.py:96 str(exc)
     if status == 404 and act == "document_get":
         return 404, {"detail": MSG_DRAWING_404}
-    if status == 404 and act.startswith("quote_"):
+    if status == 404 and act.startswith("quote_") and body != {"detail": MSG_DRAWING_404}:   # 견적 생성의 없는 도면은 원천 문구(:103)
         return 404, {"detail": MSG_QUOTE_404}
     return status, body

@@ -28,15 +28,30 @@ def health(request: Request):
         db_ok = False
     tasks = []
     if registry is not None:
-        for task_id in registry.tasks:
-            item = {"task": task_id, "model_ready": task_id in production, "version": production.get(task_id)}
-            if task_id in production:
-                err = _artifact_error(registry.tenant.code, task_id, request)
-                if err is not None:        # 산출물이 등록부와 다르면 predict 가 503 — health 도 준비 안 됨으로 (QA2 관찰)
-                    item.update(model_ready=False, error=err)
+        from ...serve.catalog import model_required, serving_ready, uses_of
+        code = registry.tenant.code
+        errors: dict[str, str | None] = {}
+
+        def ok(tid: str) -> bool:                # production 이 있고 산출물 대조 통과 — predict 와 같은 판정
+            if tid not in production:
+                return False
+            if tid not in errors:
+                errors[tid] = _artifact_error(code, tid, request)
+            return errors[tid] is None
+
+        for task_id, td in registry.tasks.items():
+            # 유형별(C2 D2-94 · DEF-QA23-002): 규칙 extract 는 모델 불필요, optimize · quote · review_queue 는 uses 과제 상태
+            req = model_required(td)
+            uses = uses_of(td, code)
+            item = {"task": task_id, "type": td.type, "model_required": req,
+                    "model_ready": serving_ready(td, code, ok), "version": production.get(task_id) if req else None,
+                    "uses": [{"task": u, "version": production.get(u)} for u in uses] if uses else None}
+            if req and task_id in production and errors.get(task_id):
+                item["error"] = errors[task_id]   # 산출물이 등록부와 다르면 predict 가 503 — health 도 준비 안 됨으로 (QA2 관찰)
             tasks.append(item)
         for task_id, reason in registry.disabled.items():
-            tasks.append({"task": task_id, "model_ready": False, "version": None, "disabled": reason})
+            tasks.append({"task": task_id, "model_ready": False, "model_required": None, "version": None, "uses": None,
+                          "disabled": reason})
     return {
         "status": "ok" if db_ok else "degraded",
         "db": db_ok,

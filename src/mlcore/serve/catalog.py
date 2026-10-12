@@ -67,3 +67,31 @@ class TaskCatalog:
 
     def ids(self) -> list[str]:
         return list(self._specs)
+
+
+# ── 유형별 모델 상태 (DEF-QA23-002 · #29 · C2 D2-94) ────────────────────────────────────────────────
+# 자기 모델이 있는 과제는 학습 유형(regression · risk · anomaly)과 model 추출기를 가진 extract 뿐이다. 규칙 extract 는 모델이
+# 필요 없고, optimize · quote · review_queue 는 `uses` 과제의 production 으로 돈다 — health · overview · 화면 1 이 같은 판정을 쓴다.
+LEARNED_TYPES = ("regression", "risk", "anomaly")
+
+
+def model_required(task: Any) -> bool:
+    if task.type in LEARNED_TYPES:
+        return True
+    if task.type == "extract":
+        return any((e or {}).get("kind") == "model" for e in task.raw.get("extractors") or [])
+    return False
+
+
+def uses_of(task: Any, tenant_id: str) -> list[str] | None:
+    """의존 과제의 회사 과제 ID(`<회사>.<짧은 이름>`). 의존이 없는 유형은 None."""
+    uses = task.raw.get("uses") if task.type in ("optimize", "quote", "review_queue") else None
+    return [f"{tenant_id}.{str(u).split('.', 1)[-1]}" for u in uses] if uses else None
+
+
+def serving_ready(task: Any, tenant_id: str, has_production) -> bool:
+    """has_production(task_id) → bool. 자기 모델 과제 = 그 production, 의존 과제 = uses 전부 production, 규칙만 = True."""
+    if model_required(task):
+        return bool(has_production(task.id))
+    uses = uses_of(task, tenant_id)
+    return all(has_production(u) for u in uses) if uses else True

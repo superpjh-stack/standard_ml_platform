@@ -178,6 +178,8 @@ kd:
   quote_csv_line_head: [품명, 재질, 수량/대, 개당 중량kg, 단가 원/kg, 금액 원]          # main.py:145
   export_head: [견적번호, 도면명, 제품, 상태, 합계(원), 모델버전]                       # main.py:132
   differs:
+    quote_csv_model_row: "옛 견적 CSV 의 [모델, 표시 이름] 행(main.py:145)은 내지 않는다 — 표준 견적 스냅숏은 모델 이름이 아니라 버전(model_versions)만 남긴다(differs.model). [버전] 행은 같다 (DEF-QA22-008)"
+    quote_create_order: "옛 POST /api/quotes 는 pydantic 검증(값 범위 포함) 뒤 도면 404. 호환은 모양 검사 → 도면 404 → 표준 값 범위 422 순서 — 없는 도면 + 범위 밖 값이 함께 오면 원천 422 · 호환 404 (DEF-QA22-006)"
     overview: "시험 구간 행 단위 예측(trend)은 내지 않는다(시험 구간 재채점 금지, goal §8). 예시 단가표(materials)·견적 계수(cost)는 회사 등록부 · 과제 rates 가 정본(견적 kg 단가는 BOM 행 입력). duplicates(특성 중복 행 수)는 표준 품질 지표에 없다. seed 는 등록부 sources.demo.seed"
     overview_omitted: [duplicates, seed, trend, materials, cost]
     model: "옛 champion 은 표시 이름(Ridge), 표준은 후보 코드(ridge). 견적의 model 키는 내지 않는다 — 표준 견적 스냅숏은 모델 버전(model_versions)만 남긴다"
@@ -243,6 +245,8 @@ pc:
   records_bad_queries: ["limit=101", "limit=0", "offset=-1", "line=K3", "cabbage_origin=invalid"]   # tests/test_api.py:23 · main.py:50-51
   records_total: 420
   differs:
+    produced_at_tz: "원천 produced_at 은 시간대 없는 시각(pd.date_range, ml_service.py:50). 표준은 api-contract §1 시각 = ISO-8601 + +09:00 — 같은 순간 (DEF-QA22-008)"
+    composition_422: "원천 배합 합 98~102 거부(main.py:18-21 model_validator) 모양 · 문구 그대로 낸다(loc [body] · value_error — 플러그인 shape_error). 경계는 표준 input_rules recipe_sum 이 판정 (DEF-QA22-008 해결)"
     overview: "limits(합성 생성 · 탐색 범위, ml_service.py:27-31)는 내지 않는다 — 표준 입력 범위는 팩 features min/max, 탐색 범위는 recipe_optimize 과제(웨이브 A2). 지표는 표본 내가 아니라 시험 1회(D2-02 — 재측정 값)"
     overview_omitted: [limits]
     queue: "원천은 전체 재적합 모델로 같은 데이터를 채점한 표본 내 |잔차| 상위 8(ml_service.py:78-79 · main.py:44) — 표준은 대기열(시험 구간 · 실측이 붙은 운영 잔차, 임계값 = 검증 구간 잔차 상위 10% 분위). evaluated(표본 내 채점 행 수)와 demo_review_score(데모 상수 — 과제 thresholds 가 정본)는 내지 않는다"
@@ -292,6 +296,8 @@ ot:
   quote_404: ["/api/quotes/unknown", "/api/cad/unknown", "/api/quotes/unknown/csv"]   # tests/test_api.py:143
   quote_list_bad_queries: ["limit=101", "offset=-1"]                                   # tests/test_api.py:141
   differs:
+    overview_split_objects: "원천 split.objects(객체 분류 960/320/320, ml_service.py:107)는 내지 않는다 — 객체 분류는 별도 과제(ot.cad_objects)의 학습 보고서가 정본이고 옛 개요는 가공시간 회귀 과제 하나에서 만든다 (DEF-QA22-008)"
+    quote_create_order: "옛 POST /api/quotes 는 pydantic 검증 뒤 도면 404(먼저 CAD 도면을 분석하세요) → 메모 strip 5자 422. 호환은 같은 순서, 값 범위는 표준 검증이 도면 확인 뒤 (DEF-QA22-006)"
     overview: "가공시간 회귀 부분만 — 객체 분류 지표(recognition_champion · recognition_metrics · recognition_test)와 객체 설명자 행 수(object_rows)는 표준 cad_objects 과제(B06 개요 · 화면 4 학습 보고서)가 정본, 시험 구간 행 단위 예측(trend)은 내지 않는다(시험 구간 재채점 금지), 예시 단가표(materials)·견적 계수(cost)는 과제 rates · 회사 단가표"
     overview_omitted: [object_rows, recognition_champion, recognition_metrics, recognition_test, trend, materials, cost]
     drawing: "skipped(제외 도형 수)는 표준 추출 응답에 없다 — 경고 문구에는 그대로"
@@ -354,6 +360,7 @@ krs:
   records_bad_queries: ["limit=0", "limit=101", "offset=-1", "state=unknown", "supplier=D"]   # main.py:78-80 · tests/test_api.py:48
   records_q_max: 40                                                                  # main.py:79
   differs:
+    composition_order: "원천 조성 합 422(문자열 detail, main.py:70-72)는 pydantic 필드 검증 뒤. 호환은 다섯 값이 숫자면 필드 범위보다 먼저 합을 본다 — 합 · 범위가 함께 틀리면 원천 목록 422 · 호환 문자열 422 (DEF-QA22-008)"
     overview: "statistics(정제 후 기술통계) · training_rows · outlier_rows_removed · outliers_by_column 은 원천이 분할 전 전체 데이터로 쟀다(ml_service.py:59-73, 원천 결함 — 표준은 학습 구간 IQR, D2-03). 지표는 시험 1회 · 검증 선정(원천은 시험 구간 RMSE 선정)"
     overview_omitted: [statistics]
     quality_omitted: [training_rows, outlier_rows_removed, outliers_by_column]

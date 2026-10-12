@@ -3,6 +3,7 @@
 // 감시는 후보까지만 만든다 — 이 화면에는 승격 버튼이 없다(승인은 화면 5).
 import {useState} from 'react';
 import {ConnectionBar, ErrorBox, fmt, StateBadge, TaskPicker, tpath, useApi, useConnection} from '../components';
+import {ApiError} from '../components/api';
 import {LevelBadge} from './Overview';
 
 type Item = {day: string; metric: string; feature: string | null; value: number | null; level: string;
@@ -93,7 +94,9 @@ export default function Monitor() {
     </div>}
     <div className="card">
       <h2>데이터 소스 점검 (doctor · fixture 모드)</h2>
-      <ErrorBox error={doc.error}/>
+      {doc.error instanceof ApiError && doc.error.status === 403
+        ? <p className="muted" data-testid="doctor-forbidden">데이터 소스 점검은 admin · approver 만 봅니다 (화면 7 권한 — goal2 §6).</p>
+        : <ErrorBox error={doc.error}/>}
       {doc.data && <div className="table-wrap"><table className="grid" data-testid="doctor">
         <thead><tr><th>역할</th><th>종류</th><th>상태</th><th>행</th><th>기간</th><th>변수 대응률</th><th>최대 결측률</th><th>목표</th><th>사유</th></tr></thead>
         <tbody>{doc.data.sources.map(s => {

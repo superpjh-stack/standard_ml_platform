@@ -147,14 +147,44 @@ def test_api_usage_counts_predictions_and_marks_unrecorded(tmp_path, monkeypatch
         for ch in ["api", "api", "batch"]:
             c.execute(sql, (new_id("prd"), code, f"{code}.delta_e", version, ch, ts))
         c.execute(sql, (new_id("prd"), code, f"{code}.delta_e", version, "api", ts + timedelta(days=1)))   # 다음 날 — 세지 않는다
-        c.execute("INSERT INTO mlp_audit (tenant_id, ts, actor, action, target, detail) VALUES (%s,%s,'t','POST x',%s,%s::jsonb)",
-                  (code, ts, f"/api/v1/tenants/{code}/tasks/delta_e/predict", json.dumps({"status": 422})))
+        # 감사 target = 실제 요청 경로(middleware: request.url.path — 과제 칸은 <t>.<task> 전체 id, DEF-QA22-005 · D2-104)
+        for target, st in [(f"/api/v1/tenants/{code}/tasks/{code}.delta_e/predict", 422),
+                           (f"/api/v1/tenants/{code}/tasks/{code}.delta_e/predict:batch", 500),
+                           (f"/api/v1/tenants/{code}/tasks/{code}.delta_ex/predict", 422)]:   # 다른 과제 이름 접두 — 세지 않는다
+            c.execute("INSERT INTO mlp_audit (tenant_id, ts, actor, action, target, detail) VALUES (%s,%s,'t','POST x',%s,%s::jsonb)",
+                      (code, ts, target, json.dumps({"status": st})))
     got = hub_export.build(DAY, codes=[code])["companies"][0]["api_usage"][DAY.isoformat()]
-    p = got[f"/api/v1/tenants/{code}/tasks/delta_e/predict"]
-    assert (p["calls"], p["errors"], p["p95_ms"], p["basis"]) == (3, 1, None, "실측") and "api 2 · batch 1" in p["ref"]
-    other = got[f"/api/v1/tenants/{code}/tasks/defect_risk/predict"]
+    p = got[f"/api/v1/tenants/{code}/tasks/{code}.delta_e/predict"]
+    assert (p["calls"], p["errors"], p["p95_ms"], p["basis"]) == (3, 2, None, "실측") and "api 2 · batch 1" in p["ref"]
+    other = got[f"/api/v1/tenants/{code}/tasks/{code}.defect_risk/predict"]
     assert (other["calls"], other["errors"], other["basis"]) == (0, 0, "실측")     # 그날 기록이 있는 회사의 0 은 실측 0
     assert set(got) == {hub_export.api_path(code, td) for td in m.tasks.values()}
+
+
+def test_api_usage_counts_audit_only_tasks_by_full_task_id(tmp_path, monkeypatch):
+    """대기열 · 문서 · 견적 과제는 감사 행으로 센다 — 키가 감사 target 과 같은 모양이어야 0 이 아니다(DEF-QA22-005)."""
+    if not h.db_ok():
+        pytest.skip("ml_test_db 없음")
+    from mlcore.db.conn import connect
+    from mlcore.monitor import hub_export
+
+    monkeypatch.setenv("MLP_TENANTS_DIR", str(tmp_path))
+    code = h.copy_tenant("kd", tmp_path)
+    h.register_db(code)
+    ts = datetime(2026, 10, 2, 11, tzinfo=KST)
+    rows = [(f"/api/v1/tenants/{code}/tasks/{code}.drawing_regions/documents", 201),
+            (f"/api/v1/tenants/{code}/tasks/{code}.drawing_regions/documents", 413),
+            (f"/api/v1/tenants/{code}/tasks/{code}.quote/quotes", 201),
+            (f"/api/v1/tenants/{code}/tasks/{code}.quote/quotes/qt_1/confirm", 409)]
+    with connect() as c:
+        for target, st in rows:
+            c.execute("INSERT INTO mlp_audit (tenant_id, ts, actor, action, target, detail) VALUES (%s,%s,'t','POST x',%s,%s::jsonb)",
+                      (code, ts, target, json.dumps({"status": st})))
+    got = hub_export.build(DAY, codes=[code])["companies"][0]["api_usage"][DAY.isoformat()]
+    d = got[f"/api/v1/tenants/{code}/tasks/{code}.drawing_regions/documents"]
+    q = got[f"/api/v1/tenants/{code}/tasks/{code}.quote/quotes"]
+    assert (d["calls"], d["errors"], d["basis"]) == (2, 1, "실측")
+    assert (q["calls"], q["errors"], q["basis"]) == (2, 1, "실측")
 
 
 def test_no_secrets_real_rows_inputs_or_predictions(doc):

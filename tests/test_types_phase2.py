@@ -94,7 +94,7 @@ def test_review_list_and_decide_contract(world):
     b = p2.review_item(m, origin="live_residual", prediction_id=pid)
     base = f"/api/v1/tenants/{m.tenant.code}/tasks/{p2.tid(m, 'value_review')}/review"
     lst = tc.get(f"{base}?state=open&limit=1", headers=h.hdr(k["operator"])).json()       # operator 조회
-    assert set(lst) == {"items", "next_cursor", "total"} and lst["total"] >= 2 and len(lst["items"]) == 1
+    assert set(lst) == {"items", "next_cursor", "total", "can_decide"} and lst["can_decide"] is False and lst["total"] >= 2 and len(lst["items"]) == 1
     assert lst["next_cursor"]
     nxt = tc.get(f"{base}?state=open&limit=1&cursor={lst['next_cursor']}", headers=h.hdr(k["operator"])).json()
     assert {lst["items"][0]["item_id"], nxt["items"][0]["item_id"]} == {a, b}

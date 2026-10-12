@@ -6,8 +6,9 @@ title: 도면 영역 · BOM 추출
 entity: drawing
 document: {formats: [dxf], max_bytes: 5242880, max_entities: 20000, unit_override: [mm, inch]}   # 원천 MAX_BYTES · MAX_ENTITIES = spec 상한
 extractors:
-  - {name: cad_regions, kind: rule, module: extractors/cad_regions.py, version: "1.0.0"}
-  - {name: bom_text, kind: rule, module: extractors/bom_text.py, version: "1.0.0"}
+  # max_region_texts: 영역 texts 합계 상한 = 엔티티 상한(결과가 도면 크기에 선형 — 겹친 사각형의 제곱 결과 → 413 region_texts, D2-101)
+  - {name: cad_regions, kind: rule, module: extractors/cad_regions.py, version: "1.0.0", params: {max_region_texts: 20000}}
+  - {name: bom_text, kind: rule, module: extractors/bom_text.py, version: "1.0.0", params: {max_region_texts: 20000}}
 labels: none
 outputs: [regions, bom_rows]
 out_of_range: reject

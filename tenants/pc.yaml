@@ -12,7 +12,7 @@ categories:                     # values_from: tenant 범주 — 원천 api/ml_s
   prod_line: [K1, K2]
 sources:
   demo:    {kind: synthetic, seed: 42, rows: 420}   # 원천 SEED 42 · rows 420 (api/ml_service.py:19,36)
-  eval:    {kind: csv, path: tests/fixtures/pc/snapshot.csv}   # migration/make_fixtures.py 생성 (demo 와 같은 행)
+  eval:    {kind: csv, path: tests/fixtures/pc/snapshot.csv}   # migration/make_fixtures.py 생성 (demo 와 같은 행 · 실수는 CSV 왕복 오차 ≤1e-12 상대, 해시 다름 — D2-102)
 feature_map: {}                 # 미확인 — 실 MES · Data Platform 열 대응 없음 (D-32)
 target_map: {}                  # 미확인 — 관능 점수 실측 원천 없음 (D-33)
 unmapped: {}

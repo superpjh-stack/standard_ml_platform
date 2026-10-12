@@ -436,3 +436,30 @@ API: `POST …/predict:batch`(operator) · `POST …/optimize`(operator, `{fixed
 - D2-A2-04 개발3: kd `/api/cad/sample.dxf` · `/api/cad/demo` · ot `/api/data/demo` 는 팩 samples 파일이 생기면.
 - D2-A2-05 호환 records 쿼리 변환 훅 없음 → krs supplier · q · state 필터 · 기본 limit 재현 불가.
 - 게이트: `tests/e2e/test_console_ot_quote.py` 는 G2-S01 판정 파일 목록(gates/gate2.py)에 없다 — 아키텍트가 넣을지 결정.
+
+## 2차 웨이브 C2 — QA 결함 수정 (코어 재진입, 2026-10-13, 기준 HEAD ad8e979 · 커밋 안 함) — 결정 D2-90 ~ D2-95
+
+### 고친 것 (먼저 실패하는 회귀 시험 → 수정)
+| 결함 | 수정 | 시험 |
+|---|---|---|
+| DEF-QA22-002 #31 (중대) | 과제 키 `line_limits`(원천 BomRow 규칙 · 범주 + material_aliases 정규화 · 모르는 키 422) + 코어 기본(스칼라 · 0 이상 · 견적식 계산 불가 422 `line_value` · 음수 금액 422 `negative_amount`). 500 0 · 음수 견적 0 | `tests/test_c2_dev2.py` 24건(kd 실제 팩 · BomRow 값 주입) |
+| #30 코어 (QA22-001) | 추출기 자식 프로세스(forkserver) 실행 · 시간 20 s · 배열당 5,000 · 결과 4 MiB 상한 → 413 `time`·`items`·`result_bytes` · 원본 · 행 0 | 폭탄 추출기 시험 팩 4건 |
+| QA22-003 | `safe_cell` 앞 공백 · 줄바꿈 뒤 수식(원천 `lstrip()` 의 상위 집합) · 화면 1 CSV 도 | 11건 |
+| QA22-004 | 원본 NUL · 결과 NUL → 422 `nul`, INSERT 실패 시 원본 정리 | 2건 |
+| QA22-006~008 | kd/ot 옛 견적 없는 도면 404 원천 문구 · kd/ot 개요 4자리 · warning 원천 문구 · krs 조성 합 문자열 422 · pc 배합 합 pydantic 모양 · kd 내보내기 파일 이름. 나머지 4건 `compat_expected.yaml differs` 사유 | `tests/test_compat.py::test_c2_*` 4건 |
+| QA23-002 | `serve.catalog.model_required/uses_of/serving_ready` — health · overview · 화면 1 유형별 표시("모델 불필요 (규칙)" · 의존 과제 버전) | 1건 |
+| QA23-004 · 005 | B09 목록 `can_decide` → 화면 8 결정 버튼 숨김 · 공용 409 문구 "이미 결정되었습니다" | 1건 + 계약 시험 2 갱신 |
+| 개발1 요청 | `test_vertical_slice_2.py` 실측 시각 → now+1h (D2-80) | 통과 |
+
+### 실측
+| 항목 | 값 | 명령 |
+|---|---|---|
+| pytest | **1087 passed · 3 skipped · 1 xfailed(strict — eto line_limits 팩 값 대기) · 0 failed** | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| e2e | **23 passed** | `uv run pytest -q tests/e2e` |
+| 웹 빌드 | 성공 (tsc -b + vite, 309.9 kB js) | `cd web && npm run build` |
+| 개별 게이트 | G-M01 · G2-Q01 · G-M03 · G-S02 · G-S04 · G-S01 · G-M05 · G-M04 PASS. G-S06 FAIL 3 = QA 산출물(`outputs/qa2-1/*.out` · `qa2-2/probe_quote.py`) — 내 파일 아님 | `uv run python gates/check_*.py` |
+| gate · gate2 · bench | 돌리지 않음(지시) | — |
+
+### 요청
+- **개발3:** `packs/eto/tasks/quote.yaml` 에 `line_limits`(값 = `tests/test_c2_dev2.py::KD_LINE_LIMITS`) → strict xfail 지우기 · 로더 `_validate_quote` 가 `serve.quotes.validate_line_limits` 호출 · 내가 고친 `api/routers/ops.py` overview · `screens/Overview.tsx` 확인(D2-94).
+- **아키텍트:** 계약 3곳(task-contract §4 document_limits · §6.2 · §6.3 line_limits · immutable, api-contract §2 health/overview · B09 · B11 · §6.1) 확인 후 `core-freeze-2` 재태그.

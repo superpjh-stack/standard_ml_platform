@@ -1,0 +1,852 @@
+[
+ {
+  "gate": "G2-E01",
+  "item": "정상 샘플 업로드",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "labels": "none",
+   "metrics": null,
+   "regions": 3,
+   "bom": 4,
+   "sec": 0.019
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "kd 엔티티 20,000",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ],
+   "sec": 0.35,
+   "resp_bytes": 1090
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-E01",
+  "item": "kd 엔티티 20,001",
+  "verdict": "PASS",
+  "measured": {
+   "status": 413,
+   "err": [
+    "document_too_large",
+    "entities"
+   ],
+   "sec": 0.1,
+   "resp_bytes": 145
+  },
+  "expected": 413
+ },
+ {
+  "gate": "G2-E01",
+  "item": "POLYLINE + VERTEX 15만(엔티티 수 회피)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ],
+   "entity_count": 2,
+   "sec": 0.65,
+   "bytes": 4089050
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "크기 정확히 5 MiB (5,242,880 B)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ],
+   "sec": 0.05
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-E01",
+  "item": "크기 5 MiB + 1 (5,242,881 B)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 413,
+   "err": [
+    "document_too_large",
+    "bytes"
+   ],
+   "sec": 0.04
+  },
+  "expected": 413
+ },
+ {
+  "gate": "G2-E01",
+  "item": "업로드 50 MiB",
+  "verdict": "PASS",
+  "measured": {
+   "status": 413,
+   "body": {
+    "error": {
+     "code": "document_too_large",
+     "message": "업로드가 허용 상한을 넘습니다",
+     "detail": {
+      "rule": "bytes",
+      "field": "file"
+     }
+    }
+   },
+   "sec": 0.02
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · 바이너리 DXF 표지",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "binary"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · gzip(.dxf 이름)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "binary"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · zip 폭탄(.dxf 이름)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "binary"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · 빈 파일",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · 홀수 줄",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · SECTION 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · 그룹 코드 문자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · 닫히지 않은 SECTION",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · 중첩 SECTION",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "깨진 문서 · UTF-16",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "binary"
+   ]
+  },
+  "expected": "422 invalid_document"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "좌표 nan",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "좌표 inf",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "좌표 -inf",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "좌표 1e309",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "좌표 1e308",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "좌표 1e9",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "좌표 1e-320",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-E01",
+  "item": "원 반지름 1e300",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "정수 코드 70 = 'abc'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "parse"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "꼭짓점 4,001",
+  "verdict": "PASS",
+  "measured": {
+   "status": 413,
+   "err": [
+    "document_too_large",
+    "vertices"
+   ]
+  },
+  "expected": "413 vertices"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "악성 텍스트(스크립트 · 수식 · \\U+0000 · 제어문자)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 500,
+   "err": [
+    null,
+    null
+   ],
+   "texts_has_nul": false,
+   "n_texts": 0
+  },
+  "expected": "201(원문 저장 · 렌더 시 이스케이프) 또는 422 — 500 아님"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "NUL 문자(앞 4096 바이트 뒤) 텍스트",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 500,
+   "err": [
+    null,
+    null
+   ],
+   "body": "{'_raw': 'Internal Server Error'}"
+  },
+  "expected": "201 또는 422 — 500 아님"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "레이어 이름 2,000,000자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ],
+   "resp_bytes": 1086,
+   "sec": 0.02
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "텍스트 3,000,000자(TEXT_MAX 2,000 자름)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "resp_bytes": 1086
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 '../../../etc/passwd.dxf'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "filename": "passwd.dxf",
+   "len": 10
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 '..\\\\..\\\\win.dxf'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "filename": "win.dxf",
+   "len": 7
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 'C:\\\\x\\\\y.dxf'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "filename": "y.dxf",
+   "len": 5
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 '/abs/path/z.dxf'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "filename": "z.dxf",
+   "len": 5
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "filename": [
+    "invalid_document",
+    "format"
+   ],
+   "len": 3
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 '\\u202egpj.dxf'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "filename": "‮gpj.dxf",
+   "len": 8
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 'x.DXF'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "filename": "x.DXF",
+   "len": 5
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 'noext'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "filename": [
+    "invalid_document",
+    "format"
+   ],
+   "len": 3
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 '.dxf'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "filename": ".dxf",
+   "len": 4
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 'a.dxf\\x00.exe'",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 422,
+   "filename": [
+    "invalid_document",
+    "format"
+   ],
+   "len": 3
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "파일 이름 'a.dxf/'",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 201,
+   "filename": "upload.dxf",
+   "len": 10
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "원본 저장 경로 = <tenant>/<sha256>.dxf 만",
+  "verdict": "PASS",
+  "measured": {
+   "n": 15,
+   "sample": [
+    "<scratch>/docs/t22f6c1/8e7a76140a81af03e859ea8cea3093888d9c959a7b4c162858505d61d332d47e.dxf",
+    "<scratch>/docs/t22f6c1/f5a81156904f9688e6186e5d4637e7b6744f61b78bfdf847d428071d4fd69806.dxf"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "unit_override=None",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "unit"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "unit_override=mm",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-E01",
+  "item": "unit_override=inch",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    null,
+    null
+   ]
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-E01",
+  "item": "unit_override=m",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "unit"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "unit_override=../mm",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "unit"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "unit_override=MM",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_document",
+    "unit"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-E01",
+  "item": "multipart boundary 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "JSON 본문",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "file 칸 2개(첫째 사용)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "base64 전송 인코딩 칸",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "Content-Encoding: gzip 머리(압축 해제 안 함)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "viewer 업로드",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": null
+ },
+ {
+  "gate": "감사",
+  "item": "문서 업로드 2회(403 · 201) → mlp_audit +2",
+  "verdict": "PASS",
+  "measured": {
+   "delta": 2
+  },
+  "expected": null
+ },
+ {
+  "gate": "감사",
+  "item": "업로드 감사 행 내용(문서 ID 남김?)",
+  "verdict": "FAIL",
+  "measured": {
+   "row": {
+    "actor": "test-operator",
+    "detail": {
+     "status": 201
+    },
+    "target": "/api/v1/tenants/t22f6c1/tasks/t22f6c1.drawing_regions/documents"
+   }
+  },
+  "expected": "doc_id 또는 sha256 이 감사에 남는다 (누가 어떤 도면을 올렸는지 추적)"
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 admin 키 · GET 문서",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "code": "not_found"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 admin 키 · GET 목록",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "code": "not_found"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 admin 키 · GET 다른 회사 경로로 내 문서",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "code": "not_found"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 업로드",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "extract 아닌 과제의 documents → 404 type_route",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "err": [
+    "not_found",
+    "type_route"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-E01",
+  "item": "cad_regions 최악 꼴 규모(키워드 텍스트 × 중첩 사각형)",
+  "verdict": "WARN",
+  "measured": {
+   "scaling": [
+    {
+     "n_rect": 250,
+     "n_text": 250,
+     "entities": 500,
+     "file_bytes": 37607,
+     "sec": 0.09,
+     "peak_MB": 0.8,
+     "regions": 250,
+     "regions_json_MB": 0.24
+    },
+    {
+     "n_rect": 500,
+     "n_text": 500,
+     "entities": 1000,
+     "file_bytes": 76107,
+     "sec": 0.33,
+     "peak_MB": 2.0,
+     "regions": 500,
+     "regions_json_MB": 0.9
+    },
+    {
+     "n_rect": 1000,
+     "n_text": 1000,
+     "entities": 2000,
+     "file_bytes": 153115,
+     "sec": 1.2,
+     "peak_MB": 6.0,
+     "regions": 1000,
+     "regions_json_MB": 3.46
+    },
+    {
+     "n_rect": 2000,
+     "n_text": 2000,
+     "entities": 4000,
+     "file_bytes": 316115,
+     "sec": 4.71,
+     "peak_MB": 20.0,
+     "regions": 2000,
+     "regions_json_MB": 13.61
+    }
+   ],
+   "projection_20000_entities": {
+    "sec_x1": 118.0,
+    "regions_json_MB": 340.0,
+    "note": "bom_text 가 analyze 를 한 번 더 부른다(×2)"
+   }
+  },
+  "expected": "상한(20,000 · 5 MiB) 안의 문서 1건이 수 초 안에 끝나고 응답 · 저장 크기가 유한"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "API 업로드 · 사각형 2,000 + 키워드 텍스트 2,000 (엔티티 4,000 · 상한의 20%)",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 201,
+   "sec": 2.6,
+   "resp_MB": 11.7
+  },
+  "expected": "< 10 s · 응답 < 5 MiB"
+ },
+ {
+  "gate": "G2-E01",
+  "item": "ot geometry_objects 최악 꼴(외곽 bulge 500 + 원 1,999)",
+  "verdict": "WARN",
+  "measured": {
+   "error": "ExtractError: points 곡선이 너무 복잡합니다. 도면을 단순화하세요.",
+   "sec": 0.0,
+   "file_bytes": 110599
+  },
+  "expected": "< 10 s"
+ }
+]

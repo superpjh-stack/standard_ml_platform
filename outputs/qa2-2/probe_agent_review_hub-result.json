@@ -1,0 +1,470 @@
+[
+ {
+  "gate": "G2-I01",
+  "item": "도구 4 · 별칭 4 · LLM 이름 4 = 12 호출 → 쓰기 0(승인 · 단계 · 학습 · 실측 · 대기열 · 견적 · 문서)",
+  "verdict": "FAIL",
+  "measured": {
+   "calls": [
+    {
+     "name": "ml.calculate_prediction",
+     "status": "ok",
+     "summary": "t48a29c.sensory_score 예측 상태 ok (모델 v1) · 합성 데이터 모델",
+     "cites": 1
+    },
+    {
+     "name": "ml.get_explanation",
+     "status": "ok",
+     "summary": "t48a29c.sensory_score 예측 근거 — 모델 v1(gbr) · 스냅숏 420행",
+     "cites": 1
+    },
+    {
+     "name": "ml.calculate_recommendation",
+     "status": "ok",
+     "summary": "t48a29c.recipe_optimize 추천 후보 5 · feasible=True · rec_id=rec_01M4RSZQQEX0P42H0TZ",
+     "cites": 2
+    },
+    {
+     "name": "ml.get_monitor_summary",
+     "status": "ok",
+     "summary": "과제 3 — 경고 0 · 운영 모델 없음 2",
+     "cites": 3
+    },
+    {
+     "name": "ml.predict",
+     "status": "ok",
+     "summary": "t48a29c.sensory_score 예측 상태 ok (모델 v1) · 합성 데이터 모델",
+     "cites": 1
+    },
+    {
+     "name": "ml.explain",
+     "status": "ok",
+     "summary": "t48a29c.sensory_score 예측 근거 — 모델 v1(gbr) · 스냅숏 420행",
+     "cites": 1
+    },
+    {
+     "name": "ml.recommend",
+     "status": "ok",
+     "summary": "t48a29c.recipe_optimize 추천 후보 5 · feasible=True · rec_id=rec_01M4RSZQTF7HX86YKJ6",
+     "cites": 2
+    },
+    {
+     "name": "ml.monitor_summary",
+     "status": "ok",
+     "summary": "과제 3 — 경고 0 · 운영 모델 없음 2",
+     "cites": 3
+    },
+    {
+     "name": "ml__calculate_prediction",
+     "status": "ok",
+     "summary": "t48a29c.sensory_score 예측 상태 ok (모델 v1) · 합성 데이터 모델",
+     "cites": 1
+    },
+    {
+     "name": "ml__get_explanation",
+     "status": "ok",
+     "summary": "t48a29c.sensory_score 예측 근거 — 모델 v1(gbr) · 스냅숏 420행",
+     "cites": 1
+    },
+    {
+     "name": "ml__calculate_recommendation",
+     "status": "ok",
+     "summary": "t48a29c.recipe_optimize 추천 후보 5 · feasible=True · rec_id=rec_01M4RSZQWZYSWTG709P",
+     "cites": 2
+    },
+    {
+     "name": "ml__get_monitor_summary",
+     "status": "ok",
+     "summary": "과제 3 — 경고 0 · 운영 모델 없음 2",
+     "cites": 3
+    }
+   ],
+   "changed": {
+    "recommendation_needs_approval": [
+     0,
+     3
+    ]
+   },
+   "prediction_delta": 3,
+   "recommendation_delta": 3
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I01",
+  "item": "도구 호출 상태(ok 기대)",
+  "verdict": "PASS",
+  "measured": [],
+  "expected": null
+ },
+ {
+  "gate": "G2-I01",
+  "item": "승인 요청 유도 · 경로 주입 11종(admin 키) → 승인 · 단계 변화 0",
+  "verdict": "PASS",
+  "measured": {
+   "results": {
+    "추천 top-level request_approval": "error",
+    "추천 params.request_approval=true": "error",
+    "추천 params.request_approval=1": "error",
+    "추천 current 에 request_approval": "error",
+    "예측 task 경로 주입": "error",
+    "예측 task 줄바꿈": "error",
+    "다른 회사 과제": "denied",
+    "견적 과제(quote 유형)": "error",
+    "대기열 과제": "error",
+    "모르는 도구 ml.draft_promote": "error",
+    "action.propose": "error"
+   },
+   "changed": {}
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I01",
+  "item": "ToolMeta readonly 4 · 이름 규칙",
+  "verdict": "PASS",
+  "measured": {
+   "ml.calculate_prediction": true,
+   "ml.get_explanation": true,
+   "ml.calculate_recommendation": true,
+   "ml.get_monitor_summary": true
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I01",
+  "item": "viewer 키 → denied",
+  "verdict": "PASS",
+  "measured": {
+   "status": "denied"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I01",
+  "item": "explain 결과에 원천 ref · 입력값 · 경로 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": "ok",
+   "keys": [
+    "algo",
+    "contributors",
+    "model_version",
+    "notice",
+    "prediction_id",
+    "snapshot_id",
+    "snapshot_range",
+    "snapshot_rows",
+    "synthetic",
+    "task",
+    "trained_at"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "GET review · viewer",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "GET review · operator",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200
+  },
+  "expected": 200
+ },
+ {
+  "gate": "G2-A01",
+  "item": "GET review · approver",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200
+  },
+  "expected": 200
+ },
+ {
+  "gate": "G2-A01",
+  "item": "GET review · admin",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200
+  },
+  "expected": 200
+ },
+ {
+  "gate": "G2-A01",
+  "item": "GET review · approver_other",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200
+  },
+  "expected": 200
+ },
+ {
+  "gate": "G2-A01",
+  "item": "대기열 열린 항목",
+  "verdict": "PASS",
+  "measured": {
+   "n": 3,
+   "origins": [
+    "test_split"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review · viewer",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review · operator",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review · approver_other",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review · approver(자기 과제)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200
+  },
+  "expected": null
+ },
+ {
+  "gate": "감사",
+  "item": "대기열 결정 → review.<state> 감사 1행",
+  "verdict": "PASS",
+  "measured": {
+   "delta": 1
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "닫힌 항목 재검토 → 409 already_decided",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review 잘못된 본문 · state=open",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review 잘못된 본문 · note 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review 잘못된 본문 · 모르는 키 decided_by",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "PATCH review 잘못된 본문 · note 5000자",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 admin · GET review",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 admin · PATCH review",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 경로 · 남의 item_id",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "남의 시도 뒤 항목 그대로 open",
+  "verdict": "PASS",
+  "measured": {
+   "open": 2
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "대기열 아닌 과제 review → 404 type_route",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I02",
+  "item": "허브 내보내기 금지 패턴(키 · DSN · URL · IP · 경로 · 입력값 · ID)",
+  "verdict": "PASS",
+  "measured": {
+   "file_bytes": 80745,
+   "companies": [
+    "kd",
+    "krs",
+    "ks",
+    "ot",
+    "pc",
+    "sw",
+    "pc"
+   ],
+   "hits": {}
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I02",
+  "item": "예측 입력값(학습 범위 중앙값) 문자열이 파일에 없음",
+  "verdict": "PASS",
+  "measured": {
+   "leaked": [],
+   "checked": 9
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I02",
+  "item": "source_ref 는 저장소 상대 경로:줄 만",
+  "verdict": "PASS",
+  "measured": {
+   "n": 44,
+   "bad": [],
+   "sample": [
+    "contracts/agent-tools.md:13",
+    "contracts/agent-tools.md:14",
+    "contracts/agent-tools.md:15",
+    "contracts/agent-tools.md:16"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I02",
+  "item": "datasets(원천 테이블 이름 — 정의만)",
+  "verdict": "INFO",
+  "measured": {
+   "physical_names": [
+    "BAS_EQUIPMENTS",
+    "EIF_PLC_RAW",
+    "PRC_MONITOR_DATA",
+    "PRS_MOLD_SHOTS",
+    "PRS_PROCESS_DATA",
+    "PRT_PRINT_CONDS",
+    "PRT_PRINT_RESULTS",
+    "PRT_QUALITY_HISTORY",
+    "RCV_MATERIAL_LOTS"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I02",
+  "item": "api_usage 는 집계 숫자만(이 회사)",
+  "verdict": "INFO",
+  "measured": {
+   "company": "pc",
+   "api_usage": {
+    "2026-10-13": {
+     "/api/v1/tenants/t48a29c/tasks/recipe_optimize/optimize": {
+      "calls": 0,
+      "errors": 0,
+      "p95_ms": null,
+      "ref": "mlp_prediction@2026-10-13",
+      "basis": "실측"
+     },
+     "/api/v1/tenants/t48a29c/tasks/residual_review/review": {
+      "calls": 0,
+      "errors": 0,
+      "p95_ms": null,
+      "ref": "mlp_audit@2026-10-13",
+      "basis": "실측"
+     },
+     "/api/v1/tenants/t48a29c/tasks/sensory_score/predict": {
+      "calls": 3,
+      "errors": 0,
+      "p95_ms": null,
+      "ref": "mlp_prediction@2026-10-13 (api 3)",
+      "basis": "실측"
+     }
+    }
+   }
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-I02",
+  "item": "내보내기 범위 = 등록부 6개사(_template · 임시 회사 제외)",
+  "verdict": "PASS",
+  "measured": {
+   "codes": [
+    "kd",
+    "krs",
+    "ks",
+    "ot",
+    "pc",
+    "sw"
+   ]
+  },
+  "expected": null
+ }
+]

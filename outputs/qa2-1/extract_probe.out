@@ -1,0 +1,61 @@
+{
+ "class_counts": {
+  "train": {
+   "hole": 240,
+   "other": 240,
+   "outer": 240,
+   "slot": 240
+  },
+  "valid": {
+   "hole": 80,
+   "other": 80,
+   "outer": 80,
+   "slot": 80
+  },
+  "test": {
+   "hole": 80,
+   "other": 80,
+   "outer": 80,
+   "slot": 80
+  }
+ },
+ "base": {
+  "status": "succeeded",
+  "champion": "logreg",
+  "labels": "synthetic",
+  "test": {
+   "macro_f1": [
+    1.0,
+    0.1
+   ],
+   "accuracy": [
+    1.0,
+    0.25
+   ]
+  },
+  "baseline": "majority_class",
+  "baseline_value": "outer",
+  "ledger": [
+   "final_eval",
+   "report"
+  ]
+ },
+ "independent_majority": {
+  "class": "outer",
+  "macro_f1": 0.1,
+  "accuracy": 0.25
+ },
+ "labels_none": {
+  "status": "failed",
+  "labels": "none",
+  "test_metric_keys": null,
+  "macro_f1": null,
+  "extract_metrics_keys": []
+ },
+ "test_perturbed_same": {
+  "champion": true,
+  "valid": true,
+  "baseline_value": true,
+  "test_macro_f1_changed": true
+ }
+}

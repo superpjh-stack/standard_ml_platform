@@ -1,0 +1,502 @@
+T01  ks.remaining_hours train 접수  PASS  HTTP 202 {'run_id': 'run_07db9a8cae333dfa', 'status': 'queued'}
+T01  ks.failure_24h train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  ks.sensor_ood train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  ks 작업자  PASS  <scratch>/art/ks/ks.remaining_hours/run_07db9a8cae333dfa", "version": "v1", "stage": "candidate"} | 
+T01  ks.remaining_hours 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  ks.remaining_hours stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.remaining_hours promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSFYTZ0EY2570PA6QNWF5R', 'state': 'pending'}
+T01  ks.remaining_hours 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSFYTZ0EY2570PA6QNWF5R', 'state': 'approved', 'production_version': 'v1'}
+T01  ks health model_ready  PASS  [('ks.remaining_hours', True), ('ks.failure_24h', False), ('ks.sensor_ood', False), ('ks.maintenance_timing', False)]
+T01  sw.delta_e train 접수  PASS  HTTP 202 {'run_id': 'run_17912735c4e81f79', 'status': 'queued'}
+T01  sw.defect_risk train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  sw.print_ood train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  sw 작업자  PASS  <scratch>/art/sw/sw.delta_e/run_17912735c4e81f79", "version": "v1", "stage": "candidate"} | 
+T01  sw.delta_e 학습  PASS  status=succeeded champion=extra_trees beats=True v=v1 err=None
+T01  sw.delta_e stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.delta_e promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG1N3K9EP2Q2X3RZ6DFPV', 'state': 'pending'}
+T01  sw.delta_e 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG1N3K9EP2Q2X3RZ6DFPV', 'state': 'approved', 'production_version': 'v1'}
+T01  sw health model_ready  PASS  [('sw.delta_e', True), ('sw.defect_risk', False), ('sw.print_ood', False), ('sw.print_setpoint', False)]
+T01  krs.joint_strength train 접수  PASS  HTTP 202 {'run_id': 'run_92d255512def8101', 'status': 'queued'}
+T01  krs.residual_review train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  krs 작업자  PASS  <scratch>/art/krs/krs.joint_strength/run_92d255512def8101", "version": "v1", "stage": "candidate"} | 
+T01  krs.joint_strength 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  krs.joint_strength stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  krs.joint_strength promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG4G8Z2KECGGBH3XC8YVK', 'state': 'pending'}
+T01  krs.joint_strength 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG4G8Z2KECGGBH3XC8YVK', 'state': 'approved', 'production_version': 'v1'}
+T01  krs health model_ready  PASS  [('krs.joint_strength', True), ('krs.recipe_optimize', False), ('krs.residual_review', False)]
+T01  pc.sensory_score train 접수  PASS  HTTP 202 {'run_id': 'run_dccd4bcbabb791fb', 'status': 'queued'}
+T01  pc.residual_review train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  pc 작업자  PASS  <scratch>/art/pc/pc.sensory_score/run_dccd4bcbabb791fb", "version": "v1", "stage": "candidate"} | 
+T01  pc.sensory_score 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  pc.sensory_score stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  pc.sensory_score promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG7CPS0A20XT1G3N13R52', 'state': 'pending'}
+T01  pc.sensory_score 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG7CPS0A20XT1G3N13R52', 'state': 'approved', 'production_version': 'v1'}
+T01  pc health model_ready  PASS  [('pc.sensory_score', True), ('pc.recipe_optimize', False), ('pc.residual_review', False)]
+T01  ot.machining_minutes train 접수  PASS  HTTP 202 {'run_id': 'run_3d886787fb207a3c', 'status': 'queued'}
+T01  ot.cad_objects train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  ot 작업자  PASS  <scratch>/art/ot/ot.machining_minutes/run_3d886787fb207a3c", "version": "v1", "stage": "candidate"} | 
+T01  ot.machining_minutes 학습  PASS  status=succeeded champion=ridge beats=True v=v1 err=None
+T01  ot.machining_minutes stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ot.machining_minutes promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSG9ZA5C8W7ETG2FKTGTN9', 'state': 'pending'}
+T01  ot.machining_minutes 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSG9ZA5C8W7ETG2FKTGTN9', 'state': 'approved', 'production_version': 'v1'}
+T01  ot health model_ready  PASS  [('ot.machining_minutes', True), ('ot.cad_objects', False), ('ot.quote', False)]
+T01  kd.labor_hours train 접수  PASS  HTTP 202 {'run_id': 'run_3996ffaa15182ea6', 'status': 'queued'}
+T01  kd.drawing_regions train 접수  WARN  HTTP 409 {'error': {'code': 'train_busy', 'message': '이 회사의 학습이 이미 진행 중입니다', 'detail': {'rule': 'tenant_concurrency'}}}
+T01  kd 작업자  PASS  <scratch>/art/kd/kd.labor_hours/run_3996ffaa15182ea6", "version": "v1", "stage": "candidate"} | 
+T01  kd.labor_hours 학습  PASS  status=succeeded champion=ridge beats=True v=v1 err=None
+T01  kd.labor_hours stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  kd.labor_hours promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGCEZXPJZCS9S1KDG7WCP', 'state': 'pending'}
+T01  kd.labor_hours 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGCEZXPJZCS9S1KDG7WCP', 'state': 'approved', 'production_version': 'v1'}
+T01  kd health model_ready  PASS  [('kd.labor_hours', True), ('kd.drawing_regions', False), ('kd.quote', False)]
+T01  ks.failure_24h train 접수  PASS  HTTP 202 {'run_id': 'run_28e5e4926e00e84d', 'status': 'queued'}
+T01  ks.failure_24h 작업자  PASS  Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/ks/ks.failure_24h/run_28e5e4926e00e84d", "version": "v1", "stage": "candidate"} | 
+T01  ks.sensor_ood train 접수  PASS  HTTP 202 {'run_id': 'run_dd020686539cc620', 'status': 'queued'}
+T01  ks.sensor_ood 작업자  PASS  -Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/ks/ks.sensor_ood/run_dd020686539cc620", "version": "v1", "stage": "candidate"} | 
+T01  ks.failure_24h 학습  PASS  status=succeeded champion=rf_clf beats=True v=v1 err=None
+T01  ks.failure_24h stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.failure_24h promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGVVPTX7KCV3NKSC47VFS', 'state': 'pending'}
+T01  ks.failure_24h 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGVVPTX7KCV3NKSC47VFS', 'state': 'approved', 'production_version': 'v1'}
+T01  ks.sensor_ood 학습  PASS  status=succeeded champion=isolation_forest beats=True v=v1 err=None
+T01  ks.sensor_ood stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ks.sensor_ood promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGVX8YB2VFXNCA5KQW2N1', 'state': 'pending'}
+T01  ks.sensor_ood 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGVX8YB2VFXNCA5KQW2N1', 'state': 'approved', 'production_version': 'v1'}
+T01  ks health model_ready  PASS  [('ks.remaining_hours', True), ('ks.failure_24h', True), ('ks.sensor_ood', True), ('ks.maintenance_timing', False)]
+T01  sw.defect_risk train 접수  PASS  HTTP 202 {'run_id': 'run_9ee3915b13c0cee6', 'status': 'queued'}
+T01  sw.defect_risk 작업자  PASS  Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/sw/sw.defect_risk/run_9ee3915b13c0cee6", "version": "v1", "stage": "candidate"} | 
+T01  sw.print_ood train 접수  PASS  HTTP 202 {'run_id': 'run_94302387fadce1a4', 'status': 'queued'}
+T01  sw.print_ood 작업자  PASS  I-Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/sw/sw.print_ood/run_94302387fadce1a4", "version": "v1", "stage": "candidate"} | 
+T01  sw.defect_risk 학습  PASS  status=succeeded champion=gbc beats=True v=v1 err=None
+T01  sw.defect_risk stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.defect_risk promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGZF7AKFQP23R2QB5ETKZ', 'state': 'pending'}
+T01  sw.defect_risk 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGZF7AKFQP23R2QB5ETKZ', 'state': 'approved', 'production_version': 'v1'}
+T01  sw.print_ood 학습  PASS  status=succeeded champion=isolation_forest beats=True v=v1 err=None
+T01  sw.print_ood stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  sw.print_ood promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSGZGS186VQ3Y316J61TX2', 'state': 'pending'}
+T01  sw.print_ood 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSGZGS186VQ3Y316J61TX2', 'state': 'approved', 'production_version': 'v1'}
+T01  sw health model_ready  PASS  [('sw.delta_e', True), ('sw.defect_risk', True), ('sw.print_ood', True), ('sw.print_setpoint', False)]
+T01  krs.residual_review train 접수  PASS  HTTP 202 {'run_id': 'run_fa95898ba833c93e', 'status': 'queued'}
+T01  krs.residual_review 작업자  FAIL  {"run_id": "run_fa95898ba833c93e", "status": "error", "error": "NotTrainable: krs.residual_review: review_queue 는 학습 과제가 아니다(extract 는 model: 추출기만)"} | 
+T01  krs.residual_review 학습  WARN  status=failed champion=None beats=None v=None err={'type': 'NotTrainable', 'message': 'krs.residual_review: review_queue 는 학습 과제가 
+T01  krs health model_ready  PASS  [('krs.joint_strength', True), ('krs.recipe_optimize', False), ('krs.residual_review', False)]
+T01  pc.residual_review train 접수  PASS  HTTP 202 {'run_id': 'run_e6222d7460f96f14', 'status': 'queued'}
+T01  pc.residual_review 작업자  FAIL  {"run_id": "run_e6222d7460f96f14", "status": "error", "error": "NotTrainable: pc.residual_review: review_queue 는 학습 과제가 아니다(extract 는 model: 추출기만)"} | 
+T01  pc.residual_review 학습  WARN  status=failed champion=None beats=None v=None err={'type': 'NotTrainable', 'message': 'pc.residual_review: review_queue 는 학습 과제가 아
+T01  pc health model_ready  PASS  [('pc.sensory_score', True), ('pc.recipe_optimize', False), ('pc.residual_review', False)]
+T01  ot.cad_objects train 접수  PASS  HTTP 202 {'run_id': 'run_9f8d86feb50ece0c', 'status': 'queued'}
+T01  ot.cad_objects 작업자  PASS  Coding-Standard-ML-Platform/dbd09a2a-f7cb-4121-9a92-cf8d0352ad28/scratchpad/art/ot/ot.cad_objects/run_9f8d86feb50ece0c", "version": "v1", "stage": "candidate"} | 
+T01  ot.cad_objects 학습  PASS  status=succeeded champion=logreg beats=True v=v1 err=None
+T01  ot.cad_objects stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  ot.cad_objects promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4RSH5XGPTXZY4TSHSWVEFTT', 'state': 'pending'}
+T01  ot.cad_objects 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4RSH5XGPTXZY4TSHSWVEFTT', 'state': 'approved', 'production_version': 'v1'}
+T01  ot health model_ready  PASS  [('ot.machining_minutes', True), ('ot.cad_objects', True), ('ot.quote', False)]
+T01  kd.drawing_regions train 접수  PASS  HTTP 202 {'run_id': 'run_761ad907489c7c64', 'status': 'queued'}
+T01  kd.drawing_regions 작업자  FAIL  {"run_id": "run_761ad907489c7c64", "status": "error", "error": "NotTrainable: kd.drawing_regions: extract 는 학습 과제가 아니다(extract 는 model: 추출기만)"} | 
+T01  kd.drawing_regions 학습  WARN  status=failed champion=None beats=None v=None err={'type': 'NotTrainable', 'message': 'kd.drawing_regions: extract 는 학습 과제가 아니다(ex
+T01  kd health model_ready  PASS  [('kd.labor_hours', True), ('kd.drawing_regions', False), ('kd.quote', False)]
+Q  kd 도면 업로드 201  PASS  HTTP 201 labels=none metrics=None regions=3 bom=4 objects=0 counts={'title_block': 1, 'bom_table': 1, 'rev_table': 1, 'other': 0, 'bom_rows': 4}
+Q  kd 라벨 없음 → labels none · metrics null  PASS  labels=none metrics=None
+Q  kd 문서 재조회 같은 인식값  PASS  HTTP 200
+Q  kd 초안 201 draft rev1  PASS  HTTP 201  total=12015740 ov=1
+Q  kd 금액 = 원 단위 문자열  PASS  total='12015740' costs={'vat': '1092340', 'labor': '2689209', 'markup': '1424791', 'material': '6809400', 'subtotal': '10923400', 'outsource': '0'}
+Q  kd 사람 수정 → overrides 1+  PASS  [{"field": "bom", "confirmed": [{"name": "SHELL", "mass_kg": 320.0, "material": "STS316L", "price_kg": "6500", "quantity": 2}, {"name": "HEAD", "mass_kg": 90.0, "material": "STS316L", "price_kg": "650
+Q  kd 수정 201 rev2  PASS  HTTP 201 ov=2 total=14995787
+Q  kd 수정 뒤 이전 overrides 유지(누적)  PASS  1 → 2
+Q  kd 인식값으로 되돌린 수정 뒤에도 overrides 이력 유지  PASS  HTTP 201 rev=3 ov=2
+Q  kd 처음 quote_id 로 조회 = 최신 revision  PASS  HTTP 200 rev=4
+Q  kd 확정 요청 reviewed 없음  PASS  HTTP 422 code=missing_required (기대 422 missing_required) field=reviewed
+Q  kd 확정 요청 메모 < 5자  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+Q  kd viewer 확정 요청  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  kd 확정 요청 202 pending  PASS  HTTP 202 {'approval_id': 'apr_01M4RSSSCQVRPWA6AYEEA75GVS', 'state': 'pending'}
+Q  kd 상태 pending_confirm  PASS  status=pending_confirm
+Q  kd 확정 대기 중 수정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  kd 확정 대기 중 재확정 요청  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  kd operator 확정 결정(✕ — D2-04)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  kd 다른 과제 담당 approver 결정  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  kd 반려 200  PASS  HTTP 200 {'approval_id': 'apr_01M4RSSSCQVRPWA6AYEEA75GVS', 'state': 'rejected', 'production_version': None}
+Q  kd 반려 뒤 초안 복귀 · overrides 유지  PASS  status=draft reviewed=False ov=2 total=14995787
+Q  kd 반려된 확정 재결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+Q  kd 반려 뒤 다시 고칠 수 있음  PASS  HTTP 201 rev=7
+Q  kd 만료 승인 = state expired 목록  PASS  HTTP 200 n=1
+Q  kd 만료 뒤 초안 복귀 · overrides 유지  PASS  status=draft ov=2
+Q  kd 만료된 확정 결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+Q  kd 만료 뒤 재요청 → 새 승인 ID  PASS  HTTP 202
+Q  kd 두 탭 동시 확정 → 200 1 · 409 1  PASS  codes=[200, 409]
+Q  kd confirmed 행 1 · 감사 1  PASS  confirmed rows=1 audit=1
+Q  kd 확정 · 확정자 · 시각  PASS  status=confirmed by=qa23-approver#4
+Q  kd 확정 금액 = 확정 요청 때 금액  PASS  total 14995787 → 14995787
+Q  kd 확정 뒤 overrides 유지  PASS  ov=2
+Q  kd 확정 견적 재수정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  kd 확정 견적 재수정(admin)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  kd 확정 견적 재확정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  kd 옛 revision ID 로 재수정(우회)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  kd 옛 revision ID 로 재수정(우회)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  kd CSV 200 · BOM · 합계  PASS  HTTP 200 bytes=1204 sha=a781af6b1eaf
+Q  kd uses 모델 교체 → production v2  PASS  HTTP 200 {'approval_id': 'apr_01M4RSSV1G0E6PCA6QCQ9CXNNR', 'state': 'approved', 'production_version': 'v2'}
+Q  kd 모델 교체 뒤 확정 견적 금액 · 예측 · 모델 버전 불변  PASS  total 14995787 → 14995787 versions=[{'task': 'kd.labor_hours', 'version': 'v1', 'synthetic': True}]
+Q  kd 모델 교체 뒤 CSV 바이트 동일  PASS  a781af6b1eaf
+Q  kd 목록의 확정 견적 금액 불변  PASS  confirmed in list=1
+Q  kd 새 초안은 새 모델 버전 사용  PASS  HTTP 201 versions=[{'task': 'kd.labor_hours', 'version': 'v2', 'synthetic': True}] total=14964649 (확정 14995787)
+Q  kd 동시 확정 요청 → 202 1 · 409 1 · 대기 승인 1  PASS  codes=[202, 409] pending approvals=1
+Q  kd 동시 수정 → 사슬 분기 없음 · revision 중복 0  PASS  codes=[201, 201] revisions=[1, 2, 3]
+2.1  kd DXF 아님(PNG 바이트)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document) rule=parse
+2.1  kd 확장자 아님(.pdf)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document)
+2.1  kd 깨진 DXF(절반)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document) rule=parse
+2.1  kd 바이너리/잡음 DXF  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document)
+2.1  kd 5 MiB 초과  PASS  HTTP 413 code=document_too_large (기대 413 document_too_large) rule=bytes
+2.1  kd 20,000 엔티티 초과(711 KiB)  PASS  HTTP 413 code=document_too_large (기대 413 document_too_large) rule=entities
+2.1  kd viewer 업로드  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.1  kd 없는 문서  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  kd 초안에 reviewed true + 메모 3자  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+Q  ot 도면 업로드 201  PASS  HTTP 201 labels=synthetic metrics=None regions=0 bom=0 objects=9 counts={'outer': 1, 'hole': 6, 'slot': 2, 'other': 0}
+Q  ot 업로드 도면 지표 없음 (labels=synthetic 은 계약 task-contract §6.2:149·205 — 합성 설명자 라벨, 업로드 도면은 metrics null)  PASS  labels=synthetic metrics=None
+Q  ot 문서 재조회 같은 인식값  PASS  HTTP 200
+Q  ot 초안 201 draft rev1  PASS  HTTP 201  total=723718 ov=1
+Q  ot 금액 = 원 단위 문자열  PASS  total='723718' costs={'vat': '65793', 'setup': '31500', 'markup': '85816', 'material': '423222', 'subtotal': '657925', 'processing': '117387'}
+Q  ot 사람 수정 → overrides 1+  PASS  [{"field": "hole_count", "confirmed": 7, "recognized": 6}]
+Q  ot 수정 201 rev2  PASS  HTTP 201 ov=2 total=727395
+Q  ot 수정 뒤 이전 overrides 유지(누적)  PASS  1 → 2
+Q  ot 인식값으로 되돌린 수정 뒤에도 overrides 이력 유지  PASS  HTTP 201 rev=3 ov=2
+Q  ot 처음 quote_id 로 조회 = 최신 revision  PASS  HTTP 200 rev=4
+Q  ot 확정 요청 reviewed 없음  PASS  HTTP 422 code=missing_required (기대 422 missing_required) field=reviewed
+Q  ot 확정 요청 메모 < 5자  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+Q  ot viewer 확정 요청  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  ot 확정 요청 202 pending  PASS  HTTP 202 {'approval_id': 'apr_01M4RST4C5MXP7CTJJBJPXA6RS', 'state': 'pending'}
+Q  ot 상태 pending_confirm  PASS  status=pending_confirm
+Q  ot 확정 대기 중 수정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 확정 대기 중 재확정 요청  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot operator 확정 결정(✕ — D2-04)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  ot 다른 과제 담당 approver 결정  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+Q  ot 반려 200  PASS  HTTP 200 {'approval_id': 'apr_01M4RST4C5MXP7CTJJBJPXA6RS', 'state': 'rejected', 'production_version': None}
+Q  ot 반려 뒤 초안 복귀 · overrides 유지  PASS  status=draft reviewed=False ov=2 total=727395
+Q  ot 반려된 확정 재결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+Q  ot 반려 뒤 다시 고칠 수 있음  PASS  HTTP 201 rev=7
+Q  ot 만료 승인 = state expired 목록  PASS  HTTP 200 n=1
+Q  ot 만료 뒤 초안 복귀 · overrides 유지  PASS  status=draft ov=2
+Q  ot 만료된 확정 결정  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+Q  ot 만료 뒤 재요청 → 새 승인 ID  PASS  HTTP 202
+Q  ot 두 탭 동시 확정 → 200 1 · 409 1  PASS  codes=[200, 409]
+Q  ot confirmed 행 1 · 감사 1  PASS  confirmed rows=1 audit=1
+Q  ot 확정 · 확정자 · 시각  PASS  status=confirmed by=qa23-approver#19
+Q  ot 확정 금액 = 확정 요청 때 금액  PASS  total 727395 → 727395
+Q  ot 확정 뒤 overrides 유지  PASS  ov=2
+Q  ot 확정 견적 재수정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 확정 견적 재수정(admin)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 확정 견적 재확정  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 옛 revision ID 로 재수정(우회)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot 옛 revision ID 로 재수정(우회)  PASS  HTTP 409 code=quote_locked (기대 409 quote_locked)
+Q  ot CSV 200 · BOM · 합계  PASS  HTTP 200 bytes=1317 sha=db0751ea4d07
+Q  ot uses 모델 교체 → production v2  PASS  HTTP 200 {'approval_id': 'apr_01M4RST61E38RYBA125SE29XER', 'state': 'approved', 'production_version': 'v2'}
+Q  ot 모델 교체 뒤 확정 견적 금액 · 예측 · 모델 버전 불변  PASS  total 727395 → 727395 versions=[{'task': 'ot.machining_minutes', 'version': 'v1', 'synthetic': True}]
+Q  ot 모델 교체 뒤 CSV 바이트 동일  PASS  db0751ea4d07
+Q  ot 목록의 확정 견적 금액 불변  PASS  confirmed in list=1
+Q  ot 새 초안은 새 모델 버전 사용  PASS  HTTP 201 versions=[{'task': 'ot.machining_minutes', 'version': 'v2', 'synthetic': True}] total=729741 (확정 727395)
+Q  ot 동시 확정 요청 → 202 1 · 409 1 · 대기 승인 1  PASS  codes=[202, 409] pending approvals=1
+Q  ot 동시 수정 → 사슬 분기 없음 · revision 중복 0  PASS  codes=[201, 201] revisions=[1, 2, 3]
+2.1  ot DXF 아님(PNG 바이트)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document) rule=parse
+2.1  ot 확장자 아님(.pdf)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document)
+2.1  ot 깨진 DXF(절반)  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document) rule=parse
+2.1  ot 바이너리/잡음 DXF  PASS  HTTP 422 code=invalid_document (기대 422 invalid_document)
+2.1  ot 5 MiB 초과  PASS  HTTP 413 code=document_too_large (기대 413 document_too_large) rule=bytes
+2.1  ot 20,000 엔티티 초과(711 KiB)  PASS  HTTP 413 code=document_too_large (기대 413 document_too_large) rule=entities
+2.1  ot viewer 업로드  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+2.1  ot 없는 문서  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  ot 초안에 reviewed true + 메모 3자  PASS  HTTP 422 code=missing_required (기대 422 missing_required)
+R  krs open 목록 operator 조회  PASS  HTTP 200 n=16 total=16
+R  krs 항목 출처 = test_split/live_residual 만  PASS  ['test_split']
+R  krs 규칙 abs_residual_ge · |잔차| ≥ 임계값  PASS  thr=4.0 min|r|=4.302
+R  krs viewer 목록(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  krs 커서 페이지 겹침 0  PASS  p1=5 p2=5 cursor=있음
+R  krs operator 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  krs 다른 과제 approver 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  krs 모르는 state  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+R  krs 빈 메모(계약 ≥1자)  PASS  HTTP 422 code=invalid_input
+R  krs 다른 회사 키로 검토  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  krs 다른 회사 경로 + 자기 키  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  krs 두 탭 동시 검토 → 200 1 · 409 1 · 결과 = 이긴 쪽  PASS  codes=[200, 409] db=false_alarm
+R  krs 닫힌 항목 재검토  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+R  krs 닫힌 항목 open 목록에서 빠짐  PASS  16 → 15
+2.1  krs review 경로를 회귀 과제로(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  krs 대기열 과제에 predict(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  krs 없는 항목  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  pc open 목록 operator 조회  PASS  HTTP 200 n=3 total=3
+R  pc 항목 출처 = test_split/live_residual 만  PASS  ['test_split']
+R  pc 규칙 top_quantile · |잔차| ≥ 임계값  PASS  thr=4.23381182426332 min|r|=4.328
+R  pc viewer 목록(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  pc 커서 페이지 겹침 0  PASS  p1=3 p2=0 cursor=없음
+R  pc operator 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  pc 다른 과제 approver 검토(✕)  PASS  HTTP 403 code=forbidden (기대 403 forbidden)
+R  pc 모르는 state  PASS  HTTP 422 code=invalid_input (기대 422 invalid_input)
+R  pc 빈 메모(계약 ≥1자)  PASS  HTTP 422 code=invalid_input
+R  pc 다른 회사 키로 검토  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  pc 다른 회사 경로 + 자기 키  PASS  HTTP 404 code=not_found (기대 404 not_found)
+R  pc 두 탭 동시 검토 → 200 1 · 409 1 · 결과 = 이긴 쪽  PASS  codes=[200, 409] db=confirmed_issue
+R  pc 닫힌 항목 재검토  PASS  HTTP 409 code=already_decided (기대 409 already_decided)
+R  pc 닫힌 항목 open 목록에서 빠짐  PASS  3 → 2
+2.1  pc review 경로를 회귀 과제로(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  pc 대기열 과제에 predict(type_route)  PASS  HTTP 404 code=not_found (기대 404 not_found)
+2.1  pc 없는 항목  PASS  HTTP 404 code=not_found (기대 404 not_found)
+UI9  kd 업로드 → 인식 표 · 라벨 표시  PASS  labels 문구=True
+UI9  kd 초안 → 상세 draft · overrides 표  PASS  status=draft errs=[]
+UI9  kd 수정본 → revision 2  PASS  견적 qte_01M4RSXZYSCDFCNAJRT3NX3Z9M 초안 revision 2 합성  합성 학습 데이터·예시 단가 기반 견적 초안입니다.
+UI9  kd 검토 없이 확정 요청 → 화면에 missing_required  PASS  표시됨
+UI9  kd 확정 요청 → pending_confirm 안내  PASS  화면 "확정 대기" 배지 · 안내(qa23-ui-kd-quotes-pending-1024.png) — 첫 판독 FAIL 은 스크립트가 재렌더 전 data-status 를 읽은 경합(재판독 PASS)
+UI9  kd 화면 5 두 탭 승인 → A 승인 · B 409 안내 남음  PASS  A='승인 apr_01M4RSY1Z1TZ8XK7G4Y92VN3PA  승인됨  ' B='승인 apr_01M4RSY1Z1TZ8XK7G4Y92VN3PA  409 · 이미 결정된 승인입니다 (alrea'
+UI9  kd 확정 배지 · 잠금 문구 · 수정 버튼 비활성  PASS  status=confirmed lock=True btn=disabled
+UI9  kd 화면 CSV 내려받기 · BOM  PASS  bytes=1204
+UI9  kd 오래된 탭 목록 재조회가 최신(확정) 상태를 보여 수정 버튼 잠김  PASS  status=confirmed
+UI9  kd op 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  kd A 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  kd B 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  kd stale 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot 업로드 → 인식 표 · 라벨 표시  PASS  labels 문구=False
+UI9  ot 초안 → 상세 draft · overrides 표  PASS  status=draft errs=[]
+UI9  ot 수정본 → revision 2  PASS  견적 qte_01M4RSYXGKRT1FZCWJFXRNM4E9 초안 revision 2 합성  합성 학습 데이터·예시 단가 기반 견적 초안입니다.
+UI9  ot 검토 없이 확정 요청 → 화면에 missing_required  PASS  표시됨
+UI9  ot 확정 요청 → pending_confirm 안내  PASS  status=pending_confirm
+UI9  ot 화면 5 두 탭 승인 → A 승인 · B 409 안내 남음  PASS  A='승인 apr_01M4RSYZGG3SD35DPM4GD3VH2M  승인됨  ' B='승인 apr_01M4RSYZGG3SD35DPM4GD3VH2M  409 · 이미 결정된 승인입니다 (alrea'
+UI9  ot 확정 배지 · 잠금 문구 · 수정 버튼 비활성  PASS  status=confirmed lock=True btn=disabled
+UI9  ot 화면 CSV 내려받기 · BOM  PASS  bytes=1317
+UI9  ot 오래된 탭 목록 재조회가 최신(확정) 상태를 보여 수정 버튼 잠김  PASS  status=confirmed
+UI9  ot op 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot A 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot B 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI9  ot stale 탭 1024px 가로 스크롤 0 · 페이지 오류 0  PASS  sw=1024 errs=[]
+UI8  krs 화면 8 항목 · 출처 배지  PASS  n=15
+UI8  krs 화면 8 두 탭 검토 → B 에 '이미 검토' 안내 남음  PASS  rvw_01M4RSHXDN95XZC8SPKTT58J1M 은(는) 이미 검토되었습니다  409 · 이미 결정된 승인입니다 (already_deci
+UI8  krs 닫힌 항목 목록에서 빠짐  PASS  15 → 14
+UI8  krs viewer 화면 8 → 권한 오류 표시 · 항목 0  PASS  토 대기열 — krs.residual_review [review_queue] 상태  검토 대기 문제 확인 오탐 전체 403 · 권한이 없습니다 (forbidden) 권한이 없습니다
+UI8  krs operator 화면 8 조회(결정 버튼 노출=14)  PASS  버튼 14개 (계약: operator 조회만)
+UI8  krs 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]
+UI8  krs 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]
+UI8  pc 화면 8 항목 · 출처 배지  PASS  n=2
+UI8  pc 화면 8 두 탭 검토 → B 에 '이미 검토' 안내 남음  PASS  rvw_01M4RSHY010B8A1CXWK78NHVRR 은(는) 이미 검토되었습니다  409 · 이미 결정된 승인입니다 (already_deci
+UI8  pc 닫힌 항목 목록에서 빠짐  PASS  2 → 1
+UI8  pc viewer 화면 8 → 권한 오류 표시 · 항목 0  PASS  검토 대기열 — pc.residual_review [review_queue] 상태  검토 대기 문제 확인 오탐 전체 403 · 권한이 없습니다 (forbidden) 권한이 없습니다
+UI8  pc operator 화면 8 조회(결정 버튼 노출=1)  PASS  버튼 1개 (계약: operator 조회만)
+UI8  pc 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]
+UI8  pc 1024px 가로 스크롤 0 · 오류 0  PASS  sw=1024 errs=[]
+NEW  press: make tenant NEW=qn1 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  textile: make tenant NEW=qn2 → 등록부 1 파일  PASS  rc=0 files=['qn2.yaml'] out=<scratch>/tenreg-qn2/qn2.yaml  pack=textil
+NEW  textile: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 4}
+NEW  textile: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn2/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  textile: 기동 · model_ready 전부 false  PASS  [('qn2.delta_e', False), ('qn2.defect_risk', False), ('qn2.print_ood', False), ('qn2.print_setpoint', False)]
+NEW  textile: qn2.delta_e 학습(demo) → stage → 승인 → production  PASS  champion=extra_trees beats=True 200/202/200
+NEW  textile: qn2.delta_e predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  textile: qn2.defect_risk 학습(demo) → stage → 승인 → production  PASS  champion=gbc beats=True 200/202/200
+NEW  textile: qn2.defect_risk predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  textile: qn2.print_ood 학습(demo) → stage → 승인 → production  PASS  champion=isolation_forest beats=True 200/202/200
+NEW  textile: qn2.print_ood predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  solder: make tenant NEW=qn3 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  kimchi: make tenant NEW=qn4 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  rollform-quote: make tenant NEW=qn5 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  eto: make tenant NEW=qn6 → 등록부 1 파일  FAIL(DEF-QA23-001)  rc=2 files=[] "거부: R2: <과제>: 범주 <변수> 값 목록(categories)이 없다" — 스캐폴드 파일을 지움
+NEW  press: 우회 — 스캐폴드 + categories 채움(출처 ks.yaml) → 병합 통과  PASS  files=['qn1.yaml'] ok ['qn1.remaining_hours', 'qn1.failure_24h', 'qn1.sensor_ood', 'qn1.maintenance_timing']
+NEW  press: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 4}
+NEW  press: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn1/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  press: 기동 · model_ready 전부 false  PASS  [('qn1.remaining_hours', False), ('qn1.failure_24h', False), ('qn1.sensor_ood', False), ('qn1.maintenance_timing', False)]
+NEW  press: qn1.remaining_hours 학습(demo) → stage → 승인 → production  PASS  champion=gbr beats=True 200/202/200
+NEW  press: qn1.remaining_hours predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  press: qn1.failure_24h 학습(demo) → stage → 승인 → production  PASS  champion=rf_clf beats=True 200/202/200
+NEW  press: qn1.failure_24h predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  press: qn1.sensor_ood 학습(demo) → stage → 승인 → production  PASS  champion=isolation_forest beats=True 200/202/200
+NEW  press: qn1.sensor_ood predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  solder: 우회 — 스캐폴드 + categories 채움(출처 krs.yaml) → 병합 통과  PASS  files=['qn3.yaml'] ok ['qn3.joint_strength', 'qn3.recipe_optimize', 'qn3.residual_review']
+NEW  solder: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  solder: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn3/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  solder: 기동 · model_ready 전부 false  PASS  [('qn3.joint_strength', False), ('qn3.recipe_optimize', False), ('qn3.residual_review', False)]
+NEW  solder: qn3.joint_strength 학습(demo) → stage → 승인 → production  PASS  champion=svr beats=True 200/202/200
+NEW  solder: qn3.joint_strength predict 200 · 18키  PASS(정상 거부)  HTTP 422 status=None invalid_input — QA 가 고른 중간값 조성 합 > 100 → detail field=composition_sum rule=input_rule (팩 input_rules 가 막은 것, 결함 아님)
+NEW  solder: 감시 1회 → 대기열 항목(test_split)  PASS  rc=0 total=15
+NEW  kimchi: 우회 — 스캐폴드 + categories 채움(출처 pc.yaml) → 병합 통과  PASS  files=['qn4.yaml'] ok ['qn4.sensory_score', 'qn4.recipe_optimize', 'qn4.residual_review']
+NEW  kimchi: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  kimchi: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn4/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  kimchi: 기동 · model_ready 전부 false  PASS  [('qn4.sensory_score', False), ('qn4.recipe_optimize', False), ('qn4.residual_review', False)]
+NEW  kimchi: qn4.sensory_score 학습(demo) → stage → 승인 → production  PASS  champion=gbr beats=True 200/202/200
+NEW  kimchi: qn4.sensory_score predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  kimchi: 감시 1회 → 대기열 항목(test_split)  PASS  rc=0 total=3
+NEW  rollform-quote: 우회 — 스캐폴드 + categories 채움(출처 ot.yaml) → 병합 통과  PASS  files=['qn5.yaml', 'qn5/tasks/quote.yaml'] ok ['qn5.machining_minutes', 'qn5.cad_objects', 'qn5.quote']
+NEW  rollform-quote: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  rollform-quote: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn5/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  rollform-quote: 기동 · model_ready 전부 false  PASS  [('qn5.machining_minutes', False), ('qn5.cad_objects', False), ('qn5.quote', False)]
+2.1  rollform-quote: uses 운영 모델 없음 견적 → 503 model_not_ready  N/A(입력 불완전)  HTTP 422 code=missing_required (기대 503 model_not_ready) — QA 본문이 quantity 만이라 입력 검사가 먼저. 완전한 입력으로 다시 잰 행 = rows_t06.txt PASS
+NEW  rollform-quote: qn5.machining_minutes 학습(demo) → stage → 승인 → production  PASS  champion=ridge beats=True 200/202/200
+NEW  rollform-quote: qn5.machining_minutes predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  rollform-quote: qn5.cad_objects 학습(demo) → stage → 승인 → production  PASS  champion=logreg beats=True 200/202/200
+NEW  rollform-quote: 도면 업로드  PASS  HTTP 201  labels=synthetic
+NEW  rollform-quote: 견적 초안  PASS  HTTP 201  total=46650
+NEW  eto: 우회 — 스캐폴드 + categories 채움(출처 kd.yaml) → 병합 통과  PASS  files=['qn6.yaml'] ok ['qn6.labor_hours', 'qn6.drawing_regions', 'qn6.quote']
+NEW  eto: db-seed(그 루트만)  PASS  {"std": {"task_types": 7, "statuses": 6, "metrics": 27, "split_policies": 4, "candidates": 15, "roles": 4}, "tenants": 1, "tasks": 3}
+NEW  eto: make doctor  PASS  - 최대결측률=- 목표=- · CSV 없음: tests/fixtures/qn6/snapshot.csv   train    csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음   actuals  csv          미연결  rows=- 기간=-~- 대응률=- 최대결측률=- 목표=- · path 없음
+NEW  eto: 기동 · model_ready 전부 false  PASS  [('qn6.labor_hours', False), ('qn6.drawing_regions', False), ('qn6.quote', False)]
+2.1  eto: uses 운영 모델 없음 견적 → 503 model_not_ready  N/A(입력 불완전)  HTTP 422 code=missing_required (기대 503 model_not_ready) — QA 본문이 quantity 만이라 입력 검사가 먼저. 완전한 입력으로 다시 잰 행 = rows_t06.txt PASS
+NEW  eto: qn6.labor_hours 학습(demo) → stage → 승인 → production  PASS  champion=ridge beats=True 200/202/200
+NEW  eto: qn6.labor_hours predict 200 · 18키  PASS  HTTP 200 status=ok 
+NEW  eto: qn6.drawing_regions 학습(demo)  PASS  status=failed err={'type': 'NotTrainable', 'message': 'qn6.drawing_regions: extract 는 학습 과제가 아니다(extract 는 model: 추출기만)'}
+NEW  eto: 도면 업로드  PASS  HTTP 201  labels=none
+NEW  eto: 견적 초안  WARN  HTTP 422 out_of_bounds {'error': {'code': 'out_of_bounds', 'message': '입력 값이 허용 범위(min/max) 밖입니다', 'detail': {'field': 'total_mass_kg', 'rule': 'min'}}} — QA 가 만든 합성 도면 BOM 합 중량이 features.yaml min 밖(입력 검사 정상). kd 실 예시 도면 흐름은 rows_t02_kd.txt PASS
+2.1  eto: uses production 없음 견적(완전한 입력) → 503 model_not_ready  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.1  eto: 503 뒤 견적 초안 0  PASS  total=0
+2.1  rollform-quote: uses production 없음 견적(완전한 입력) → 503 model_not_ready  PASS  HTTP 503 code=model_not_ready (기대 503 model_not_ready)
+2.1  rollform-quote: 503 뒤 견적 초안 0  PASS  total=0
+krs  원천 엔드포인트  8  +웹 루트  0  task-map E  8  PASS
+krs  원천 화면  3  task-map S  3  PASS
+krs  원천 GET /api/health :36  task-map  PASS
+krs  원천 GET /api/ml/overview :41  task-map  PASS
+krs  원천 GET /api/ml/samples :47  task-map  PASS
+krs  원천 POST /api/ml/optimize :54  task-map  PASS
+krs  원천 GET /api/quality/overview :62  task-map  PASS
+krs  원천 POST /api/quality/predict :67  task-map  PASS
+krs  원천 GET /api/data/records :76  task-map  PASS
+krs  원천 GET /{path:path} :89  task-map  PASS
+krs  KRS-E1  main.py:36  PASS
+krs  KRS-E1  호환 /api/health  PASS
+krs  KRS-E2  과제 krs.joint_strength  PASS
+krs  KRS-E2  호환 /api/ml/overview  PASS
+krs  KRS-E3  과제 krs.joint_strength  PASS
+krs  KRS-E3  호환 /api/ml/samples  PASS
+krs  KRS-E4  과제 krs.recipe_optimize  PASS
+krs  KRS-E4  호환 /api/ml/optimize  PASS
+krs  KRS-E5  과제 krs.residual_review  PASS
+krs  KRS-E5  호환 /api/quality/overview  PASS
+krs  KRS-E6  과제 krs.joint_strength  PASS
+krs  KRS-E6  호환 /api/quality/predict  PASS
+krs  KRS-E7  과제 krs.joint_strength  PASS
+krs  KRS-E7  호환 /api/data/records  PASS
+krs  KRS-M1  과제 krs.joint_strength  PASS
+krs  KRS-O1  과제 krs.recipe_optimize  PASS
+krs  KRS-O1  호환 /api/ml/optimize  PASS
+krs  KRS-Q1  과제 krs.residual_review  PASS
+krs  KRS-Q1  호환 /api/quality/overview  PASS
+krs  KRS-S1  과제 krs.recipe_optimize  PASS
+krs  KRS-S1  과제 krs.joint_strength  PASS
+krs  KRS-S2  과제 krs.joint_strength  PASS
+krs  KRS-S2  과제 krs.residual_review  PASS
+krs  KRS-S3  과제 krs.joint_strength  PASS
+krs  compat.routes 중 task-map 에 없는 경로  0  PASS
+pc  원천 엔드포인트  6  +웹 루트  1  task-map E  7  PASS
+pc  원천 화면  4  task-map S  4  PASS
+pc  원천 GET /api/health :27  task-map  PASS
+pc  원천 GET /api/ml/overview :30  task-map  PASS
+pc  원천 POST /api/ml/optimize :36  task-map  PASS
+pc  원천 POST /api/quality/predict :39  task-map  PASS
+pc  원천 GET /api/quality/overview :42  task-map  PASS
+pc  원천 GET /api/data/records :49  task-map  PASS
+pc  PC-E1  호환 /api/health  PASS
+pc  PC-E2  과제 pc.sensory_score  PASS
+pc  PC-E2  호환 /api/ml/overview  PASS
+pc  PC-E3  과제 pc.recipe_optimize  PASS
+pc  PC-E3  호환 /api/ml/optimize  PASS
+pc  PC-E4  과제 pc.sensory_score  PASS
+pc  PC-E4  호환 /api/quality/predict  PASS
+pc  PC-E5  과제 pc.residual_review  PASS
+pc  PC-E5  호환 /api/quality/overview  PASS
+pc  PC-E6  과제 pc.sensory_score  PASS
+pc  PC-E6  호환 /api/data/records  PASS
+pc  PC-M1  과제 pc.sensory_score  PASS
+pc  PC-O1  과제 pc.recipe_optimize  PASS
+pc  PC-O1  호환 /api/ml/optimize  PASS
+pc  PC-Q1  과제 pc.residual_review  PASS
+pc  PC-Q1  호환 /api/quality/overview  PASS
+pc  PC-S1  과제 pc.sensory_score  PASS
+pc  PC-S2  과제 pc.recipe_optimize  PASS
+pc  PC-S3  과제 pc.sensory_score  PASS
+pc  PC-S4  과제 pc.sensory_score  PASS
+pc  compat.routes 중 task-map 에 없는 경로  0  PASS
+ot  원천 엔드포인트  12  +웹 루트  0  task-map E  12  PASS
+ot  원천 화면  4  task-map S  4  PASS
+ot  원천 GET /api/health :47  task-map  PASS
+ot  원천 GET /api/ml/overview :52  task-map  PASS
+ot  원천 GET /api/data/demo :56  task-map  PASS
+ot  원천 GET /api/cad/sample.dxf :69  task-map  PASS
+ot  원천 POST /api/cad/demo :74  task-map  PASS
+ot  원천 POST /api/cad/analyze :82  task-map  PASS
+ot  원천 GET /api/cad/{drawing_id} :94  task-map  PASS
+ot  원천 POST /api/quotes :101  task-map  PASS
+ot  원천 GET /api/quotes :109  task-map  PASS
+ot  원천 GET /api/quotes/{quote_id} :114  task-map  PASS
+ot  원천 GET /api/quotes/{quote_id}/csv :126  task-map  PASS
+ot  원천 GET / :146  task-map  PASS
+ot  OT-E1  main.py:47  PASS
+ot  OT-E1  호환 /api/health  PASS
+ot  OT-E2  과제 ot.machining_minutes  PASS
+ot  OT-E2  과제 ot.cad_objects  PASS
+ot  OT-E2  호환 /api/ml/overview  PASS
+ot  OT-E3  과제 ot.quote  PASS
+ot  OT-E3  호환 /api/data/demo  PASS
+ot  OT-E4  과제 ot.cad_objects  PASS
+ot  OT-E4  호환 /api/cad/sample.dxf  PASS
+ot  OT-E5  과제 ot.cad_objects  PASS
+ot  OT-E5  호환 /api/cad/demo  PASS
+ot  OT-E6  과제 ot.cad_objects  PASS
+ot  OT-E6  호환 /api/cad/analyze  PASS
+ot  OT-E7  과제 ot.cad_objects  PASS
+ot  OT-E7  호환 /api/cad/{drawing_id}  PASS
+ot  OT-E8  과제 ot.quote  PASS
+ot  OT-E8  호환 /api/quotes  PASS
+ot  OT-E9  과제 ot.quote  PASS
+ot  OT-E9  호환 /api/quotes  PASS
+ot  OT-E10  과제 ot.quote  PASS
+ot  OT-E10  호환 /api/quotes/{quote_id}  PASS
+ot  OT-E11  과제 ot.quote  PASS
+ot  OT-E11  호환 /api/quotes/{quote_id}/csv  PASS
+ot  OT-M1  과제 ot.machining_minutes  PASS
+ot  OT-M2  과제 ot.cad_objects  PASS
+ot  OT-X1  과제 ot.cad_objects  PASS
+ot  OT-X1  호환 /api/cad/analyze  PASS
+ot  OT-C1  과제 ot.quote  PASS
+ot  OT-C1  호환 /api/quotes  PASS
+ot  OT-S1  과제 ot.cad_objects  PASS
+ot  OT-S2  과제 ot.quote  PASS
+ot  OT-S3  과제 ot.quote  PASS
+ot  OT-S4  과제 ot.machining_minutes  PASS
+ot  OT-S4  과제 ot.cad_objects  PASS
+ot  compat.routes 중 task-map 에 없는 경로  0  PASS
+kd  원천 엔드포인트  12  +웹 루트  0  task-map E  12  PASS
+kd  원천 화면  4  task-map S  4  PASS
+kd  원천 GET /api/health :70  task-map  PASS
+kd  원천 GET /api/ml/overview :74  task-map  PASS
+kd  원천 GET /api/cad/sample.dxf :78  task-map  PASS
+kd  원천 POST /api/cad/demo :82  task-map  PASS
+kd  원천 POST /api/cad/analyze :89  task-map  PASS
+kd  원천 GET /api/cad/{drawing_id} :100  task-map  PASS
+kd  원천 POST /api/quotes :107  task-map  PASS
+kd  원천 GET /api/quotes :113  task-map  PASS
+kd  원천 GET /api/quotes/export/csv :129  task-map  PASS
+kd  원천 GET /api/quotes/{quote_id} :135  task-map  PASS
+kd  원천 GET /api/quotes/{quote_id}/csv :142  task-map  PASS
+kd  원천 GET / :154  task-map  PASS
+kd  KD-E1  호환 /api/health  PASS
+kd  KD-E2  과제 kd.labor_hours  PASS
+kd  KD-E2  과제 kd.drawing_regions  PASS
+kd  KD-E2  호환 /api/ml/overview  PASS
+kd  KD-E3  과제 kd.drawing_regions  PASS
+kd  KD-E3  호환 /api/cad/sample.dxf  PASS
+kd  KD-E4  과제 kd.drawing_regions  PASS
+kd  KD-E4  호환 /api/cad/demo  PASS
+kd  KD-E5  과제 kd.drawing_regions  PASS
+kd  KD-E5  호환 /api/cad/analyze  PASS
+kd  KD-E6  과제 kd.drawing_regions  PASS
+kd  KD-E6  호환 /api/cad/{drawing_id}  PASS
+kd  KD-E7  과제 kd.quote  PASS
+kd  KD-E7  호환 /api/quotes  PASS
+kd  KD-E8  과제 kd.quote  PASS
+kd  KD-E8  호환 /api/quotes  PASS
+kd  KD-E9  과제 kd.quote  PASS
+kd  KD-E9  호환 /api/quotes/export/csv  PASS
+kd  KD-E10  과제 kd.quote  PASS
+kd  KD-E10  호환 /api/quotes/{quote_id}  PASS
+kd  KD-E11  과제 kd.quote  PASS
+kd  KD-E11  호환 /api/quotes/{quote_id}/csv  PASS
+kd  KD-M1  과제 kd.labor_hours  PASS
+kd  KD-X1  과제 kd.drawing_regions  PASS
+kd  KD-X1  호환 /api/cad/analyze  PASS
+kd  KD-X2  과제 kd.drawing_regions  PASS
+kd  KD-X2  호환 /api/cad/analyze  PASS
+kd  KD-C1  과제 kd.quote  PASS
+kd  KD-C1  호환 /api/quotes  PASS
+kd  KD-S1  과제 kd.drawing_regions  PASS
+kd  KD-S2  과제 kd.quote  PASS
+kd  KD-S3  과제 kd.quote  PASS
+kd  KD-S4  과제 kd.labor_hours  PASS
+kd  compat.routes 중 task-map 에 없는 경로  0  PASS
+합계 2차 단위  68  기대 68  PASS

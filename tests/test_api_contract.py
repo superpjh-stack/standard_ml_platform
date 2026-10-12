@@ -229,7 +229,8 @@ def test_phase2_roles_scope_and_lists(world2):
     _envelope(tc.get(rv, headers=h.hdr(k["viewer"])), 403, "forbidden")
     for role in ("operator", "approver", "admin"):
         body = tc.get(rv, headers=h.hdr(k[role])).json()
-        assert set(body) == {"items", "next_cursor", "total"}, (role, body)
+        assert set(body) == {"items", "next_cursor", "total", "can_decide"}, (role, body)   # can_decide — C2 D2-93
+        assert body["can_decide"] is (role != "operator"), (role, body)
     _envelope(tc.patch(f"{rv}/{item}", headers=h.hdr(k["operator"]), json={"state": "false_alarm", "note": "x"}), 403, "forbidden")
     # 화면 9 · B10 · B11: viewer ✕ · operator ○ (확정 결정 ✕ — test_quote.py)
     for url in (dc, qt):

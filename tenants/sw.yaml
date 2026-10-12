@@ -10,7 +10,7 @@ tasks:
 categories: {}
 sources:
   demo:    {kind: synthetic, seed: 42}       # spec §11.2 예시는 20260917 — 원천 시드는 42 (D-30)
-  eval:    {kind: csv, path: tests/fixtures/sw/snapshot.csv}          # migration/make_fixtures.py 생성 (demo 와 같은 행)
+  eval:    {kind: csv, path: tests/fixtures/sw/snapshot.csv}          # migration/make_fixtures.py 생성 (demo 와 같은 행 · 실수는 CSV 왕복 오차 ≤1e-12 상대, 해시 다름 — D2-102)
   train:   {kind: dataplatform, view: null, url_env: MLP_SW_DP_URL, key_env: MLP_SW_DP_KEY}   # 뷰 이름 미확인 (spec 예시 sw_gold.print_quality_daily 는 실재 미확인)
   gateway: {kind: gateway, table: PRC_MONITOR_DATA, dsn_env: MLP_SW_GW_RO_DSN}
   actuals: {kind: mes, tables: [PRT_QUALITY_HISTORY, PRT_PRINT_RESULTS, PRT_PRINT_CONDS, RCV_MATERIAL_LOTS], dsn_env: MLP_SW_MES_RO_DSN}

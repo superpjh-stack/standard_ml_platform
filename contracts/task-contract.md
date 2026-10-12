@@ -86,7 +86,7 @@ enums:
   labels: [none, synthetic, provided]                 # none → 지표 null + labels: none (G2-E01)
   rounding: [ROUND_HALF_UP]                           # 2차 — 견적은 Decimal · ROUND_HALF_UP 만 (G2-Q01)
   currency: [KRW]
-immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval, approver_role, target, origins, rounding, currency, formula, extractors, labels, derived, input_rules, input_limits]   # approver_role · target — D-121 · 2차 6키 — §6.4 · derived · input_rules — §1 · §2(웨이브 P 마감) · input_limits — §6.3(재진입 D2-70)
+immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval, approver_role, target, origins, rounding, currency, formula, extractors, labels, derived, input_rules, input_limits, line_limits]   # approver_role · target — D-121 · 2차 6키 — §6.4 · derived · input_rules — §1 · §2(웨이브 P 마감) · input_limits — §6.3(재진입 D2-70) · line_limits — §6.3(C2 D2-90)
 not_removable_on_override: [approver_role]
 time_split_policies: [time_60_20_20, time_cv5]
 # 웨이브 P 마감(D2-30 요청 반영) — 로더(registry/{packs,tenants}.py)는 이 값을 먼저 읽고, 없을 때만 코드 기본표를 쓴다
@@ -95,7 +95,7 @@ review_rules: [abs_residual_ge, top_quantile]       # §6.1
 review_quantile_from: [valid]
 review_schedule: [daily_after_monitor]
 review_uses_types: [regression, risk]
-document_limits: {max_bytes: 5242880, max_entities: 20000}   # spec §8.3 — 팩 · 회사는 낮추기만
+document_limits: {max_bytes: 5242880, max_entities: 20000, max_result_bytes: 4194304, max_items: 5000, max_seconds: 20}   # spec §8.3 — 팩 · 회사는 낮추기만 · 결과 상한 3개는 재진입 C2(D2-91, #30 코어)
 document_formats: [dxf]
 document_unit_override: [mm, inch]
 extract_outputs: [regions, objects, bom_rows]
@@ -130,8 +130,8 @@ quote_review_note_min: 5
 |---|---|---|
 | `uses` | ○ | `[<pack>.<regression \| risk 과제>]` 정확히 1개. 잔차 = 실측 − 그 과제 production(또는 채점 대상 run) 예측 |
 | `rule` | ○ | 둘 중 하나: `{abs_residual_ge: <수>}`(krs 4.0 MPa) · `{top_quantile: <0<q<1>}`(pc 0.10). 회사 덮어쓰기로 **값만** 바꿀 수 있다(D2-11) |
-| `quantile_from` | top_quantile 이면 ○ | 고정값 `valid` — 분위 임계값은 **검증 구간 잔차**(학습 구간 모델이 낸 표본 밖 잔차)로 정해 학습 보고서에 남기고, 시험 구간 · 운영 잔차에 그 임계값을 적용한다. 학습 · 시험 구간 잔차로 분위를 재지 않는다 |
-| `origins` | ○ | `review_origin` 부분집합. `test_split` = uses 과제 run 의 시험 구간 잔차(학습 보고서 생성 때 1회 — guard 의 `final_eval` 결과만, 새 시험 접근 0) · `live_residual` = 실측(`mlp_actual`)이 붙은 운영 예측. **학습 · 검증 구간 잔차 · 전체 재적합 후 같은 데이터 채점은 금지**(guard 계측, G2-R01 · std/split_policies.yaml `queue_scoring`) |
+| `quantile_from` | top_quantile 이면 ○ | 고정값 `valid` — 분위 임계값은 **검증 구간 잔차**(학습 구간 모델이 낸 표본 밖 잔차)로 정해 학습 보고서에 남기고, 시험 구간 · 운영 잔차에 그 임계값을 적용한다. 학습 · 시험 구간 잔차로 분위를 재지 않는다. `time_cv5` 는 폴드 잔차를 합치지 않고 **마지막(시험 직전) 검증 블록** 잔차만(보고서 `queue_residuals.valid_block: last`, D2-80) |
+| `origins` | ○ | `review_origin` 부분집합. `test_split` = uses 과제 run 의 시험 구간 잔차(학습 보고서 생성 때 1회 — guard 의 `final_eval` 결과만, 새 시험 접근 0) · `live_residual` = 실측(`mlp_actual`)이 붙은 운영 예측 — 짝 조건(D2-80 · D2-81): ① 실측은 **예측 뒤 관측**(`observed_at > 예측 ts`)된 것만, 예측마다 그 뒤 가장 이른 실측 1건 ② 실측 하나는 예측 하나(그 실측 직전의 마지막 예측)에만 ③ 그 예측 버전 모델 학습 스냅숏의 **재적합 구간(학습 + 검증) entity 는 제외**(표본 내 잔차 — 뺀 건수를 guard ledger `queue_scoring` 에, 스냅숏 · 보고서를 못 읽으면 짝 0 · 오류). **학습 · 검증 구간 잔차 · 전체 재적합 후 같은 데이터 채점은 금지**(guard 계측, G2-R01 · std/split_policies.yaml `queue_scoring`) |
 | `max_items` | | 한 번 만들 때 최대 항목(기본 50) · 정렬 = \|잔차\| ↓ |
 | `reason` | | 항목 사유 문구 틀(`"|잔차| {abs_residual:.2f} ≥ {threshold}"`). 사유는 항목마다 남는다 |
 | `schedule` | | `daily_after_monitor`(기본) — 감시 일일 작업 뒤 live_residual 항목 생성(개발3). 같은 (예측 ID) 는 한 번만 |
@@ -144,7 +144,7 @@ quote_review_note_min: 5
 | 키 | 필수 | 규칙 |
 |---|---|---|
 | `entity` | ○ | `drawing` |
-| `document` | ○ | `{formats: [dxf], max_bytes: ≤ 5242880, max_entities: ≤ 20000, unit_override: [mm, inch]}` — spec 상한을 넘을 수 없고 팩 · 회사가 낮출 수만 있다(ot 2,000 · kd 20,000) |
+| `document` | ○ | `{formats: [dxf], max_bytes: ≤ 5242880, max_entities: ≤ 20000, unit_override: [mm, inch], max_result_bytes?: ≤ 4194304, max_items?: ≤ 5000, max_seconds?: ≤ 20}` — 결과 상한(C2 D2-91): 추출기는 코어가 자식 프로세스에서 돌리고 `max_seconds` 를 넘기면 죽여 413(rule `time`), 추출기 결과 · 합친 결과의 출력 배열당 항목 > `max_items` 413(rule `items`), 결과 JSON > `max_result_bytes` 413(rule `result_bytes`), 결과 문자열 NUL 422 invalid_document(rule `nul`) — 거부된 문서는 원본 · 행 0. — spec 상한을 넘을 수 없고 팩 · 회사가 낮출 수만 있다(ot 2,000 · kd 20,000) |
 | `extractors` | ○ | `[{name, kind: rule \| model, module: extractors/<name>.py, version, params?}]` ≥ 1, 순서대로 실행 · 결과 합침. 같은 이름 다른 구현은 병합 규칙 R5. `params` = 그 추출기의 YAML 값(임계값 · 허용차 · 팩 고유 상한 — 예 점수 하한 0.8 · 평탄화 0.2 mm · 꼭짓점 500, 코드 상수 금지) `{이름: 수 \| 문자열 \| bool \| 그 목록}` — 회사는 바꿀 수 없다(extractors 불변) |
 | `labels` | ○ | `none`(실도면 정답 없음 — kd D-160) · `synthetic`(합성 설명자 생성 라벨 — ot) · `provided`(사람 정답 — 2차 범위 밖). `none` 이면 평가 요청에 200 + `labels: none` · 지표 null, IoU/F1 을 만들지 않는다 |
 | `model` | kind: model 이면 ○ | `{features: [<features.yaml 설명자>], classes: [...], target: <라벨 열 이름, 기본 label>, split: stratified_60_20_20, candidates: [logreg, rf_clf, et_clf], candidate_params, selection: macro_f1}` — `target` 은 합성 설명자 생성기의 라벨 열(변수 아님 — D2-44 확정) — 검증 macro-F1 선정 → 학습+검증 재적합 → 시험 1회(층화). 기준선 = 학습 구간 최빈 클래스(표준 변경 요청 D2-15) |
@@ -181,6 +181,7 @@ def extract(raw: bytes, filename: str, *, unit: str | None, limits: dict, model=
 | `currency` | ○ | `KRW` · 원 단위(덮어쓰기 불가) |
 | `confirm` | ○ | `{requires: [reviewed, review_note], review_note_min: 5, approver_role: <역할>}` — 확정은 approver 이상(D2-04), 확정 뒤 수정 409 `quote_locked` |
 | `input_limits` | | `{<inputs 중 features.yaml 밖 이름>: {min?, max?, integer?}}` — 수량 · 시간 단가 · 외주비 같은 견적 고유 입력의 범위(원천 QuoteInput 이관 — kd 수량 1~1000 정수 · ot 1~10000 정수). 밖이면 422 `invalid_input`(detail `field` = 입력 이름, `rule` = `range` · `integer` — 입력값 되풀이 없음). 없는 이름은 0 이상 숫자만 본다. features.yaml 변수는 여기 두지 않는다(범위 정본 = features.yaml). **덮어쓰기 불가** (D2-A2-03 · 재진입 D2-70) |
+| `line_limits` | | 품목 행(`lines`)의 값 규칙 — `input_limits` 의 품목판(원천 BomRow 이관, kd `api/main.py:33-43`). `{min_items?, max_items?(≤ 200), fields: {<키>: {type: string \| number \| category, required?, min?, max?, integer?, min_length?, max_length?, values_from?}}}` — `fields` 가 있으면 **모르는 키 422**(extra_forbidden). number = JSON 숫자 또는 부호 · 지수 없는 10진 문자열, min 기본 0(음수 없음) · integer. string = 앞뒤 공백 제거 뒤 길이. category = `values_from`(inputs 의 회사 범주 변수) 값 목록 안 — 회사 `material_aliases` · 대소문자 통합 뒤 **정규 값으로 저장**. 밖이면 422 `invalid_input`(detail `field` = `lines.<i>.<키>` · `lines`, `rule` = `required` · `type` · `number` · `integer` · `range` · `length` · `category` · `extra_forbidden` · `min_items` · `max_items` — 입력값 되풀이 없음). **없어도 코어 기본:** 키 = 소문자 이름 꼴 · 값 = 스칼라 · 숫자는 유한 0 이상(문자열 칸은 뜻을 모르므로 그대로 — 음수 문자열 단가는 음수 금액 검사가 막는다) · 문자열 200자 · 견적식이 계산할 수 없는 품목 422(`rule line_value`, 500 아님) · **합계 · 품목 금액 음수 422**(`negative_amount` — 음수 견적 0). 로더 모양 검사 = `serve.quotes.validate_line_limits`. **덮어쓰기 불가** (C2 D2-90 · #31) |
 | `csv` | | **품목 행** 내보내기 열 순서(없는 열은 빈 칸). 요약(항목 · 값) 행은 늘 전부 낸다 — 합계 · 구성 금액 · 입력 · 단가 · 예측 · 검토(D2-A2-01). 수식 주입 방지(`= + - @ \t \r` 앞 `'`) · UTF-8 BOM 은 코어가 강제 |
 
 견적 금액은 확정 때 `mlp_quote` 스냅숏(입력 · 단가 · 예측 ID · 모델 버전 · 구성 금액)으로 고정된다 — 이후 모델 · 단가가 바뀌어도 확정 금액은 바뀌지 않는다(G2-Q01).

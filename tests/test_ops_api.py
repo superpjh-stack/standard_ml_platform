@@ -135,7 +135,9 @@ def test_records_paging(world):
 def test_doctor_route(world):
     code, tc, k = world["code"], world["tc"], world["k"]
     assert tc.get(f"/api/v1/tenants/{code}/doctor", headers=h.hdr(k["viewer"])).status_code == 403
-    r = tc.get(f"/api/v1/tenants/{code}/doctor", headers=h.hdr(k["operator"]))
+    # goal2 §6 화면 7 operator ✕ 가 정본 — doctor 는 sources 권한(admin · approver 조회, DEF-QA23-006 · D2-103)
+    assert tc.get(f"/api/v1/tenants/{code}/doctor", headers=h.hdr(k["operator"])).status_code == 403
+    r = tc.get(f"/api/v1/tenants/{code}/doctor", headers=h.hdr(k["approver"]))
     assert r.status_code == 200
     s = {x["role"]: x for x in r.json()["sources"]}
     assert s["demo"]["status"] == "연결" and s["train"]["status"] == "미연결" and s["train"]["target"] == "목표 없음"
@@ -147,3 +149,17 @@ def test_other_tenant_key_is_404(world):
                  f"/tasks/{code}.remaining_hours/records", f"/tasks/{code}.remaining_hours/monitor", "/doctor"):
         r = tc.get(f"/api/v1/tenants/{code}{path}", headers=h.hdr(ko["admin"]))
         assert r.status_code == 404 and r.json()["error"]["code"] == "not_found", path
+
+
+def test_records_json_has_no_nat_string():
+    """DEF-QA23-003 · D2-103 — 시각 없는 행은 `"ts": null`(문자열 "NaT" 금지, api-contract §2 ISO-8601 또는 null)."""
+    import numpy as np
+    import pandas as pd
+
+    from mlcore.api.routers import ops
+
+    assert ops._json(pd.NaT) is None and ops._json(np.datetime64("NaT")) is None
+    assert ops._json(pd.Timestamp("2026-01-01T00:00:00+09:00")) == "2026-01-01T00:00:00+09:00"
+    frame = pd.DataFrame({"entity_id": ["A", "B"], "ts": pd.to_datetime([None, None])})
+    assert [{k: ops._json(v) for k, v in r.items()} for r in frame.to_dict("records")] == \
+        [{"entity_id": "A", "ts": None}, {"entity_id": "B", "ts": None}]

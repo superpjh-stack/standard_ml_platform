@@ -343,3 +343,31 @@ kimchi 기준선(아키텍트 D2-39) MAE 1.5375 · queue 3 · 임계 4.2338 과 
 - **개발3 (이관 보고서):** `outputs/reproduce-krs-pc.json` 행 6 → `docs/migration-report.md`. pc 행에는 "재측정" · "원천" 두 말이 다 있어야 G-M12(6사) 통과.
 - **아키텍트:** ① D2-02 · kimchi baselines 주석은 `time_60_20_20` 인데 실제 정책은 `time_cv5`(행 420 < 500, std D-05) — 문구 정리 ② solder baselines 값 확인 ③ krs RMSE +12.76% 는 사유(원천 시험 구간 선정)로 남김 — 넓히지 않음.
 - 코어 결함(2차): **없음**.
+
+## §9 웨이브 C2 — 2차 QA 결함 수정 (코어 재진입 · 2026-10-13)
+
+시험 먼저: `tests/test_qa2_fixes_dev1.py` 8건(QA 재현 `outputs/qa2-1/queue_leak_probe.py` · `queue_train_rows_krs.py` · `queue_invariance_probe.py` · QA3 #29 를 옮김) — 처음 실행 **7 failed** 확인 → 구현 뒤 **8 passed**.
+
+| 결함 | 고친 곳 | 내용 | 결정 |
+|---|---|---|---|
+| DEF-QA21-001 #26 | `train/review.py` `live_pairs` · `fit_entities` | 실측 `observed_at > 예측 ts` 만 · 예측 버전 모델 학습 스냅숏 재적합 구간(목표 있는 행 − 보고서 시험 행) entity 제외 · 뺀 건수 ledger `queue_scoring`(ok=false) · 스냅숏/보고서 없으면 InSampleEvaluation(fail closed). 계약 task-contract §6.1 `origins` 에 조건 3 | D2-80 |
+| DEF-QA21-002 #27 | `train/review.py` `live_pairs` | 예측마다 그 뒤 가장 이른 실측 1건 · 실측 1 : 예측 1(그 실측 직전 마지막 예측) | D2-81 |
+| DEF-QA21-003 #27 | `train/trainer.py` 대기열 재료 | time_cv5 `valid_abs` = 마지막(시험 직전) 검증 블록만 · `valid_block: last`. 시험 교란 불변 시험 유지. conformal q 는 범위 밖(그대로) | D2-80 |
+| DEF-QA23-007 #29 | `data/jobs.py` `submit` · `data/taskview.py` `trainable` | 비학습 과제(review_queue · 규칙 extract · quote · optimize) → 소스 · 스냅숏 · 실행 행 전에 `NotTrainable(InvalidInput)` 422 `invalid_input` detail `{rule: not_trainable, type}` · mlp_train_run 0행. 라우트(개발2) 수정 0 | D2-82 |
+
+### 실측
+
+| 항목 | 값 | 명령 |
+|---|---|---|
+| pc.residual_review (time_cv5) | 임계 4.2338 → **3.5984** (검증 56행 = 마지막 블록) · 대기열 3 → **6**/84 · MAE 1.5375 그대로 | `migration/reproduce.py` 의 `_std_train` · `_std_queue` 를 scratch 에서 호출(출력 파일 안 씀) |
+| krs.residual_review | 그대로 — 16 · 4.0 (random_60_20_20) | 같음 |
+| check_leakage | G-M05 PASS | `uv run python gates/check_leakage.py` |
+| 전체 | **1007 passed · 3 skipped · 4 failed** — 4건 모두 D2-80 시각 조건에 걸린 남의 시험(아래), observed_at 한 줄만 바꾼 사본으로 10 passed 확인 | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+
+### 요청 (내 파일 밖 — 건드리지 않음)
+
+- **개발3 `tests/test_monitor_review.py`** 3건(`test_live_residual_items_only_from_predictions_with_actuals` · `test_new_actual_later_is_picked_up_once` · `test_max_items_caps_one_run`): `actual()` 의 `observed_at` 이 고정 과거(2026-10-01)라 예측(now) 보다 앞 → D2-80 으로 짝 0. `datetime(2026, 10, 1, 9, tzinfo=KST)` → `datetime.now(KST) + timedelta(hours=1)`.
+- **개발2 `tests/test_vertical_slice_2.py::test_pc_residual_review_end_to_end`**: 같은 이유(2026-10-02) — `datetime.now(KST) + timedelta(hours=1)`.
+- **개발3 · 아키텍트 — pc 기준선:** `packs/kimchi/baselines.yaml` `residual_review` queue_size **3 → 6**, 측정 문구 임계 4.2338 → 3.5984(마지막 검증 블록) · `outputs/reproduce-krs-pc.json` 재생성(`migration/reproduce.py --phase2`) · 이관 보고서 pc 행. krs 는 그대로.
+- **개발3 `monitor/review.py`:** 바꿀 것 없음(`live_pairs` 시그니처 호환 — `ledger` 는 선택 인자). 요약에 뺀 건수를 보이려면 `ledger=` 를 넘기면 된다.
+- **아키텍트:** 전용 오류 코드 `not_trainable` 이 필요하면 `std/statuses.yaml` 에 넣고 `NotTrainable.code` 만 바꾼다(지금은 `invalid_input` + detail.rule).

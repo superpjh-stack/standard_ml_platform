@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
 from mlcore.serve.compat import CompatError
@@ -90,6 +91,13 @@ def parse_predict_one(old: Any, info: dict) -> Any:
     if sup not in fwd:
         raise CompatError(422, {"detail": [{"loc": ["body", "supplier"], "msg": "A · B · C 중 하나입니다", "type": "literal_error"}]})
     body["supplier"] = fwd[sup]
+    # 조성 합 거부 — 원천 main.py:70-72 는 문자열 detail(HTTPException) 이다. 다섯 값이 모두 숫자일 때만 원천 문구로 낸다
+    # (DEF-QA22-008). 표준 input_rules(99.9~100.1)와 같은 경계 — 숫자 아님 · 범위 밖 칸은 표준 검증이 그대로 422(목록 모양)
+    comp = [body.get(k) for k in COMPOSITION]
+    if all(isinstance(v, (int, float, Decimal)) and not isinstance(v, bool) for v in comp):
+        total = sum(float(v) for v in comp)
+        if abs(total - 100) > .1:
+            raise CompatError(422, {"detail": f"조성비 합계가 100%여야 합니다. 현재 {total:.3f}%입니다."})
     info["_old_inputs"] = {k: body.get(k) for k in RECOMMENDED}
     return body
 

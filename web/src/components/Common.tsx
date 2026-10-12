@@ -22,7 +22,7 @@ const CODE_TEXT: Record<string, string> = {
   auth_required: 'API 키가 없거나 틀립니다 (auth_required)',
   forbidden: '권한이 없습니다 (forbidden)',
   not_found: '찾을 수 없습니다 (not_found)',
-  already_decided: '이미 결정된 승인입니다 (already_decided)',
+  already_decided: '이미 결정되었습니다 (already_decided)',   // 승인 · 검토 항목 공용 — 화면별 문구는 화면이 덧붙인다(DEF-QA23-005)
   invalid_transition: '등록부 전이 규칙 위반 (invalid_transition)',
   not_implemented: '2차 범위입니다 (not_implemented)',
   invalid_input: '입력 값이 올바르지 않습니다 (invalid_input)',

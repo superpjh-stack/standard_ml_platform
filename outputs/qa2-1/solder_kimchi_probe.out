@@ -1,0 +1,86 @@
+{
+ "rules": {
+  "krs": {
+   "n": 200000,
+   "mismatch": 0,
+   "examples": []
+  },
+  "pc": {
+   "n": 200000,
+   "mismatch": 0,
+   "examples": []
+  }
+ },
+ "iqr": {
+  "report": {
+   "folds": [
+    5
+   ],
+   "refit": 7,
+   "columns": [
+    "sn_pct",
+    "ag_pct",
+    "cu_pct",
+    "sb_pct",
+    "flux_pct",
+    "temperature_c",
+    "mixing_min"
+   ]
+  },
+  "independent_train_only": 5,
+  "independent_train_valid": 7,
+  "if_whole_720(source K6)": 10,
+  "if_train_plus_test": 9,
+  "core_iqr_filter_train": 5,
+  "valid_rows_kept_for_selection": 144,
+  "test_rows_kept": 144
+ },
+ "accept_krs": {
+  "strategy": "random",
+  "points": 5000,
+  "max_points": 5000,
+  "drawn": 5064,
+  "capped": false,
+  "derived_eq_100_minus_sum_maxerr": 1.4210854715202004e-14,
+  "derived_in_range": true,
+  "range": [
+   93.45094154211992,
+   98.46688839207398
+  ],
+  "controls_in_train_range": {
+   "ag_pct": true,
+   "cu_pct": true,
+   "sb_pct": true,
+   "flux_pct": true,
+   "temperature_c": true,
+   "mixing_min": true
+  },
+  "seed_reproducible": true,
+  "rule_sum_ok_all": true
+ },
+ "accept_pc": {
+  "strategy": "random",
+  "points": 3500,
+  "max_points": 3500,
+  "drawn": 4738,
+  "capped": false,
+  "derived_eq_100_minus_sum_maxerr": 7.105427357601002e-15,
+  "derived_in_range": true,
+  "range": [
+   15.267863615707565,
+   22.876962264643304
+  ],
+  "controls_in_train_range": {
+   "cabbage_pct": true,
+   "radish_pct": true,
+   "salt_pct": true,
+   "brine_salinity_pct": true,
+   "brining_hours": true,
+   "fermentation_temp_c": true,
+   "fermentation_hours": true,
+   "storage_temp_c": true
+  },
+  "seed_reproducible": true,
+  "rule_sum_ok_all": true
+ }
+}

@@ -1,0 +1,162 @@
+krs  원천 엔드포인트  8  +웹 루트  0  task-map E  8  PASS
+krs  원천 화면  3  task-map S  3  PASS
+krs  원천 GET /api/health :36  task-map  PASS
+krs  원천 GET /api/ml/overview :41  task-map  PASS
+krs  원천 GET /api/ml/samples :47  task-map  PASS
+krs  원천 POST /api/ml/optimize :54  task-map  PASS
+krs  원천 GET /api/quality/overview :62  task-map  PASS
+krs  원천 POST /api/quality/predict :67  task-map  PASS
+krs  원천 GET /api/data/records :76  task-map  PASS
+krs  원천 GET /{path:path} :89  task-map  PASS
+krs  KRS-E1  main.py:36  PASS
+krs  KRS-E1  호환 /api/health  PASS
+krs  KRS-E2  과제 krs.joint_strength  PASS
+krs  KRS-E2  호환 /api/ml/overview  PASS
+krs  KRS-E3  과제 krs.joint_strength  PASS
+krs  KRS-E3  호환 /api/ml/samples  PASS
+krs  KRS-E4  과제 krs.recipe_optimize  PASS
+krs  KRS-E4  호환 /api/ml/optimize  PASS
+krs  KRS-E5  과제 krs.residual_review  PASS
+krs  KRS-E5  호환 /api/quality/overview  PASS
+krs  KRS-E6  과제 krs.joint_strength  PASS
+krs  KRS-E6  호환 /api/quality/predict  PASS
+krs  KRS-E7  과제 krs.joint_strength  PASS
+krs  KRS-E7  호환 /api/data/records  PASS
+krs  KRS-M1  과제 krs.joint_strength  PASS
+krs  KRS-O1  과제 krs.recipe_optimize  PASS
+krs  KRS-O1  호환 /api/ml/optimize  PASS
+krs  KRS-Q1  과제 krs.residual_review  PASS
+krs  KRS-Q1  호환 /api/quality/overview  PASS
+krs  KRS-S1  과제 krs.recipe_optimize  PASS
+krs  KRS-S1  과제 krs.joint_strength  PASS
+krs  KRS-S2  과제 krs.joint_strength  PASS
+krs  KRS-S2  과제 krs.residual_review  PASS
+krs  KRS-S3  과제 krs.joint_strength  PASS
+krs  compat.routes 중 task-map 에 없는 경로  0  PASS
+pc  원천 엔드포인트  6  +웹 루트  1  task-map E  7  PASS
+pc  원천 화면  4  task-map S  4  PASS
+pc  원천 GET /api/health :27  task-map  PASS
+pc  원천 GET /api/ml/overview :30  task-map  PASS
+pc  원천 POST /api/ml/optimize :36  task-map  PASS
+pc  원천 POST /api/quality/predict :39  task-map  PASS
+pc  원천 GET /api/quality/overview :42  task-map  PASS
+pc  원천 GET /api/data/records :49  task-map  PASS
+pc  PC-E1  호환 /api/health  PASS
+pc  PC-E2  과제 pc.sensory_score  PASS
+pc  PC-E2  호환 /api/ml/overview  PASS
+pc  PC-E3  과제 pc.recipe_optimize  PASS
+pc  PC-E3  호환 /api/ml/optimize  PASS
+pc  PC-E4  과제 pc.sensory_score  PASS
+pc  PC-E4  호환 /api/quality/predict  PASS
+pc  PC-E5  과제 pc.residual_review  PASS
+pc  PC-E5  호환 /api/quality/overview  PASS
+pc  PC-E6  과제 pc.sensory_score  PASS
+pc  PC-E6  호환 /api/data/records  PASS
+pc  PC-M1  과제 pc.sensory_score  PASS
+pc  PC-O1  과제 pc.recipe_optimize  PASS
+pc  PC-O1  호환 /api/ml/optimize  PASS
+pc  PC-Q1  과제 pc.residual_review  PASS
+pc  PC-Q1  호환 /api/quality/overview  PASS
+pc  PC-S1  과제 pc.sensory_score  PASS
+pc  PC-S2  과제 pc.recipe_optimize  PASS
+pc  PC-S3  과제 pc.sensory_score  PASS
+pc  PC-S4  과제 pc.sensory_score  PASS
+pc  compat.routes 중 task-map 에 없는 경로  0  PASS
+ot  원천 엔드포인트  12  +웹 루트  0  task-map E  12  PASS
+ot  원천 화면  4  task-map S  4  PASS
+ot  원천 GET /api/health :47  task-map  PASS
+ot  원천 GET /api/ml/overview :52  task-map  PASS
+ot  원천 GET /api/data/demo :56  task-map  PASS
+ot  원천 GET /api/cad/sample.dxf :69  task-map  PASS
+ot  원천 POST /api/cad/demo :74  task-map  PASS
+ot  원천 POST /api/cad/analyze :82  task-map  PASS
+ot  원천 GET /api/cad/{drawing_id} :94  task-map  PASS
+ot  원천 POST /api/quotes :101  task-map  PASS
+ot  원천 GET /api/quotes :109  task-map  PASS
+ot  원천 GET /api/quotes/{quote_id} :114  task-map  PASS
+ot  원천 GET /api/quotes/{quote_id}/csv :126  task-map  PASS
+ot  원천 GET / :146  task-map  PASS
+ot  OT-E1  main.py:47  PASS
+ot  OT-E1  호환 /api/health  PASS
+ot  OT-E2  과제 ot.machining_minutes  PASS
+ot  OT-E2  과제 ot.cad_objects  PASS
+ot  OT-E2  호환 /api/ml/overview  PASS
+ot  OT-E3  과제 ot.quote  PASS
+ot  OT-E3  호환 /api/data/demo  PASS
+ot  OT-E4  과제 ot.cad_objects  PASS
+ot  OT-E4  호환 /api/cad/sample.dxf  PASS
+ot  OT-E5  과제 ot.cad_objects  PASS
+ot  OT-E5  호환 /api/cad/demo  PASS
+ot  OT-E6  과제 ot.cad_objects  PASS
+ot  OT-E6  호환 /api/cad/analyze  PASS
+ot  OT-E7  과제 ot.cad_objects  PASS
+ot  OT-E7  호환 /api/cad/{drawing_id}  PASS
+ot  OT-E8  과제 ot.quote  PASS
+ot  OT-E8  호환 /api/quotes  PASS
+ot  OT-E9  과제 ot.quote  PASS
+ot  OT-E9  호환 /api/quotes  PASS
+ot  OT-E10  과제 ot.quote  PASS
+ot  OT-E10  호환 /api/quotes/{quote_id}  PASS
+ot  OT-E11  과제 ot.quote  PASS
+ot  OT-E11  호환 /api/quotes/{quote_id}/csv  PASS
+ot  OT-M1  과제 ot.machining_minutes  PASS
+ot  OT-M2  과제 ot.cad_objects  PASS
+ot  OT-X1  과제 ot.cad_objects  PASS
+ot  OT-X1  호환 /api/cad/analyze  PASS
+ot  OT-C1  과제 ot.quote  PASS
+ot  OT-C1  호환 /api/quotes  PASS
+ot  OT-S1  과제 ot.cad_objects  PASS
+ot  OT-S2  과제 ot.quote  PASS
+ot  OT-S3  과제 ot.quote  PASS
+ot  OT-S4  과제 ot.machining_minutes  PASS
+ot  OT-S4  과제 ot.cad_objects  PASS
+ot  compat.routes 중 task-map 에 없는 경로  0  PASS
+kd  원천 엔드포인트  12  +웹 루트  0  task-map E  12  PASS
+kd  원천 화면  4  task-map S  4  PASS
+kd  원천 GET /api/health :70  task-map  PASS
+kd  원천 GET /api/ml/overview :74  task-map  PASS
+kd  원천 GET /api/cad/sample.dxf :78  task-map  PASS
+kd  원천 POST /api/cad/demo :82  task-map  PASS
+kd  원천 POST /api/cad/analyze :89  task-map  PASS
+kd  원천 GET /api/cad/{drawing_id} :100  task-map  PASS
+kd  원천 POST /api/quotes :107  task-map  PASS
+kd  원천 GET /api/quotes :113  task-map  PASS
+kd  원천 GET /api/quotes/export/csv :129  task-map  PASS
+kd  원천 GET /api/quotes/{quote_id} :135  task-map  PASS
+kd  원천 GET /api/quotes/{quote_id}/csv :142  task-map  PASS
+kd  원천 GET / :154  task-map  PASS
+kd  KD-E1  호환 /api/health  PASS
+kd  KD-E2  과제 kd.labor_hours  PASS
+kd  KD-E2  과제 kd.drawing_regions  PASS
+kd  KD-E2  호환 /api/ml/overview  PASS
+kd  KD-E3  과제 kd.drawing_regions  PASS
+kd  KD-E3  호환 /api/cad/sample.dxf  PASS
+kd  KD-E4  과제 kd.drawing_regions  PASS
+kd  KD-E4  호환 /api/cad/demo  PASS
+kd  KD-E5  과제 kd.drawing_regions  PASS
+kd  KD-E5  호환 /api/cad/analyze  PASS
+kd  KD-E6  과제 kd.drawing_regions  PASS
+kd  KD-E6  호환 /api/cad/{drawing_id}  PASS
+kd  KD-E7  과제 kd.quote  PASS
+kd  KD-E7  호환 /api/quotes  PASS
+kd  KD-E8  과제 kd.quote  PASS
+kd  KD-E8  호환 /api/quotes  PASS
+kd  KD-E9  과제 kd.quote  PASS
+kd  KD-E9  호환 /api/quotes/export/csv  PASS
+kd  KD-E10  과제 kd.quote  PASS
+kd  KD-E10  호환 /api/quotes/{quote_id}  PASS
+kd  KD-E11  과제 kd.quote  PASS
+kd  KD-E11  호환 /api/quotes/{quote_id}/csv  PASS
+kd  KD-M1  과제 kd.labor_hours  PASS
+kd  KD-X1  과제 kd.drawing_regions  PASS
+kd  KD-X1  호환 /api/cad/analyze  PASS
+kd  KD-X2  과제 kd.drawing_regions  PASS
+kd  KD-X2  호환 /api/cad/analyze  PASS
+kd  KD-C1  과제 kd.quote  PASS
+kd  KD-C1  호환 /api/quotes  PASS
+kd  KD-S1  과제 kd.drawing_regions  PASS
+kd  KD-S2  과제 kd.quote  PASS
+kd  KD-S3  과제 kd.quote  PASS
+kd  KD-S4  과제 kd.labor_hours  PASS
+kd  compat.routes 중 task-map 에 없는 경로  0  PASS
+합계 2차 단위  68  기대 68  PASS

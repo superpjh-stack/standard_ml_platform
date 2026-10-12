@@ -371,11 +371,11 @@
     "rule": {
      "top_quantile": 0.1
     },
-    "threshold": 4.23381182426332,
+    "threshold": 3.598430347470682,
     "threshold_from": "valid",
     "origin": "test_split",
     "scored_rows": 84,
-    "queue_size": 3,
+    "queue_size": 6,
     "max_items": 50
    },
    "reason": "대조 제외(D2-02 · D2-11): 원천 임계값 = 전체 재적합 모델의 표본 내 |잔차| 0.9 분위(P2) · 화면 상위 8 고정(P4) → 표준 임계값 = 검증 구간 잔차 0.9 분위, 시험 구간 · 운영 잔차에만 적용"

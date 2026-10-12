@@ -12,7 +12,7 @@ permissions:
                   admin: allow, approver: read, operator: deny, viewer: deny}
   approve:       {screen: 5, apis: ["GET .../approvals", "POST /approvals/{id}/decide", "POST .../models/{v}/promote", "POST .../models/{v}/rollback"],
                   admin: allow, approver: own_task, operator: read, viewer: deny}
-  monitor:       {screen: 6, apis: ["GET .../monitor", "GET /doctor"],
+  monitor:       {screen: 6, apis: ["GET .../monitor"],                 # GET /doctor 는 sources(화면 7) — goal2 §6 정본 (D2-103)
                   admin: allow, approver: allow, operator: read, viewer: deny}
   trace:         {screen: 10, apis: ["GET /predictions/{id}/trace", "audit"],
                   admin: allow, approver: deny, operator: deny, viewer: deny,

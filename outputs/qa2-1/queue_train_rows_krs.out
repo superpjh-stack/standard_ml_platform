@@ -1,0 +1,94 @@
+{
+ "fit_rows": 576,
+ "fit_rows_ge4": 15,
+ "picked_complete_rows": 13,
+ "sent": [
+  {
+   "entity": "DEMO-20240045",
+   "actual_status": 200,
+   "predict_status": 422,
+   "warn": "{\"error\":{\"code\":\"out_of_bounds\",\"message\":\"입력 값이 허용 범위(min/max) 밖입니다\",\"detail\":{\"field\":\"temperature_c\",\"rule\":\"min\"}}}"
+  },
+  {
+   "entity": "DEMO-20240287",
+   "actual_status": 200,
+   "predict_status": 200,
+   "warn": [
+    {
+     "code": "synthetic_model",
+     "field": null,
+     "message": "합성 데이터로 학습한 모델입니다"
+    }
+   ]
+  },
+  {
+   "entity": "DEMO-20240369",
+   "actual_status": 200,
+   "predict_status": 422,
+   "warn": "{\"error\":{\"code\":\"out_of_bounds\",\"message\":\"입력 값이 허용 범위(min/max) 밖입니다\",\"detail\":{\"field\":\"temperature_c\",\"rule\":\"max\"}}}"
+  }
+ ],
+ "predict_ok": 10,
+ "run_review": [
+  {
+   "tenant_id": "t789fb5",
+   "task_id": "t789fb5.residual_review",
+   "day": "2026-10-03",
+   "origin": "live_residual",
+   "uses": "t789fb5.joint_strength",
+   "rule": "abs_residual_ge",
+   "version": "v1",
+   "threshold": 4.0,
+   "threshold_from": "rule",
+   "pairs": 10,
+   "created": 10,
+   "test_split": {
+    "origin": "test_split",
+    "version": "v1",
+    "created": 16,
+    "threshold": 4.0
+   }
+  }
+ ],
+ "items": {
+  "total": 26,
+  "live": 10,
+  "live_from_fit_segment": 10,
+  "example": [
+   {
+    "entity_id": "DEMO-20240462",
+    "origin": "live_residual",
+    "residual": -15.286719699558049
+   },
+   {
+    "entity_id": "DEMO-20240549",
+    "origin": "live_residual",
+    "residual": -13.918350960634363
+   },
+   {
+    "entity_id": "DEMO-20240578",
+    "origin": "live_residual",
+    "residual": -12.664159523579585
+   }
+  ]
+ },
+ "api_review_first": {
+  "item_id": "rvw_01M4RSMYJ6YZ7667GZZY5P2D74",
+  "task": "t789fb5.residual_review",
+  "entity_id": "DEMO-20240710",
+  "prediction_id": "prd_01M4RSMYHSZ427X2H3D5JSWJN1",
+  "model_version": "v1",
+  "predicted": 45.408272,
+  "actual": 49.97532909188679,
+  "residual": 4.567057091886795,
+  "rule": "abs_residual_ge",
+  "threshold": 4.0,
+  "reason": "|잔차| 4.57 MPa ≥ 4.0 MPa",
+  "origin": "live_residual",
+  "state": "open",
+  "decided_by": null,
+  "decided_at": null,
+  "note": null,
+  "created_at": "2026-10-13T04:32:49+09:00"
+ }
+}

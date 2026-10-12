@@ -63,9 +63,11 @@ def dec_text(x: Any) -> str:
 
 
 def safe_cell(v: Any) -> str:
-    """CSV 수식 주입 방지 — `= + - @ \\t \\r` 로 시작하면 앞에 `'` (source_inventory §10.1 E11)."""
+    """CSV 수식 주입 방지 — `= + - @ \\t \\r` 로 시작하거나, 앞 공백 · 줄바꿈을 떼고(`lstrip()`) 그렇게 시작하면 앞에 `'`
+    (source_inventory §10.1 E11 · 원천 견적 저장소 둘의 `api/main.py` safe_cell 은 `lstrip()` 뒤 검사 — DEF-QA22-003).
+    표준은 원천의 상위 집합이다: 원천이 두는 `\\t` 시작 칸(`"\\tabc"`)도 막는다."""
     s = "" if v is None else v if isinstance(v, str) else dumps(v) if isinstance(v, (dict, list)) else str(v)
-    return "'" + s if s.startswith(CSV_DANGER) else s
+    return "'" + s if s.startswith(CSV_DANGER) or s.lstrip().startswith(CSV_DANGER) else s
 
 
 # ── 플러그인 ──────────────────────────────────────────────────────────────────────────────
@@ -135,6 +137,99 @@ def parse_body(body: Any, *, keys: set[str] = BODY_KEYS) -> dict:
     return body
 
 
+# ── 품목(lines) 검증 — task-contract §6.3 `line_limits` (DEF-QA22-002 · #31 · D2-90) ─────────────────────
+# 원천 BomRow(도면 견적 원천 `api/main.py:33-43`: extra=forbid · 공백 제거 · 이름 1~80 · 재질 목록 · 수량 정수 1~1000 · 중량 · 단가 범위)를
+# 과제 YAML 값으로 옮긴다. 과제에 line_limits 가 없어도 코어 기본은 지킨다: 키 = 이름 꼴, 값 = 스칼라, 숫자는 유한 · 0 이상,
+# 문자열 숫자는 10진 표기만(지수 · 부호 없음), 문자열 200자 이하. 오류 detail = {field: "lines.<i>.<키>", rule} — 입력값은 되풀이하지 않는다.
+LINE_KEY = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
+LINE_TEXT_MAX = 200
+LINE_FIELD_TYPES = ("string", "number", "category")
+LINE_FIELD_KEYS = {"type", "required", "min", "max", "integer", "min_length", "max_length", "values_from"}
+DEC_TEXT = re.compile(r"^[0-9]{1,15}(\.[0-9]{1,10})?$")
+
+
+def _line_err(i: int | None, key: str | None, rule: str, msg: str) -> InvalidInput:
+    field = "lines" if i is None else f"lines.{i}" + (f".{key}" if key and LINE_KEY.match(key) else "")
+    return InvalidInput(msg, {"field": field, "rule": rule})
+
+
+def _line_number(v: Any) -> Decimal | None:
+    """숫자 칸 값 → Decimal. JSON 숫자(int · Decimal) 또는 10진 문자열("6500" — 원천 pydantic 숫자 판정). 그 밖 None."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        return Decimal(v)
+    if isinstance(v, Decimal):
+        return v if v.is_finite() else None
+    text = v.strip() if isinstance(v, str) else None
+    if text is not None and DEC_TEXT.match(text):
+        return Decimal(text)
+    return None
+
+
+def validate_line_limits(name: str, limits: Any, *, inputs: list[str], categories: set[str]) -> list[str]:
+    """과제 `line_limits` 모양 검사(등록부 로더 · QuoteContext 가 같은 함수를 쓴다). → 문제 목록(빈 목록 = 통과).
+    `{min_items?, max_items?(≤ 200), fields: {<키>: {type: string|number|category, required?, min?, max?, integer?,
+    min_length?, max_length?, values_from?(category — inputs 의 범주 변수)}}}`. 숫자 min 은 0 이상(견적 입력은 음수가 없다)."""
+    if limits is None:
+        return []
+    if not isinstance(limits, dict) or set(limits) - {"min_items", "max_items", "fields"} \
+            or not isinstance(limits.get("fields"), dict):
+        return [f"{name}: line_limits 는 {{min_items?, max_items?, fields: {{키: 규칙}}}} map"]
+    p = []
+    for k in ("min_items", "max_items"):
+        v = limits.get(k)
+        if v is not None and not (isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= LINES_MAX):
+            p.append(f"{name}: line_limits.{k} 는 0 ~ {LINES_MAX} 정수")
+    if not p and (limits.get("min_items") or 0) > (limits.get("max_items") if limits.get("max_items") is not None else LINES_MAX):
+        p.append(f"{name}: line_limits min_items > max_items")
+    for key, rule in limits["fields"].items():
+        where = f"{name}: line_limits.fields.{key}"
+        if not (isinstance(key, str) and LINE_KEY.match(key)):
+            p.append(f"{where} — 키는 소문자 이름 꼴")
+            continue
+        if not isinstance(rule, dict) or rule.get("type") not in LINE_FIELD_TYPES or set(rule) - LINE_FIELD_KEYS:
+            p.append(f"{where} — type 은 {list(LINE_FIELD_TYPES)}, 규칙 키는 {sorted(LINE_FIELD_KEYS)} 만")
+            continue
+        if "required" in rule and not isinstance(rule["required"], bool):
+            p.append(f"{where}.required 는 true/false")
+        t = rule["type"]
+        if t == "number":
+            lo, hi = rule.get("min"), rule.get("max")
+            if any(x is not None and not (isinstance(x, (int, float, Decimal)) and not isinstance(x, bool)) for x in (lo, hi)) \
+                    or ("integer" in rule and not isinstance(rule["integer"], bool)):
+                p.append(f"{where} — min · max 숫자, integer true/false")
+            elif lo is not None and lo < 0:
+                p.append(f"{where}.min 은 0 이상(견적 입력은 음수가 없다)")
+            elif lo is not None and hi is not None and lo > hi:
+                p.append(f"{where} min > max")
+            if set(rule) & {"min_length", "max_length", "values_from"}:
+                p.append(f"{where} — number 에는 min_length · max_length · values_from 을 두지 않는다")
+        elif t == "string":
+            for k in ("min_length", "max_length"):
+                v = rule.get(k)
+                if v is not None and not (isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= LINE_TEXT_MAX):
+                    p.append(f"{where}.{k} 는 0 ~ {LINE_TEXT_MAX} 정수")
+            if set(rule) & {"min", "max", "integer", "values_from"}:
+                p.append(f"{where} — string 에는 min · max · integer · values_from 을 두지 않는다")
+        else:
+            vf = rule.get("values_from")
+            if vf not in inputs or vf not in categories:
+                p.append(f"{where}.values_from 은 inputs 의 회사 범주 변수(categories) 이름")
+            if set(rule) - {"type", "required", "values_from"}:
+                p.append(f"{where} — category 에는 required · values_from 만")
+    return p
+
+
+def check_amounts(res: dict) -> None:
+    """견적식 결과 불변식 — 합계 · 품목 금액은 0 이상(음수 견적을 만들지 않는다, DEF-QA22-002). 입력 검증을 지나도 지킨다."""
+    def neg(x: Any) -> bool:
+        d = _line_number(x) if not isinstance(x, str) else (Decimal(x) if re.match(r"^-?[0-9]+(\.[0-9]+)?$", x) else None)
+        return d is not None and d < 0
+    if neg(res.get("total")) or any(neg((ln or {}).get("amount")) for ln in res.get("lines") or []):
+        raise InvalidInput("견적 금액이 음수가 됩니다 — 품목 · 입력 값을 확인하세요", {"field": "lines", "rule": "negative_amount"})
+
+
 class QuoteContext:
     """견적 과제 하나 — 과제 정의 · 의존 과제 · 견적식 · 단가."""
 
@@ -157,6 +252,14 @@ class QuoteContext:
         self.extra = [n for n in self.input_names if n not in pack_feats]      # 단가 · 수량 입력(features.yaml 밖)
         # features.yaml 밖 입력의 범위(task-contract §6.3 input_limits — D2-A2-03): {이름: {min, max, integer}}. 없으면 0 이상 숫자
         self.limits = {str(n): dict(v) for n, v in (raw.get("input_limits") or {}).items()}
+        # 품목 행 규칙(task-contract §6.3 line_limits — D2-90). 범주 칸은 회사 categories + material_aliases(추출기와 같은 통합)
+        self.line_limits = raw.get("line_limits")
+        probs = validate_line_limits(self.task.id, self.line_limits, inputs=self.input_names, categories=set(cats))
+        if probs:
+            raise TypeError(f"과제 line_limits 설정 결함: {probs[0]}")
+        from ..registry.tenants import material_aliases
+        self.aliases = material_aliases(catalog.merged)
+        self.cat_values = {str(k): [str(x) for x in (v or [])] for k, v in cats.items()}
         by_pack = {s.task.pack_id: s for s in (catalog.get(self.tenant_id, t) for t in catalog.ids())}
         self.uses = []
         for pack_id in raw.get("uses") or []:
@@ -204,6 +307,71 @@ class QuoteContext:
             text = f"{lo} 이상" + (f" {hi} 이하" if hi is not None else "")
             raise InvalidInput(f"허용 범위({text}) 밖입니다", {"field": name, "rule": "range"})
 
+    def check_lines(self, lines: list) -> list[dict]:
+        """품목 행 검증 → 정리된 행(문자열 앞뒤 공백 제거 · 범주 정규 값). 과제 line_limits 가 없으면 코어 기본만."""
+        lim = self.line_limits or {}
+        fields = lim.get("fields")
+        if lim.get("min_items") is not None and len(lines) < lim["min_items"]:
+            raise _line_err(None, None, "min_items", f"품목은 {lim['min_items']}행 이상입니다")
+        if len(lines) > (lim.get("max_items") if lim.get("max_items") is not None else LINES_MAX):
+            raise _line_err(None, None, "max_items", f"품목은 {lim.get('max_items', LINES_MAX)}행 이하입니다")
+        out = []
+        for i, ln in enumerate(lines):
+            row: dict[str, Any] = {}
+            for key, v in ln.items():
+                if not (isinstance(key, str) and LINE_KEY.match(key)) or (fields is not None and key not in fields):
+                    raise _line_err(i, key if isinstance(key, str) else None, "extra_forbidden", "모르는 품목 키가 있습니다")
+                rule = (fields or {}).get(key)
+                row[key] = self._line_value(i, key, v, rule)
+            for key, rule in (fields or {}).items():
+                if rule.get("required") and row.get(key) is None:
+                    raise _line_err(i, key, "required", "품목 필수 칸이 없습니다")
+            out.append(row)
+        return out
+
+    def _line_value(self, i: int, key: str, v: Any, rule: dict | None) -> Any:
+        if isinstance(v, (dict, list)):
+            raise _line_err(i, key, "type", "품목 칸 값은 숫자 · 문자열입니다")
+        if v is None:
+            return None
+        t = (rule or {}).get("type")
+        if t is None:                                            # 코어 기본(과제 규칙 없음)
+            if isinstance(v, str):
+                if len(v) > LINE_TEXT_MAX:
+                    raise _line_err(i, key, "length", f"품목 문자열은 {LINE_TEXT_MAX}자 이하입니다")
+                return v               # 문자열 칸의 뜻은 모른다 — 음수 단가 문자열은 견적식 결과 음수 금액 검사가 막는다
+            d = _line_number(v)
+            if d is None:
+                raise _line_err(i, key, "number", "품목 숫자가 올바르지 않습니다")
+            if d < 0:
+                raise _line_err(i, key, "range", "품목 숫자는 0 이상입니다")
+            return v
+        if t == "number":
+            d = _line_number(v)
+            if d is None:
+                raise _line_err(i, key, "number", "숫자여야 합니다")
+            if rule.get("integer") and d != d.to_integral_value():
+                raise _line_err(i, key, "integer", "정수여야 합니다")
+            lo = Decimal(str(rule.get("min", 0)))
+            hi = Decimal(str(rule["max"])) if rule.get("max") is not None else None
+            if d < lo or (hi is not None and d > hi):
+                text = f"{lo} 이상" + (f" {hi} 이하" if hi is not None else "")
+                raise _line_err(i, key, "range", f"허용 범위({text}) 밖입니다")
+            return int(d) if rule.get("integer") else v
+        if not isinstance(v, str):
+            raise _line_err(i, key, "type", "문자열이어야 합니다")
+        s = v.strip()
+        if t == "string":
+            lo, hi = rule.get("min_length", 1 if rule.get("required") else 0), rule.get("max_length", LINE_TEXT_MAX)
+            if not lo <= len(s) <= hi:
+                raise _line_err(i, key, "length", f"{lo}~{hi}자입니다")
+            return s
+        values = self.cat_values.get(rule["values_from"]) or []
+        canon = s if s in values else self.aliases.get(s.upper()) or {x.upper(): x for x in values}.get(s.upper())
+        if canon not in values:
+            raise _line_err(i, key, "category", "회사 범주 목록에 없는 값입니다")
+        return canon
+
     def _recognized_values(self, doc_id: str | None) -> dict:
         if not doc_id:
             return {}
@@ -242,7 +410,7 @@ class QuoteContext:
         from .predict import PredictRequest, Predictor
         prepared = dict(inputs)
         if callable(getattr(self.formula, "prepare", None)):
-            prepared.update(self.formula.prepare(dict(inputs), [dict(x) for x in lines]) or {})
+            prepared.update(_formula_call(self.formula.prepare, dict(inputs), [dict(x) for x in lines]) or {})
         predicted: dict[str, Decimal] = {}
         preds, versions, synthetic = [], [], False
         predictor = Predictor(self.catalog)
@@ -260,9 +428,10 @@ class QuoteContext:
                           "unit": (out.get("prediction") or {}).get("unit") or "", "status": out["status"]})
             versions.append({"task": dep.task.id, "version": out["model"]["version"], "synthetic": out["model"]["synthetic"]})
             synthetic = synthetic or bool(out["synthetic"])
-        res = self.formula.quote(dict(prepared), [dict(x) for x in lines], dict(predicted), dict(self.rates))
+        res = _formula_call(self.formula.quote, dict(prepared), [dict(x) for x in lines], dict(predicted), dict(self.rates))
         if not isinstance(res, dict) or "total" not in res:
             raise TypeError("견적식 결과에 total 이 없습니다")
+        check_amounts(res)
         used = {**predicted, **(res.get("predicted") or {})}
         out_lines = []
         for ln in res.get("lines") or []:
@@ -276,6 +445,15 @@ class QuoteContext:
                              "unit": p["unit"]} for p in preds],
             "model_versions": versions, "synthetic": synthetic, "inputs": prepared,
         }
+
+
+def _formula_call(fn, *args):
+    """견적식 호출 — 품목 · 입력 값 때문에 계산할 수 없으면(칸 없음 · 숫자 아님) 422. 500 으로 새지 않는다(DEF-QA22-002).
+    견적식 결과 모양 결함(total 없음 · 정수 아닌 금액)은 그대로 500(지어내지 않는다)."""
+    try:
+        return fn(*args)
+    except (KeyError, TypeError, ValueError, ArithmeticError) as e:
+        raise InvalidInput("견적식이 이 품목 · 입력 값으로 계산할 수 없습니다", {"field": "lines", "rule": "line_value"}) from e
 
 
 def _is_numlike(v: Any) -> bool:
@@ -410,7 +588,7 @@ def _review_fields(body: dict, actor: str, note_min: int) -> tuple[bool, str | N
 def create(qc: QuoteContext, body: dict, *, actor: str) -> dict:
     body = parse_body(body)
     inputs = qc.check_inputs(dict(body.get("inputs") or {}))
-    lines = list(body.get("lines") or [])
+    lines = qc.check_lines(list(body.get("lines") or []))
     doc_id = body.get("doc_id")
     ov = qc.overrides(doc_id, inputs, lines)
     reviewed, note, by = _review_fields(body, actor, qc.note_min)
@@ -426,7 +604,7 @@ def create(qc: QuoteContext, body: dict, *, actor: str) -> dict:
 def revise(qc: QuoteContext, quote_id: str, body: dict, *, actor: str) -> dict:
     body = parse_body(body)
     inputs = qc.check_inputs(dict(body.get("inputs") or {}))
-    lines = list(body.get("lines") or [])
+    lines = qc.check_lines(list(body.get("lines") or []))
     with connect() as c:
         prev = latest_row(c, qc.tenant_id, qc.task.id, quote_id)
     if prev is None:

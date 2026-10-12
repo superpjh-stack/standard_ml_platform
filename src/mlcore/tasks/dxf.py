@@ -134,6 +134,8 @@ def read(raw: bytes, *, max_entities: int = 20000) -> DxfDoc:
     """→ DxfDoc. 형식 · 파싱 오류는 DocumentError(invalid_document), 엔티티 상한 초과는 DocumentError(document_too_large)."""
     if raw.lstrip()[:len(BINARY_SENTINEL)] == BINARY_SENTINEL or b"\x00" in raw[:4096]:
         raise DocumentError("invalid_document", "binary", "바이너리 DXF 는 받지 않습니다")
+    if b"\x00" in raw:                       # 앞 4 KiB 뒤의 NUL — 텍스트 DXF 에 없다, jsonb 도 받지 않는다(DEF-QA22-004)
+        raise DocumentError("invalid_document", "nul", "도면에 NUL 문자가 있습니다")
     text, enc = _decode(raw)
     header: dict[str, list[tuple[int, str]]] = {}
     entities: list[Entity] = []

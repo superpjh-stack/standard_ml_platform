@@ -1,0 +1,12 @@
+kd.labor_hours               status=succeeded champ=ridge            env3_same=True shuffle_same=True
+krs.joint_strength           status=succeeded champ=gbr              env3_same=True shuffle_same=True
+ks.failure_24h               status=succeeded champ=rf_clf           env3_same=True shuffle_same=True
+ks.remaining_hours           status=succeeded champ=gbr              env3_same=True shuffle_same=True
+ks.sensor_ood                status=succeeded champ=isolation_forest env3_same=True shuffle_same=True
+ot.cad_objects               status=succeeded champ=logreg           env3_same=True shuffle_same=True
+ot.machining_minutes         status=succeeded champ=ridge            env3_same=True shuffle_same=True
+pc.sensory_score             status=succeeded champ=gbr              env3_same=True shuffle_same=True
+sw.defect_risk               status=succeeded champ=gbc              env3_same=True shuffle_same=True
+sw.delta_e                   status=succeeded champ=extra_trees      env3_same=True shuffle_same=True
+sw.print_ood                 status=succeeded champ=isolation_forest env3_same=True shuffle_same=True
+tasks 11 bad 0

@@ -13,13 +13,24 @@
   R8 영역 안 텍스트의 키워드 종류가 하나면 그 라벨, 둘 이상이면 other. 상태는 언제나 '검토 필요'.
   R9 텍스트 · 사각형이 없으면 영역을 만들지 않는다(가짜 후보 0). INSERT 등 다른 요소는 미지원 개수로 공개.
 정답 라벨이 없으므로 지표를 만들지 않는다(과제 labels: none — 코어가 metrics: null).
+
+규모(D2-101 · #30): 결과는 원천 알고리즘과 같고(`tests/test_extract_eto_scale.py` 가 1차 구현과 대조), 계산만 바꿨다 —
+  사각형을 넓이 순(같으면 파일 순 — 원천 min 과 같은 선택)으로 줄 세워 키워드 텍스트 묶음을 numpy 로 한 번에 판정,
+  영역 안 텍스트도 numpy 마스크 한 번. 분석(parse + 영역)은 같은 도면이면 한 번만(bom_text 가 다시 쓴다).
+  영역 안 텍스트를 모두 담으면 결과가 영역 수 × 텍스트 수로 커질 수 있어, 과제 params `max_region_texts`
+  (영역 texts 합계 상한, 팩 YAML)를 넘으면 413 document_too_large(rule region_texts). params 가 없으면 상한 없음(원천과 같음).
 """
 
 from __future__ import annotations
 
+import hashlib
 import math
 import re
+import sys
+import types
 from collections import Counter
+
+import numpy as np
 
 from mlcore.tasks.dxf import SCALE_TO_MM, read
 from mlcore.tasks.extract import ExtractError
@@ -123,36 +134,97 @@ def parse(raw: bytes, *, unit: str, limits: dict | None = None) -> dict:
             "entity_count": doc.entity_count, "factor": factor}
 
 
-def regions_from(texts: list[dict], rects: list[list[float]]) -> list[dict]:
-    """R6~R8 — 키워드 텍스트를 감싸는 가장 작은 사각형 → 영역 후보."""
-    regions, seen = [], set()
-    for text in texts:
-        value = text["text"].upper()
-        if not any(any(w in value for w in words) for words in KEYWORDS.values()):
+def _kinds(value: str) -> frozenset:
+    up = value.upper()
+    return frozenset(k for k, words in KEYWORDS.items() if any(w in up for w in words))
+
+
+_BLOCK = 256                       # 키워드 텍스트 묶음 크기(묶음 × 사각형 bool 행렬)
+
+
+def regions_from(texts: list[dict], rects: list[list[float]], *, max_region_texts: int | None = None) -> list[dict]:
+    """R6~R8 — 키워드 텍스트를 감싸는 가장 작은 사각형 → 영역 후보 (원천과 같은 결과, 계산은 색인 — D2-101)."""
+    if not texts or not rects:
+        return []
+    kinds = [_kinds(t["text"]) for t in texts]
+    keyed = [i for i, k in enumerate(kinds) if k]
+    if not keyed:
+        return []
+    R = np.asarray(rects, dtype=float).reshape(-1, 4)
+    ok = (R[:, 2] > R[:, 0]) & (R[:, 3] > R[:, 1])
+    area = (R[:, 2] - R[:, 0]) * (R[:, 3] - R[:, 1])
+    order = np.argsort(area, kind="stable")                # 넓이 오름차순 · 같으면 파일 순(원천 min 의 첫 최소)
+    order = order[ok[order]]
+    if order.size == 0:
+        return []
+    Rs = R[order]
+    P = np.asarray([t["point"] for t in texts], dtype=float).reshape(-1, 2)
+    best: dict[int, int] = {}                              # 키워드 텍스트 번호 → 가장 작은 감싸는 사각형 번호
+    for s in range(0, len(keyed), _BLOCK):
+        idx = keyed[s:s + _BLOCK]
+        x, y = P[idx, 0:1], P[idx, 1:2]
+        m = (Rs[:, 0] <= x) & (x <= Rs[:, 2]) & (Rs[:, 1] <= y) & (y <= Rs[:, 3])
+        hit = m.any(axis=1)
+        first = m.argmax(axis=1)
+        for j, ti in enumerate(idx):
+            if hit[j]:
+                best[ti] = int(order[first[j]])
+    regions, seen, total = [], set(), 0
+    for ti in keyed:
+        if ti not in best:
             continue
-        x, y = text["point"]
-        enclosing = [r for r in rects if r[0] <= x <= r[2] and r[1] <= y <= r[3] and r[2] > r[0] and r[3] > r[1]]
-        if not enclosing:
-            continue
-        box = min(enclosing, key=lambda b: (b[2] - b[0]) * (b[3] - b[1]))
+        box = rects[best[ti]]
         if tuple(box) in seen:
             continue
         seen.add(tuple(box))
-        inside = [t["text"] for t in texts if box[0] <= t["point"][0] <= box[2] and box[1] <= t["point"][1] <= box[3]]
-        kinds = {k for k, words in KEYWORDS.items() if any(any(w in t.upper() for w in words) for t in inside)}
-        label = next(iter(kinds)) if len(kinds) == 1 else "other"
+        mask = (box[0] <= P[:, 0]) & (P[:, 0] <= box[2]) & (box[1] <= P[:, 1]) & (P[:, 1] <= box[3])
+        members = np.flatnonzero(mask)
+        total += int(members.size)
+        if max_region_texts is not None and total > max_region_texts:
+            raise ExtractError("document_too_large", "region_texts",
+                               "도면 영역 안 텍스트가 너무 많습니다(겹친 사각형). 도면을 나눠 올리세요.")
+        inside = [texts[i]["text"] for i in members.tolist()]
+        found = frozenset().union(*(kinds[i] for i in members.tolist()))
+        label = next(iter(found)) if len(found) == 1 else "other"
         regions.append({"id": f"REG-{len(regions) + 1:03}", "label": label, "bbox": box, "texts": inside,
-                        "evidence": text["text"], "status": REVIEW})
+                        "evidence": texts[ti]["text"], "status": REVIEW})
     return regions
 
 
-def analyze(raw: bytes, *, unit: str, limits: dict | None = None) -> dict:
-    """parse + regions + 원천 검사(도형 없음 거부 · 경고). bom_text 도 이 함수를 쓴다."""
+# 같은 도면 분석 공유 — 코어 로더 · bom_text 가 이 파일을 각자 다른 모듈 이름으로 읽어도 같은 자리를 본다(최근 1건).
+_SHARED = sys.modules.setdefault("mlp_pack_eto_analysis_shared", types.ModuleType("mlp_pack_eto_analysis_shared"))
+if not hasattr(_SHARED, "last"):
+    _SHARED.last = None
+
+
+def _cap(params: dict | None) -> int | None:
+    v = (params or {}).get("max_region_texts")
+    return int(v) if v is not None else None
+
+
+def analyze(raw: bytes, *, unit: str, limits: dict | None = None, max_region_texts: int | None = None) -> dict:
+    """parse + regions + 원천 검사(도형 없음 거부 · 경고). bom_text 도 이 함수를 쓴다 — 같은 입력이면 한 번만 계산."""
+    key = (hashlib.sha256(raw).hexdigest(), unit, int((limits or {}).get("max_entities") or 20000), max_region_texts)
+    last = _SHARED.last
+    if last is not None and last[0] == key:
+        if isinstance(last[1], ExtractError):
+            raise last[1]
+        return last[1]
+    try:
+        out = _analyze(raw, unit=unit, limits=limits, max_region_texts=max_region_texts)
+    except ExtractError as e:
+        _SHARED.last = (key, e)
+        raise
+    _SHARED.last = (key, out)
+    return out
+
+
+def _analyze(raw: bytes, *, unit: str, limits: dict | None, max_region_texts: int | None) -> dict:
     g = parse(raw, unit=unit, limits=limits)
     coords = [p for path in g["paths"] for p in path["points"]] + [t["point"] for t in g["texts"]]
     if not coords:
         raise ExtractError("invalid_document", "parse", "지원하는 모델 공간 도형이나 텍스트가 없습니다.")
-    regions = regions_from(g["texts"], g["rects"])
+    regions = regions_from(g["texts"], g["rects"], max_region_texts=max_region_texts)
     warnings = [WARN_RULE]
     if g["unsupported"]:
         warnings.append("미지원 요소 제외: " + ", ".join(f"{k} {v}개" for k, v in g["unsupported"].items()))
@@ -163,11 +235,12 @@ def analyze(raw: bytes, *, unit: str, limits: dict | None = None) -> dict:
     return {**g, "regions": regions, "warnings": warnings, "bbox": [min(xs), min(ys), max(xs), max(ys)]}
 
 
-def extract(raw: bytes, filename: str, *, unit: str, limits: dict, model=None, **_context) -> dict:
+def extract(raw: bytes, filename: str, *, unit: str, limits: dict, model=None, context: dict | None = None,
+            **_ignored) -> dict:
     """→ 추출 결과(progress-dev2 2차 §2.1.1 모양). 원본을 쓰지 않고 외부로 보내지 않는다."""
-    a = analyze(raw, unit=unit, limits=limits)
+    a = analyze(raw, unit=unit, limits=limits, max_region_texts=_cap((context or {}).get("params")))
     return {
-        "regions": a["regions"], "objects": [], "bom_rows": [], "confidence": None,
+        "regions": [dict(r, texts=list(r["texts"]), bbox=list(r["bbox"])) for r in a["regions"]], "objects": [], "bom_rows": [], "confidence": None,
         "counts": {k: sum(r["label"] == k for r in a["regions"]) for k in LABELS},
         "dimensions": None, "unit": "mm", "entity_count": a["entity_count"], "warnings": a["warnings"],
         "preview": {"bbox": a["bbox"], "paths": a["paths"], "texts": a["texts"], "scale_to_mm": a["factor"],

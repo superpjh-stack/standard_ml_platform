@@ -14,8 +14,17 @@ DEFAULT_LABEL = "label"
 CLASS_TARGET_TYPES = ("extract",)      # 목표가 클래스 이름(문자열)인 유형 — 표준 프레임이 수치로 바꾸지 않는다
 
 
+TRAINABLE = ("regression", "risk", "anomaly", "extract")   # extract = model: 블록이 있는 모델 추출기만 (D2-15)
+
+
 def has_model(task) -> bool:
     return task.type == "extract" and isinstance(task.raw.get("model"), dict)
+
+
+def trainable(task) -> bool:
+    """자기 모델을 학습하는 과제인가 — 1차 학습 유형 + `model:` 블록이 있는 extract. 대기열 · 규칙 추출 · 견적 · 최적화는
+    아니다(uses 과제의 production 모델을 쓴다). 접수(`data.jobs.submit`)와 학습기가 같은 규칙을 쓴다(D2-82)."""
+    return task.type in TRAINABLE and (task.type != "extract" or has_model(task))
 
 
 def learn_view(task):

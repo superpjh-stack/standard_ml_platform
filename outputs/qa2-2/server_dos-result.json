@@ -1,0 +1,24 @@
+{
+ "entities_10000": {
+  "file_MB": 0.62,
+  "status": 201,
+  "sec": 22.2,
+  "resp_MB": 72.2,
+  "rss_before_MB": 127,
+  "rss_peak_MB": 818
+ },
+ "entities_20000": {
+  "file_MB": 1.24,
+  "status": 500,
+  "sec": 174.3,
+  "resp_MB": 0.0,
+  "rss_before_MB": 440,
+  "rss_peak_MB": 2261
+ },
+ "chunked_50MiB": {
+  "status": 413,
+  "sec": 0.04,
+  "sent_MB": 50
+ },
+ "rss_end_MB": 475
+}

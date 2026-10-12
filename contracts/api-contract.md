@@ -22,12 +22,12 @@
 | B07 models | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/models/{v}/rollback` | approver | `rollback` — 승인 요청(사유 필수) |
 | B08 train | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/train` | admin | `POST .../train` |
 | B08 train | 1 | GET | `/api/v1/runs/{run_id}` | approver(조회) | `GET /runs/{id}` |
-| B09 review | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/review` | operator(조회) | `GET .../review` — `?state=&cursor=&limit=` → `{items: [ReviewItem], next_cursor, total}` (viewer ✕ — goal2 §6) |
+| B09 review | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/review` | operator(조회) | `GET .../review` — `?state=&cursor=&limit=` → `{items: [ReviewItem], next_cursor, total, can_decide}` (viewer ✕ — goal2 §6 · `can_decide` = 이 키가 이 과제 PATCH 판정을 할 수 있는가 — 화면 8 결정 버튼 표시, C2 D2-93) |
 | B09 review | 1 | PATCH | `/api/v1/tenants/{t}/tasks/{task}/review/{item_id}` | approver(own_task) | `PATCH .../review/{id}` — `{state: confirmed_issue\|false_alarm, note}` → 200 ReviewItem · 닫힘 409 `already_decided` |
 | B10 documents | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | `POST .../documents` — multipart `file` · `unit_override?` → 201 DocumentExtraction |
 | B10 documents | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | 목록 `?search=&cursor=&limit=` → `{items: [DocumentExtraction 요약], next_cursor, total}` (화면 9) |
 | B10 documents | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/documents/{doc_id}` | operator | `GET .../documents/{id}` → DocumentExtraction · 다른 회사 · 없음 404 |
-| B11 quotes | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `POST .../quotes` — `{doc_id?, inputs, lines?, reviewed, review_note}` → 201 Quote(`draft`) |
+| B11 quotes | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `POST .../quotes` — `{doc_id?, inputs, lines?, reviewed, review_note}` → 201 Quote(`draft`) · `lines` 는 과제 `line_limits` + 코어 기본(task-contract §6.3) — 밖이면 422 `invalid_input`(field `lines.<i>.<키>`), 음수 금액 422 (C2 D2-90) |
 | B11 quotes | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `GET .../quotes` — `?search=&cursor=&limit=` → `{items: [Quote], next_cursor, total}` |
 | B11 quotes | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}` | operator | → Quote(최신 revision) |
 | B11 quotes | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/revisions` | operator | Quote 와 같은 본문 → 201 Quote(revision+1, `draft`) · 확정 견적 409 `quote_locked` |
@@ -37,7 +37,7 @@
 | B13 approvals | 1 | GET | `/api/v1/tenants/{t}/approvals` | operator(조회) | `GET .../approvals` |
 | B13 approvals | 1 | POST | `/api/v1/approvals/{approval_id}/decide` | approver(own_task) | `POST /approvals/{id}/decide` |
 | B14 monitor | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/monitor` | operator(조회) | `GET .../monitor` |
-| B14 monitor | 1 | GET | `/api/v1/tenants/{t}/doctor` | operator(조회) | `GET /doctor` (회사 범위로 둔다 — D-28) |
+| B14 monitor | 1 | GET | `/api/v1/tenants/{t}/doctor` | approver(조회) | `GET /doctor` (회사 범위로 둔다 — D-28). 권한은 화면 7 `sources`(goal2 §6 operator ✕ 정본 — D2-103) |
 | B15 trace | 1 | GET | `/api/v1/predictions/{prediction_id}/trace` | admin | `GET /predictions/{id}/trace` |
 
 ## 2. 공통 규칙
@@ -84,13 +84,13 @@
 | `monitor` | `?days=30` | `{items: [{day, metric, feature, value, level}], next_cursor}` |
 | `doctor` | — | `{tenant, sources: [{role, kind, status: "연결"\|"미연결", rows, ts_from, ts_to, coverage, missing_rates, target: "있음"\|"목표 없음", message}]}` |
 | `trace` | — | `{prediction: {...}, model: {version, stage, algo, artifact_sha256}, run: {run_id, config_hash, seed, code_version}, snapshot: {snapshot_id, sha256, rows, ts_from, ts_to, synthetic}, sources: [{kind, ref}], actuals: [...]}` |
-| `health` | — | `{status: "ok"\|"degraded", db: bool, version, tasks: [{task, model_ready: bool, version \| null}]}` |
+| `health` | — | `{status: "ok"\|"degraded", db: bool, version, tasks: [{task, type, model_ready: bool, model_required: bool, version \| null, uses: [{task, version \| null}] \| null}]}` — `model_required` false = 자기 모델이 없는 과제(규칙 extract · quote · optimize · review_queue). 그때 `model_ready` = 규칙 추출만이면 true, `uses` 가 있으면 그 과제 production 이 전부 있을 때 true (C2 D2-94) |
 
 **덧붙인 키(D-78).** 위 표의 키는 전부 필수다(빼거나 선택으로 바꾸지 않는다). 아래 키는 화면이 쓰는 **덧붙임**으로 계약에 올린다 — 이름 · 뜻을 바꾸려면 계약 절차.
 - `doctor`: 응답 `mode` · `warnings`, `sources[]` 에 `targets`(과제별 목표 판정) · `unmapped`(정적 대응 밖 변수).
 - `monitor`: `total` · `last_day` · `retrain_candidates`(화면 6 재학습 후보 링크) · 요청 `?metric=`(psi · oor_rate · missing_rate · live_perf · volume · error_rate · source_health).
 - `tasks` 목록: 응답 `tenant` · `disabled`, 항목 `production` · `uses`.
-- `overview`: 항목 `title` · `model_ready` · `uses` · `pending_approvals`, `monitor.day` · `monitor.note`.
+- `overview`: 항목 `title` · `model_ready` · `model_required` · `uses` · `pending_approvals`, `monitor.day` · `monitor.note`. `uses` 는 optimize · quote · review_queue 의 의존 과제 `[{task, version, synthetic}]`(그 밖 null) — `model_ready` 판정은 health 와 같다(C2 D2-94).
 
 ## 5. 호환 라우터 (D-18 — `/api/v1` 밖)
 
@@ -109,8 +109,9 @@
 
 | 상황 | HTTP | code |
 |---|---|---|
-| DXF 아님(확장자 · 바이너리 DXF · 파싱 실패 · 단위 미지정인데 `unit_override` 없음) | 422 | `invalid_document` (detail.rule = `format` · `binary` · `parse` · `unit`) — 원천 415 는 호환 라우터만 |
-| 5 MiB · 20,000 엔티티(또는 과제 `document` 상한) 초과 · 좌표 · 꼭짓점 상한 초과 | 413 | `document_too_large` (detail.rule = `bytes` · `entities` · `vertices` · `points`) |
+| DXF 아님(확장자 · 바이너리 DXF · 파싱 실패 · 단위 미지정인데 `unit_override` 없음 · NUL 문자 — 원본 또는 추출 결과) | 422 | `invalid_document` (detail.rule = `format` · `binary` · `parse` · `unit` · `nul` — C2 D2-92) — 원천 415 는 호환 라우터만 |
+| 5 MiB · 20,000 엔티티(또는 과제 `document` 상한) 초과 · 좌표 · 꼭짓점 상한 초과 · 영역 안 텍스트 합계 상한(추출기 params `max_region_texts`) 초과 · 추출 시간 · 결과 상한 초과(task-contract §6.2 `document` — 코어) | 413 | `document_too_large` (detail.rule = `bytes` · `entities` · `vertices` · `points` · `region_texts` — D2-101 · `time` · `items` · `result_bytes` · `resources` — C2 D2-91) |
+| 학습 대상이 아닌 과제(review_queue · 규칙 extract · quote · optimize)에 `train` | 422 | `invalid_input` (detail.rule = `not_trainable`, detail.type — 전용 코드 두지 않음, D2-82 · D2-107) |
 | 정답 라벨 없음(평가 요청) | 200 | `labels: "none"` · `metrics: null` |
 | 검토 없는 견적 확정 | 422 | `missing_required` (detail.field = `reviewed` · `review_note`) |
 | 확정된 견적 수정 · 재확정 | 409 | `quote_locked` |

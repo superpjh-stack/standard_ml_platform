@@ -13,6 +13,15 @@ input_limits:                          # features.yaml 밖 입력 범위 — 원
   quantity:       {min: 1, max: 1000, integer: true}
   labor_rate:     {min: 1, max: 1000000}
   outsource_cost: {min: 0, max: 1000000000}
+line_limits:                           # 견적 품목 검증 — 원천 BomRow(api/main.py) 규칙 (#31 · D2-90)
+  min_items: 1
+  max_items: 100
+  fields:
+    name:     {type: string, required: true, min_length: 1, max_length: 80}
+    material: {type: category, required: true, values_from: main_material}
+    quantity: {type: number, required: true, min: 1, max: 1000, integer: true}
+    mass_kg:  {type: number, required: true, min: 0.01, max: 10000}
+    price_kg: {type: number, required: true, min: 0, max: 1000000}
 formula: formulas/quote.py             # prepare: Σ BOM 중량 → total_mass_kg (회귀 입력)
 rates: {labor_per_hour: "45000", scrap_rate: "0.08", markup: "0.15", vat_rate: "0.10"}   # 원천 config.py COST (예시 단가) — 문자열
 rounding: ROUND_HALF_UP

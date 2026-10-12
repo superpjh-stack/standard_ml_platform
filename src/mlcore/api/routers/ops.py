@@ -17,6 +17,7 @@ from fastapi import APIRouter, Query, Request
 
 from ... import auth
 from ...db.conn import connect
+from ...serve.catalog import model_required, serving_ready, uses_of
 from ...serve.errors import NotFound, ServeError
 from ._common import catalog, principal, task_id
 
@@ -140,22 +141,25 @@ def overview(t: str, task: str, request: Request):
         if td.type == "optimize":
             n = c.execute("SELECT count(*) AS n FROM mlp_recommendation WHERE tenant_id=%s AND task_id=%s AND created_at >= %s "
                           "AND created_at < %s", (t, td.id, lo, hi)).fetchone()["n"]
-            uses = []
-            for u in td.raw.get("uses") or []:
-                uid = f"{t}.{u.split('.', 1)[1]}"
-                p = _production(c, t, uid)
-                uses.append({"task": uid, "version": p["version"] if p else None, "synthetic": p["synthetic"] if p else None})
         else:
             n = c.execute("SELECT count(*) AS n FROM mlp_prediction WHERE tenant_id=%s AND task_id=%s AND ts >= %s AND ts < %s",
                           (t, td.id, lo, hi)).fetchone()["n"]
-            uses = None
+        # 의존 과제(optimize · quote · review_queue)의 운영 버전 — 유형별 상태(C2 D2-94 · DEF-QA23-002, serve.catalog 판정)
+        uses = None
+        if uses_of(td, t):
+            uses = []
+            for uid in uses_of(td, t):
+                p = _production(c, t, uid)
+                uses.append({"task": uid, "version": p["version"] if p else None, "synthetic": p["synthetic"] if p else None})
         mon = _monitor_state(c, t, td.id)
         pending = c.execute("SELECT count(*) AS n FROM mlp_approval WHERE tenant_id=%s AND task_id=%s AND state='pending'",
                             (t, td.id)).fetchone()["n"]
     metrics = (prod or {}).get("metrics") or {}
     return {"task": td.id, "type": td.type, "title": td.raw.get("title"),
             "production": None if prod is None else {k: prod[k] for k in ("version", "algo", "trained_at", "synthetic")},
-            "model_ready": prod is not None or (td.type == "optimize" and bool(uses) and all(u["version"] for u in uses)),
+            "model_required": model_required(td),
+            "model_ready": serving_ready(td, t, lambda tid: (prod is not None) if tid == td.id
+                                         else any(u["task"] == tid and u["version"] for u in uses or [])),
             "test_metrics": {k: v.get("value") for k, v in metrics.items()} if prod else None,
             "baseline": {k: v.get("baseline") for k, v in metrics.items()} if prod else None,
             "uses": uses, "predictions_yesterday": int(n), "pending_approvals": int(pending), "monitor": mon}
@@ -190,7 +194,7 @@ def _frame(m, td) -> pd.DataFrame:
 
 
 def _json(v: Any) -> Any:
-    if v is None:
+    if v is None or v is pd.NaT:                          # 시각 없는 행 → null (문자열 "NaT" 금지 — D2-103)
         return None
     if isinstance(v, pd.Timestamp):
         return v.tz_convert(KST).isoformat() if v.tzinfo else v.isoformat()
@@ -270,7 +274,7 @@ def monitor(t: str, task: str, request: Request, days: int = Query(default=30, g
 
 @router.get("/tenants/{t}/doctor")
 def doctor(t: str, request: Request):
-    auth.require(principal(request), "monitor", write=False)
+    auth.require(principal(request), "sources", write=False)   # goal2 §6 화면 7 — admin · approver(조회) (D2-103)
     from ...monitor import doctor as dr
 
     m = _merged(request)
