@@ -31,6 +31,7 @@ unmapped:
 approvers: {maintenance_lead: []}   # 미확인 — 사람 확인 필요 (D-04)
 notify: {webhook_env: null}         # 미확인
 compat:
+  round: {remaining_hours: 2, risk_probability: 4}   # 원천 api/ml_service.py 반올림 자리 (tests/compat_expected.yaml)
   entity_prefix: "KS-DEMO-"
   model_version_label: null         # 원천 MODEL_VERSION 상수는 옮기지 않는다 — 호환 응답의 version 은 등록부 버전
   routes: [/api/health, /api/maintenance/predict, /api/ml/optimize, /api/ml/overview, /api/data/records]

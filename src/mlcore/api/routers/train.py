@@ -22,3 +22,16 @@ def train(t: str, task: str, request: Request, body: TrainBody | None = None):
     if out["reused"]:
         return {"run_id": out["run_id"], "status": out["status"], "reused": True}
     return JSONResponse({"run_id": out["run_id"], "status": out["status"]}, status_code=202)
+
+
+@router.get("/runs/{run_id}")
+def run(run_id: str, request: Request):
+    """B08 GET /runs/{id} — 학습 실행 조회(contracts/api-contract.md §4). 다른 회사 · 없음은 404 로 숨긴다."""
+    from ...data.jobs import run_view
+    from ...serve.errors import NotFound
+
+    p = auth.require(principal(request), "train", write=False)
+    body = run_view(run_id, tenant_id=p.tenant_id)
+    if body is None:
+        raise NotFound("run")
+    return body

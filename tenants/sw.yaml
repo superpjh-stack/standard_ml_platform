@@ -31,6 +31,7 @@ unmapped:
 approvers: {quality: [], line_lead: []}       # 미확인 — 사람 확인 필요 (D-04)
 notify: {webhook_env: MLP_SW_SLACK_WEBHOOK}
 compat:
+  round: {delta_e: 3, risk_probability: 4}   # 원천 api/ml_service.py 반올림 자리 (tests/compat_expected.yaml)
   entity_prefix: "SW-DEMO-"
   equipment_by_print_type: {나염: [EQ_SCREEN_01, 나염기], 승화: [EQ_SUBLIM_01, 승화전사기], DTF: [EQ_DTF_01, DTF 프린터]}
   routes: [/api/health, /api/quality/predict, /api/ml/optimize, /api/ml/overview, /api/data/records]
