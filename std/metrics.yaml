@@ -13,7 +13,7 @@ metrics:
   ece:               {direction: lower,  types: [risk]}
   grade_precision:   {direction: higher, types: [risk]}
   grade_recall:      {direction: higher, types: [risk]}
-  flag_rate:         {direction: target, types: [anomaly], target_from: contamination}
+  flag_rate:         {direction: target, types: [anomaly], target_from: contamination, beats_band: [0.5, 2.0]}   # D-50: 시험 flag_rate 가 contamination × [0.5, 2.0] 안이면 기준선을 이김
   precision_at_k:    {direction: higher, types: [anomaly], when: "라벨 있음"}
   macro_f1:          {direction: higher, types: [extract]}
   class_f1:          {direction: higher, types: [extract]}

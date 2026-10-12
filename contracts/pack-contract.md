@@ -11,7 +11,7 @@ packs/<pack>/
   features.yaml        # 필수 (contracts/feature-contract.md)
   tasks/*.yaml         # 필수, ≥ 2 (contracts/task-contract.md)
   formulas/*.py        # optimize 비용식 — def cost(row: dict, params: dict) -> float 순수 함수
-  synth/*.py           # 필수 — def generate(rows: int, seed: int) -> pandas.DataFrame (6벌 demo_data() 이관)
+  synth/*.py           # 필수 — 공용 모듈(pack.yaml synth.module) + 선택 과제 진입점 synth/<task>.py. 시그니처 §4 (6벌 demo_data() 이관)
   baselines.yaml       # 필수 — 합성 기준 지표(아키텍트만 고친다 · 좋게만)
   tests/               # 팩 시험(이관한 원천 시험 케이스)
   README.md
@@ -40,12 +40,21 @@ tasks: [delta_e, defect_risk, print_ood, print_setpoint]   # tasks/*.yaml 파일
 
 Phase 0 에는 값이 비어 있다(`value: null`). 첫 값은 개발3 이관 대조(M5) 후 **아키텍트가** 적는다. 값이 없으면 기준선 회귀 게이트는 FAIL 이다(가짜 PASS 금지).
 
-## 4. 합성 생성기 `synth/*.py`
+## 4. 합성 생성기 `synth/*.py` (D-53 확정)
 
-- 시그니처 `generate(rows: int = 720, seed: int = <pack.yaml synth.seed>) -> pd.DataFrame`. 표준 프레임 열(`entity_id` · `ts` · 변수 · 목표)을 낸다.
+```python
+def generate(rows: int = <pack.yaml synth.rows>, seed: int = <pack.yaml synth.seed>, *,
+             categories: dict[str, list[str]] | None = None) -> pandas.DataFrame: ...
+```
+
+- **`categories`(키워드 전용)**: 회사 등록부 `categories` — `values_from: tenant` 범주 변수의 회사 값 목록(D-34). `None` 이면 팩 중립 값(`M1` …)을 쓴다. 범주를 쓰지 않는 팩도 이 인자를 받기만 한다(호출 모양을 하나로).
+- **반환 열**: `entity_id`(팩 중립 `DEMO-0001` …) · `ts`(tz `Asia/Seoul`) · `features.yaml` 변수 · **목표 열(과제 `target.name` 이름 그대로)**. 팩 안 과제들이 생성기를 공유하면 목표 열이 여럿이다. 표준 프레임의 `target` · `tenant_id` · `task_id` · `group` · `_source` · `_source_ref` 열은 **어댑터(`SyntheticSource`)가** 만든다 — 생성기는 회사 · 과제를 모른다.
+- **모듈 해석(둘 다 둔다)**: 과제 진입점 `synth/<task>.py`(spec §4.2 표기)가 있으면 그것, 없으면 `pack.yaml synth.module`(공용). 해석 · 시드 · 행 수는 `registry.packs.synth_spec(pack, task)` 한 곳에서 정한다. 시드 · 행 수 우선순위: `tenants/<t>.yaml sources.<role>.seed|rows` > `pack.yaml synth`. 진입점은 공용 모듈을 다시 내보내기만 해도 된다.
+- `load_pack()` 은 `synth.module` 파일이 있고 `seed` · `rows` 가 정수인지 검사한다(없으면 `PackInvalid` — G-M03).
 - 원천 `demo_data()` 와 **같은 시드에서 행 일치 100%**(G-M12) — 원천의 열 이름을 표준 이름으로 바꾸는 것 외에 값 · 순서를 바꾸지 않는다.
 - 엔티티 접두어는 팩 중립(`DEMO-0001`)로 둔다. 원천 접두어(`KS-DEMO-`)는 회사 등록부 `compat.entity_prefix` 가 호환 라우터에서 붙인다.
-- 설비 · 금형 코드 같은 회사 고유 범주값은 생성기에 두지 않는다. 필요한 범주는 팩 중립 값(`M1` …)으로 만들고 회사 `feature_map`/`compat` 이 대응한다.
+- 설비 · 금형 코드 같은 회사 고유 범주값은 생성기에 두지 않는다. 회사 값은 `categories` 인자로만 들어온다(중립 값으로 만든 행을 회사 값으로 바꾸면 회사 프레임과 같아야 한다 — `tests/test_synth.py`).
+- 생성기가 없거나 실패하면 어댑터는 `SourceDisconnected` 를 낸다. 합성 값을 대신 지어내지 않는다.
 
 ## 5. 1차 팩
 

@@ -49,15 +49,19 @@
 |---|---|---|
 | 모르는 키 · NaN · Infinity · 형 불일치 · batch > 500 | 422 | `invalid_input` |
 | 필수 변수 누락 · `max_imputed` 초과 | 422 | `missing_required` |
-| `min/max` 밖 | 422 | `out_of_bounds` |
+| `min/max` 밖 · 범주 값이 `values`(또는 회사 `categories`) 밖 (D-55) | 422 | `out_of_bounds` (detail.rule = `min` · `max` · `values`) |
+| 되돌리기 요청에 `reason` 없음 (D-54) | 422 | `missing_required` (detail.field = `reason`) |
 | 학습 범위 밖 | 200 | 응답 `status: out_of_range` (`reject` 정책이면 `rejected`) |
 | production 없음 | 503 | `model_not_ready` (대체 · 기본값 응답 없음) |
 | 산출물 해시 · 패키지 버전 불일치 | 503 | `model_artifact_mismatch` |
 | 소스 실패(train) | 503 | `source_disconnected` (doctor 는 200 + 소스별 `미연결`) |
+| 학습할 목표 열 없음(train, 지도학습) | 503 | `source_disconnected` (detail.rule = `no_target`, 문구 `목표 없음`) |
 | 키 없음 · 틀림 | 401 | `auth_required` |
 | 역할 밖 | 403 | `forbidden` |
 | 다른 회사 · 없는 과제 · 없는 예측 ID | 404 | `not_found` |
 | 이미 결정 · 만료된 승인 | 409 | `already_decided` |
+| 등록부 전이 규칙 위반 — candidate 아닌 것을 stage · 기준선 미달 · 차단 경고 · live 회사의 합성 모델 · staging 아닌 것을 promote · archived 아닌 것을 rollback (D-54) | 409 | `invalid_transition` (detail.rule = `from_candidate_only` · `baseline` · `blocking_warning` · `live_synthetic` · `from_staging_only` · `from_archived_only`) |
+| 회사당 동시 학습 1개 초과 — queued · running 이 이미 있음 (spec §5.5, D-54) | 409 | `train_busy` (detail.rule = `tenant_concurrency`) |
 | 2차 유형 경로(B09 · B10 · B11) | 501 | `not_implemented` |
 
 ## 4. 주요 본문
@@ -66,10 +70,10 @@
 |---|---|---|
 | `predict` · `predict:batch` · `optimize` | `contracts/predict-contract.md` §1 | 같은 문서 §5 |
 | `actuals` | `{entity_id, value, observed_at}` | `{actual_id, linked_prediction_ids: [...]}` |
-| `train` | `{source_role: "demo"\|"eval"\|"train", seed?: int}` | 202 `{run_id, status: "queued"}` · 멱등이면 200 `{run_id, status, reused: true}` |
+| `train` | `{source_role: "demo"\|"eval"\|"train", seed?: int}` | 202 `{run_id, status: "queued"}` · 멱등이면 200 `{run_id, status, reused: true}`. 접수만 한다 — 실행 · candidate 등록은 API 밖 작업자(`interfaces.md` §4.1, D-57). 등록부에 없는 `source_role` 은 503 `source_disconnected` |
 | `runs/{id}` | — | `{run_id, status, task, snapshot: {snapshot_id, rows, ts_from, ts_to, sha256}, champion, valid_metrics, test_metrics: {name: {value, baseline, delta_vs_baseline}}, beats_baseline, version, warnings}` |
 | `models` | — | `{items: [{version, stage, algo, metrics, beats_baseline, synthetic, snapshot_id, created_at, promoted_at, promoted_by}], next_cursor}` |
-| `models/{v}/promote` · `rollback` | `{reason?}` | 202 `{approval_id, state: "pending"}` — production 은 바뀌지 않는다 |
+| `models/{v}/promote` · `rollback` | promote `{reason?}` · rollback `{reason}`(필수 — 없으면 422 `missing_required`) | 202 `{approval_id, state: "pending"}` — production 은 바뀌지 않는다 |
 | `approvals/{id}/decide` | `{decision: "approve"\|"reject", reason}` | 200 `{approval_id, state, production_version}` · 409 `already_decided` |
 | `overview` | — | `{task, type, production: {version, algo, trained_at, synthetic} \| null, test_metrics, baseline, predictions_yesterday, monitor: {level, alerts}}` |
 | `records` | `?search&limit&cursor` | `{items: [표준 프레임 행], next_cursor, total}` |

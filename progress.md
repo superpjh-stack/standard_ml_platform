@@ -6,6 +6,7 @@
    - 개발1: `DataSource` · `Snapshot` · `TrainResult` 를 `progress-dev1.md` §1 에 먼저 공표 → synthetic · csv 어댑터 · 스냅숏 · `time_60_20_20` · 후보 2 · 기준선. 누수 래퍼는 `src/mlcore/train/guard.py`(이미 있음)를 쓴다.
    - 개발2: `Predictor.predict()` · 응답 모델(`contracts/predict-contract.md` 18키)을 `progress-dev2.md` §1 에 먼저 공표 → 등록부 · 산출물 해시 · predict · 기록 · trace · `approval.decide()`.
    - 개발3: `packs/{press,textile}/synth/*.py` 이관(원천 `demo_data()` 행 일치) · `tests/fixtures/{ks,sw}/` 생성(README 계획대로) · `registry/{packs,tenants}.py` 인수(D-44).
+1-1. **A0 계약 불일치 D-47~D-58 확정(아키텍트, 2026-10-12).** 계약 · `std/` 반영 완료, 코드 후속은 `decisions.md` §5(개발1 D-50 anomaly 임계값이 가장 급함). 확정 직후 `make gate` = PASS 11 · FAIL 12 · BLOCKED 1(G-V01 PASS — 개발2 시험 추가분).
 2. 사람 확인 대기: D-27(R4 판정) · D-30(spec 예시 대 원천 값) · D-32 · D-33(실데이터 차단) · D-04(승인자 명단).
 
 ## Phase 0 실측

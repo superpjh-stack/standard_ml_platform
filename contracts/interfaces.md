@@ -4,7 +4,18 @@
 > 소유 · 첫 공표: `DataSource` · `Snapshot` · `TrainResult` = 개발1(A0 초반, `progress-dev1.md` §1), `Predictor.predict()` · 응답 모델 = 개발2(A0 첫 작업, `progress-dev2.md` §1). 공표 시 이 문서와 다르면 `계약 불일치` 로 올린다.
 > 모든 타입은 코어(`src/mlcore`) 안에 있고, **업종 · 회사 이름을 모른다**. 과제 · 변수 · 소스 정보는 전부 `TaskDef` · `FeatureDef` · `SourceSpec`(YAML 에서 로드)로 들어온다.
 
-## 1. 공통 타입 (`mlcore/types.py`)
+## 1. 공통 타입 (D-47 확정 — 소유자 파일에 둔다, `mlcore/types.py` 는 만들지 않는다)
+
+한 파일은 한 사람만 고친다(goal §3.2). 주인 없는 `types.py` 를 두지 않고, 타입은 그것을 만드는 담당의 모듈에 둔다. 다른 모듈은 아래 위치에서 import 한다(모양은 아래 정의 그대로).
+
+| 타입 | 위치 | 담당 |
+|---|---|---|
+| `FeatureDef` · `feature_defs()` | `mlcore/data/features.py` | 개발1 |
+| `SourceKind` · `SourceHealth` · `ReadSpec` · `DataSource` · `SourceDisconnected` | `mlcore/data/sources/base.py` (`mlcore.data.sources` 에서 다시 내보냄) | 개발1 |
+| `TaskDef` | `mlcore/registry/tenants.py` | 개발3 |
+| `Status` | `mlcore/serve/contract.py` | 개발2 |
+| `Stage` · `ModelRef` | `mlcore/registry/models.py` | 개발2 |
+| `TaskType` | `std/task_types.yaml` 키(코드 상수 없음) — 형 표기가 필요하면 `str` | — |
 
 ```python
 from dataclasses import dataclass, field
@@ -150,17 +161,42 @@ class TrainResult:
     selection_reason: str
     test_metrics: dict[str, MetricValue]        # 시험 1회
     beats_baseline: bool
-    artifact_dir: str | None                    # var/artifacts/<tenant>/<task>/<version>/
+    artifact_dir: str | None                    # var/artifacts/<tenant>/<task>/<run_id>/ — 저장소 루트 기준 상대 경로 (D-48)
     report: dict                                # report.json 내용 (spec §5.4)
     warnings: list[dict]
     ledger: list[dict]                          # AccessLedger.events()
+    artifact_sha256: str | None = None          # §5 산출물 해시 규칙(D-58). 등록부가 다시 재서 다르면 등록 거부
+    synthetic: bool = False                     # 스냅숏의 합성 여부(정본은 mlp_snapshot.synthetic — 등록부는 DB 행을 쓴다)
+    test_predictions: tuple[float, ...] = ()    # 시험 1회 예측(결정성 대조 G-M06 · 보고용). 선정 · 보정에 쓰지 않는다
 
 class Trainer(Protocol):
     def train(self, cfg: TrainConfig) -> TrainResult: ...
-    # 절차 고정: 학습 구간 후보 학습 → 검증 구간 선정 · 구간 · 보정 → 학습+검증 재적합 → GuardedTest.take("final_eval") 1회 → 보고
-
-def submit(tenant_id: str, task_id: str, *, actor: str) -> str: ...   # mlp_train_run queued → run_id. 같은 snapshot+config 면 기존 run_id
+    # 절차 고정: 학습 구간 후보 학습 → 검증 구간 선정 · 구간 · 보정 · 임계값 → 학습+검증 재적합 → GuardedTest.take("final_eval") 1회 → 보고
 ```
+
+**산출물 폴더는 실행(run) 단위다(D-48).** 버전 번호 `v<n>` 은 등록부가 `register()` 때 붙이므로 학습 시점에 모른다. 그래서 학습기는 `var/artifacts/<tenant>/<task>/<run_id>/` 에 쓰고, 등록부는 그 경로를 `mlp_model_version.artifact_path` 에 적는다. 한 실행은 한 버전만 된다(`register` 는 같은 `run_id` 면 기존 버전을 돌려준다). 버전 → 폴더 대응은 등록부 행이 정본이다. spec §6.2 의 `<version>/` 표기와 다르다 → `decisions.md` D-48 정본 결함.
+
+### 4.1 작업 접수 · 실행 (D-49 · D-57 확정)
+
+```python
+# mlcore/data/jobs.py — 학습 코드(mlcore.train)를 import 하지 않는다. API 가 이것만 부른다(G-M06 B 정적 검사).
+def submit(tenant_id: str, task_id: str, *, actor: str, source_role: str | None = None,
+           seed: int | None = None, test: bool = False) -> str: ...
+    # 소스(source_role, 없으면 회사 mode 와 같은 이름의 sources 항목) 읽기 → snapshot.freeze → mlp_snapshot → mlp_train_run(queued) → run_id
+    # 같은 snapshot + config 면 기존 run_id (run_id = "run_" + sha256(tenant|task|snapshot|config_hash)[:16] — 결정적, db-schema §ID)
+    # 실패: SourceDisconnected(→ 503 source_disconnected) · NoTarget(→ 503 source_disconnected, detail.rule = no_target, 문구 "목표 없음")
+    #       TrainBusy(→ 409 train_busy — 회사당 queued · running 1개, spec §5.5) · KeyError(켜지지 않은 과제 → 404 not_found)
+# mlcore.train.trainer.submit 은 같은 함수를 다시 내보낸 이름이다(학습 쪽 호출용). API 는 mlcore.data.jobs 를 쓴다.
+
+# mlcore/train/jobs.py — 학습 실행 (개발1)
+def execute(run_id: str, *, test: bool = False) -> TrainResult: ...   # queued → running → succeeded | failed (report · log 기록). 등록하지 않는다
+def pending(*, test: bool = False) -> list[str]: ...                  # queued run_id 목록(접수 순)
+
+# mlcore/serve/training.py — 학습 성공 → candidate 등록의 유일한 접착부 (개발2)
+def run_and_register(run_id: str) -> tuple[TrainResult, ModelRef | None]: ...   # execute → succeeded 면 Registry.register (항상 candidate)
+```
+
+**실행 주체는 API 밖 작업자 프로세스다.** `uv run python -m mlcore.train.jobs --pending`(또는 `<run_id>`)가 queued 를 하나씩 집어 **`serve.training.run_and_register(run_id)` 를 부른다** — `execute` 만 부르고 등록을 빠뜨리는 길은 두지 않는다. `make train TENANT= TASK=` 는 `submit` 뒤 같은 프로세스에서 `run_and_register` 를 부른다. API 프로세스는 접수(202 queued)까지만 하고 학습을 돌리지 않는다(배경 작업 · 스레드 없음 — G-M06 · G-M14 RSS). 시험(G-V01 등)은 작업자 대신 `run_and_register` 를 직접 부른다.
 
 학습 프로세스는 `OMP_NUM_THREADS=1` 이다. 학습 함수는 **API 기동 경로에서 호출되지 않는다**(G-M06 계측: `train.calls` 카운터가 기동 후 0).
 
@@ -172,6 +208,7 @@ class ModelRef:
     tenant_id: str; task_id: str; version: str; stage: Stage
     algo: str; snapshot_id: str; run_id: str; synthetic: bool
     artifact_sha256: str; trained_at: datetime
+    # 덧붙임(기본값 있음): artifact_path: str · env_lock: dict · beats_baseline: bool · metrics: dict
 
 class Registry(Protocol):
     def register(self, result: TrainResult, *, tenant_id: str, task_id: str) -> ModelRef: ...   # 항상 candidate
@@ -183,16 +220,30 @@ class Registry(Protocol):
 
 class ModelNotReady(Exception): ...         # → 503 model_not_ready
 class ArtifactMismatch(Exception): ...      # → 503 model_artifact_mismatch
+class InvalidTransition(Exception): ...     # → 409 invalid_transition (detail.rule = 규칙 이름 — D-54)
 
-def save_artifacts(version_dir: str, model: object, report: dict, features_lock: dict) -> str: ...  # model.joblib · report.json · features.lock.json · env.lock → sha256
+def save_artifacts(artifact_dir: str, model: object, report: dict, features_lock: dict) -> str: ...  # model.joblib · report.json · features.lock.json · env.lock → sha256
 def load_artifacts(ref: ModelRef) -> "LoadedModel": ...  # SHA-256 · env.lock(패키지 버전) 대조, 다르면 ArtifactMismatch
+def artifact_sha256(artifact_dir: str) -> str: ...
+def current_env_lock() -> dict: ...
 ```
+
+**산출물 규칙 (D-58 확정, `mlcore/registry/artifacts.py`):**
+- 파일 4개 고정: `model.joblib` · `features.lock.json` · `env.lock` · `report.json`. 쓰기는 학습기가 `save_artifacts` 로만 한다(적재 대조와 같은 함수).
+- `artifact_path` 는 **저장소 루트 기준 상대 경로**(`var/artifacts/<tenant>/<task>/<run_id>`). 절대 경로 · 홈 경로를 DB 에 적지 않는다.
+- `artifact_sha256 = sha256( Σ "<파일 이름>\0<파일 sha256 hex>\n" )` — 4파일을 이름순으로 이어 붙인 바이트의 SHA-256. 폴더 이름은 해시에 들어가지 않는다.
+- `env.lock = {"python": "<major.minor>", "packages": {numpy, pandas, scikit-learn, scipy, joblib: "<버전>"}}`.
+- 적재 때 (1) 파일 해시 = 등록부 `artifact_sha256`, (2) `env.lock` 파일 = 등록부 `env_lock`, (3) `env.lock` = 현재 프로세스 `current_env_lock()` 를 모두 대조하고, 하나라도 다르면 `ArtifactMismatch`(detail.rule = `sha256` · `env_lock_registry` · `env_lock`, 파일 · 폴더가 없으면 `file_missing` · `dir_missing`). 등록 때도 (1) 을 다시 잰다(`sha256_at_register`).
 
 ## 6. 승인 — `mlcore/approval/`
 
 ```python
-def decide(approval_id: str, *, actor: str, actor_role: str, approve: bool, reason: str | None) -> dict: ...
+def decide(approval_id: str, *, actor: str, actor_role: str, approve: bool, reason: str | None,
+           request_id: str | None = None) -> dict: ...   # → {approval_id, state, production_version}
+class AlreadyDecided(Exception): ...                     # → 409 already_decided
 ```
+
+**권한 판정 위치 (D-56 확정):** 회사 범위(다른 회사 승인 → 404 `not_found`)와 `own_task`(그 과제의 `approver_role` 담당이 아니면 403 `forbidden`)는 **API 계층**(`api/routers/models.py` + `auth.require_own_task`)이 `decide` 를 부르기 전에 본다 — 담당 목록 · 키 범위는 인증 계층의 지식이다. `decide` 는 역할(`approver` · `admin`)을 다시 보고, 아니면 거부한다(심층 방어). `request_id` 는 감사 행(`mlp_audit.request_id`)에 그대로 적는다. `decide` 를 부르는 곳은 이 API 경로 하나다(감시 · 작업자 · 스크립트는 부르지 않는다).
 
 **`production` 을 쓰는 유일한 코드 경로다(G-M09 · `check_no_autopromote`).** 한 트랜잭션 안에서: `UPDATE mlp_approval SET state=… WHERE approval_id=%s AND state='pending' AND (expires_at IS NULL OR expires_at > now()) RETURNING …` — 0행이면 `AlreadyDecided`(→ 409) · 승인이면 기존 production → `archived` · 대상 → `production` · `mlp_audit` INSERT. 동시 2건이면 하나만 성공한다. 감시(monitor)는 `request_promotion` 까지만 부른다.
 
@@ -210,7 +261,7 @@ class Predictor(Protocol):
 
 # 입력 검증 3단 — 순서 고정
 def validate_format(inputs: dict, features: Sequence[FeatureDef]) -> None: ...   # 모르는 키 · NaN · Inf · 형 → InvalidInput(422)
-def validate_bounds(inputs: dict, features: Sequence[FeatureDef]) -> None: ...   # min/max 밖 → OutOfBounds(422)
+def validate_bounds(inputs: dict, features: Sequence[FeatureDef]) -> None: ...   # min/max 밖 · 범주 values(또는 회사 categories) 밖 → OutOfBounds(422, detail.rule = min|max|values) — D-55
 def impute(inputs: dict, features, lock: dict, max_imputed: int) -> tuple[dict, list[str]]: ...  # 필수 누락 · 한도 초과 → MissingRequired(422)
 def range_check(inputs: dict, lock: dict) -> tuple[list[str], list[str]]: ...    # (out_of_range_fields, near_range_fields) — 학습 범위 p1/p99
 ```
@@ -248,7 +299,7 @@ def formula(row: dict, params: dict) -> float: ...   # 팩 formulas/<name>.py �
 
 ```python
 def psi(expected: pd.Series, actual: pd.Series, *, bins: int = 10, categorical: bool = False) -> float: ...  # 수치 10분위(학습 스냅숏 기준 경계), 범주 빈도, 0 빈도는 1e-6 바닥
-def run_daily(tenant_id: str, day: "date") -> list[dict]: ...   # mlp_monitor_daily 행. 재학습 후보 조건이면 train.submit → registry.request_promotion
+def run_daily(tenant_id: str, day: "date") -> list[dict]: ...   # mlp_monitor_daily 행. 재학습 후보 조건이면 data.jobs.submit(작업자가 run_and_register → candidate) → registry.request_promotion
 ```
 
 ## 10. 로더 — `mlcore/registry/packs.py` · `tenants.py`

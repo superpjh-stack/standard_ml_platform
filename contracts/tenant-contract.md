@@ -37,6 +37,7 @@ labels: {}                    # 회사 문구 덮어쓰기
 |---|---|---|
 | T1 | `*_env` · `*_dsn_env` · `key_env` 는 `^MLP_[A-Z0-9_]+$` 이름. 값(URL · DSN · 키 · IP · 호스트)을 적지 않는다 | G-S06 FAIL |
 | T2 | 다른 회사 코드 · 회사명 · 데이터 파일 경로가 없다(`tests/fixtures/<자기 code>/` 만) | G-S06 FAIL |
+| T4 | 새 회사 연습(G-M10 · spec §17-9 "CSV 업로드")의 CSV 는 **커밋하지 않는다.** 시험이 `migration/make_fixtures.py --kind template_csv --out <tmp>` 로 만들고, 임시 등록부 폴더에서 `make tenant` 가 만든 `tenants/yn.yaml` 의 `sources.eval.path` 가 그 파일을 가리킨다. 1차에는 `tenants/yn*` · `tests/fixtures/yn/` 을 커밋하지 않는다("빈 폴더에서 처음부터" 를 되풀이할 수 있게 — D-51) | G-S06 · G-M10 |
 | T3 | 병합 규칙 5(spec §11.3) — 아래 | 기동 거부(G-S02) |
 
 ### 2.1 병합 규칙 5 (기동 거부)

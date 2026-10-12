@@ -19,7 +19,7 @@
 | 대기 승인 하나 | 같은 대상 `pending` 하나 | 부분 고유 색인 `mlp_approval_one_pending` | — |
 | 키 평문 금지 | `key_hash` 는 `pbkdf2_sha256$` · `sha256$` 접두 | 검사 제약 `mlp_api_key_no_plain` | — |
 
-ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<ulid>` · `prediction_id = prd_<ulid>` · `rec_id = rec_<ulid>` · `approval_id = apr_<ulid>` · 버전 `v<n>`(과제 안 일련번호).
+ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·task·snapshot_id·config_hash) 앞 16>`(결정적 — 같은 스냅숏 · 설정이면 같은 run_id, 멱등 · G-M06, D-49) · `prediction_id = prd_<ulid>` · `rec_id = rec_<ulid>` · `approval_id = apr_<ulid>` · 버전 `v<n>`(과제 안 일련번호).
 시각은 전부 `timestamptz`(KST 로 표시). 금액은 `numeric`.
 
 ## 1. spec §10.1 주요 열 대응

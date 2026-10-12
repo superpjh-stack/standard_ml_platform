@@ -140,3 +140,31 @@ class AlreadyDecided(Exception)   # 409 already_decided (이미 결정 · 만료
 - 개발3: `tests/test_monitor.py` 가 있어야 G-M09 PASS. 감시는 `Registry().request_promotion(...)` 까지만 부른다.
 - 아키텍트: D-54(오류 코드 `invalid_transition` · `train_busy`) · D-57(작업 실행 주체).
 - 다음 단계(개발2): `tests/test_vertical_slice.py`, `predict:batch`, anomaly · optimize 추론부, 호환 라우터.
+
+## §3 웨이브 A0 통합 — G-V01 (2026-10-12, 기준 커밋 762e5e7, 커밋 안 함)
+
+`tests/test_vertical_slice.py` — `ks.remaining_hours`(팩 press) · `sw.delta_e`(팩 textile) 2건 파라미터화, 같은 시험 본문 · 같은 mlcore 코드.
+
+흐름(전부 FastAPI TestClient, 실제 auth 경로 — `mlp_api_key` 해시 조회 → 미들웨어 → `auth.require` / `require_own_task`):
+`POST …/train`(operator 403 · 키 없음 401 · admin 202 queued · 재요청 200 reused) → **작업 실행 → candidate** → `GET …/models`(candidate · `beats_baseline` · 시험 MAE < 기준선) → candidate 상태 predict 503 `model_not_ready` → `POST …/stage`(approver 403 · admin 200 staging) → `POST …/promote`(다른 과제 approver 403 · approver 202 pending, 여전히 503) → `GET /approvals?state=pending` → `POST /approvals/{id}/decide`(operator 403 · approver 200 production · 재결정 409 `already_decided`) → `POST …/predict`(viewer 403 · operator 200, 18키 · JSON Schema · regression null 규칙 · 구간 안 값) → `mlp_prediction` 1행(outputs = 응답) → `POST …/actuals`(linked = [pid]) → `GET /predictions/{id}/trace`(approver 403 · admin 200: 모델 · 실행 · 스냅숏 sha256 = `mlp_snapshot.sha256` · 소스 참조 = 스냅숏 `source_ref` · 실측) → 다른 회사 admin 키 404.
+
+### 우회 (기록)
+
+- **D-57 (작업 실행 주체 미정):** `POST …/train` 은 queued 만 만든다. 시험은 작업자 진입점 `serve.training.run_and_register(run_id)`(= `train.jobs.execute` → `Registry.register()`)를 **직접 부른다**. 아키텍트가 작업자/배경 작업을 정하면 그 경로로 바꾼다. 시험 머리 주석에도 적었다.
+- **격리(_dev2 방식):** 시험마다 `tenants/<ks|sw>.yaml` 을 새 코드로 임시 폴더에 복사. 개발1 학습기는 `registry.tenants.load_and_merge(code)` 를 기본 폴더로 부르므로, 시험에서만 `monkeypatch` 로 **그 임시 코드만** 임시 폴더를 보게 감쌌다(다른 코드는 원래 함수). 코어 코드 변경 0. 다른 개발자 파일 수정 0 · 요청 0.
+- 결함: G-V01 을 막는 개발2 결함 없음(수정 0).
+
+### 실측
+
+| 항목 | ks.remaining_hours | sw.delta_e |
+|---|---|---|
+| 챔피언 · 버전 | gbr v1 | extra_trees v1 |
+| 시험 MAE / 기준선 | 5.568 h / 21.219 (보고값 5.57) | 0.557 / 1.087 (보고값 0.557) |
+| 예측(보정값 입력) · 구간 | 103.086 h · [92.41, 113.76] | 1.861 · [0.722, 3.000] |
+| 스냅숏 | 720행 · sha256 64자 · synthetic · `packs/press/synth/remaining_hours.py` seed 42 | 720행 · synthetic · `packs/textile/synth/delta_e.py` seed 42 |
+
+| 명령 | 결과 |
+|---|---|
+| `OMP_NUM_THREADS=1 uv run pytest -q tests/test_vertical_slice.py` | 2 passed (2.7 s) |
+| `OMP_NUM_THREADS=1 uv run pytest -q` | **162 passed** (전 160 + 2) |
+| `make gate` | **G-V01 PASS** · 합계 PASS 11 · FAIL 12 · BLOCKED 1 (전 PASS 10 — 다른 PASS 전부 유지: G-S01 · S02 · S06×2 · S07 · M01 · M03 · M05 · M06 · M07) |

@@ -47,4 +47,4 @@ std_name: {<name>: <허브 std/fields.yaml 이름>, ...}   # 선택
 
 ## 4. 범주 변수
 
-범주 값이 검증 범위의 `values` 밖이면 422 `invalid_input`, 학습 스냅숏에서 본 적 없는 값이면 `out_of_range_fields` 에 넣는다(OneHot `handle_unknown="ignore"`).
+범주 값이 검증 범위의 `values`(또는 `values_from: tenant` 면 회사 `categories`) 밖이면 422 `out_of_bounds`(detail.rule = `values` — 수치 min/max 밖과 같은 "있을 수 없는 값", D-55), 문자열이 아니면 422 `invalid_input`, 학습 스냅숏에서 본 적 없는 값이면 `out_of_range_fields` 에 넣는다(OneHot `handle_unknown="ignore"`).

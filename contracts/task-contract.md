@@ -35,7 +35,8 @@
 | `risk` | `target: {name, positive}` ○ | 이진 |
 | | `thresholds: {review_prob, watch_prob?}` ○ | 등급 high ≥ review_prob · watch ≥ watch_prob |
 | | `calibration: {method: none \| sigmoid \| isotonic}` | 검증 구간으로만 |
-| `anomaly` | `contamination` ○ | 0 < c < 0.5. 임계값은 학습+검증 점수 분위로 정한다(시험 구간 금지) |
+| `anomaly` | `contamination` ○ | 0 < c < 0.5. **임계값 = 학습 구간 모델이 낸 검증 구간 점수의 `1 - c` 분위**(표본 밖 점수, `time_cv5` 는 폴드별 검증 점수를 이어 붙인 것). 이 값을 학습+검증 재적합 모델에 그대로 쓴다 — 회귀 구간 `q` 와 같은 방식. 재적합 모델의 표본 내 점수 분위 · 시험 구간은 쓰지 않는다(D-50) |
+| | 기준선 판정 | 라벨이 없으므로 우열 대신 **시험 `flag_rate` ∈ `contamination` × `std/metrics.yaml flag_rate.beats_band`([0.5, 2.0])** 이면 `beats_baseline`. 범위 밖이면 candidate 까지(staging 거부) |
 | | `candidates: [isolation_forest]` | |
 | `optimize` | `uses: [<pack>.<task>, ...]` ○ | 의존 과제가 같은 팩에 있고, 회사에서 켜져 있어야 한다(병합 규칙 3) |
 | | `controls: [<feature>, ...]` | `controllable: true` 변수. 생략하면 `features.yaml` 의 controllable 전부 |
