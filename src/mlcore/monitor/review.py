@@ -26,12 +26,17 @@ SCHEDULE = "daily_after_monitor"
 ITEM_PREFIX = "rvw"
 
 
+TEST_ORIGIN = "test_split"
+
+
 def queue_tasks(merged: tenants.Merged) -> list[tenants.TaskDef]:
+    """일일 작업 대상 — origins 에 live_residual 또는 test_split 이 있고 schedule 이 daily_after_monitor."""
     out = []
     for td in merged.tasks.values():
         if td.type != "review_queue":
             continue
-        if ORIGIN in (td.raw.get("origins") or []) and (td.raw.get("schedule") or SCHEDULE) == SCHEDULE:
+        origins = td.raw.get("origins") or []
+        if (ORIGIN in origins or TEST_ORIGIN in origins) and (td.raw.get("schedule") or SCHEDULE) == SCHEDULE:
             out.append(td)
     return out
 
@@ -76,6 +81,49 @@ def _insert(conn, tenant_id: str, item: dict) -> bool:
     return row is not None
 
 
+def _insert_test(conn, tenant_id: str, item: dict) -> bool:
+    """test_split 항목 — prediction_id 없음. 같은 (과제, 모델 버전, entity) 의 test_split 항목은 한 번만."""
+    from ..serve.ids import new_id
+
+    row = conn.execute(
+        "INSERT INTO mlp_review_item (item_id, tenant_id, task_id, entity_id, prediction_id, predicted, actual, residual, reason, "
+        "origin, state, version, rule, threshold) "
+        "SELECT %s,%s,%s,%s,NULL,%s,%s,%s,%s,%s,'open',%s,%s,%s "
+        "WHERE NOT EXISTS (SELECT 1 FROM mlp_review_item WHERE tenant_id=%s AND task_id=%s AND origin=%s AND version=%s "
+        "AND entity_id=%s) RETURNING item_id",
+        (new_id(ITEM_PREFIX), tenant_id, item["task"], item["entity_id"], item["predicted"], item["actual"], item["residual"],
+         item["reason"], TEST_ORIGIN, item["model_version"], item["rule"], item["threshold"],
+         tenant_id, item["task"], TEST_ORIGIN, item["model_version"], item["entity_id"])).fetchone()
+    return row is not None
+
+
+def populate_test_split(merged: tenants.Merged, task: tenants.TaskDef, *, uses: str, prod: dict) -> dict:
+    """uses 과제 production run 보고서의 시험 구간 잔차(학습기 final_eval 1회 결과 — 새 시험 접근 0) → test_split 항목.
+    `train.review.from_run` 이 보고서 증거(ledger · 행 수 · 예측 해시 · 검증 잔차 해시)를 확인한다 — 어긋나면 항목 0 + 사유.
+    한 production 버전에 한 번(이미 그 버전의 test_split 항목이 있으면 건너뛴다). 항목에 version · rule · threshold 를 적는다."""
+    from ..train import review as tr
+
+    tenant_id = merged.tenant.code
+    raw = task.raw
+    out: dict[str, Any] = {"origin": TEST_ORIGIN, "version": prod["version"], "created": 0}
+    report = run_report(tenant_id, uses, prod["version"])
+    if report is None:
+        return {**out, "skipped": "production run 보고서 없음 — 항목을 만들지 않는다"}
+    rule = dict(raw.get("rule") or {})
+    items = tr.from_run(report, rule, task_id=task.id, model_version=prod["version"], origins=raw.get("origins") or [],
+                        quantile_from=raw.get("quantile_from", tr.QUANTILE_FROM),
+                        max_items=int(raw.get("max_items") or tr.DEFAULT_MAX_ITEMS), reason=raw.get("reason"))
+    with connect() as c:
+        c.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"mlp_review:{tenant_id}:{task.id}",))
+        done = c.execute("SELECT 1 FROM mlp_review_item WHERE tenant_id=%s AND task_id=%s AND origin=%s AND version=%s LIMIT 1",
+                         (tenant_id, task.id, TEST_ORIGIN, prod["version"])).fetchone()
+        if done:
+            return {**out, "skipped": "이 버전의 test_split 항목이 이미 있다"}
+        out["created"] = sum(_insert_test(c, tenant_id, it) for it in items)
+    out["threshold"] = items[0]["threshold"] if items else None
+    return out
+
+
 def review_task(merged: tenants.Merged, task: tenants.TaskDef, day: date) -> dict:
     """한 대기열 과제 → 요약 {task_id, uses, version, rule, threshold, threshold_from, pairs, created, skipped?, error?}."""
     from ..train import review as tr
@@ -92,6 +140,15 @@ def review_task(merged: tenants.Merged, task: tenants.TaskDef, day: date) -> dic
     if prod is None:
         return {**summary, "skipped": "운영 모델 없음 (model_not_ready) — 항목을 만들지 않는다"}
     summary["version"] = prod["version"]
+    origins = raw.get("origins") or []
+    if TEST_ORIGIN in origins:
+        try:
+            summary["test_split"] = populate_test_split(merged, task, uses=uses, prod=prod)
+        except Exception as e:  # noqa: BLE001 — 증거가 맞지 않으면(표본 내 등) 항목 0 + 사유
+            summary["test_split"] = {"origin": TEST_ORIGIN, "created": 0,
+                                     "error": {"type": type(e).__name__, "message": str(e)[:300]}}
+    if ORIGIN not in origins:
+        return summary
     try:
         report = run_report(tenant_id, uses, prod["version"]) if summary["rule"] == "top_quantile" else None
         thr = tr.threshold(rule, report, quantile_from=raw.get("quantile_from", tr.QUANTILE_FROM))

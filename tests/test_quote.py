@@ -113,7 +113,7 @@ def test_draft_amounts_are_decimal_strings_and_match_formula(world):
     with connect() as c:                                                     # 작업시간 예측은 표준 predict 1행(근거)
         row = c.execute("SELECT task_id, channel FROM mlp_prediction WHERE prediction_id = %s", (pid,)).fetchone()
         db = c.execute("SELECT total, costs, status FROM mlp_quote WHERE quote_id = %s", (q["quote_id"],)).fetchone()
-    assert row == {"task_id": p2.tid(m, "target_value"), "channel": "api"}
+    assert row == {"task_id": p2.tid(m, "target_value"), "channel": "quote"}
     assert db["total"] == Decimal(want["total"]) and db["costs"] == q["costs"] and db["status"] == "draft"
 
 

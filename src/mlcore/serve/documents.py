@@ -72,6 +72,29 @@ def _model_for(tenant_id: str, task_id: str, catalog: Any):
     return ref, load_artifacts(ref)
 
 
+def extract_context(merged: Any) -> dict:
+    """추출기에 넘기는 회사 값 (progress-dev3 2차 §1 · D2-37 요청). 코어는 뜻을 모르고 등록부 값을 그대로 넘긴다:
+    `categories`(회사 범주 목록) · `material_aliases`(별칭 대문자 → 정규 값). 추출기별 `params`(과제 extractors[].params —
+    임계값 · 허용차 · 팩 고유 상한 같은 YAML 값, 코드 상수 금지) · `previous`(앞 추출기까지 합친 결과 — 규칙 → 모델 순서 연결)는
+    부를 때마다 더한다."""
+    from ..registry.tenants import material_aliases
+    cats = {str(k): [str(v) for v in (vals or [])] for k, vals in (merged.tenant.config.get("categories") or {}).items()}
+    return {"categories": cats, "material_aliases": material_aliases(merged)}
+
+
+def call_extractor(mod: Any, raw: bytes, name: str, *, unit: str, limits: dict, model: Any, context: dict) -> dict:
+    """`context=` 를 받는 추출기(키워드 인자 context 또는 **kwargs)에만 넘긴다 — 1차 공표 모양(context 없음)도 그대로 돈다."""
+    import inspect
+    try:
+        params = inspect.signature(mod.extract).parameters
+        takes = "context" in params or any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values())
+    except (TypeError, ValueError):
+        takes = False
+    if takes:
+        return mod.extract(raw, name, unit=unit, limits=limits, model=model, context=context)
+    return mod.extract(raw, name, unit=unit, limits=limits, model=model)
+
+
 def upload(spec: Any, catalog: Any, *, filename: str | None, raw: bytes, unit_override: str | None,
            actor: str) -> dict:
     check_type(spec, "extract")
@@ -95,14 +118,17 @@ def upload(spec: Any, catalog: Any, *, filename: str | None, raw: bytes, unit_ov
     parts, used = [], []
     plugin_limits = {"max_bytes": limits["max_bytes"], "max_entities": limits["max_entities"],
                      "unit_override": unit_override}
+    base_ctx = extract_context(catalog.merged)
     for es in task.raw.get("extractors") or []:
         mod = load_extractor(catalog.merged.pack.path, es)
         model, model_version = None, None
         if mod.KIND == "model":
             ref, model = _model_for(spec.tenant_id, task.id, catalog)
             model_version = ref.version
+        ctx = {**base_ctx, "params": dict(es.get("params") or {}),
+               "previous": merge_results(parts) if parts else None}
         try:
-            res = mod.extract(raw, name, unit=unit, limits=dict(plugin_limits), model=model)
+            res = call_extractor(mod, raw, name, unit=unit, limits=dict(plugin_limits), model=model, context=ctx)
         except dxf.DocumentError as e:                         # ExtractError 포함
             raise as_serve_error(e) from None
         except ValueError as e:

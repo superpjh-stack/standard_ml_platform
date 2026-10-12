@@ -49,7 +49,7 @@ def generate(rows: int = <pack.yaml synth.rows>, seed: int = <pack.yaml synth.se
 
 - **`categories`(키워드 전용)**: 회사 등록부 `categories` — `values_from: tenant` 범주 변수의 회사 값 목록(D-34). `None` 이면 팩 중립 값(`M1` …)을 쓴다. 범주를 쓰지 않는 팩도 이 인자를 받기만 한다(호출 모양을 하나로).
 - **반환 열**: `entity_id`(팩 중립 `DEMO-0001` …) · `ts`(tz `Asia/Seoul`) · `features.yaml` 변수 · **목표 열(과제 `target.name` 이름 그대로)**. 팩 안 과제들이 생성기를 공유하면 목표 열이 여럿이다. 표준 프레임의 `target` · `tenant_id` · `task_id` · `group` · `_source` · `_source_ref` 열은 **어댑터(`SyntheticSource`)가** 만든다 — 생성기는 회사 · 과제를 모른다.
-- **모듈 해석(둘 다 둔다)**: 과제 진입점 `synth/<task>.py`(spec §4.2 표기)가 있으면 그것, 없으면 `pack.yaml synth.module`(공용). 해석 · 시드 · 행 수는 `registry.packs.synth_spec(pack, task)` 한 곳에서 정한다. 시드 · 행 수 우선순위: `tenants/<t>.yaml sources.<role>.seed|rows` > `pack.yaml synth`. 진입점은 공용 모듈을 다시 내보내기만 해도 된다.
+- **모듈 해석(둘 다 둔다)**: 과제 진입점 `synth/<task>.py`(spec §4.2 표기)가 있으면 그것, 없으면 `pack.yaml synth.module`(공용). 해석 · 시드 · 행 수는 `registry.packs.synth_spec(pack, task)` 한 곳에서 정한다. 시드 · 행 수 우선순위: `tenants/<t>.yaml sources.<role>.tasks.<task>.seed|rows` > `pack.yaml synth.tasks.<task>.seed|rows` > `tenants/<t>.yaml sources.<role>.seed|rows` > `pack.yaml synth`. 과제별 값(`synth.tasks: {<task>: {rows?, seed?}}`, 웨이브 P 마감 D2-45)은 같은 팩에서 행 수가 다른 생성기(예 rollform-quote 작업 900 행 · 객체 설명자 1,600 행)를 위한 것이다 — 팩 과제가 아닌 이름 · 정수 아닌 값은 PackInvalid. 진입점은 공용 모듈을 다시 내보내기만 해도 된다.
 - `load_pack()` 은 `synth.module` 파일이 있고 `seed` · `rows` 가 정수인지 검사한다(없으면 `PackInvalid` — G-M03).
 - 원천 `demo_data()` 와 **같은 시드에서 행 일치 100%**(G-M12) — 원천의 열 이름을 표준 이름으로 바꾸는 것 외에 값 · 순서를 바꾸지 않는다.
 - 엔티티 접두어는 팩 중립(`DEMO-0001`)로 둔다. 원천 접두어(`KS-DEMO-`)는 회사 등록부 `compat.entity_prefix` 가 호환 라우터에서 붙인다.

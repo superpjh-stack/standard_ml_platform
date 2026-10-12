@@ -31,7 +31,7 @@ from . import documents
 from .errors import InvalidInput, MissingRequired, NotFound, ServeError
 from .ids import new_id
 from .jsonout import dumps
-from .validate import as_defs, check_missing, ml_inputs, validate_bounds, validate_format
+from .validate import as_defs, check_missing, check_rules, ml_inputs, validate_bounds, validate_format
 
 KST = timezone(timedelta(hours=9))
 ONE = Decimal(1)
@@ -145,7 +145,9 @@ class QuoteContext:
         self.task = spec.task
         raw = self.task.raw
         self.formula = load_formula(catalog.merged.pack.path, str(raw["formula"]))
-        self.rates = {str(k): Decimal(str(v)) for k, v in (raw.get("rates") or {}).items()}
+        # 단가: 이름 → Decimal, 단가표(rate_tables)는 이름 → {범주 값: Decimal} (D2-45 — 범주별 kg 단가 · 밀도 등)
+        self.rates = {str(k): ({str(c): Decimal(str(x)) for c, x in v.items()} if isinstance(v, dict) else Decimal(str(v)))
+                      for k, v in (raw.get("rates") or {}).items()}
         self.input_names = list(raw.get("inputs") or [])
         pack_feats = catalog.merged.pack.features
         cats = catalog.merged.tenant.config.get("categories") or {}
@@ -178,6 +180,7 @@ class QuoteContext:
         ml = ml_inputs(feats)
         validate_format(ml, self.defs)
         validate_bounds(ml, self.defs)
+        check_rules(ml_inputs(inputs), self.task.raw.get("input_rules"))
         check_missing(ml, self.defs, 0)
         for n in self.extra:
             v = inputs.get(n)
@@ -211,7 +214,7 @@ class QuoteContext:
         for field, rv in rec.items():
             confirmed = inputs.get(field) if field in inputs else (lines if isinstance(rv, list) else None)
             if isinstance(rv, list) or isinstance(confirmed, list):
-                same = _norm(rv) == _norm(confirmed)
+                same = _norm(_strip(rv)) == _norm(_project(rv, confirmed))
             elif _is_numlike(rv) and _is_numlike(confirmed):
                 same = abs(_d(rv) - _d(confirmed)) <= tol
             else:
@@ -232,7 +235,7 @@ class QuoteContext:
         for dep in self.uses:
             feats = {n: prepared[n] for n in dep.features if n in prepared}
             out = predictor.predict(self.tenant_id, dep.task.id, PredictRequest(inputs=ml_inputs(feats)),
-                                    caller=actor, channel="api")   # 채널 CHECK 에 quote 없음 — 아키텍트 요청(progress-dev2)
+                                    caller=actor, channel="quote")   # 견적이 부른 예측 — mlp_prediction.channel 'quote' (D2-45)
             value = (out.get("prediction") or {}).get("value")
             if value is None:
                 raise InvalidInput("작업시간 예측을 할 수 없는 입력입니다(학습 범위 밖 거부)",
@@ -274,6 +277,28 @@ def _plain(v: Any) -> Any:
     if type(v).__name__ == "float":
         return Decimal(str(v))
     return v
+
+
+PROJECT_SKIP = ("source", "evidence", "id")
+
+
+def _project(recognized: Any, confirmed: Any) -> Any:
+    """목록 칸(예 BOM) 비교 — 확정 행을 인식 행이 가진 키로만 줄인다(확정에만 있는 단가 · 인식에만 있는 출처 근거는 비교 밖).
+    행 수 · 순서 · 공통 키 값이 같으면 수정 없음. 모양이 다르면 그대로 비교한다(다르다고 본다)."""
+    if not (isinstance(recognized, list) and isinstance(confirmed, list) and len(recognized) == len(confirmed)
+            and all(isinstance(x, dict) for x in recognized + confirmed)):
+        return confirmed
+    out = []
+    for r, c in zip(recognized, confirmed):
+        keys = [k for k in r if k not in PROJECT_SKIP]
+        out.append({k: c.get(k) for k in keys})
+    return out
+
+
+def _strip(recognized: Any) -> Any:
+    if isinstance(recognized, list) and all(isinstance(x, dict) for x in recognized):
+        return [{k: v for k, v in r.items() if k not in PROJECT_SKIP} for r in recognized]
+    return recognized
 
 
 def _norm(v: Any) -> str:
@@ -354,7 +379,8 @@ def _as_row(qc: QuoteContext, *, quote_id, doc_id, computed, overrides, reviewed
             "lines": computed["lines"], "total": computed["total"], "overrides": overrides,
             "model_versions": computed["model_versions"], "reviewed": reviewed, "reviewed_by": reviewed_by,
             "review_note": review_note, "status": status, "revision": revision, "supersedes": supersedes,
-            "inputs": computed["inputs"], "costs": computed["costs"], "rates": {k: dec_text(v) for k, v in qc.rates.items()},
+            "inputs": computed["inputs"], "costs": computed["costs"], "rates": {k: ({c: dec_text(x) for c, x in v.items()} if isinstance(v, dict) else dec_text(v))
+                                                  for k, v in qc.rates.items()},
             "predictions": computed["predictions"], "approval_id": approval_id, "confirmed_by": confirmed_by,
             "confirmed_at": confirmed_at, "created_by": created_by}
 
@@ -516,7 +542,8 @@ def to_csv(q: dict, columns: list[str] | None = None) -> bytes:
     summary = [("quote_id", q["quote_id"]), ("task", q["task"]), ("status", q["status"]), ("revision", q["revision"]),
                ("doc_id", q["doc_id"]), *[(f"costs.{k}", v) for k, v in q["costs"].items()], ("total", q["total"]),
                ("currency", q["currency"]), *[(f"inputs.{k}", v) for k, v in q["inputs"].items()],
-               *[(f"rates.{k}", v) for k, v in q["rates"].items()],
+               *[(f"rates.{k}.{c}", x) if isinstance(v, dict) else (f"rates.{k}", v)
+                 for k, v in q["rates"].items() for c, x in (v.items() if isinstance(v, dict) else [(None, v)])],
                *[(f"predictions.{p['task']}", p["value"]) for p in q["predictions"]],
                ("reviewed", q["reviewed"]), ("review_note", q["review_note"]), ("confirmed_by", q["confirmed_by"]),
                ("confirmed_at", q["confirmed_at"]), ("overrides", len(q["overrides"])), ("notice", q["notice"])]

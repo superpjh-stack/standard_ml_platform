@@ -1,0 +1,19 @@
+# 수주 견적 — 도면 BOM 검토 → 공수 예측 → 견적식 (task-contract §6.3 · §6.5 · source_inventory §11.6 · D2-07 · D2-07a).
+# 과제 이름 quote = 유형 코드 quote (D2-31 — std 어휘 과제 이름은 자기 유형일 때만 허용, gates/check_core_terms.py).
+# 원천 QuoteInput(api/main.py:47-60): BOM 1~100행 · 수량 · 절단/용접 길이 · 두께 · 난이도 · 시간 단가 · 외주비 · 검토 + 메모 5자 이상.
+id: eto.quote
+type: quote
+title: 수주 견적 초안
+entity: job
+uses: [eto.labor_hours]
+from_extract: eto.drawing_regions
+recognized: {bom: bom_rows}            # 도면 BOM(인식) 과 확정 BOM(lines) 이 다르면 overrides — 원천은 source_bom 을 따로 저장(:19)
+inputs: [cut_m, weld_m, thickness_mm, complexity, main_material, product_family, quantity, labor_rate, outsource_cost]
+formula: formulas/quote.py             # prepare: Σ BOM 중량 → total_mass_kg (회귀 입력)
+rates: {labor_per_hour: "45000", scrap_rate: "0.08", markup: "0.15", vat_rate: "0.10"}   # 원천 config.py COST (예시 단가) — 문자열
+rounding: ROUND_HALF_UP
+currency: KRW
+confirm: {requires: [reviewed, review_note], review_note_min: 5, approver_role: estimating_lead}
+csv: [name, material, quantity, mass_kg, price_kg, weight_total, amount]
+out_of_range: predict_with_warning
+approver_role: estimating_lead

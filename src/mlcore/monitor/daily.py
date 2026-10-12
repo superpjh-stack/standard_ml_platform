@@ -104,6 +104,17 @@ def error_rate(tenant_id: str, task_id: str, day: date, *, conn) -> tuple[float 
     return bad / len(rows), len(rows)
 
 
+def _class_of(actual, classes: list[str]) -> str | None:
+    """실측 값 → 클래스 이름. mlp_actual.value 는 수치라 클래스 색인(classes 순서)으로 적는다 — 범위 밖 · 비정수는 None."""
+    try:
+        f = float(actual)
+    except (TypeError, ValueError):
+        return None
+    if not classes or not f.is_integer() or not 0 <= int(f) < len(classes):
+        return None
+    return classes[int(f)]
+
+
 def live_performance(tenant_id: str, task: tenants.TaskDef, day: date, window_days: int, prod: dict,
                      *, conn) -> dict:
     """실측이 연결된 예측(창 안)의 선정 지표 대 production 시험 지표. 실측 없으면 value=None · '실측 없음'."""
@@ -119,19 +130,32 @@ def live_performance(tenant_id: str, task: tenants.TaskDef, day: date, window_da
         "  ORDER BY observed_at DESC LIMIT 1) a ON true "
         "WHERE p.tenant_id=%s AND p.task_id=%s AND p.version=%s AND p.entity_id IS NOT NULL AND p.ts >= %s AND p.ts < %s",
         (tenant_id, task.id, prod["version"], lo, hi)).fetchall()
-    pairs = [((r["outputs"] or {}).get("prediction") or {}).get("value") for r in rows]
-    pairs = [(float(p), float(r["value"])) for p, r in zip(pairs, rows) if p is not None]
     test = ((prod.get("metrics") or {}).get(metric) or {}).get("value")
-    if not pairs:
-        return {"value": None, "level": "ok", "detail": {"metric": metric, "n": 0, "test": test, "note": "실측 없음"}}
-    pred = pd.Series([p for p, _ in pairs])
-    act = pd.Series([a for _, a in pairs])
-    if metric == "mae":
-        live = float((pred - act).abs().mean())
-    elif metric == "brier":
-        live = float(((pred - act) ** 2).mean())
-    else:  # 다른 선정 지표가 std 에 생기면 여기서 실패를 보인다
-        raise NotImplementedError(f"live_perf 지표 {metric}")
+    if metric == "macro_f1":
+        # extract(모델 추출기): 예측 label 과 실측 label(클래스 이름) 짝 — 예측 기록에 label 이 없으면(문서 추출은
+        # mlp_document 에 남고 mlp_prediction · 실측 짝이 없다) 실측 없음으로 보인다. 숫자 실측과 짝짓지 않는다.
+        pairs_c = [(((r["outputs"] or {}).get("prediction") or {}).get("label"), r["value"]) for r in rows]
+        classes = [str(c) for c in (task.raw.get("model") or {}).get("classes") or []]
+        pairs_c = [(str(p), _class_of(a, classes)) for p, a in pairs_c if p is not None and _class_of(a, classes) is not None]
+        if not pairs_c:
+            return {"value": None, "level": "ok", "detail": {"metric": metric, "n": 0, "test": test, "note": "실측 없음"}}
+        from sklearn.metrics import f1_score
+        live = float(f1_score([a for _, a in pairs_c], [p for p, _ in pairs_c], labels=classes or None,
+                              average="macro", zero_division=0))
+        pairs = pairs_c
+    else:
+        pairs = [((r["outputs"] or {}).get("prediction") or {}).get("value") for r in rows]
+        pairs = [(float(p), float(r["value"])) for p, r in zip(pairs, rows) if p is not None]
+        if not pairs:
+            return {"value": None, "level": "ok", "detail": {"metric": metric, "n": 0, "test": test, "note": "실측 없음"}}
+        pred = pd.Series([p for p, _ in pairs])
+        act = pd.Series([a for _, a in pairs])
+        if metric == "mae":
+            live = float((pred - act).abs().mean())
+        elif metric == "brier":
+            live = float(((pred - act) ** 2).mean())
+        else:  # 다른 선정 지표가 std 에 생기면 여기서 실패를 보인다
+            raise NotImplementedError(f"live_perf 지표 {metric}")
     direction = packs.std("metrics")["metrics"][metric]["direction"]
     drop = None
     if test not in (None, 0):
@@ -206,7 +230,10 @@ def run_daily(tenant_id: str, day: date, *, frames: Mapping[str, pd.DataFrame] |
     out: list[dict] = []
     for task_id, task in merged.tasks.items():
         summary: dict[str, Any] = {"tenant_id": tenant_id, "task_id": task_id, "day": day, "metric": "_summary"}
-        if task.type not in LEARNED:
+        from ..data.taskview import has_model, learn_view
+        if task.type == "extract" and has_model(task):
+            task = learn_view(task)          # 모델 추출기 — model: 블록의 설명자 · 라벨로 감시(실측 성능 = macro_f1)
+        elif task.type not in LEARNED:
             out.append({**summary, "skipped": "학습 과제가 아님(uses 과제 감시로 본다)"})
             continue
         with connect() as c:

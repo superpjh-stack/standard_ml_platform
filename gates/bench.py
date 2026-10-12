@@ -209,6 +209,22 @@ print(json.dumps({"key": raw, "tasks": learned}))
 """
 
 
+def image_tag(sha: str) -> tuple[str, bool]:
+    """측정 이미지 태그. 작업 트리가 커밋과 같으면 커밋 SHA, 다르면 `<sha>-wt<트리 해시 8>` — 미커밋 트리로 빌드한 이미지에
+    커밋 SHA 를 붙이지 않는다(F7-5 · #7: 이미지가 미커밋 작업 트리로 빌드됨). 배포 이미지는 `make image`(깨끗한 트리만)."""
+    st = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True).stdout
+    if not st.strip():
+        return sha, False
+    import hashlib
+    h = hashlib.sha256(subprocess.run(["git", "diff", "HEAD", "--binary"], cwd=ROOT, capture_output=True).stdout)
+    for f in sorted(subprocess.run(["git", "ls-files", "-o", "--exclude-standard"], cwd=ROOT, capture_output=True,
+                                   text=True).stdout.splitlines()):
+        p = ROOT / f
+        if p.is_file():
+            h.update(f.encode() + b"\0" + p.read_bytes())
+    return f"{sha}-wt{h.hexdigest()[:8]}", True
+
+
 def _dc(proj: str, override: Path, *args, check=True, timeout=600, env=None) -> subprocess.CompletedProcess:
     cmd = ["docker", "compose", "-p", proj, "-f", str(ROOT / "docker-compose.yml"), "-f", str(override), *args]
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=timeout, env=env)
@@ -232,12 +248,21 @@ def bench_compose(source: str, work: Path) -> dict:
     envf.write_text(f"POSTGRES_DB=ml_db\nPOSTGRES_USER=mlp\nPOSTGRES_PASSWORD={pw}\n"
                     f"MLP_DB_APP_USER=mlp_bench_app\nMLP_DB_APP_PASSWORD={app_pw}\n"
                     f"MLP_DB_DSN=host=db dbname=ml_db user=mlp_bench_app password={app_pw}\nMLP_TENANT={source}\nMLP_MODE=demo\n")
+    # 간헐 실패 원인(웨이브 P 마감 조사): 측정 컨테이너가 호스트 8200 을 고정으로 잡았다 — 개발 서버(make run) · 앞선 실행이
+    # 남긴 mlpbench-* 컨테이너가 8200 을 쥐고 있으면 `up` 이 "ports are not available" 로 실패하고(FAIL), 그 실행의 finally 가
+    # 남은 것을 내려 다음 실행은 PASS 였다(자기 치유형 간헐). 측정은 배포 포트와 무관하므로 빈 루프백 포트로 붙인다
+    # (`!override` — compose 파일의 8200 · 루프백 규약은 그대로, G-M11 이 본다). 시작 전에 같은 이름의 남은 프로젝트도 내린다.
+    port = _free_port()
     override = work / f"bench-{source}.override.yml"
-    override.write_text(f"services:\n  db:\n    env_file: [{envf}]\n  app:\n    env_file: [{envf}]\n")
+    override.write_text(f"services:\n  db:\n    env_file: [{envf}]\n  app:\n    env_file: [{envf}]\n"
+                        f"    ports: !override\n      - \"127.0.0.1:{port}:8200\"\n")
     proj = f"mlpbench-{source}"
-    env = {**os.environ, "MLP_GIT_SHA": sha}
-    out: dict = {"tenant_source": source, "image": f"mlp-app:{sha}"}
+    tag, dirty = image_tag(sha)
+    env = {**os.environ, "MLP_GIT_SHA": tag}
+    out: dict = {"tenant_source": source, "image": f"mlp-app:{tag}", "dirty_tree": dirty, "host_port": port}
     try:
+        _dc(proj, override, "down", "-v", "--remove-orphans", check=False, env=env, timeout=120)   # 앞선 실행이 남긴 것
+        _dc(proj, override, "build", "app", env=env, timeout=900)     # 지금 작업 트리로 — 측정 시간 · up 제한시간과 분리
         _dc(proj, override, "up", "-d", "--wait", env=env, timeout=300)
         t0 = time.time()
         r = _dc(proj, override, "exec", "-T", "app", "/app/.venv/bin/python", "-c", SETUP_IN_CONTAINER, source, env=env)
@@ -250,7 +275,7 @@ def bench_compose(source: str, work: Path) -> dict:
         _dc(proj, override, "stop", "app", env=env)
         start = time.perf_counter()
         _dc(proj, override, "start", "app", env=env)
-        with httpx.Client(base_url="http://127.0.0.1:8200", timeout=30, headers={"X-API-Key": info["key"]}) as c:
+        with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=30, headers={"X-API-Key": info["key"]}) as c:
             health = None
             while time.perf_counter() - start < 60:
                 try:
@@ -301,7 +326,7 @@ def bench_compose(source: str, work: Path) -> dict:
 def measure_compose() -> dict:
     work = Path(tempfile.mkdtemp(prefix="mlp-bench-compose-"))
     res = {"limits": LIMITS, "mode": "compose", "compose_limited": True,
-           "note": "docker compose 제한 아래(app 768MB · CPU 1 · OMP_NUM_THREADS=1, 이미지 = 커밋 SHA)",
+           "note": "docker compose 제한 아래(app 768MB · CPU 1 · OMP_NUM_THREADS=1, 이미지 = 커밋 SHA · 미커밋 트리면 <sha>-wt<해시>, 빈 루프백 포트)",
            "platform": sys.platform, "tenants": [bench_compose(s, work) for s in TENANTS]}
     return _finish(res)
 

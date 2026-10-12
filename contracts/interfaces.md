@@ -123,7 +123,8 @@ def plan(frame: pd.DataFrame, task: TaskDef, seed: int) -> tuple[SplitPlan, "Gua
 **계측 래퍼 (Phase 0 공표, `gates/check_leakage.py` 와 공유):** 시험 구간 인덱스는 `SplitPlan` 에 없다. `GuardedTest` 만 가지고 있고, 꺼낼 때마다 `AccessLedger` 에 목적과 호출 위치가 남는다.
 
 ```python
-Purpose = Literal["final_eval", "report", "selection", "calibration", "interval", "threshold", "baseline", "queue"]
+Purpose = Literal["final_eval", "report", "selection", "calibration", "interval", "threshold", "baseline", "queue",
+                  "queue_scoring"]   # queue_scoring — 2차 대기열 채점(금지 목적, std/split_policies.yaml forbidden_uses_of_test · D2-42)
 ALLOWED = {"final_eval", "report"}       # report = 시험 1회 평가 뒤의 순열 중요도 · 잔차 표 (spec §5.4)
 
 class TestLeak(Exception): ...           # 금지 목적 접근 · final_eval 2회째 접근 · final_eval 전 report 접근

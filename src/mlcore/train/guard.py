@@ -34,7 +34,7 @@ class TestLeak(Exception):
 
 
 class InSampleEvaluation(Exception):
-    """평가 구간이 학습(재적합) 구간과 겹친다 — 평창식 표본 내 평가 (spec §5.3 · F5)."""
+    """평가 구간이 학습(재적합) 구간과 겹친다 — 표본 내 평가 (spec §5.3 · F5)."""
 
 
 class AccessLedger:

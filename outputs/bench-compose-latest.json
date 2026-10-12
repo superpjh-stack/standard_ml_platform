@@ -7,87 +7,91 @@
  },
  "mode": "compose",
  "compose_limited": true,
- "note": "docker compose 제한 아래(app 768MB · CPU 1 · OMP_NUM_THREADS=1, 이미지 = 커밋 SHA)",
+ "note": "docker compose 제한 아래(app 768MB · CPU 1 · OMP_NUM_THREADS=1, 이미지 = 커밋 SHA · 미커밋 트리면 <sha>-wt<해시>, 빈 루프백 포트)",
  "platform": "darwin",
  "tenants": [
   {
    "tenant_source": "ks",
-   "image": "mlp-app:283dd31",
-   "train_in_container_s": 2.4,
-   "health_s": 1.593,
-   "startup_s": 1.676,
+   "image": "mlp-app:21a39bc-wt040696fe",
+   "dirty_tree": true,
+   "host_port": 58409,
+   "train_in_container_s": 2.46,
+   "health_s": 1.604,
+   "startup_s": 1.683,
    "per_task": {
     "remaining_hours": {
      "type": "regression",
-     "p50_ms": 21.19,
-     "p95_ms": 22.5,
-     "max_ms": 62.0,
-     "batch500_s": 0.088,
+     "p50_ms": 20.23,
+     "p95_ms": 21.77,
+     "max_ms": 65.5,
+     "batch500_s": 0.097,
      "n": 200
     },
     "failure_24h": {
      "type": "risk",
-     "p50_ms": 22.28,
-     "p95_ms": 23.51,
-     "max_ms": 25.83,
-     "batch500_s": 0.108,
+     "p50_ms": 21.56,
+     "p95_ms": 22.27,
+     "max_ms": 24.03,
+     "batch500_s": 0.107,
      "n": 200
     },
     "sensor_ood": {
      "type": "anomaly",
-     "p50_ms": 26.56,
-     "p95_ms": 27.62,
-     "max_ms": 29.39,
+     "p50_ms": 25.95,
+     "p95_ms": 27.42,
+     "max_ms": 31.59,
      "batch500_s": 0.308,
      "n": 200
     }
    },
-   "rss_mb": 246.8,
+   "rss_mb": 245.6,
    "cgroup_memory_max": "805306368",
    "cgroup_cpu_max": "100000 100000"
   },
   {
    "tenant_source": "sw",
-   "image": "mlp-app:283dd31",
-   "train_in_container_s": 2.48,
-   "health_s": 1.548,
-   "startup_s": 1.626,
+   "image": "mlp-app:21a39bc-wt040696fe",
+   "dirty_tree": true,
+   "host_port": 58436,
+   "train_in_container_s": 2.56,
+   "health_s": 1.597,
+   "startup_s": 1.676,
    "per_task": {
     "delta_e": {
      "type": "regression",
-     "p50_ms": 22.48,
-     "p95_ms": 23.84,
-     "max_ms": 69.51,
-     "batch500_s": 0.093,
+     "p50_ms": 22.3,
+     "p95_ms": 23.73,
+     "max_ms": 76.19,
+     "batch500_s": 0.089,
      "n": 200
     },
     "defect_risk": {
      "type": "risk",
-     "p50_ms": 20.52,
-     "p95_ms": 21.6,
-     "max_ms": 26.38,
-     "batch500_s": 0.103,
+     "p50_ms": 20.32,
+     "p95_ms": 21.39,
+     "max_ms": 24.74,
+     "batch500_s": 0.105,
      "n": 200
     },
     "print_ood": {
      "type": "anomaly",
-     "p50_ms": 26.14,
-     "p95_ms": 27.3,
-     "max_ms": 30.93,
-     "batch500_s": 0.312,
+     "p50_ms": 25.87,
+     "p95_ms": 27.31,
+     "max_ms": 29.09,
+     "batch500_s": 0.301,
      "n": 200
     }
    },
-   "rss_mb": 249.2,
+   "rss_mb": 249.7,
    "cgroup_memory_max": "805306368",
    "cgroup_cpu_max": "100000 100000"
   }
  ],
  "worst": {
-  "p95_ms": 27.62,
-  "batch500_s": 0.312,
-  "startup_s": 1.676,
-  "rss_mb": 249.2
+  "p95_ms": 27.42,
+  "batch500_s": 0.308,
+  "startup_s": 1.683,
+  "rss_mb": 249.7
  },
  "pass": {
   "p95_ms": true,

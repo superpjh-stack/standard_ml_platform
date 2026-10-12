@@ -336,7 +336,7 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 | `mlp_train_run.status` | queued · running · succeeded · failed |
 | `mlp_model_version.stage` | candidate · staging · production · archived |
 | `mlp_prediction.status` | ok · watch · review · out_of_range · rejected · needs_approval (`std/statuses.yaml`) |
-| `mlp_prediction.channel` | api · batch · console · compat · optimize |
+| `mlp_prediction.channel` | api · batch · console · compat · optimize · quote (견적이 부른 uses 예측 — 웨이브 P 마감 D2-45, 비파괴 CHECK 넓히기) |
 | `mlp_actual.source` | api · csv · mes · dataplatform · gateway · synthetic |
 | `mlp_recommendation.status` | needs_approval · approved · rejected · applied · dismissed |
 | `mlp_review_item.state` | open · confirmed_issue · false_alarm |
@@ -382,6 +382,7 @@ ID 형식: `snapshot_id = snp_<sha256 앞 16>` · `run_id = run_<sha256(tenant·
 
 - `mlp_quote.total` 은 이미 `numeric` — Decimal 그대로. 금액 열에 `double precision` 을 쓰지 않는다(G2-Q01).
 - `mlp_review_item.origin` CHECK(test_split · live_residual)는 1차 그대로 — 학습 구간 값은 DB 가 거부한다.
+- 부분 고유 색인 `mlp_review_item_prediction_once (tenant_id, task_id, prediction_id) WHERE prediction_id IS NOT NULL` — 같은 운영 예측은 대기열에 한 번만(동시 실행 이중 삽입을 DB 가 막는다, D2-33). `@migrate` 구간 `CREATE UNIQUE INDEX IF NOT EXISTS`(비파괴 · 멱등). test_split 항목(prediction_id NULL)의 1회성은 일정 작업이 (과제 · 버전 · entity) 로 지킨다.
 - 원본 파일 `mlp_document.raw_path` = `var/documents/<tenant>/<raw_sha256>.dxf`(D2-05, `.gitignore` · 커밋 금지), 보존 1년(§5 와 같은 감사 등급).
 - ID 접두: `rvw_` · `doc_` · `qte_` (+ ULID, `serve/ids.py` 규칙).
 - Agent 호출 · 허브 내보내기는 테이블을 더하지 않는다 — Agent 호출은 `mlp_prediction.caller`(키의 `consumer`) · `mlp_audit` 로 남고, 허브 일 호출 수는 `mlp_prediction` 을 날짜 · 과제별로 센다(`hub-export.md`).

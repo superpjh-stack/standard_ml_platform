@@ -7,7 +7,7 @@
 
 | 키 | 필수 | 형 | 규칙 |
 |---|---|---|---|
-| `id` | ○ | `<pack>.<task>` | 파일 이름 = `<task>.yaml`. 과제 이름은 소문자 · 숫자 · `_`, 팩 코드는 `-` 도 허용(`rollform-quote` — D2-14) |
+| `id` | ○ | `<pack>.<task>` | 파일 이름 = `<task>.yaml`. 과제 이름은 소문자 · 숫자 · `_`, 팩 코드는 `-` 도 허용(`rollform-quote` — D2-14). **std 어휘(유형 · 상태 · 오류 코드 · 지표 · 기준선 이름)와 같은 팩 이름은 "과제 이름 = 그 과제 자신의 유형 코드" 하나만 허용**(예 `eto.quote` 의 type `quote`) — 변수 · 목표 · 비용식 이름이나 다른 유형의 과제 이름으로 쓰면 G-M01 팩 위반(D2-31) |
 | `type` | ○ | enum | `std/task_types.yaml` 의 코드. 1차는 phase 1 만 켤 수 있다(2차 유형 3 은 웨이브 P 가 phase 1 로 올린 뒤 — §6). **덮어쓰기 불가** |
 | `title` | ○ | string | 화면 제목 |
 | `entity` | ○ | enum | `lot` · `equipment_window` · `job` · `drawing` |
@@ -24,6 +24,7 @@
 | `notice` | | string | 없으면 `pack.yaml` 기본 문구 |
 | `seed` | | int | 학습 · 무작위 탐색 시드. 기본 = 팩 `synth` 시드 |
 | `outlier` | | `iqr` \| `{method: iqr, k: 1.5, columns: [...]}` | 기본 꺼짐(D-60). 경계는 **그 학습 구간(폴드 학습 · 재적합 학습)에서만** 재고 그 구간 행만 뺀다 — 검증 · 시험 행은 그대로. 모르는 방법은 학습 failed |
+| `input_rules` | | `[{name, expr, between: [lo, hi]}]` | 변수 조합 규칙(원천 krs 조성 합 100 ± 0.1 · pc 배합 합 98~102 이관). `expr` 은 §2 제약과 같은 안전 식(이름 · 숫자 · `+ - *` · 괄호), 이름은 features.yaml 수치 변수(quote 는 `inputs` 도). predict · predict:batch · optimize `fixed` · 견적 `inputs` 에서 형식 → min/max 뒤에 검사, 값이 [lo, hi] 밖이면 422 `invalid_input`(detail `field` = 규칙 `name`, `rule` = `input_rule` — 입력값 되풀이 없음). 식의 변수 중 결측(null)이 있으면 그 규칙은 건너뛴다. **덮어쓰기 불가** |
 | `candidate_search` | | `{<후보>: {<파라미터>: [값, ...]}}` | 기본 꺼짐(D-60, spec §5.2). 후보당 최대 `std/candidates.yaml` 탐색 횟수(20)회 무작위(시드 = 과제 `seed`), 첫 시도 = `candidate_params` 기본값, 선정은 검증 지표만. 비지도(anomaly)는 탐색하지 않고 경고 `search_skipped` |
 
 ## 2. 유형별 키
@@ -45,12 +46,13 @@
 | | `controls: [<feature>, ...]` | `controllable: true` 변수. 생략하면 `features.yaml` 의 controllable 전부 |
 | | `fixed: [<feature>, ...]` | 요청에서 받는 고정 입력 — 의존 과제 features 중 controls 를 뺀 것 |
 | | `decision_vars: {<name>: {min, max \| max_param, step, unit, label}}` | **모델 입력이 아닌** 결정 변수(예: 정비 대기 시간). 학습 범위가 없으므로 `[min, max]` 만 쓴다 — spec §8.1 보강(D-25) |
-| | `params: {<name>: {default, min, max, unit, label}}` | 요청 `params` 로 받는 제약 상한 · 하한 값 |
+| | `derived: {<feature>: "<식>"}` | 탐색점마다 식으로 계산하는 **모델 입력**(예: 조성 등식 `sn_pct: "100 - ag_pct - cu_pct - sb_pct - flux_pct"`). 대상은 uses 과제의 수치 입력이고 controls · fixed · decision_vars 가 아니다. 식의 이름은 controls · fixed · decision_vars · params. **수락:** 값이 그 변수의 `[min, max]` ∩ 의존 모델 학습 범위(p1~p99) 밖인 점은 버린다(원천 "범위 안 배합만 수락"). `random` 은 시드 고정 순서로 수락된 점이 `search.max_points` 개가 될 때까지 뽑는다(`n_candidates` = 수락 수, 뽑은 수 · 상한 도달은 `mlp_recommendation` 저장본 `acceptance`). 수락 0 이면 422 `invalid_input`(rule `derived_range`). 후보 `conditions` 에 derived 값도 나온다. **덮어쓰기 불가** |
+| | `params: {<name>: {default, min, max, unit, label, optional?}}` | 요청 `params` 로 받는 제약 상한 · 하한 값. `optional: true` 면 `default: null` 을 허용하고, 요청에 없으면 **그 이름을 쓰는 제약은 평가하지 않는다**(원천 krs `max_cost: null`) — 응답 `constraints` 에서 빠지고 저장본 `skipped_constraints` 에 남는다. optional 이 아닌데 default 가 없으면 등록부 거부 |
 | | `formulas: {<name>: <formulas 모듈 이름>}` | 팩 `formulas/<module>.py::cost(row, params) -> float` 순수 함수 |
 | | `objective: {minimize \| maximize: <name>, tiebreak: [{minimize \| maximize: <name>}]}` ○ | `<name>` 은 uses 과제의 **짧은 이름**(`<pack>.` 뺀 과제 이름 — regression 은 예측값, risk 는 확률) · formula 이름 · decision_var |
-| | `constraints: [{name, expr}]` ○ | `expr` = `<lhs> (<=|>=|<|>) <rhs>` 한 줄. lhs · rhs 는 uses 과제의 짧은 이름 · formula · decision_var · controls · `params` 이름 · 숫자 · 단순 `+ - *` |
-| | `search: {strategy: grid \| random \| auto, max_points}` ○ | auto = 공간 ≤ max_points 면 grid |
-| | `on_infeasible: least_violation` ○ | violation = Σ max(0, 위반량) / max(\|rhs\|, 1e-9) |
+| | `constraints: [{name, expr, scale?}]` ○ | `expr` = `<lhs> (<=|>=|<|>) <rhs>` 한 줄. lhs · rhs 는 uses 과제의 짧은 이름 · formula · decision_var · controls · derived · `params` 이름 · 숫자 · 단순 `+ - *` · 괄호. `scale`(양수, 선택) = 위반량 분모(원천 pc `max(0, target − pred)/3 + max(0, cost − max)/5` 이관) |
+| | `search: {strategy: grid \| random \| auto, max_points, max_draws?}` ○ | auto = 공간 ≤ max_points 면 grid. random 의 `max_points` = 평가할 점 수(원천 krs 5,000 · pc 3,500). `max_draws`(기본 50 × max_points) = derived 수락 표집의 시도 상한 |
+| | `on_infeasible: least_violation` ○ | violation = Σ max(0, 위반량) / (`scale` 이 있으면 scale, 없으면 max(\|rhs\|, 1e-9)) |
 | | `warn_with: [<pack>.<anomaly 과제>]` | 선택(D-76, 원천 sw "시험 인쇄로 먼저 확인" 이관). 추천(best) 조건이 그 과제 **production** 모델의 flag 에 걸리면 `warnings` 에 `extrapolation`(field = 그 과제 id — predict-contract §3 코드, D-131)을 넣는다. 목적 · 제약 · 순위에는 쓰지 않는다. production 이 없으면 같은 코드 `extrapolation` 에 문구 `… (model_not_ready)` 로 확인하지 못했음을 보인다(숨기지 않는다). 의존 과제 규칙(병합 규칙 3)을 같이 받는다 |
 | | 고정 입력 범위 밖 (D-72) | optimize 의 허용 상태는 `needs_approval` · `review` 뿐 — 고정 입력이 학습 범위 밖이면 경고 `out_of_range`(field = 고정 변수) + `out_of_range_fields` + status `review` |
 
@@ -84,9 +86,23 @@ enums:
   labels: [none, synthetic, provided]                 # none → 지표 null + labels: none (G2-E01)
   rounding: [ROUND_HALF_UP]                           # 2차 — 견적은 Decimal · ROUND_HALF_UP 만 (G2-Q01)
   currency: [KRW]
-immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval, approver_role, target, origins, rounding, currency, formula, extractors, labels]   # approver_role · target — D-121 · 2차 6키 — §6.4
+immutable_on_override: [type, split, time_key, group_key, uses, on_infeasible, interval, approver_role, target, origins, rounding, currency, formula, extractors, labels, derived, input_rules]   # approver_role · target — D-121 · 2차 6키 — §6.4 · derived · input_rules — §1 · §2(웨이브 P 마감)
 not_removable_on_override: [approver_role]
 time_split_policies: [time_60_20_20, time_cv5]
+# 웨이브 P 마감(D2-30 요청 반영) — 로더(registry/{packs,tenants}.py)는 이 값을 먼저 읽고, 없을 때만 코드 기본표를 쓴다
+overridable_on_override: [thresholds, features, candidates, candidate_params, constraints, params, monitor, notice, title, rule, max_items, reason, document, rates, csv, recognized]   # §3 · §6.4 — 이 밖의 키는 R1(DEF-QAR2-004)
+review_rules: [abs_residual_ge, top_quantile]       # §6.1
+review_quantile_from: [valid]
+review_schedule: [daily_after_monitor]
+review_uses_types: [regression, risk]
+document_limits: {max_bytes: 5242880, max_entities: 20000}   # spec §8.3 — 팩 · 회사는 낮추기만
+document_formats: [dxf]
+document_unit_override: [mm, inch]
+extract_outputs: [regions, objects, bom_rows]
+extract_model_selection: [macro_f1]
+quote_uses_types: [regression]
+quote_confirm_requires: [reviewed, review_note]
+quote_review_note_min: 5
 ```
 
 ## 5. 1차 과제 8 (ks 4 · sw 4)
@@ -129,9 +145,9 @@ time_split_policies: [time_60_20_20, time_cv5]
 |---|---|---|
 | `entity` | ○ | `drawing` |
 | `document` | ○ | `{formats: [dxf], max_bytes: ≤ 5242880, max_entities: ≤ 20000, unit_override: [mm, inch]}` — spec 상한을 넘을 수 없고 팩 · 회사가 낮출 수만 있다(ot 2,000 · kd 20,000) |
-| `extractors` | ○ | `[{name, kind: rule \| model, module: extractors/<name>.py, version}]` ≥ 1, 순서대로 실행 · 결과 합침. 같은 이름 다른 구현은 병합 규칙 R5 |
+| `extractors` | ○ | `[{name, kind: rule \| model, module: extractors/<name>.py, version, params?}]` ≥ 1, 순서대로 실행 · 결과 합침. 같은 이름 다른 구현은 병합 규칙 R5. `params` = 그 추출기의 YAML 값(임계값 · 허용차 · 팩 고유 상한 — 예 점수 하한 0.8 · 평탄화 0.2 mm · 꼭짓점 500, 코드 상수 금지) `{이름: 수 \| 문자열 \| bool \| 그 목록}` — 회사는 바꿀 수 없다(extractors 불변) |
 | `labels` | ○ | `none`(실도면 정답 없음 — kd D-160) · `synthetic`(합성 설명자 생성 라벨 — ot) · `provided`(사람 정답 — 2차 범위 밖). `none` 이면 평가 요청에 200 + `labels: none` · 지표 null, IoU/F1 을 만들지 않는다 |
-| `model` | kind: model 이면 ○ | `{features: [<features.yaml 설명자>], classes: [...], split: stratified_60_20_20, candidates: [logreg, rf_clf, et_clf], candidate_params, selection: macro_f1}` — 검증 macro-F1 선정 → 학습+검증 재적합 → 시험 1회(층화). 기준선 = 학습 구간 최빈 클래스(표준 변경 요청 D2-15) |
+| `model` | kind: model 이면 ○ | `{features: [<features.yaml 설명자>], classes: [...], target: <라벨 열 이름, 기본 label>, split: stratified_60_20_20, candidates: [logreg, rf_clf, et_clf], candidate_params, selection: macro_f1}` — `target` 은 합성 설명자 생성기의 라벨 열(변수 아님 — D2-44 확정) — 검증 macro-F1 선정 → 학습+검증 재적합 → 시험 1회(층화). 기준선 = 학습 구간 최빈 클래스(표준 변경 요청 D2-15) |
 | `outputs` | | `[regions, objects, bom_rows]` 중 쓰는 것. 출력 모양은 predict-contract §8.2 |
 
 추출기 플러그인 `packs/<pack>/extractors/<name>.py` 의 모양(인터페이스 정본은 웨이브 P 개발2 가 `interfaces.md` 에 공표 — 아래가 기대값):
@@ -143,6 +159,11 @@ def extract(raw: bytes, filename: str, *, unit: str | None, limits: dict, model=
 #     "counts": {...}, "dimensions": {...} | None, "unit": "mm", "entity_count": int, "warnings": [...]}
 #  잘못된 DXF → ValueError(code="invalid_document"), 상한 초과 → ValueError(code="document_too_large")
 #  추출기는 원본을 쓰지 않고 외부로 보내지 않는다(네트워크 0). model 은 등록부 production 산출물에서만 온다
+# 선택 인자 context=(받는 추출기에만 — 키워드 context 또는 **kwargs, 웨이브 P 마감 D2-45):
+#   {"categories": 회사 categories, "material_aliases": 별칭 대문자 → 정규 값, "params": extractors[].params,
+#    "previous": 앞 추출기까지 합친 결과 | None}
+# 결과 키 "replaces": ["objects" | "regions" | "bom_rows" | "counts" | "dimensions", …] — 앞 결과를 이어 붙이지 않고 바꾼다
+#   (규칙 추출기가 기하 객체 · 검증 사유를 내고 모델 추출기가 같은 객체를 분류해 다시 내는 경우)
 ```
 
 ### 6.3 `quote` — 견적 (spec §8.4 · kd · ot)
@@ -154,7 +175,8 @@ def extract(raw: bytes, filename: str, *, unit: str | None, limits: dict, model=
 | `recognized` | from_extract 이면 ○ | `{<입력 이름>: <추출 결과 경로>}` 예 `{holes: counts.hole, slots: counts.slot, length: dimensions.length, width: dimensions.width}` · kd `{bom: bom_rows}`. 확정 입력과 다르면 `overrides` 1항목(ot 0.001 허용차 — `tolerance`) |
 | `inputs` | ○ | 사람이 검토 · 확정하는 입력 이름(features.yaml 변수 + `quantity` · 단가 입력). 검증은 predict 와 같은 3단 |
 | `formula` | ○ | `formulas/<module>.py` — `def quote(inputs, lines, predicted, rates) -> dict` 순수 함수, **`Decimal` · `ROUND_HALF_UP` 만**(float 연산 · `round()` · `float()` 0 — `gates/check_decimal.py`, G2-Q01). 단계별 반올림 순서는 원천 그대로(D2-07) |
-| `rates` | ○ | `{<이름>: "<10진 문자열>"}` — 단가 · 계수(문자열로 적어 float 를 거치지 않는다). 회사는 **값만** 덮어쓴다 |
+| `rates` | ○ | `{<이름>: "<10진 문자열>"}` — 단가 · 계수(문자열로 적어 float 를 거치지 않는다). 회사는 **값만** 덮어쓴다. 단가표 이름(`rate_tables`)의 값은 `{<범주 값>: "<10진 문자열>"}` — 팩은 빈 표 `{}`(회사 범주 값을 팩에 두지 않는다), 회사가 칸을 채운다 |
+| `rate_tables` | | `{<단가 이름>: <inputs 의 범주 변수>}` — 범주별 단가표(예 재질별 kg 단가 · 밀도). 병합 뒤 칸 = 회사 `categories[<변수>]` 와 정확히 같아야 한다(없는 칸 · 남는 칸 R2). 견적식에는 `rates[<이름>]` 이 `{범주 값: Decimal}` 로 간다. 덮어쓰기 불가(이름 · 변수) |
 | `rounding` | ○ | `ROUND_HALF_UP` (덮어쓰기 불가) |
 | `currency` | ○ | `KRW` · 원 단위(덮어쓰기 불가) |
 | `confirm` | ○ | `{requires: [reviewed, review_note], review_note_min: 5, approver_role: <역할>}` — 확정은 approver 이상(D2-04), 확정 뒤 수정 409 `quote_locked` |
@@ -166,7 +188,7 @@ def extract(raw: bytes, filename: str, *, unit: str | None, limits: dict, model=
 
 | 바꿀 수 있다 | 바꿀 수 없다 (병합 규칙 R1) |
 |---|---|
-| `rule` 의 값(같은 종류 안) · `max_items` · `reason` · `document` 상한(낮추기만) · `rates` 값 · `csv` · `recognized.tolerance` | `origins`(학습 구간 추가 불가) · `quantile_from` · `extractors` · `labels` · `formula` · `rounding` · `currency` · `uses` · `confirm.requires` 빼기 |
+| `rule` 의 값(같은 종류 안) · `max_items` · `reason` · `document` 상한(낮추기만 — 회사별 요소 상한, 예 ot 2,000) · `rates` 값(단가표는 칸 채우기) · `csv` · `recognized.tolerance` | `origins`(학습 구간 추가 불가) · `quantile_from` · `extractors` · `labels` · `formula` · `rounding` · `currency` · `uses` · `confirm.requires` 빼기 |
 
 ### 6.5 2차 과제 (팩 4 · 회사 4) — 웨이브 A0-2 · A2 기대값
 

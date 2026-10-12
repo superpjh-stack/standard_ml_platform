@@ -7,4 +7,4 @@ synth: {module: synth/jobs.py, seed: 42, rows: 900}      # 원천 demo_jobs() �
 notice: "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 실제 BOM·공수·외주비·단가 확인 후 담당자가 확정해야 합니다."
 status_labels: {}
 monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}
-tasks: [labor_hours, drawing_regions]    # 과제 quote 는 G-M01 금지어 충돌 해소 뒤(decisions.md D2-31) — 견적식 플러그인 formulas/quote.py 는 있다
+tasks: [labor_hours, drawing_regions, quote]    # quote = 유형 코드와 같은 과제 이름(D2-31 결정)

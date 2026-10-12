@@ -1,3 +1,6 @@
-# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (pack-contract §3). 이관 대조(M5) 뒤 아키텍트가 값을 적는다 — 비어 있으면 G2-P01 FAIL.
-labor_hours:     {metric: mae,  value: null, measured_by: null, source_reported: 4.1071}   # 원천 docs/verification.md:23 (시험 MAE)
-drawing_regions: {metric: null, value: null, measured_by: null, source_reported: null}     # labels: none — 지표 없음(G2-E01)
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (pack-contract §3). 값 = 표준 학습기 시험 구간 실측(합성 seed 42 · 900 행 ·
+# random_60_20_20 · 시험 1회, 2026-10-13 웨이브 P 마감 D2-39). measured_by = 재현 경로. source_reported = 원천 문서값.
+# 지표가 없는 과제(labels: none 추출 · 견적)는 metric · value 모두 null + reason — 지표를 지어내지 않는다(G2-E01 · G2-P01).
+labor_hours:     {metric: mae,  value: 3.7017, baseline: 62.9053, measured_by: "표준 학습기 submit → run_and_register (회사 demo 합성 소스, champion ridge)", source_reported: 4.1071}   # 원천 docs/verification.md:23 — 원천 절차는 행 순서 540/180/180(D2-21 사유)
+drawing_regions: {metric: null, value: null, measured_by: null, source_reported: null, reason: "labels: none — 실도면 정답 없음(D-160), 원천 일치는 tests/test_extract_eto.py"}
+quote:           {metric: null, value: null, measured_by: null, source_reported: null, reason: "견적 — 학습 지표 없음, 원천 저장 견적 원 단위 대조는 tests/test_formula_eto_quote.py"}

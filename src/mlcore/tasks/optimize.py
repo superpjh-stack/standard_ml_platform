@@ -29,8 +29,9 @@ from ..registry.artifacts import load_artifacts
 from ..registry.models import ModelRef, Registry
 from ..serve.contract import to_contract
 from ..serve.errors import InvalidInput, MissingRequired, NotFound, OutOfBounds, ServeError
+from ..serve.expr import ExprError, compile_expr, eval_expr, names_of
 from ..serve.ids import new_id
-from ..serve.validate import check_missing, impute, range_check, validate_bounds, validate_format
+from ..serve.validate import check_missing, check_rules, impute, range_check, validate_bounds, validate_format
 from .base import kind_for, warn
 
 TOP = 5
@@ -55,41 +56,28 @@ class SearchSpace:
     size: int = 0
     strategy: str = "grid"
     points: pd.DataFrame = field(default_factory=pd.DataFrame)
+    derived: list[str] = field(default_factory=list)      # 점마다 식으로 계산한 모델 입력(task-contract §2 derived)
+    n_drawn: int = 0                                      # 뽑은 점 수(수락 전) — derived 범위 밖 점은 버린다
+    capped: bool = False                                  # 시도 상한(search.max_draws)에 걸려 max_points 를 못 채움
 
 
 class InfeasibleSpace(ServeError):
     status, code, default_message = 422, "invalid_input", "학습 범위 ∩ 검증 범위에 탐색할 점이 없습니다"
 
 
-# ── 제약 식 — `<lhs> (<=|>=|<|>) <rhs>`, 항은 이름 · 숫자 · + - * (task-contract §2) ─────────────────
+# ── 제약 식 — `<lhs> (<=|>=|<|>) <rhs>`, 항은 이름 · 숫자 · + - * · 괄호 (task-contract §2, serve/expr.py) ───────
 def _compile(side: str) -> ast.Expression:
-    tree = ast.parse(side, mode="eval")
-    for node in ast.walk(tree):
-        ok = isinstance(node, (ast.Expression, ast.BinOp, ast.UnaryOp, ast.Name, ast.Load, ast.Constant,
-                               ast.Add, ast.Sub, ast.Mult, ast.USub, ast.UAdd))
-        if not ok or (isinstance(node, ast.Constant) and not isinstance(node.value, (int, float))):
-            raise ServeError("제약 식에 허용되지 않는 항이 있습니다", {"rule": "constraint_expr", "field": None})
-    return tree
+    try:
+        return compile_expr(side)
+    except ExprError:
+        raise ServeError("제약 식에 허용되지 않는 항이 있습니다", {"rule": "constraint_expr", "field": None}) from None
 
 
 def _eval(node: ast.AST, env: dict[str, Any]):
-    if isinstance(node, ast.Expression):
-        return _eval(node.body, env)
-    if isinstance(node, ast.Constant):
-        return float(node.value)
-    if isinstance(node, ast.Name):
-        if node.id not in env:
-            raise ServeError("제약 식의 이름을 찾을 수 없습니다", {"rule": "constraint_name", "field": node.id})
-        return env[node.id]
-    if isinstance(node, ast.UnaryOp):
-        v = _eval(node.operand, env)
-        return -v if isinstance(node.op, ast.USub) else v
-    a, b = _eval(node.left, env), _eval(node.right, env)
-    if isinstance(node.op, ast.Add):
-        return a + b
-    if isinstance(node.op, ast.Sub):
-        return a - b
-    return a * b
+    try:
+        return eval_expr(node, env)
+    except ExprError as e:
+        raise ServeError("제약 식의 이름을 찾을 수 없습니다", {"rule": "constraint_name", "field": e.field}) from None
 
 
 @dataclass(frozen=True)
@@ -99,13 +87,19 @@ class Constraint:
     op: str
     lhs: ast.Expression
     rhs: ast.Expression
+    scale: float | None = None          # 있으면 위반량 = max(0, -slack) / scale (없으면 |rhs| — task-contract §2)
 
     @classmethod
     def parse(cls, c: dict) -> "Constraint":
         m = EXPR.match(c["expr"])
         if not m:
             raise ServeError("제약 식 모양이 아닙니다", {"rule": "constraint_expr", "field": c.get("name")})
-        return cls(c["name"], c["expr"], m["op"], _compile(m["lhs"]), _compile(m["rhs"]))
+        scale = c.get("scale")
+        return cls(c["name"], c["expr"], m["op"], _compile(m["lhs"]), _compile(m["rhs"]),
+                   None if scale is None else float(scale))
+
+    def names(self) -> set[str]:
+        return set(names_of(self.lhs)) | set(names_of(self.rhs))
 
     def evaluate(self, env: dict[str, Any], n: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """→ (lhs, rhs, slack, satisfied, violation) 점마다."""
@@ -113,7 +107,8 @@ class Constraint:
         rhs = np.broadcast_to(np.asarray(_eval(self.rhs, env), dtype=float), (n,)).astype(float)
         slack = rhs - lhs if self.op in ("<=", "<") else lhs - rhs
         sat = slack > 0 if self.op in ("<", ">") else slack >= -FEASIBLE_EPS
-        viol = np.where(sat, 0.0, np.maximum(0.0, -slack) / np.maximum(np.abs(rhs), 1e-9))
+        denom = np.full(n, self.scale) if self.scale is not None else np.maximum(np.abs(rhs), 1e-9)
+        viol = np.where(sat, 0.0, np.maximum(0.0, -slack) / denom)
         if self.op in ("<", ">"):     # 엄격 부등호에서 경계(slack 0)는 위반량 0 이지만 충족도 아니다 — 아주 작은 위반으로 센다
             viol = np.where(~sat & (viol == 0), FEASIBLE_EPS * 10, viol)
         return lhs, rhs, slack, sat, viol
@@ -189,7 +184,7 @@ class Optimizer:
         return out
 
     # ── 공간 ────────────────────────────────────────────────────────────
-    def space(self, task: Any, locks: list[dict], params: dict, defs: dict) -> SearchSpace:
+    def space(self, task: Any, locks: list[dict], params: dict, defs: dict, fixed: dict | None = None) -> SearchSpace:
         raw = task.raw
         axes, kinds, ranges = {}, {}, {}
         for name in raw.get("controls") or []:
@@ -234,24 +229,119 @@ class Optimizer:
         strat = search.get("strategy", "auto")
         strategy = "random" if strat == "random" or size > max_points else "grid"
         names = list(axes)
+        derived = self._derived_spec(raw, locks, defs)
+        if not derived:                          # 1차 경로 그대로(결정성 · 기존 기대값)
+            if strategy == "grid":
+                pts = self._grid(axes, names)
+            else:
+                rng = np.random.default_rng(int(raw.get("seed", 42)))
+                n = min(max_points, size)
+                flat = rng.choice(size, size=n, replace=False) if size < 2**62 else rng.integers(0, size, n)
+                pts = self._decode(np.sort(flat), axes, names)
+            self._as_float(pts, names, kinds, defs)
+            return SearchSpace(axes, kinds, ranges, size, strategy, pts, n_drawn=len(pts))
+        env0 = {k: float(v) for k, v in params.items()}
+        for k, v in (fixed or {}).items():
+            if isinstance(v, (int, float)) and not isinstance(v, bool):
+                env0.setdefault(k, float(v))
         if strategy == "grid":
-            grids = np.meshgrid(*[np.asarray(axes[n], dtype=object) for n in names], indexing="ij")
-            pts = pd.DataFrame({n: g.ravel() for n, g in zip(names, grids)})
+            pts = self._grid(axes, names)
+            self._as_float(pts, names, kinds, defs)
+            ok = self._apply_derived(pts, derived, env0)
+            n_drawn, capped = len(pts), False
+            pts = pts[ok].reset_index(drop=True)
         else:
+            # 수락 표집(원천 '범위 안 배합만 수락'): 시드 고정 순서로 뽑아 derived 가 범위 안인 점이 max_points 개가 될 때까지.
             rng = np.random.default_rng(int(raw.get("seed", 42)))
-            n = min(max_points, size)
-            flat = rng.choice(size, size=n, replace=False) if size < 2**62 else rng.integers(0, size, n)
-            flat = np.sort(flat)
-            cols, rem = {}, flat.copy()
-            for name in reversed(names):       # 혼합 기수 → 축별 색인
-                L = len(axes[name])
-                cols[name] = np.asarray(axes[name], dtype=object)[rem % L]
-                rem = rem // L
-            pts = pd.DataFrame({n: cols[n] for n in names})
+            max_draws = int(search.get("max_draws", 50 * max_points))
+            limit = min(max_draws, size)
+            if size <= 20_000_000:
+                order = rng.permutation(size)[:limit]
+            else:                                # 큰 공간: 중복을 뺀 무작위 정수(처음 나온 순서 유지)
+                raw_draw = rng.integers(0, size, limit)
+                _, first = np.unique(raw_draw, return_index=True)
+                order = raw_draw[np.sort(first)]
+            kept, n_drawn, chunk = [], 0, max(1000, max_points)
+            got = 0
+            while got < max_points and n_drawn < len(order):
+                flat = order[n_drawn:n_drawn + chunk]
+                part = self._decode(flat, axes, names)
+                self._as_float(part, names, kinds, defs)
+                ok = self._apply_derived(part, derived, env0)
+                idx = np.flatnonzero(ok)
+                need = max_points - got
+                if len(idx) > need:              # 정확히 max_points 개 — 그 점까지 뽑은 것으로 센다
+                    n_drawn += int(idx[need - 1]) + 1
+                    idx = idx[:need]
+                else:
+                    n_drawn += len(flat)
+                kept.append(flat[idx])
+                got += len(idx)
+            capped = got < max_points and got < size
+            flat_ok = np.sort(np.concatenate(kept)) if kept else np.array([], dtype=np.int64)
+            pts = self._decode(flat_ok, axes, names)
+            self._as_float(pts, names, kinds, defs)
+            self._apply_derived(pts, derived, env0)
+        if not len(pts):
+            raise InfeasibleSpace("derived 변수가 범위 안인 점이 없습니다", {"rule": "derived_range", "field": next(iter(derived))})
+        return SearchSpace(axes, kinds, ranges, size, strategy, pts, derived=list(derived), n_drawn=int(n_drawn),
+                           capped=bool(capped))
+
+    # ── 공간 도우미 ───────────────────────────────────────────────────────
+    @staticmethod
+    def _grid(axes: dict, names: list[str]) -> pd.DataFrame:
+        grids = np.meshgrid(*[np.asarray(axes[n], dtype=object) for n in names], indexing="ij")
+        return pd.DataFrame({n: g.ravel() for n, g in zip(names, grids)})
+
+    @staticmethod
+    def _decode(flat: np.ndarray, axes: dict, names: list[str]) -> pd.DataFrame:
+        cols, rem = {}, np.asarray(flat).copy()
+        for name in reversed(names):           # 혼합 기수 → 축별 색인
+            L = len(axes[name])
+            cols[name] = np.asarray(axes[name], dtype=object)[rem % L]
+            rem = rem // L
+        return pd.DataFrame({n: cols[n] for n in names})
+
+    @staticmethod
+    def _as_float(pts: pd.DataFrame, names: list[str], kinds: dict, defs: dict) -> None:
         for n in names:                         # 수치 축은 float
             if kinds[n] == "decision" or defs.get(n) is None or defs[n].dtype != "category":
                 pts[n] = pts[n].astype(float)
-        return SearchSpace(axes, kinds, ranges, size, strategy, pts)
+
+    @staticmethod
+    def _derived_spec(raw: dict, locks: list[dict], defs: dict) -> dict[str, tuple]:
+        """derived → {변수: (식, lo, hi)} — 수락 구간 = [min, max] ∩ 모든 의존 모델의 학습 범위(p1~p99)."""
+        out = {}
+        for name, text in (raw.get("derived") or {}).items():
+            f = defs.get(name)
+            lo = None if f is None or f.min is None else float(f.min)
+            hi = None if f is None or f.max is None else float(f.max)
+            for lk in locks:
+                item = (lk.get("features") or {}).get(name)
+                if item is not None and item.get("p1") is not None:
+                    lo = item["p1"] if lo is None else max(lo, item["p1"])
+                    hi = item["p99"] if hi is None else min(hi, item["p99"])
+            out[name] = (_compile(str(text)), lo, hi)
+        return out
+
+    @staticmethod
+    def _apply_derived(pts: pd.DataFrame, derived: dict, env0: dict) -> np.ndarray:
+        """점마다 derived 값을 열로 넣고, 수락(범위 안) 표지를 돌려준다."""
+        env = dict(env0)
+        for c in pts.columns:
+            if pts[c].dtype != object:
+                env[c] = pts[c].to_numpy(dtype=float)
+        ok = np.ones(len(pts), dtype=bool)
+        for name, (tree, lo, hi) in derived.items():
+            v = np.broadcast_to(np.asarray(_eval(tree, env), dtype=float), (len(pts),)).astype(float)
+            v = np.round(v, 10)
+            pts[name] = v
+            ok &= np.isfinite(v)
+            if lo is not None:
+                ok &= v >= lo - 1e-9
+            if hi is not None:
+                ok &= v <= hi + 1e-9
+        return ok
 
     @staticmethod
     def _decision_bounds(d: dict, params: dict) -> tuple[float, float | None]:
@@ -269,6 +359,8 @@ class Optimizer:
         out = {}
         for name, p in spec.items():
             v = given.get(name, p.get("default"))
+            if v is None and p.get("optional"):
+                continue                       # 선택 제약 값(예: 비용 상한 없음) — 이 이름을 쓰는 제약은 평가하지 않는다
             if v is None:
                 raise MissingRequired("제약 값이 없습니다", {"field": name, "rule": "required"})
             if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(float(v)):
@@ -290,11 +382,13 @@ class Optimizer:
         raw = task.raw
         defs = {f.name: f for f in spec.defs}
         controls = list(raw.get("controls") or [])
-        fixed_names = list(raw.get("fixed") or [n for n in defs if n not in controls])
+        derived_names = list(raw.get("derived") or {})
+        fixed_names = list(raw.get("fixed") or [n for n in defs if n not in controls and n not in derived_names])
         fixed_defs = [defs[n] for n in fixed_names]
         # 1) 형식 → min/max → 필수 (predict 와 같은 순서 · 같은 규칙)
         validate_format(req.fixed, fixed_defs)
         validate_bounds(req.fixed, fixed_defs)
+        check_rules(req.fixed, raw.get("input_rules"))
         check_missing(req.fixed, fixed_defs, spec.max_imputed)
         params = self._params(task, req.params)
         dvars = raw.get("decision_vars") or {}
@@ -330,7 +424,11 @@ class Optimizer:
             oor += [x for x in o if x not in oor]
             near += [x for x in nr if x not in near and x not in oor]
         # 4) 공간
-        sp = self.space(task, locks, params, defs)
+        fixed_vals: dict = {}
+        for f in filled_by:
+            for k, v in f.items():
+                fixed_vals.setdefault(k, v)
+        sp = self.space(task, locks, params, defs, fixed=fixed_vals)
         pts = sp.points
         n = len(pts)
         # 5) 의존 과제 일괄 예측 (+ current 1점)
@@ -338,10 +436,22 @@ class Optimizer:
         if req.current is not None:
             cur_row = pd.DataFrame([{k: (float(req.current[k]) if sp.kinds.get(k) == "decision" or defs.get(k) is None
                                          or defs[k].dtype != "category" else req.current[k]) for k in sp.axes}])
+            if sp.derived:                     # 현재 조건의 derived 도 같은 식으로(수락 검사 없이 값만)
+                env0 = {k: float(v) for k, v in params.items()}
+                env0.update({k: float(v) for k, v in fixed_vals.items()
+                             if isinstance(v, (int, float)) and not isinstance(v, bool) and k not in env0})
+                self._apply_derived(cur_row, self._derived_spec(raw, locks, defs), env0)
         evals = self._evaluate(spec, uses, filled_by, pts, cur_row, params)
         env_all, preds, intervals = evals["env"], evals["preds"], evals["intervals"]
         # 6) 제약
-        cons = [Constraint.parse(c) for c in raw.get("constraints") or []]
+        cons, skipped = [], []
+        optional_absent = {k for k, p in (raw.get("params") or {}).items() if p.get("optional") and k not in params}
+        for c in raw.get("constraints") or []:
+            con = Constraint.parse(c)
+            if con.names() & optional_absent:
+                skipped.append(con.name)       # 선택 제약 값이 없다 — 평가하지 않는다(응답 constraints 에서 빠지고 저장본에 남는다)
+                continue
+            cons.append(con)
         total = n + (1 if cur_row is not None else 0)
         cres = [c.evaluate(env_all, total) for c in cons]
         violation = np.sum([cr[4] for cr in cres], axis=0) if cres else np.zeros(total)
@@ -371,7 +481,7 @@ class Optimizer:
         top = pool[order[:TOP]]
         # 8) 후보 모양
         def cand(i: int) -> dict:
-            conds = {k: _num(pts.iloc[i][k]) if i < n else _num(cur_row.iloc[0][k]) for k in sp.axes}
+            conds = {k: _num(pts.iloc[i][k]) if i < n else _num(cur_row.iloc[0][k]) for k in [*sp.axes, *sp.derived]}
             return {
                 "conditions": conds,
                 "predictions": {k: float(round(float(np.asarray(v)[i] if np.ndim(v) else v), 6)) for k, v in preds.items()},
@@ -426,7 +536,9 @@ class Optimizer:
             "explain": None, "model": None, "uses": uses_out, "prediction_id": None,
             "synthetic": synthetic, "notice": spec.notice,
         })
-        self._record(spec, out, req, params, caller=caller, channel=channel)
+        self._record(spec, out, req, params, caller=caller, channel=channel,
+                     extra={"skipped_constraints": skipped,
+                            "acceptance": {"derived": sp.derived, "drawn": sp.n_drawn, "accepted": n, "capped": sp.capped}})
         return out
 
     # ── 이상 경고 (task-contract §2 warn_with · D-76) ─────────────────────────────────────
@@ -536,8 +648,8 @@ class Optimizer:
         if not len(pts):
             return 0.0
         ok = np.ones(len(pts), dtype=bool)
-        for name, kind in sp.kinds.items():
-            if kind != "control":
+        for name, kind in [*sp.kinds.items(), *((d, "derived") for d in sp.derived)]:
+            if kind not in ("control", "derived"):
                 continue
             for lk in locks:
                 item = (lk.get("features") or {}).get(name)
@@ -552,7 +664,8 @@ class Optimizer:
                     ok &= (x >= item["p1"] - 1e-9) & (x <= item["p99"] + 1e-9)
         return round(float(ok.mean()), 6)
 
-    def _record(self, spec, out: dict, req: OptimizeRequest, params: dict, *, caller: str, channel: str) -> None:
+    def _record(self, spec, out: dict, req: OptimizeRequest, params: dict, *, caller: str, channel: str,
+                extra: dict | None = None) -> None:
         """mlp_recommendation(needs_approval) + 승인 요청(kind=recommendation, action=apply) — 한 트랜잭션. 설비 · MES 쓰기 0."""
         rec = out["recommendation"]
         uses_versions = {u["task"]: u["version"] for u in out["uses"]}
@@ -561,7 +674,7 @@ class Optimizer:
                   "n_candidates": rec["n_candidates"], "n_feasible": rec["n_feasible"],
                   "in_train_range_rate": rec["in_train_range_rate"], "objective": rec["objective"],
                   "status": out["status"], "warnings": out["warnings"], "channel": channel,
-                  "request_approval": req.request_approval}
+                  "request_approval": req.request_approval, **(extra or {})}
         evidence = {"rec_id": rec["rec_id"], "feasible": rec["feasible"], "best": rec["best"], "uses": out["uses"],
                     "objective": rec["objective"], "status": out["status"]}
         with connect() as c:

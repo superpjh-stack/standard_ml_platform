@@ -94,10 +94,18 @@ def get_task(t: str, task: str, request: Request):
     names = list(raw.get("features") or [])
     if td.type == "optimize":                       # 최적화 폼 = 고정 + 조절 변수
         names = list(dict.fromkeys(list(raw.get("fixed") or []) + list(raw.get("controls") or [])))
+    elif td.type == "quote":                        # 견적 폼 = inputs 중 features.yaml 변수(수량 · 단가 입력은 inputs 목록으로)
+        names = [n for n in raw.get("inputs") or [] if n in m.pack.features]
+    elif td.type == "extract" and isinstance(raw.get("model"), dict):
+        names = list((raw.get("model") or {}).get("features") or [])
     spec = catalog(request).get(t, td.id)
     keep = ("target", "thresholds", "interval", "clip", "calibration", "contamination", "controls", "fixed",
             "decision_vars", "params", "objective", "constraints", "search", "on_infeasible", "time_key", "group_key",
-            "split", "candidates", "out_of_range", "max_imputed", "approver_role", "monitor")
+            "split", "candidates", "out_of_range", "max_imputed", "approver_role", "monitor", "derived", "input_rules",
+            # 2차 유형 (개발2 요청 — 화면 9 가 인식값 · 단가 · 상한을 폼에 채운다). 단가는 10진 문자열 그대로
+            "rule", "quantile_from", "origins", "max_items", "reason", "schedule",                       # review_queue
+            "document", "extractors", "labels", "outputs", "model",                                     # extract
+            "from_extract", "recognized", "inputs", "rates", "rate_tables", "rounding", "currency", "confirm", "csv")   # quote
     out = {"task": td.id, "pack_task": td.pack_id, "type": td.type, "title": raw.get("title"), "entity": raw.get("entity"),
            "features": _feature_meta(m, names), "notice": spec.notice,
            "uses": [f"{t}.{u.split('.', 1)[1]}" for u in raw.get("uses") or []] or None,

@@ -19,6 +19,7 @@ __all__ = ["Extractor", "ExtractError", "limits_for", "load_extractor", "merge_r
 
 SPEC_LIMITS = {"max_bytes": 5 * 1024 * 1024, "max_entities": 20000}       # spec §8.3 — 팩 · 회사는 낮추기만
 OUTPUT_KEYS = ("regions", "objects", "bom_rows")
+REPLACEABLE = OUTPUT_KEYS + ("counts", "dimensions")     # 결과 `replaces` 로 앞 결과를 바꿀 수 있는 키
 
 
 class ExtractError(DocumentError):
@@ -30,7 +31,12 @@ class Extractor(Protocol):
     VERSION: str
     KIND: Literal["rule", "model"]
 
-    def extract(self, raw: bytes, filename: str, *, unit: str, limits: dict, model: Any = None) -> dict: ...
+    def extract(self, raw: bytes, filename: str, *, unit: str, limits: dict, model: Any = None,
+                context: dict | None = None) -> dict: ...
+    # context(선택 인자 — 받는 추출기에만 넘긴다): {categories, material_aliases, params, previous}
+    #   params   = 과제 extractors[].params (팩 YAML 값 — 임계값 · 허용차 · 팩 고유 상한, 코드 상수 금지)
+    #   previous = 앞 추출기까지 합친 결과(None = 첫 추출기). 규칙 추출기가 찾은 객체를 모델 추출기가 분류할 때 쓴다.
+    # 결과 키 `replaces: ["objects", …]` 가 있으면 합칠 때 그 배열을 이어 붙이지 않고 이 결과로 바꾼다(앞 결과를 다듬은 경우).
 
 
 def limits_for(task_raw: dict) -> dict:
@@ -71,7 +77,7 @@ def load_extractor(pack_path: Path, spec: dict) -> Any:
 
 
 def merge_results(parts: list[tuple[Any, dict]]) -> dict:
-    """[(추출기 모듈, 결과)] → 합친 결과. 배열 이어 붙임 · counts 키별 합 · dimensions 처음 non-null ·
+    """[(추출기 모듈, 결과)] → 합친 결과. 배열 이어 붙임(결과 `replaces` 에 든 배열은 바꿈) · counts 키별 합 · dimensions 처음 non-null ·
     confidence = model 추출기 값 평균(규칙만이면 None) · warnings 이어 붙임."""
     out: dict[str, Any] = {k: [] for k in OUTPUT_KEYS}
     out.update(counts={}, dimensions=None, confidence=None, warnings=[])
@@ -79,11 +85,21 @@ def merge_results(parts: list[tuple[Any, dict]]) -> dict:
     for mod, res in parts:
         if not isinstance(res, dict):
             raise TypeError(f"추출기 {getattr(mod, 'NAME', '?')} 결과가 dict 가 아닙니다")
+        replaces = res.get("replaces") or []
+        if not isinstance(replaces, list) or any(k not in REPLACEABLE for k in replaces):
+            raise TypeError(f"추출기 {getattr(mod, 'NAME', '?')} 의 replaces 는 {list(REPLACEABLE)} 중 이름 목록입니다")
+        if "counts" in replaces:
+            out["counts"] = {}
+        if "dimensions" in replaces:
+            out["dimensions"] = None
         for k in OUTPUT_KEYS:
             vals = res.get(k) or []
             if not isinstance(vals, list):
                 raise TypeError(f"추출기 {mod.NAME} 의 {k} 가 배열이 아닙니다")
-            out[k].extend(vals)
+            if k in replaces:
+                out[k] = list(vals)
+            else:
+                out[k].extend(vals)
         for k, v in (res.get("counts") or {}).items():
             out["counts"][str(k)] = int(out["counts"].get(str(k), 0)) + int(v)
         if out["dimensions"] is None and res.get("dimensions") is not None:

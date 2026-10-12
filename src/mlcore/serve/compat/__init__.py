@@ -11,6 +11,7 @@ prediction.value + 과제 target.name 으로 대신한다").
 | `…/overview` (GET)          | 묶음 과제들의 production 학습 보고서 |
 | `…/records` · `…/records/{id}` (GET) | 묶음 과제 production 스냅숏 행(표준 records — 개발3 B12 가 생기면 그것으로 바꾼다) |
 | `/api/health` 꼴(`…/health`, GET) | 등록부 production 여부 |
+| 객체 항목 `{path, method, action, task?, shape?, params?}` | 2차 동작(대기열 · 문서 · 견적 · 단일 예측 · 팩 예시 파일) — `phase2.py` |
 
 옛 422 모양 `{"detail": [{loc, msg, type}]}` 를 재현한다. 입력값은 되풀이하지 않는다(loc · type · 표준 메시지만).
 옛 서비스와 달리 **API 키가 필요하다**(역할 판정은 표준과 같다 — decisions D-59). 운영 모델이 없으면 503 — 지어내지 않는다.
@@ -86,6 +87,8 @@ class Compat:
     def resolve(self, method: str, path: str) -> tuple[str, str | None] | None:
         """(동작, 경로 인자) — compat.routes 에 있는 것만."""
         for r in self.routes():
+            if not isinstance(r, str):            # 객체 항목은 2차 장치(phase2.py)가 맞춘다
+                continue
             if path == r:
                 for suffix, (m, action) in {"/predict": ("POST", "predict"), "/optimize": ("POST", "optimize"),
                                             "/overview": ("GET", "overview"), "/records": ("GET", "records"),

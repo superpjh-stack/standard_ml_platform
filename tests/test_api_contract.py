@@ -35,8 +35,14 @@ P1 = [r for r in ROWS if r["phase"] == 1]
 P2 = [r for r in ROWS if r["phase"] == 2]
 
 
+PHASE2_BUNDLES = ("B09", "B10", "B11")
+TYPED = [r for r in ROWS if r["bundle"] in PHASE2_BUNDLES]
+
+
 def test_contract_counts():
-    assert len({r["bundle"] for r in P1}) == 12 and len({r["bundle"] for r in ROWS}) == 15
+    """웨이브 P 마감: §1 의 묶음 15 가 전부 단계 1(B09~B11 합침) · 단계 2 행 0."""
+    assert len({r["bundle"] for r in P1}) == 15 and len({r["bundle"] for r in ROWS}) == 15 and not P2
+    assert {r["bundle"] for r in TYPED} == set(PHASE2_BUNDLES) and len(TYPED) == 11
 
 
 def _app_routes() -> set[tuple[str, str]]:
@@ -70,7 +76,7 @@ def _envelope(r, status: int, code: str):
     return body["error"]
 
 
-@pytest.mark.parametrize("row", P2, ids=[f"{r['bundle']}-{r['method']}-{r['path']}" for r in P2])
+@pytest.mark.parametrize("row", TYPED, ids=[f"{r['bundle']}-{r['method']}-{r['path']}" for r in TYPED])
 def test_phase2_routes_exist_and_route_by_type(world, row):
     """웨이브 P(goal2 G2-T01 "2차 유형 경로의 501 은 0"): §1 의 B09~B11 행은 앱에 있고, 1차 유형 과제로 부르면
     501 이 아니라 404 not_found(detail.rule type_route — api-contract §6.1 · D2-20). 아키텍트가 §1 단계를 1 로 바꾸면

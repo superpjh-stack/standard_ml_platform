@@ -77,7 +77,7 @@ def choose(page, task_id: str) -> None:
 
 
 def test_screens_200_no_placeholder(page, server):
-    assert len(SCREENS) == 6, SCREENS
+    assert len(SCREENS) == 10, SCREENS          # 1차 6 + 2차 7~10 (screen-map ○ — 웨이브 P 마감)
     for no, path in SCREENS:
         resp = page.goto(f"{server.base}/app/{path}")
         assert resp is not None and resp.status == 200, (path, resp and resp.status)
@@ -87,6 +87,8 @@ def test_screens_200_no_placeholder(page, server):
         page.wait_for_load_state("networkidle")
         assert "_placeholder" not in page.content(), path
         assert page.locator("[data-placeholder]").count() == 0, path
+        ok, sw, cw = no_hscroll(page)
+        assert ok, f"화면 {no} 가로 스크롤 {sw} > {cw}"   # 1024px — 화면 7~10 포함
     assert page.errors == [], page.errors
 
 

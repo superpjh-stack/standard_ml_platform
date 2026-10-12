@@ -225,10 +225,14 @@ def _phase2_override(name: str, base: dict, over: dict, sc: dict) -> dict:
         if not isinstance(r, dict) or set(r) - set(b):
             extra = sorted(set(r) - set(b)) if isinstance(r, dict) else r
             raise RegistryRejected("R1", f"{name}: rates 는 팩 단가 이름의 값만 덮어쓴다 (새 이름 {extra})")
-        probs = _packs.validate_rates(name, {**b, **r})
+        tables = set((base.get("rate_tables") or {}))
+        merged_r = {**b}
+        for k, v in r.items():            # 단가표(rate_tables)는 칸(회사 범주 값)을 채운다 — 이름은 팩 것만
+            merged_r[k] = {**(b.get(k) or {}), **v} if k in tables and isinstance(v, dict) else v
+        probs = _packs.validate_rates(name, merged_r, tables)
         if probs:
             raise RegistryRejected("R1", f"{name}: rates — {probs[0]}")
-        out["rates"] = {**b, **r}
+        out["rates"] = merged_r
     if "recognized" in over:
         r, b = over["recognized"], base.get("recognized") or {}
         if not isinstance(r, dict) or any(k != "tolerance" and r[k] != b.get(k) for k in r):
@@ -278,6 +282,15 @@ def _check_target_leak(name: str, task: dict) -> None:
         raise RegistryRejected("R1", f"{name}: 목표 target {tname!r} 가 입력 변수에 있다(목표 누수)")
 
 
+def _check_compat_routes(cfg: dict, task_types: dict[str, str]) -> None:
+    """compat.routes 객체 항목(2차 호환 경로) — 호환 라우터와 같은 표(serve/compat_routes.py)로 기동 때 검사(T0)."""
+    from ..serve.compat_routes import CompatConfigError, check_routes
+    try:
+        check_routes((cfg.get("compat") or {}).get("routes"), task_types)
+    except CompatConfigError as e:
+        raise RegistryRejected("T0", str(e)) from None
+
+
 def merge(pack: Pack, tenant: Tenant,
           production_synthetic: Callable[[str], bool | None] | None = None) -> Merged:
     cfg = tenant.config
@@ -293,6 +306,7 @@ def merge(pack: Pack, tenant: Tenant,
     for name in tenant.overrides:
         if name not in pack.tasks:
             raise RegistryRejected("T0", f"덮어쓰기 {name!r} 가 팩에 없다")
+    _check_compat_routes(cfg, {n: pack.tasks[n].get("type") for n in short})
 
     mode = cfg["mode"]
     sources = cfg.get("sources") or {}
@@ -320,6 +334,15 @@ def merge(pack: Pack, tenant: Tenant,
         for u in list(raw.get("uses") or []) + list(raw.get("warn_with") or []):     # warn_with 도 의존 과제(D-76)
             if u.split(".", 1)[-1] not in short:
                 raise RegistryRejected("R3", f"{full}: 의존 과제 {u} 가 꺼져 있다")
+        # R2 — 견적 단가표(rate_tables: {단가 이름: 범주 변수})는 회사 범주 값마다 한 칸 · 남는 칸 없음 (D2-45)
+        for tbl, var in (raw.get("rate_tables") or {}).items():
+            want = {str(v) for v in (categories.get(var) or [])}
+            have = set(((raw.get("rates") or {}).get(tbl) or {}))
+            if not want:
+                raise RegistryRejected("R2", f"{full}: 단가표 {tbl} 의 범주 {var} 값 목록(categories)이 없다")
+            if have != want:
+                raise RegistryRejected("R2", f"{full}: 단가표 {tbl} 칸이 회사 범주 {var} 와 다르다 "
+                                             f"(없음 {sorted(want - have)} · 남음 {sorted(have - want)})")
         # R5 — 같은 이름 · 다른 구현의 플러그인
         for fname, module in (raw.get("formulas") or {}).items():
             if module in tenant.formulas and module in pack.formulas and tenant.formulas[module] != pack.formulas[module]:
@@ -431,8 +454,11 @@ def synth_call(merged: Merged, task_id: str, role: str = "demo") -> SynthCall:
     task = merged.tasks[task_id]
     short = task.pack_id.split(".", 1)[1]
     spec = synth_spec(merged.pack, short)
-    seed = int(src["seed"]) if src.get("seed") is not None else spec.seed
-    rows = int(src["rows"]) if src.get("rows") is not None else spec.rows
+    # 우선순위: 회사 소스 tasks.<과제> > 팩 synth.tasks.<과제> > 회사 소스 rows · seed > 팩 synth (D2-45)
+    own = dict(((src.get("tasks") or {}).get(short)) or {})
+    pack_own = _packs.synth_task_override(merged.pack, short)
+    seed = int(own.get("seed", pack_own.get("seed", src["seed"] if src.get("seed") is not None else spec.seed)))
+    rows = int(own.get("rows", pack_own.get("rows", src["rows"] if src.get("rows") is not None else spec.rows)))
     cats = {k: list(v) for k, v in (merged.tenant.config.get("categories") or {}).items()}
     target = ((task.raw.get("target") or {}).get("name"))
     try:

@@ -15,7 +15,7 @@ aliases: [...]               # 회사명 별칭 — 코어 · 팩 금지어 검�
 tasks:
   enable: [sw.delta_e, ...]   # 필수. <code>.<pack 과제 이름>. 의존(uses) 과제도 켜져야 한다
 sources:                      # role → 어댑터 설정. 값이 아니라 위치 · 환경변수 이름
-  demo:    {kind: synthetic, seed: 42}
+  demo:    {kind: synthetic, seed: 42}       # 선택 tasks: {<과제>: {rows?, seed?}} — 과제별 합성 행 수 · 시드(pack-contract §4 우선순위, D2-45)
   eval:    {kind: csv, path: tests/fixtures/<code>/snapshot.csv}
   train:   {kind: dataplatform, view: <뷰 이름 # 미확인>, url_env: MLP_<CODE>_DP_URL, key_env: MLP_<CODE>_DP_KEY}
   actuals: {kind: mes, tables: [<허용목록>], dsn_env: MLP_<CODE>_MES_RO_DSN, read_role: <SELECT 전용 DB 역할 # 선택>}   # read_role(gateway · mes 선택) — 연결 직후 SET ROLE, 실패 → source_disconnected (D-88)
@@ -28,6 +28,8 @@ notify: {webhook_env: MLP_<CODE>_SLACK_WEBHOOK}
 compat:                       # 호환 라우터(D-18)만 쓰는 회사 고유 값
   entity_prefix: "SW-DEMO-"
   routes: [/api/quality/predict, /api/ml/optimize, /api/ml/overview, /api/data/records]
+  # 2차 객체 항목(api-contract §5 · D2-45): {path: "/api/cad/{id}", method: GET, action: document_get, task: <과제>, shape?, params?}
+  #   회사 옛 모양은 tenants/<code>/compat.py 의 parse_<동작> · shape_<동작> (predict-contract §7.1) — 기동 때 T0 검사
   round: {delta_e: 3, risk_probability: 4}           # 옛 응답 반올림 자리(D-71 · D-W2-02). 없으면 반올림 안 함(위험 확률만 기본 4)
   optimize_rename: {delta_e: pred_delta_e}           # 선택 — 표준 예측 · 비용식 · 묶음 anomaly 과제 짧은 이름 → 옛 행 키 (anomaly 값 = production flag, 모델 없으면 null — D-132)
   # 아래는 모두 선택(D-132) — 원천 코드를 읽어 파일:줄 주석과 함께 적는다. 없으면 표준 이름 · 문구 그대로

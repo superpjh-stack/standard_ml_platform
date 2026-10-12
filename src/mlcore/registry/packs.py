@@ -122,6 +122,7 @@ def validate_task(name: str, task: dict, pack_code: str, features: dict, all_tas
         p.append(f"{name}: type {ttype!r} 이 std/task_types.yaml 에 없다")
         return p
     rule = sc["by_type"].get(ttype, {})
+    p += _validate_expr_keys(name, task, ttype, features, all_tasks)
     for key in rule.get("required", []):
         if task.get(key) in (None, "", [], {}):
             p.append(f"{name}: {ttype} 필수 {key} 없음")
@@ -175,6 +176,89 @@ def validate_task(name: str, task: dict, pack_code: str, features: dict, all_tas
         strat = (task.get("search") or {}).get("strategy")
         if strat not in sc["enums"]["search_strategy"]:
             p.append(f"{name}: search.strategy {strat!r}")
+    return p
+
+
+# ── 식 키 — input_rules(전 유형) · derived · 제약 scale · params optional(optimize) (task-contract §1 · §2) ─────
+def _expr_names(text) -> list[str] | None:
+    from ..serve.expr import ExprError, compile_expr, names_of
+    try:
+        return names_of(compile_expr(str(text)))
+    except ExprError:
+        return None
+
+
+def _is_num(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _validate_expr_keys(name: str, task: dict, ttype: str, features: dict, all_tasks: dict) -> list[str]:
+    p: list[str] = []
+    numeric = {k for k, f in features.items() if isinstance(f, dict) and f.get("dtype") in ("float", "int")}
+    rules = task.get("input_rules")
+    if rules is not None:
+        allowed = numeric | (set(task.get("inputs") or []) if ttype == "quote" else set())
+        if not isinstance(rules, list) or not rules:
+            p.append(f"{name}: input_rules 는 비지 않은 목록 [{{name, expr, between: [lo, hi]}}]")
+        else:
+            seen = set()
+            for r in rules:
+                if not isinstance(r, dict) or set(r) != {"name", "expr", "between"}:
+                    p.append(f"{name}: input_rules 항목은 name · expr · between 세 키 {r!r}")
+                    continue
+                if not (isinstance(r["name"], str) and NAME_RE.match(r["name"])) or r["name"] in seen:
+                    p.append(f"{name}: input_rules 이름 {r['name']!r} (소문자 · 숫자 · _ · 중복 없음)")
+                seen.add(r.get("name"))
+                names = _expr_names(r["expr"])
+                if names is None:
+                    p.append(f"{name}: input_rules {r['name']!r} 식 — 이름 · 숫자 · + - * · 괄호만")
+                elif not names or set(names) - allowed:
+                    p.append(f"{name}: input_rules {r['name']!r} 식의 이름 {sorted(set(names) - allowed)} 이 수치 변수가 아니다")
+                b = r["between"]
+                if not (isinstance(b, list) and len(b) == 2 and all(_is_num(x) for x in b) and b[0] <= b[1]):
+                    p.append(f"{name}: input_rules {r['name']!r} between 은 [lo ≤ hi] 숫자 둘")
+    if ttype != "optimize":
+        for key in ("derived",):
+            if key in task:
+                p.append(f"{name}: {key} 는 optimize 과제 키")
+        return p
+    controls = list(task.get("controls") or [k for k, f in features.items() if isinstance(f, dict) and f.get("controllable")])
+    fixed = list(task.get("fixed") or [])
+    dvars = list((task.get("decision_vars") or {}).keys())
+    params = task.get("params") or {}
+    derived = task.get("derived")
+    if derived is not None:
+        uses_feats = set()
+        for u in task.get("uses") or []:
+            uses_feats |= set((all_tasks.get(str(u).split(".", 1)[-1]) or {}).get("features") or [])
+        if not isinstance(derived, dict) or not derived:
+            p.append(f"{name}: derived 는 비지 않은 {{변수: \"식\"}}")
+        else:
+            src = set(controls) | set(fixed) | set(dvars) | set(params)
+            for var, text in derived.items():
+                if var not in numeric:
+                    p.append(f"{name}: derived {var!r} 가 features.yaml 의 수치 변수가 아니다")
+                if var in controls or var in fixed or var in dvars:
+                    p.append(f"{name}: derived {var!r} 는 조절 · 고정 · 결정 변수가 아니어야 한다(식으로 계산하는 모델 입력)")
+                if uses_feats and var not in uses_feats:
+                    p.append(f"{name}: derived {var!r} 가 uses 과제의 입력 변수가 아니다")
+                names = _expr_names(text)
+                if names is None:
+                    p.append(f"{name}: derived {var!r} 식 — 이름 · 숫자 · + - * · 괄호만")
+                elif set(names) - src:
+                    p.append(f"{name}: derived {var!r} 식의 이름 {sorted(set(names) - src)} 이 controls · fixed · decision_vars · params 가 아니다")
+    for c in task.get("constraints") or []:
+        if isinstance(c, dict) and "scale" in c and not (_is_num(c["scale"]) and c["scale"] > 0):
+            p.append(f"{name}: 제약 {c.get('name')!r} scale 은 양수")
+    for k, prm in params.items():
+        if isinstance(prm, dict) and "optional" in prm and not isinstance(prm["optional"], bool):
+            p.append(f"{name}: params {k!r} optional 은 true/false")
+        if isinstance(prm, dict) and prm.get("default") is None and not prm.get("optional"):
+            p.append(f"{name}: params {k!r} default 가 없으면 optional: true 여야 한다")
+    md = (task.get("search") or {}).get("max_draws")
+    mp = (task.get("search") or {}).get("max_points", 10000)
+    if md is not None and not (isinstance(md, int) and not isinstance(md, bool) and md >= mp):
+        p.append(f"{name}: search.max_draws 는 max_points 이상 정수")
     return p
 
 
@@ -307,6 +391,13 @@ def _validate_extract(name: str, task: dict, features: dict, pack_path: Path | N
             p.append(f"{name}: 추출기 {en} 의 module 이름이 다르다 ({e.get('module')})")
         if not isinstance(e.get("version"), str) or not e.get("version"):
             p.append(f"{name}: 추출기 {en} version 없음(문자열)")
+        prm = e.get("params")             # 추출기 YAML 값(임계값 · 허용차 · 팩 고유 상한) → context["params"] (D2-45)
+        if prm is not None and not (isinstance(prm, dict) and all(
+                isinstance(k, str) and NAME_RE.match(k) and _scalar_param(v) for k, v in prm.items())):
+            p.append(f"{name}: 추출기 {en} params 는 {{이름: 수 | 문자열 | bool | 그 목록}} map")
+        unknown_e = sorted(set(e) - {"name", "kind", "module", "version", "params"})
+        if unknown_e:
+            p.append(f"{name}: 추출기 {en} 모르는 키 {unknown_e}")
     if task.get("labels") not in sc["enums"]["labels"]:
         p.append(f"{name}: labels {task.get('labels')!r} — {sc['enums']['labels']} 만")
     outs = task.get("outputs", [])
@@ -329,15 +420,36 @@ def _validate_extract(name: str, task: dict, features: dict, pack_path: Path | N
                 p.append(f"{name}: model.candidates {c!r} 는 extract 후보가 아니다")
         if model.get("selection") not in phase2_rule(sc, "extract_model_selection"):
             p.append(f"{name}: model.selection 은 macro_f1 (있음 {model.get('selection')!r})")
+        tgt = model.get("target", "label")          # 라벨 열 이름(합성 설명자 생성기의 열) — D2-44 확정(task-contract §6.2)
+        if not isinstance(tgt, str) or not NAME_RE.match(tgt) or tgt in (model.get("features") or []) or tgt in features:
+            p.append(f"{name}: model.target {tgt!r} 는 변수가 아닌 라벨 열 이름(식별자)")
     return p
 
 
-def validate_rates(name: str, rates) -> list[str]:
+def _scalar_param(v) -> bool:
+    if isinstance(v, list):
+        return all(_scalar_param(x) and not isinstance(x, list) for x in v)
+    return isinstance(v, (str, bool, int, float)) and not (isinstance(v, float) and v != v)
+
+
+def validate_rates(name: str, rates, tables=()) -> list[str]:
+    """단가 `{이름: "10진 문자열"}`. `tables`(과제 rate_tables 의 이름)는 단가표 `{범주 값: "10진 문자열"}` — 팩은 빈 표 `{}` 로
+    두고 칸은 회사 덮어쓰기가 채운다(팩에 회사 범주 값을 두지 않는다 — G-M01). 칸이 회사 범주와 맞는지는 병합 때(R2)."""
     if not isinstance(rates, dict) or not rates:
         return [f"{name}: rates 는 비지 않은 {{이름: \"10진 문자열\"}}"]
-    bad = {k: v for k, v in rates.items() if not (isinstance(k, str) and NAME_RE.match(k)
-                                                    and isinstance(v, str) and DECIMAL_STR_RE.match(v))}
-    return [f"{name}: rates 값은 10진 문자열만(float · 지수 표기 금지 — G2-Q01) {bad!r}"] if bad else []
+    tables = set(tables or ())
+
+    def ok(k, v) -> bool:
+        if not (isinstance(k, str) and NAME_RE.match(k)):
+            return False
+        if k in tables:
+            return isinstance(v, dict) and all(isinstance(c, str) and c.strip() and isinstance(x, str)
+                                               and DECIMAL_STR_RE.match(x) for c, x in v.items())
+        return isinstance(v, str) and bool(DECIMAL_STR_RE.match(v))
+    bad = {k: v for k, v in rates.items() if not ok(k, v)}
+    missing = sorted(tables - set(rates))
+    out = [f"{name}: rates 값은 10진 문자열만(float · 지수 표기 금지 — G2-Q01) {bad!r}"] if bad else []
+    return out + ([f"{name}: rate_tables {missing} 가 rates 에 없다(빈 표 {{}} 로라도 둔다)"] if missing else [])
 
 
 def _validate_quote(name: str, task: dict, pack_code: str, all_tasks: dict, pack_path: Path | None,
@@ -355,7 +467,12 @@ def _validate_quote(name: str, task: dict, pack_code: str, all_tasks: dict, pack
     if not isinstance(inputs, list) or not inputs or not all(isinstance(x, str) and NAME_RE.match(x) for x in inputs):
         p.append(f"{name}: inputs 는 비지 않은 이름 목록")
     p += _module_ok(name, "formulas", task.get("formula"), pack_path)
-    p += validate_rates(name, task.get("rates"))
+    tables = task.get("rate_tables")
+    if tables is not None and not (isinstance(tables, dict) and all(
+            isinstance(k, str) and NAME_RE.match(k) and v in (inputs or []) for k, v in tables.items())):
+        p.append(f"{name}: rate_tables 는 {{단가 이름: inputs 의 범주 변수}} map")
+        tables = None
+    p += validate_rates(name, task.get("rates"), tables or ())
     if task.get("rounding") not in sc["enums"]["rounding"]:
         p.append(f"{name}: rounding {task.get('rounding')!r} — {sc['enums']['rounding']} 만")
     if task.get("currency") not in sc["enums"]["currency"]:
@@ -449,6 +566,17 @@ def _validate_synth(path: Path, meta: dict) -> list[str]:
         problems.append(f"synth.module {mod} 파일 없음")
     if not isinstance(s.get("seed"), int) or not isinstance(s.get("rows"), int) or s["rows"] <= 0:
         problems.append("pack.yaml synth.seed · rows 는 정수")
+    per = s.get("tasks")              # 과제별 행 수 · 시드(D2-45 — 예 객체 설명자 1,600 행은 작업 900 행과 다르다)
+    if per is not None:
+        if not isinstance(per, dict):
+            problems.append("pack.yaml synth.tasks 는 {과제: {rows?, seed?}}")
+        else:
+            for t, v in per.items():
+                if t not in (meta.get("tasks") or []):
+                    problems.append(f"pack.yaml synth.tasks.{t}: 팩 과제가 아니다")
+                if not isinstance(v, dict) or set(v) - {"rows", "seed"} or any(
+                        not isinstance(v.get(k), int) or isinstance(v.get(k), bool) for k in v) or v.get("rows", 1) <= 0:
+                    problems.append(f"pack.yaml synth.tasks.{t}: rows · seed 는 정수(rows > 0)")
     return problems
 
 
@@ -458,7 +586,13 @@ def synth_spec(pack: Pack, task: str | None = None) -> SynthSpec:
         raise KeyError(f"{pack.code}: 과제 {task!r} 없음")
     own = pack.path / "synth" / f"{task}.py" if task else None
     path = own if own is not None and own.is_file() else pack.path / s["module"]
-    return SynthSpec(pack.code, task, path, int(s["seed"]), int(s["rows"]))
+    per = ((s.get("tasks") or {}).get(task) or {}) if task else {}
+    return SynthSpec(pack.code, task, path, int(per.get("seed", s["seed"])), int(per.get("rows", s["rows"])))
+
+
+def synth_task_override(pack: Pack, task: str | None) -> dict:
+    """pack.yaml synth.tasks.<과제> — 과제 고유 rows · seed (없으면 빈 dict)."""
+    return dict(((pack.meta.get("synth") or {}).get("tasks") or {}).get(task) or {}) if task else {}
 
 
 def _synth_package(pack: Pack) -> str:

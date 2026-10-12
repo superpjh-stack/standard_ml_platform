@@ -28,12 +28,19 @@ def _iso(ts: datetime | None) -> str | None:
 
 
 def _learned(merged: tenants.Merged) -> list[tenants.TaskDef]:
-    return [t for t in merged.tasks.values() if t.raw.get("features")]
+    """학습 보기(`data.taskview.learn_view`) 로 본 학습 과제 — extract 는 model: 블록의 변수 · 라벨 열(D2-44 · D2-45)."""
+    from ..data.taskview import learn_view
+    out = []
+    for t in merged.tasks.values():
+        v = learn_view(t)
+        if v.raw.get("features"):
+            out.append(v)
+    return out
 
 
 def _features(merged: tenants.Merged) -> list[str]:
     out: dict[str, None] = {}
-    for t in merged.tasks.values():
+    for t in _learned(merged) + [t for t in merged.tasks.values() if t.type == "optimize"]:
         for key in ("features", "fixed", "controls"):
             for f in t.raw.get(key) or []:
                 out[f] = None

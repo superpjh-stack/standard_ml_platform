@@ -1,5 +1,29 @@
 # progress.md — 검증된 현황의 유일한 진실
 
+## 2차 — 웨이브 P 마감 · 동결 준비 (아키텍트, 2026-10-13, 기준 커밋 21a39bc) — 다음: 오케스트레이터 `git tag core-freeze-2`
+
+### 지금 해야 할 것
+
+1. **오케스트레이터:** 이 커밋에 `core-freeze-2` 태그(로컬). 그 뒤 `src/mlcore` · `web/src/components` · `std` · `contracts` 0줄(G2-C01).
+2. **웨이브 A0-2:** `tests/test_vertical_slice_2.py`(G2-V01) — `kd.quote`(이제 켜짐 · `tests/test_kd_quote_flow.py` 가 업로드 → 견적 초안까지 확인) · `pc.residual_review`.
+3. **웨이브 A2:** 팩 `solder` · `rollform-quote` · kimchi `recipe_optimize` · 회사 `krs` · `ot` · task-map 6사 · 이관 보고서 — 코어 장치는 `docs/freeze-readiness.md` 표대로(derived · input_rules · scale · optional · rate_tables · synth.tasks · extractor params/context/replaces · 호환 객체 경로 + `tenants/<code>/compat.py`). 모자라면 고치지 말고 `코어 결함(2차)`.
+4. 사람 확인 대기(그대로) + 오케스트레이터 허락 대기: 옛 시험 DB `ml_grants_check_db` 삭제(D2-35).
+
+### 실측
+
+| 항목 | 실측 | 검증 방법 |
+|---|---|---|
+| D2-31 | G-M01 std 어휘 규칙(과제 이름 = 자기 유형만 면제 · 다른 겹침은 팩 FAIL) → `eto.quote` · `kd.quote` 켬 · G-M01 PASS(코어 116 · 팩 56 파일, std 어휘 과제 이름 1 `quote`) | `uv run python gates/check_core_terms.py` · `tests/test_freeze_readiness.py` |
+| 개발자 간 요청 | 추출기 context · 주석 '평창식' 0 · live_perf macro_f1 · doctor learn_view · test_split 항목 version · rule · threshold(일정 작업) · 과제 상세 2차 키 · `live_pairs → from_live`(이미 연결 — 확인) · channel `quote` · `model.target` 확정 · `Purpose queue_scoring` | `tests/test_kd_quote_flow.py` 4 · `test_monitor_extract_live.py` 2 · `test_monitor_review.py` 9 |
+| A2 대비 | 모자랐던 코어 기능 8묶음 넣음(D2-45) — 표 `docs/freeze-readiness.md` | `tests/test_optimize_phase2.py` 22 · `test_compat_phase2.py` · `test_freeze_readiness.py` 15 |
+| 계약 | api-contract §1 묶음 15 단계 1(B09~B11 11행 합침) · screen-map 7~10 ○ · D2-30 task-schema 표 · D2-33 부분 고유 색인(비파괴, 두 DB) · D2-39 기준선(eto MAE 3.7017 · kimchi MAE 1.5375 · queue_size 3) · F7-5 | `make db-migrate` 2회(멱등) · `gates/check_schema.py` PASS(열 211) |
+| 간헐 실패 | 원인 = bench compose 가 호스트 8200 고정(개발 서버 · 남은 `mlpbench-*` 가 쥐면 `up` FAIL → finally 가 치워 다음 PASS). 재현(8200 점유 → FAIL) → 빈 루프백 포트 + 잔여 정리 + 측정 전 build → 8200 점유 상태로 PASS (D2-46) | `gates/bench.py --compose` |
+| pytest | **843 passed · 3 skipped · 0 failed** (1 실패 = 팩 baselines 주석의 회사 코드 — 고친 뒤 재실행 통과) | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| e2e | **22 passed** (화면 1~10 · 1024px 가로 스크롤 0) | `uv run pytest -q tests/e2e` |
+| make gate | **5회 연속 PASS 23 · BLOCKED 1** (각 137~138 s) | `make gate` ×5 |
+| make gate2 | 1차 24행 PASS 23 · BLOCKED 1 · **G2-T01 · G2-R01 · G2-E01 · G2-Q01 · G2-S01 · G2-A01 · G2-I01 · G2-I02 · G2-H01 PASS** · FAIL = G2-C01(태그 전) · G2-V01(A0-2) · G2-P01 · 6사 4행(A2: solder · rollform-quote · krs · ot) · BLOCKED G2-L01(D-13) — 합계 41행 PASS 32 · FAIL 7 · BLOCKED 2 | `make gate2` |
+
+
 ## 2차 — Phase P0 (아키텍트, 2026-10-13, 기준 커밋 40a67c7) — 판정 기준 `goal2.md`, 명령 `make gate2`
 
 ### 지금 해야 할 것 (웨이브 P — 코어 확장, 개발 3 병렬 · 끝에 `core-freeze-2`)

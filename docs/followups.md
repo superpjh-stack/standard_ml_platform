@@ -11,7 +11,7 @@
 | F7-2 | #7 | D-76 optimize `warn_with` 구현 · task-schema 허용 키 | 개발2 · 개발3 | 해결 | `tests/test_override_rules.py` (D-131 · D-132) |
 | F7-3 | #7 | D-73 추천 승인 만료 규칙 · `state=expired` 전이 · 재요청 경로 (DEF-QA3-004) | 개발2 | 해결 | `tests/test_wave_c_dev2.py` (D-130 — 기간은 사람 확인) |
 | F7-4 | #7 | D-81 호환 `/api/data/records` 를 B12 행 함수로 전환 | 개발2 | 해결 | `tests/test_followups_dev2.py` (D-81 — B12 `_frame` 호출) |
-| F7-5 | #7 | 커밋 뒤 `make image` 재빌드(이미지가 미커밋 작업 트리로 빌드됨) | 아키텍트 | 열림 | — |
+| F7-5 | #7 | 커밋 뒤 `make image` 재빌드(이미지가 미커밋 작업 트리로 빌드됨) | 아키텍트 | 해결 | `tests/test_makefile_image.py` (make image 는 깨끗한 트리만 · bench 이미지는 미커밋이면 `<sha>-wt<해시>` — 웨이브 P 마감 D2-45) |
 | F7-6 | #7 | task-contract §3 · §4 에 `approver_role` · `target` (D-121) | 아키텍트 | 해결 | `tests/test_override_rules.py` (D-121) |
 | F7-7 | #7 · #16 | D-123 compose 앱 계정을 `mlp_app` 구성원 LOGIN 역할로 (DEF-QA2-009 잔여) | 개발3 | 해결 | `tests/test_deploy_app_role.py` (`docker/initdb/20-app-login.sh` · D2-34) |
 | F7-8 | #7 | 시험 DB `ml_grants_check_db` · `ml_grants_fresh_db` 정리 + `test_schema_grants` teardown | 개발3 | 해결 | `tests/test_schema_grants.py` (임시 DB + teardown · 남은 옛 DB 1개 삭제는 오케스트레이터 — D2-35) |

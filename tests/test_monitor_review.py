@@ -58,12 +58,12 @@ def actual(world, entity: str, value: float):
     assert r.status_code in (200, 201), r.text
 
 
-def items(code: str, task: str) -> list[dict]:
+def items(code: str, task: str, origin: str = "live_residual") -> list[dict]:
     from mlcore.db.conn import connect
 
     with connect() as c:
-        return c.execute("SELECT * FROM mlp_review_item WHERE tenant_id=%s AND task_id=%s ORDER BY abs(residual) DESC, item_id",
-                         (code, task)).fetchall()
+        return c.execute("SELECT * FROM mlp_review_item WHERE tenant_id=%s AND task_id=%s AND origin=%s "
+                         "ORDER BY abs(residual) DESC, item_id", (code, task, origin)).fetchall()
 
 
 def test_live_residual_items_only_from_predictions_with_actuals(world):
@@ -93,6 +93,27 @@ def test_live_residual_items_only_from_predictions_with_actuals(world):
         assert r["residual"] == pytest.approx(r["actual"] - r["predicted"]) and abs(r["residual"]) >= want
         assert r["item_id"].startswith("rvw_") and len(r["item_id"]) == 30 and r["reason"]
         assert r["decided_by"] is None and r["decided_at"] is None
+
+
+def test_test_split_items_from_run_report_once_per_version(world):
+    """origins 에 test_split — production run 보고서의 시험 구간 잔차(final_eval 결과)로 항목을 한 번 만든다 (D2-43 · D2-45).
+    항목에 version · rule · threshold 가 있고 prediction_id 는 없다. 같은 버전 재실행은 0."""
+    from mlcore.monitor import review
+    from mlcore.train import review as tr
+
+    code, queue = world["code"], world["queue"]
+    review.run_review(code, DAY)
+    rep = review.run_report(code, world["uses"], world["version"])
+    want = tr.from_run(rep, {"top_quantile": 0.10}, task_id=queue, model_version=world["version"],
+                       origins=["test_split", "live_residual"], max_items=50)
+    got = items(code, queue, "test_split")
+    assert want and len(got) == len(want)
+    assert {r["entity_id"] for r in got} == {w["entity_id"] for w in want}
+    for r in got:
+        assert r["prediction_id"] is None and r["version"] == world["version"] and r["rule"] == "top_quantile"
+        assert r["threshold"] == pytest.approx(want[0]["threshold"]) and r["state"] == "open"
+    again = [x for x in review.run_review(code, DAY) if x["task_id"] == queue][0]
+    assert again["test_split"]["created"] == 0 and len(items(code, queue, "test_split")) == len(got)
 
 
 def test_second_run_creates_nothing_new(world):

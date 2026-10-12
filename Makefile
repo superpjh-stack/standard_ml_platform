@@ -113,7 +113,8 @@ e2e:              ## G-S03 — Playwright(1.63.0) 화면 1~6 · 1024px · featur
 compose-config:   ## G-M11 — docker compose config (이미지 태그 = 커밋 SHA)
 	MLP_GIT_SHA=$(GIT_SHA) docker compose config
 
-image:            ## 앱 이미지 빌드(태그 = 커밋 SHA). 배포 · push 는 하지 않는다
+image:            ## 앱 이미지 빌드(태그 = 커밋 SHA). 작업 트리가 커밋과 다르면 거부(F7-5 — 미커밋 트리에 커밋 SHA 를 붙이지 않는다). push 없음
+	@test -z "$$(git status --porcelain)" || { echo "image: 작업 트리에 커밋하지 않은 변경이 있다 — 커밋한 뒤 'make image' (태그 = 커밋 SHA, F7-5)"; exit 2; }
 	MLP_GIT_SHA=$(GIT_SHA) docker compose build app
 
 check-routes:   ; $(UV) python gates/check_routes.py

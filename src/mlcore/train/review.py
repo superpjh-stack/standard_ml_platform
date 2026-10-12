@@ -4,7 +4,7 @@
   - `test_split`: uses 과제 run 의 시험 구간 잔차. 학습기가 **final_eval 안에서** 계산해 보고서 `queue_residuals` 에
     남긴 것만 쓴다(여기서 시험 구간을 다시 보지 않는다 — 새 guard 접근 0).
   - `live_residual`: 실측(`mlp_actual`)이 붙은 운영 예측(`mlp_prediction`) — prediction_id 필수.
-학습 · 검증 구간 잔차 · 전체 재적합 후 같은 데이터 채점(평창식, source_inventory P2)은 `QueueLeak` /
+학습 · 검증 구간 잔차 · 전체 재적합 후 같은 데이터 채점(표본 내 평가, source_inventory P2)은 `QueueLeak` /
 `InSampleEvaluation` 으로 거부하고 guard ledger 에 `queue_scoring` 으로 남긴다.
 임계값: `abs_residual_ge: x` 는 그 값, `top_quantile: q` 는 **검증 구간 잔차**(학습 구간 모델의 표본 밖 잔차)의
 1−q 분위(`quantile_from: valid` 고정). 시험 · 운영 · 표본 내 잔차로 분위를 재지 않는다.
@@ -67,7 +67,7 @@ def _pred_sha(values: Sequence[float]) -> str:
 def _verified_block(report: Mapping, ledger: AccessLedger | None) -> dict:
     """run 보고서의 `queue_residuals` 가 학습기 final_eval 1회에서 나온 시험 구간 잔차인지 증거로 확인한다.
     증거: ledger 에 ok 인 final_eval 정확히 1회 · 위반 0 / 블록 source=final_eval · origin=test_split /
-    행 수 = 분할 시험 구간 크기 / 예측값 해시 = 보고서 `test_predictions_sha256`. 하나라도 어긋나면 표본 내(평창식)로 본다."""
+    행 수 = 분할 시험 구간 크기 / 예측값 해시 = 보고서 `test_predictions_sha256`. 하나라도 어긋나면 표본 내 평가로 본다."""
     q = (report or {}).get("queue_residuals")
     if not q:
         _record(ledger, 0, "run 보고서에 queue_residuals 없음")
@@ -174,7 +174,7 @@ def from_live(pairs: Iterable[Mapping], rule: Mapping, *, task_id: str, origins:
 
 def residuals(predict: Callable, frame, *, fit_idx: Iterable[int], score_idx: Iterable[int],
               ledger: AccessLedger | None = None, target: str = "target") -> list[dict]:
-    """모델로 frame 의 행을 채점해 잔차 행을 만든다 — **재적합 구간과 겹치는 행은 채점하지 않는다**(평창식 거부).
+    """모델로 frame 의 행을 채점해 잔차 행을 만든다 — **재적합 구간과 겹치는 행은 채점하지 않는다**(표본 내 평가 거부).
     시험 구간 인덱스는 이 함수로 얻을 수 없다(GuardedTest 만 가진다). 쓰임: 검증 잔차 · 이관 재현의 표본 밖 확인."""
     fit, score = {int(i) for i in fit_idx}, [int(i) for i in score_idx]
     both = fit.intersection(score)

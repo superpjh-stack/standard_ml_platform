@@ -21,7 +21,7 @@ from ..db.conn import connect
 from .errors import InvalidInput, NotFound, ServeError
 from .ids import new_id
 from .record import record
-from .validate import check_missing, impute, range_check, validate_bounds, validate_format
+from .validate import check_missing, check_rules, impute, range_check, validate_bounds, validate_format
 
 KST = timezone(timedelta(hours=9))
 EXPLAIN_TOP = 5
@@ -94,6 +94,7 @@ class Predictor:
         feats = spec.defs                                                    # Sequence[FeatureDef] (D-47)
         validate_format(req.inputs, feats)                                   # 1단 형식
         validate_bounds(req.inputs, feats)                                   # 2단 min/max
+        check_rules(req.inputs, spec.task.raw.get("input_rules"))           # 변수 조합 규칙(조성 합 등)
         check_missing(req.inputs, feats, spec.max_imputed)                   # 필수 · 보정 한도
 
     def _answer(self, spec: TaskSpec, ref: ModelRef, loaded: Any, reqs: Sequence[PredictRequest]) -> list[dict]:

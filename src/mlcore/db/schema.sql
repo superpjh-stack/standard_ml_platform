@@ -161,7 +161,7 @@ CREATE TABLE mlp_prediction (
     outputs       jsonb NOT NULL,                    -- 표준 응답 전체 (contracts/predict-contract.md)
     status        text NOT NULL CHECK (status IN ('ok', 'watch', 'review', 'out_of_range', 'rejected', 'needs_approval')),
     caller        text NOT NULL,
-    channel       text NOT NULL DEFAULT 'api' CHECK (channel IN ('api', 'batch', 'console', 'compat', 'optimize')),
+    channel       text NOT NULL DEFAULT 'api' CHECK (channel IN ('api', 'batch', 'console', 'compat', 'optimize', 'quote')),
     synthetic     boolean NOT NULL,
     ts            timestamptz NOT NULL DEFAULT now(),
     FOREIGN KEY (tenant_id, task_id, version) REFERENCES mlp_model_version (tenant_id, task_id, version)
@@ -346,6 +346,18 @@ ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS approval_id    text;
 ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS confirmed_by   text;
 ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS confirmed_at   timestamptz;
 ALTER TABLE mlp_quote ADD COLUMN IF NOT EXISTS created_by     text;
+-- 웨이브 P 마감(D2-45 · D2-33) — 넓히기 · 색인만(행 변경 0). 채널 CHECK 에 견적이 부른 예측 'quote' 를 더한다(값 집합을 넓히기만).
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'mlp_prediction'::regclass
+                   AND conname = 'mlp_prediction_channel_check' AND pg_get_constraintdef(oid) LIKE '%quote%') THEN
+        ALTER TABLE mlp_prediction DROP CONSTRAINT IF EXISTS mlp_prediction_channel_check;
+        ALTER TABLE mlp_prediction ADD CONSTRAINT mlp_prediction_channel_check
+            CHECK (channel IN ('api', 'batch', 'console', 'compat', 'optimize', 'quote'));
+    END IF;
+END $$;
+-- 같은 운영 예측은 대기열에 한 번만 — 동시 실행 이중 삽입을 DB 가 막는다 (D2-33). test_split 항목은 prediction_id 가 NULL 이라 대상 밖
+CREATE UNIQUE INDEX IF NOT EXISTS mlp_review_item_prediction_once
+    ON mlp_review_item (tenant_id, task_id, prediction_id) WHERE prediction_id IS NOT NULL;
 -- @migrate-end
 
 -- @grants-begin ── 보호 구간: 추가만 트리거 + 권한 분리 (DEF-QA2-009 · decisions.md D-123) ──────────────────────

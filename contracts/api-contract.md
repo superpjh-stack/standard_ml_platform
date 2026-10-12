@@ -1,7 +1,7 @@
 # 계약 — 공개 API `/api/v1` (API Contract)
 
 > **정본.** 출처: `spec.md` §12.2(묶음 15) · §7 · §8.1 · §6.1 · goal §2.3(오류 계약) · goal §6(역할). 검사: `gates/check_routes.py`(G-S04) · `tests/test_api_contract.py`.
-> 1차 = 묶음 **12** (B09 review · B10 documents · B11 quotes 제외 — 이 셋은 경로는 두되 **501 `not_implemented`**). 2차 상세 경로 · 오류는 §6(웨이브 P 끝에 §1 로 합친다).
+> 묶음 **15** 전부 단계 1(구현). 1차 12 + 2차 B09 review · B10 documents · B11 quotes — 웨이브 P 마감(아키텍트, `core-freeze-2` 전)에 §6 의 행을 §1 로 합쳤다. 2차 오류 · 업로드 규칙 · 호환 라우터는 §6.
 > 인증: 헤더 `X-API-Key`. 키는 `mlp_api_key.key_hash` 로만 저장된다(평문 0). `GET /api/v1/health` 만 인증 없음. 키의 `tenant_id` 와 경로 `{t}` 가 다르면 **404 `not_found`**(존재 숨김).
 
 ## 1. 묶음 15 (기계 판독 — `check_routes.py` 가 이 표를 읽는다)
@@ -22,13 +22,17 @@
 | B07 models | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/models/{v}/rollback` | approver | `rollback` — 승인 요청(사유 필수) |
 | B08 train | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/train` | admin | `POST .../train` |
 | B08 train | 1 | GET | `/api/v1/runs/{run_id}` | approver(조회) | `GET /runs/{id}` |
-| B09 review | 2 | GET | `/api/v1/tenants/{t}/tasks/{task}/review` | viewer | `GET .../review` |
-| B09 review | 2 | PATCH | `/api/v1/tenants/{t}/tasks/{task}/review/{item_id}` | approver | `PATCH .../review/{id}` |
-| B10 documents | 2 | POST | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | `POST .../documents` |
-| B10 documents | 2 | GET | `/api/v1/tenants/{t}/tasks/{task}/documents/{doc_id}` | operator | `GET .../documents/{id}` |
-| B11 quotes | 2 | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `POST .../quotes` |
-| B11 quotes | 2 | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `GET .../quotes` |
-| B11 quotes | 2 | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}.csv` | operator | `GET .../quotes/{id}.csv` |
+| B09 review | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/review` | operator(조회) | `GET .../review` — `?state=&cursor=&limit=` → `{items: [ReviewItem], next_cursor, total}` (viewer ✕ — goal2 §6) |
+| B09 review | 1 | PATCH | `/api/v1/tenants/{t}/tasks/{task}/review/{item_id}` | approver(own_task) | `PATCH .../review/{id}` — `{state: confirmed_issue\|false_alarm, note}` → 200 ReviewItem · 닫힘 409 `already_decided` |
+| B10 documents | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | `POST .../documents` — multipart `file` · `unit_override?` → 201 DocumentExtraction |
+| B10 documents | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | 목록 `?search=&cursor=&limit=` → `{items: [DocumentExtraction 요약], next_cursor, total}` (화면 9) |
+| B10 documents | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/documents/{doc_id}` | operator | `GET .../documents/{id}` → DocumentExtraction · 다른 회사 · 없음 404 |
+| B11 quotes | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `POST .../quotes` — `{doc_id?, inputs, lines?, reviewed, review_note}` → 201 Quote(`draft`) |
+| B11 quotes | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `GET .../quotes` — `?search=&cursor=&limit=` → `{items: [Quote], next_cursor, total}` |
+| B11 quotes | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}` | operator | → Quote(최신 revision) |
+| B11 quotes | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/revisions` | operator | Quote 와 같은 본문 → 201 Quote(revision+1, `draft`) · 확정 견적 409 `quote_locked` |
+| B11 quotes | 1 | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/confirm` | operator(요청) | `{reviewed: true, review_note}` → 202 `{approval_id, state: pending}` · 검토 없음 422 `missing_required` · 이미 확정 409 `quote_locked`. **확정 결정은 B13 decide(approver 이상 — D2-04 · D2-19)** |
+| B11 quotes | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}.csv` | operator | `GET .../quotes/{id}.csv` — UTF-8 BOM · 수식 주입 방지 · 금액 문자열 그대로 |
 | B12 records | 1 | GET | `/api/v1/tenants/{t}/tasks/{task}/records` | viewer | `GET .../records?search=&limit=20&cursor=` |
 | B13 approvals | 1 | GET | `/api/v1/tenants/{t}/approvals` | operator(조회) | `GET .../approvals` |
 | B13 approvals | 1 | POST | `/api/v1/approvals/{approval_id}/decide` | approver(own_task) | `POST /approvals/{id}/decide` |
@@ -62,7 +66,7 @@
 | 이미 결정 · 만료된 승인 | 409 | `already_decided` |
 | 등록부 전이 규칙 위반 — candidate 아닌 것을 stage · 기준선 미달 · 차단 경고 · live 회사의 합성 모델 · staging 아닌 것을 promote · archived 아닌 것을 rollback (D-54) | 409 | `invalid_transition` (detail.rule = `from_candidate_only` · `baseline` · `blocking_warning` · `live_synthetic` · `from_staging_only` · `from_archived_only`) |
 | 회사당 동시 학습 1개 초과 — queued · running 이 이미 있음 (spec §5.5, D-54) | 409 | `train_busy` (detail.rule = `tenant_concurrency`) |
-| 2차 유형 경로(B09 · B10 · B11) | 501 | `not_implemented` |
+| 2차 유형 경로(B09 · B10 · B11)를 그 유형이 아닌 과제로 | 404 | `not_found` (detail.rule = `type_route` — §6.1, D2-20). 501 경로는 없다(G2-T01) |
 
 ## 4. 주요 본문
 
@@ -94,25 +98,12 @@
 
 **인증(D-59 확정 — 사람 결정 2026-10-12).** 옛 health 꼴(`/api/health`)만 키 없이 연다. 나머지 호환 경로는 표준과 같이 `X-API-Key` + `std/roles.yaml` 역할 판정 · 다른 회사 키 404. 키 없는 옛 클라이언트는 401(옛 오류 모양 `{"detail": …}`) — 열어 두지 않는다. 회사 고유 값: `tenants/<code>.yaml compat.round`(옛 응답 반올림 자리, 없으면 반올림 안 함 · 위험 확률만 기본 4) · `compat.optimize_rename`(선택, D-71).
 
-## 6. 2차 — B09 review · B10 documents · B11 quotes 상세 (Phase P0 아키텍트, goal2 §2 · §2.1 · §6)
+**2차 객체 경로(웨이브 P 마감 — `core-freeze-2` 전 장치, D2-45).** `compat.routes` 항목은 문자열(1차 — 접미사 추론) 또는 객체 `{path, method?, action, task?, shape?, params?}`. `path` 는 `/api/` 아래(`/api/v1` 제외), 경로 인자는 한 마디 전체 `{이름}`. 여러 객체가 맞으면 경로 인자가 적은 것이 먼저, 같으면 적힌 순서. 동작(method · 권한 영역 · 과제 유형): `health`(GET, 키 없음) · `overview` · `records` · `record` · `predict` · `optimize`(1차 그대로) · `predict_one`(POST predict, regression\|risk\|anomaly 한 과제) · `samples`(GET overview, `limit/offset`, 기본 `params.limit` 12) · `review_list`(GET review, `limit/state`, 결과에 과제 `rule`) · `document_upload`(POST quotes, multipart `params.file_field`=file — 확장자가 아니면 **415**(원천 모양), 크기 · 엔티티 413, 그 밖 422) · `document_demo`(POST, 팩 `samples/<params.file>` 을 업로드 흐름으로) · `document_get` · `pack_file`(GET overview, 팩 `samples/` 의 파일만 — `.json` 은 JSON, 그 밖은 원본 바이트, 경로 탈출 404) · `quote_create`(POST quotes — **draft 만**, 확정은 표준 경로 · 승인) · `quote_list`(옛 `search/offset/limit` → `{total, offset, limit, records}`) · `quote_get` · `quote_csv` · `quote_export_csv`(`params.columns`, BOM · 수식 주입 방지). 오류: 표준 422 → 옛 `{"detail":[{loc,msg,type}]}`, 그 밖 → `{"detail", "code"[, "rule"]}`. 설정 결함 503 `compat_config_error`, 플러그인 결함 503 `compat_plugin_error`(숨기지 않는다 — 표준 결과로 대신하지 않는다). 응답 기본 200(`params.status` 로 바꾼다). 등록부 로더가 기동 때 같은 표(`serve/compat_routes.py`)로 객체 항목을 검사한다 — 틀리면 T0 거부. 회사 모양 플러그인은 `predict-contract.md` §7.
 
-> **§1 표(기계 판독)는 지금 그대로 둔다** — 1차 게이트 G-S04 가 §1 의 단계 2 행을 501 로 확인하기 때문이다(`tests/test_api_contract.py::test_phase2_routes_are_501`).
-> **웨이브 P 끝(코어 동결 전)** 아키텍트가 §1 의 B09~B11 행을 단계 `1` 로 바꾸고 아래 표의 행을 §1 에 합친다. 그 뒤 `test_contract_counts` 의 기대값은 1차 15 · 2차 0 이 된다(묶음 수 15 는 그대로). 아래 표의 단계 열 `P` = 웨이브 P 에서 구현.
-> 응답 모양은 `predict-contract.md` §8, 키는 `task-contract.md` §6, 역할은 goal2 §6(→ `std/roles.yaml` 웨이브 P 반영).
+## 6. 2차 — B09 review · B10 documents · B11 quotes 상세 (Phase P0 아키텍트 → 웨이브 P 마감에 §1 로 합침)
 
-| 묶음 | 단계 | 메서드 | 경로 | 최소 역할 | 요청 → 응답 |
-|---|---|---|---|---|---|
-| B09 review | P | GET | `/api/v1/tenants/{t}/tasks/{task}/review` | operator(조회) | `?state=&cursor=&limit=` → `{items: [ReviewItem], next_cursor, total}` (viewer ✕ — goal2 §6) |
-| B09 review | P | PATCH | `/api/v1/tenants/{t}/tasks/{task}/review/{item_id}` | approver(own_task) | `{state: confirmed_issue\|false_alarm, note}` → 200 ReviewItem · 닫힘 409 `already_decided` |
-| B10 documents | P | POST | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | multipart `file` · `unit_override?` → 201 DocumentExtraction |
-| B10 documents | P | GET | `/api/v1/tenants/{t}/tasks/{task}/documents` | operator | `?search=&cursor=&limit=` → `{items: [DocumentExtraction 요약], next_cursor, total}` (화면 9 목록) |
-| B10 documents | P | GET | `/api/v1/tenants/{t}/tasks/{task}/documents/{doc_id}` | operator | → DocumentExtraction · 다른 회사 · 없음 404 |
-| B11 quotes | P | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `{doc_id?, inputs, lines?, reviewed, review_note}` → 201 Quote(`draft`) |
-| B11 quotes | P | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes` | operator | `?search=&cursor=&limit=` → `{items: [Quote], next_cursor, total}` |
-| B11 quotes | P | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}` | operator | → Quote(최신 revision) |
-| B11 quotes | P | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/revisions` | operator | Quote 와 같은 본문 → 201 Quote(revision+1, `draft`) · 확정 견적 409 `quote_locked` |
-| B11 quotes | P | POST | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/confirm` | operator(요청) | `{reviewed: true, review_note}` → 202 `{approval_id, state: pending}` · 검토 없음 422 `missing_required` · 이미 확정 409 `quote_locked`. **확정 결정은 B13 decide(approver 이상 — D2-04)** |
-| B11 quotes | P | GET | `/api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}.csv` | operator | UTF-8 BOM · 수식 주입 방지 · 금액 문자열 그대로 |
+> 경로 · 역할 · 요청 → 응답은 **§1 표(기계 판독)** 가 정본이다 — 웨이브 P 마감(아키텍트)에 이 절의 표를 §1 로 옮기고 단계를 `1` 로 바꿨다.
+> 그래서 `test_contract_counts` 는 단계 1 묶음 15 · 단계 2 묶음 0, G-S04 는 15/15 를 본다. 응답 모양은 `predict-contract.md` §8, 키는 `task-contract.md` §6, 역할은 goal2 §6(→ `std/roles.yaml`).
 
 ### 6.1 오류 계약 추가 (goal2 §2.1 — `std/statuses.yaml error_codes` 에 웨이브 P 가 추가)
 

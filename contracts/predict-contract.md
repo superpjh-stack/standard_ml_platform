@@ -389,6 +389,11 @@ candidate = {
 
 옛 오류 모양(`{"detail": [...]}` 422)도 호환 라우터가 재현한다. 원천 응답과의 일치는 `tests/test_compat.py` 가 원천 저장소 파일에서 읽은 키 목록으로 확인한다.
 
+
+### 7.1 회사 모양 플러그인 (웨이브 P 마감 — 2차 4개사 옛 응답, D2-45)
+
+`tenants/<code>/compat.py`(선택, 등록부 폴더 안 파일만 · 내용 해시로 한 번 읽음): `parse_<동작|shape>(old_body, info) -> 표준 본문` · `shape_<동작|shape>(표준 결과, info) -> 옛 본문` · `shape_error(status, body, info) -> (status, body)`. `info = {tenant, action, method, path, args, query, task, params}`. 플러그인은 `mlcore.serve.compat.CompatError(status, body)` 로 옛 오류를 낼 수 있다. 플러그인이 없으면 표준 결과를 그대로 내고 `compat.input_rename` 만 요청 입력에 적용한다. **계산 · 저장 · 승인은 표준 서비스 그대로다 — 플러그인은 모양만 바꾼다**(금액은 표준 Decimal 견적식 결과 · 대기열은 표준 규칙 · 추출은 팩 추출기). 동작 목록은 `api-contract.md` §5.
+
 ## 8. 2차 유형 응답 — 대기열 · 추출 · 견적 (Phase P0 아키텍트, goal2 G2-T01)
 
 > **18키 원칙과의 관계.** §2 의 18키 응답은 `predict` · `predict:batch` · `optimize` 의 모양이다 — 그대로 둔다(§5 스키마 · `type` enum 4 · G-M04 변경 0).

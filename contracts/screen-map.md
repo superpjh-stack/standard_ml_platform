@@ -3,7 +3,7 @@
 > **정본.** 출처: `spec.md` §12.1 · goal §3.2 · §6. 검사: `make check-routes` · `tests/e2e/`(G-S03).
 > 콘솔은 `web/`(Vite + React 19 + TS). 개발 서버 5190, 빌드는 API(8200)가 `/app/*` 로 제공. **회사 화면 코드는 0** — 입력 폼은 `GET .../tasks/{task}` 의 `features` 메타로 만든다.
 > 공용 컴포넌트(상태 배지 · 지표 표 · 변수 폼 생성기 · 2차: 문서 뷰어 · 금액 표)는 `web/src/components/` 하나, 개발2 소유.
-> **2차(goal2 §3.2):** 화면 7~10 의 파일 · 소유자를 정했다. 웨이브 P 끝(동결 전) 아키텍트가 마지막 열을 `2차` → `○` 로 바꾸면 G-S03(화면 10 · e2e 6개사)이 이 행들을 판정한다. 그 전에는 `check_routes` 가 1차 6 만 본다.
+> **2차(goal2 §3.2):** 화면 7~10 의 파일 · 소유자를 정했고, 웨이브 P 마감(아키텍트, `core-freeze-2` 전)에 마지막 열을 `2차` → `○` 로 켰다. G-S03 은 화면 10 의 파일 · `/app` 200 · `_placeholder` 0 을, G2-S01 은 화면 7~10 e2e(`tests/e2e/test_console_sources.py` · `test_console_phase2.py`, 1024px)를 본다. A2 에서는 회사 화면 코드 없이 데이터만 늘린다.
 
 | # | 화면 | 경로 | 파일 | 소유 | API | 역할 | 1차 |
 |---|---|---|---|---|---|---|---|
@@ -13,10 +13,10 @@
 | 4 | 모델 비교 · 검증 | `/app/models` | `web/src/screens/Models.tsx` | 개발1 | B07 · B08 | admin · approver(조회) | ○ |
 | 5 | 승인 대기열 | `/app/approvals` | `web/src/screens/Approvals.tsx` | 개발2 | B13 · B07 | approver · admin · operator(조회) | ○ |
 | 6 | 감시 | `/app/monitor` | `web/src/screens/Monitor.tsx` | 개발3 | B14 | admin · approver · operator(조회) | ○ |
-| 7 | 데이터 소스 · 스냅숏 | `/app/sources` | `web/src/screens/Sources.tsx` | 개발1 | B14 doctor · B08 · B12 | admin · approver(조회) | 2차 |
-| 8 | 검토 대기열 | `/app/review` | `web/src/screens/Review.tsx` | 개발2 | B09 · B02 | admin · approver(자기 과제) · operator(조회) | 2차 |
-| 9 | 도면 추출 · 견적 | `/app/quotes` | `web/src/screens/Quotes.tsx` | 개발2 | B10 · B11 · B13 | admin · approver · operator(확정 ✕) | 2차 |
-| 10 | 감사 · 예측 추적 | `/app/trace` | `web/src/screens/Trace.tsx` | 개발2 | B15 · 감사 조회 | admin | 2차 |
+| 7 | 데이터 소스 · 스냅숏 | `/app/sources` | `web/src/screens/Sources.tsx` | 개발1 | B14 doctor · B08 · B12 | admin · approver(조회) | ○ (1024px 가로 스크롤 0) |
+| 8 | 검토 대기열 | `/app/review` | `web/src/screens/Review.tsx` | 개발2 | B09 · B02 | admin · approver(자기 과제) · operator(조회) | ○ (1024px 가로 스크롤 0) |
+| 9 | 도면 추출 · 견적 | `/app/quotes` | `web/src/screens/Quotes.tsx` | 개발2 | B10 · B11 · B13 | admin · approver · operator(확정 ✕) | ○ (1024px 가로 스크롤 0) |
+| 10 | 감사 · 예측 추적 | `/app/trace` | `web/src/screens/Trace.tsx` | 개발2 | B15 · 감사 조회 | admin | ○ (1024px 가로 스크롤 0) |
 
 ## 화면별 필수 요소 (G-S03 판정에 쓴다)
 

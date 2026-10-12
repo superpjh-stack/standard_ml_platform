@@ -57,7 +57,9 @@ def _g2_p01() -> list[Line]:
     for pack in ("solder", "kimchi", "rollform-quote", "eto"):
         f = ROOT / "packs" / pack / "baselines.yaml"
         vals = (yaml.safe_load(read(f)) or {}) if f.is_file() else {}
-        if not vals or any((v or {}).get("value") is None for v in vals.values()):
+        # 값이 없어도 되는 것은 지표 자체가 없는 과제뿐(metric null + reason — labels: none 추출 · 견적). 지표가 있으면 값 필수
+        if not vals or any((v or {}).get("value") is None and ((v or {}).get("metric") is not None or not (v or {}).get("reason"))
+                           for v in vals.values()):
             empty.append(pack)
     probs = [x.measured for x in (reg, tasks, synth) if x.status != "PASS"]
     if empty:
@@ -69,10 +71,12 @@ def _g2_p01() -> list[Line]:
 def _g2_s01() -> list[Line]:
     rows = [ln for ln in read(ROOT / "contracts" / "screen-map.md").splitlines() if re.match(r"^\| (7|8|9|10) \|", ln)]
     on = [ln for ln in rows if re.search(r"\| ○[^|]*\|$", ln)]
-    e2e = pytest_gate("G2-S01", "", "tests/e2e/test_console.py")
+    e2e_files = ["tests/e2e/test_console_sources.py", "tests/e2e/test_console_phase2.py"]   # 화면 7 · 8~10 (1024px)
+    runs = [pytest_gate("G2-S01", "", f) for f in e2e_files]
+    e2e = next((r for r in runs if r.status != "PASS"), None) or Line("G2-S01", "", "PASS", " · ".join(r.measured for r in runs))
     probs = []
     if len(on) != 4:
-        probs.append(f"screen-map 화면 7~10 중 판정 대상(○) {len(on)}/4 — 웨이브 P 끝에 아키텍트가 켠다")
+        probs.append(f"screen-map 화면 7~10 중 판정 대상(○) {len(on)}/4")
     if e2e.status != "PASS":
         probs.append(e2e.measured)
     missing = [m.group(1) for ln in rows if (m := re.search(r"`(web/src/screens/[A-Za-z]+\.tsx)`", ln)) and not (ROOT / m.group(1)).is_file()]
@@ -87,7 +91,7 @@ def _g2_a01() -> list[Line]:
     t = pytest_gate("G2-A01", "", "tests/test_api_contract.py")
     probs = []
     if len(p1) != 15:
-        probs.append(f"계약 §1 단계 1 묶음 {len(p1)}/15 (B09~B11 은 웨이브 P 끝에 단계 1 로)")
+        probs.append(f"계약 §1 단계 1 묶음 {len(p1)}/15")
     if t.status != "PASS":
         probs.append(t.measured)
     return [Line("G2-A01", "API 15", "FAIL" if probs else "PASS", "; ".join(probs) if probs else f"15/15 · {t.measured}")]
