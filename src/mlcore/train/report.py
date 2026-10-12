@@ -14,7 +14,7 @@ from sklearn.inspection import permutation_importance
 from ..data.features import FeatureDef
 from .guard import GuardedTest
 
-SCORING = {"regression": "neg_mean_absolute_error", "risk": "neg_brier_score"}
+SCORING = {"regression": "neg_mean_absolute_error", "risk": "neg_brier_score", "extract": "f1_macro"}
 
 
 def test_report(frame: pd.DataFrame, test: GuardedTest, *, model, task_type: str, features: Sequence[FeatureDef],
@@ -30,6 +30,8 @@ def test_report(frame: pd.DataFrame, test: GuardedTest, *, model, task_type: str
         out["permutation_importance"] = sorted(
             ({"feature": n, "mean": float(m), "std": float(s)} for n, m, s in zip(names, pi.importances_mean, pi.importances_std)),
             key=lambda r: -r["mean"])
+        if task_type == "extract":            # 클래스 예측 — 잔차 · 범주별 오차가 없다(혼동행렬은 final_eval 에서)
+            return out
         pred = predict(X)
         err = pred - y
         out["residuals"] = {"mean": float(np.mean(err)), "std": float(np.std(err)),

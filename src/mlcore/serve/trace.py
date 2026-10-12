@@ -59,3 +59,38 @@ def trace(prediction_id: str, *, tenant_id: str) -> dict:
         "actuals": [{"actual_id": a["actual_id"], "entity_id": a["entity_id"], "value": a["value"],
                      "observed_at": _iso(a["observed_at"]), "source": a["source"]} for a in acts],
     }
+
+
+# ── 축약 보기 `?view=explain` (agent-tools §4 · std/roles.yaml trace.explain_view) ─────────────────────
+def explain_view_rule(role: str) -> str:
+    """roles.yaml permissions.trace.explain_view[role] — auth.allowed 는 하위 표를 보지 않으므로 직접 읽는다."""
+    from .. import auth
+    sub = (auth.permissions().get("trace") or {}).get("explain_view") or {}
+    return sub.get(role, "deny")
+
+
+def explain_view(prediction_id: str, *, tenant_id: str) -> dict:
+    """모델 · 스냅숏 · 기여만. 입력값 · 원천 소스 ref · run 설정 해시는 넣지 않는다. 다른 회사 → 404."""
+    with connect() as c:
+        p = c.execute("SELECT prediction_id, task_id, version, status, synthetic, outputs FROM mlp_prediction "
+                      "WHERE prediction_id = %s AND tenant_id = %s", (prediction_id, tenant_id)).fetchone()
+        if not p:
+            raise NotFound("예측을 찾을 수 없습니다")
+        mv = c.execute("SELECT version, stage, algo, created_at, snapshot_id FROM mlp_model_version "
+                       "WHERE tenant_id=%s AND task_id=%s AND version=%s", (tenant_id, p["task_id"], p["version"])).fetchone()
+        snap = (c.execute("SELECT snapshot_id, rows, ts_from, ts_to, synthetic FROM mlp_snapshot WHERE snapshot_id = %s",
+                          (mv["snapshot_id"],)).fetchone() if mv else None)
+    out = p["outputs"] or {}
+    model_out = out.get("model") or {}
+    explain = out.get("explain")
+    return {
+        "view": "explain",
+        "prediction": {"prediction_id": p["prediction_id"], "task": p["task_id"], "version": p["version"],
+                       "status": p["status"], "synthetic": p["synthetic"],
+                       "explain": explain if isinstance(explain, dict) else None},
+        "model": {"version": mv["version"], "stage": mv["stage"], "algo": mv["algo"],
+                  "trained_at": model_out.get("trained_at") or _iso(mv["created_at"])} if mv else None,
+        "snapshot": {"snapshot_id": snap["snapshot_id"], "rows": snap["rows"], "ts_from": _iso(snap["ts_from"]),
+                     "ts_to": _iso(snap["ts_to"]), "synthetic": snap["synthetic"]} if snap else None,
+        "notice": out.get("notice") or "",
+    }

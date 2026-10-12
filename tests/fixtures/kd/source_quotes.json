@@ -1,0 +1,290 @@
+{
+  "note": "원천 앱이 저장한 합성 데모 결과(읽기 전용 사본). 생성: migration/source_expected.py — 손질 금지",
+  "rows": [
+    {
+      "cost_snapshot": {
+        "labor_per_hour": 45000.0,
+        "markup": 0.15,
+        "scrap_rate": 0.08,
+        "vat_rate": 0.1
+      },
+      "created_at": "2026-09-19T06:16:30.837061+00:00",
+      "features": {
+        "complexity": 3.0,
+        "cut_m": 24.0,
+        "mass_kg": 650.0,
+        "material": "STS316L",
+        "product": "반응기",
+        "thickness_mm": 6.0,
+        "weld_m": 18.0
+      },
+      "hours_per_unit": 1.0275,
+      "input": {
+        "bom": [
+          {
+            "mass_kg": 320.0,
+            "material": "STS316L",
+            "name": "SHELL",
+            "price_kg": 6500.0,
+            "quantity": 1
+          },
+          {
+            "mass_kg": 90.0,
+            "material": "STS316L",
+            "name": "HEAD",
+            "price_kg": 6500.0,
+            "quantity": 2
+          },
+          {
+            "mass_kg": 110.0,
+            "material": "STS304",
+            "name": "JACKET",
+            "price_kg": 4500.0,
+            "quantity": 1
+          },
+          {
+            "mass_kg": 10.0,
+            "material": "SS400",
+            "name": "SUPPORT",
+            "price_kg": 1100.0,
+            "quantity": 4
+          }
+        ],
+        "complexity": 3.0,
+        "cut_m": 24.0,
+        "drawing_id": "CAD-1858970fd2d8",
+        "labor_rate": 45000.0,
+        "material": "STS316L",
+        "outsource_cost": 0.0,
+        "product": "반응기",
+        "quantity": 1,
+        "review_note": "브라우저 기능 검증용 합성 데모입니다. 실제 승인 아님.",
+        "reviewed": true,
+        "thickness_mm": 6.0,
+        "weld_m": 18.0
+      },
+      "labor_cost": 46238,
+      "lines": [
+        {
+          "cost": 2246400,
+          "mass_kg": 320.0,
+          "material": "STS316L",
+          "name": "SHELL",
+          "price_kg": 6500.0,
+          "quantity": 1,
+          "weight_total": 320.0
+        },
+        {
+          "cost": 1263600,
+          "mass_kg": 90.0,
+          "material": "STS316L",
+          "name": "HEAD",
+          "price_kg": 6500.0,
+          "quantity": 2,
+          "weight_total": 180.0
+        },
+        {
+          "cost": 534600,
+          "mass_kg": 110.0,
+          "material": "STS304",
+          "name": "JACKET",
+          "price_kg": 4500.0,
+          "quantity": 1,
+          "weight_total": 110.0
+        },
+        {
+          "cost": 47520,
+          "mass_kg": 10.0,
+          "material": "SS400",
+          "name": "SUPPORT",
+          "price_kg": 1100.0,
+          "quantity": 4,
+          "weight_total": 40.0
+        }
+      ],
+      "markup_cost": 620754,
+      "mass_kg": 650.0,
+      "material_cost": 4092120,
+      "model": "Ridge",
+      "model_version": "kd-cad-demo-2026.09",
+      "outsource_cost": 0,
+      "ref": "quotes/QT-da58bcaf288e",
+      "source_bom": [
+        {
+          "mass_kg": 320.0,
+          "material": "STS316L",
+          "name": "SHELL",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 90.0,
+          "material": "STS316L",
+          "name": "HEAD",
+          "quantity": 2,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 110.0,
+          "material": "STS304",
+          "name": "JACKET",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 10.0,
+          "material": "SS400",
+          "name": "SUPPORT",
+          "quantity": 4,
+          "source": "REG-002"
+        }
+      ],
+      "subtotal": 4759112,
+      "total": 5235023,
+      "vat": 475911
+    },
+    {
+      "cost_snapshot": {
+        "labor_per_hour": 45000.0,
+        "markup": 0.15,
+        "scrap_rate": 0.08,
+        "vat_rate": 0.1
+      },
+      "created_at": "2026-09-19T06:24:23.150802+00:00",
+      "features": {
+        "complexity": 3.0,
+        "cut_m": 24.0,
+        "mass_kg": 650.0,
+        "material": "STS316L",
+        "product": "반응기",
+        "thickness_mm": 6.0,
+        "weld_m": 18.0
+      },
+      "hours_per_unit": 58.146,
+      "input": {
+        "bom": [
+          {
+            "mass_kg": 320.0,
+            "material": "STS316L",
+            "name": "SHELL",
+            "price_kg": 6500.0,
+            "quantity": 1
+          },
+          {
+            "mass_kg": 90.0,
+            "material": "STS316L",
+            "name": "HEAD",
+            "price_kg": 6500.0,
+            "quantity": 2
+          },
+          {
+            "mass_kg": 110.0,
+            "material": "STS304",
+            "name": "JACKET",
+            "price_kg": 4500.0,
+            "quantity": 1
+          },
+          {
+            "mass_kg": 10.0,
+            "material": "SS400",
+            "name": "SUPPORT",
+            "price_kg": 1100.0,
+            "quantity": 4
+          }
+        ],
+        "complexity": 3.0,
+        "cut_m": 24.0,
+        "drawing_id": "CAD-d0c940a70495",
+        "labor_rate": 45000.0,
+        "material": "STS316L",
+        "outsource_cost": 0.0,
+        "product": "반응기",
+        "quantity": 1,
+        "review_note": "최신 모델 모바일 검증용 합성 데모. 실제 승인 아님.",
+        "reviewed": true,
+        "thickness_mm": 6.0,
+        "weld_m": 18.0
+      },
+      "labor_cost": 2616570,
+      "lines": [
+        {
+          "cost": 2246400,
+          "mass_kg": 320.0,
+          "material": "STS316L",
+          "name": "SHELL",
+          "price_kg": 6500.0,
+          "quantity": 1,
+          "weight_total": 320.0
+        },
+        {
+          "cost": 1263600,
+          "mass_kg": 90.0,
+          "material": "STS316L",
+          "name": "HEAD",
+          "price_kg": 6500.0,
+          "quantity": 2,
+          "weight_total": 180.0
+        },
+        {
+          "cost": 534600,
+          "mass_kg": 110.0,
+          "material": "STS304",
+          "name": "JACKET",
+          "price_kg": 4500.0,
+          "quantity": 1,
+          "weight_total": 110.0
+        },
+        {
+          "cost": 47520,
+          "mass_kg": 10.0,
+          "material": "SS400",
+          "name": "SUPPORT",
+          "price_kg": 1100.0,
+          "quantity": 4,
+          "weight_total": 40.0
+        }
+      ],
+      "markup_cost": 1006304,
+      "mass_kg": 650.0,
+      "material_cost": 4092120,
+      "model": "Ridge",
+      "model_version": "kd-cad-demo-2026.09.1",
+      "outsource_cost": 0,
+      "ref": "quotes/QT-c32bb3ece4ad",
+      "source_bom": [
+        {
+          "mass_kg": 320.0,
+          "material": "STS316L",
+          "name": "SHELL",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 90.0,
+          "material": "STS316L",
+          "name": "HEAD",
+          "quantity": 2,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 110.0,
+          "material": "STS304",
+          "name": "JACKET",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 10.0,
+          "material": "SS400",
+          "name": "SUPPORT",
+          "quantity": 4,
+          "source": "REG-002"
+        }
+      ],
+      "subtotal": 7714994,
+      "total": 8486493,
+      "vat": 771499
+    }
+  ],
+  "source": "data/kyungdong.sqlite3"
+}

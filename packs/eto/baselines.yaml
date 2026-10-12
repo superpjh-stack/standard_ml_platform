@@ -1,0 +1,3 @@
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (pack-contract §3). 이관 대조(M5) 뒤 아키텍트가 값을 적는다 — 비어 있으면 G2-P01 FAIL.
+labor_hours:     {metric: mae,  value: null, measured_by: null, source_reported: 4.1071}   # 원천 docs/verification.md:23 (시험 MAE)
+drawing_regions: {metric: null, value: null, measured_by: null, source_reported: null}     # labels: none — 지표 없음(G2-E01)

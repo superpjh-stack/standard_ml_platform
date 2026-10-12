@@ -245,3 +245,59 @@ def fit_calibrator(method, p_valid, y_valid) / apply_calibrator(method, cal, p) 
 | 이관 지표 | 변화 0 — ks.remaining_hours MAE 5.5683 · RMSE 6.9793 · R² 0.9199 / ks.failure_24h Brier 0.0576 · AUC 0.6444 · AP 0.1426 / sw.delta_e MAE 0.5569 · RMSE 0.7088 · R² 0.7222 / sw.defect_risk Brier 0.1261 · AUC 0.8686 · AP 0.7823 / flag_rate ks 0.1389 · sw 0.1458. 분할 432/144/144 · `cut_moved` 없음 | scratchpad 스크립트(read_frame → StandardTrainer) |
 
 남은 일: D-85 아키텍트 확인(거부 대 계약 예외) · interfaces §2.2 해시 v2 문구 · tenant-contract `read_role` 키(아키텍트) · 실 계정 SELECT 전용 역할(사람, D-13) · 기존 ml_db 등록 모델은 v1 스냅숏 ID 그대로(재학습하면 새 run).
+
+## §7 2차 웨이브 P — 개발1 (2026-10-13, 기준 커밋 283dd31 위 작업 트리 · 커밋 안 함)
+
+### §7.1 공표 — 대기열 학습 측 · 모델 추출기 (다른 담당이 부르는 시그니처)
+
+```python
+# mlcore/train/review.py — 항목 초안만(DB 쓰기 · item_id · state 는 B09 개발2 · 일정 작업 개발3)
+ORIGINS = ("test_split", "live_residual"); ITEM_KEYS = (task, entity_id, prediction_id, model_version, predicted, actual,
+                                                        residual, rule, threshold, reason, origin)
+class QueueLeak(TestLeak)                       # 학습 · 검증 · 표본 내 출처, quantile_from ≠ valid, 과제가 안 켠 출처
+parse_rule(rule) -> (kind, value)               # {abs_residual_ge: x≥0} | {top_quantile: 0<q<1} 정확히 하나 — 아니면 ValueError
+threshold(rule, run_report=None, *, quantile_from="valid", ledger=None) -> {rule, value, from, n, q}
+from_run(run_report, rule, *, task_id, model_version, origins, quantile_from="valid", max_items=50, reason=None, ledger=None) -> [item]
+from_live(pairs, rule, *, task_id, origins, run_report=None, quantile_from="valid", max_items=50, reason=None, ledger=None) -> [item]
+live_pairs(conn, tenant_id, uses_task_id, *, version=None, since=None) -> [{prediction_id, entity_id, model_version, predicted, actual}]
+residuals(predict, frame, *, fit_idx, score_idx, ledger=None) -> [row]   # 재적합 구간과 겹치면 InSampleEvaluation(평창식)
+# run 보고서(= mlp_train_run.report) 새 키 queue_residuals: {origin, source: final_eval, test: [{entity_id, ts, actual,
+#   predicted, residual}], valid_abs, valid_rows, valid_sha256} — regression · risk 만. GET /runs/{id} 는 요약(행 수)만.
+
+# mlcore/data/taskview.py — extract 학습 보기
+learn_view(task) -> TaskDef     # model: 블록 → features · candidates · candidate_params · split · target{name: model.target|label} · classes
+# 학습기: TRAINABLE += extract(model: 블록 있을 때만, 규칙만이면 NotTrainable). test_metrics = macro_f1 · accuracy(+ majority_class 기준선),
+#   보고서 extract_metrics = {labels, macro_f1, accuracy, class_f1, confusion_matrix{labels, matrix}, baseline{class_f1, …}}
+#   model.joblib = Pipeline.predict(X) → 클래스 이름(str), features.lock: task_type extract · classes · labels · baseline(최빈 클래스)
+#   labels: none → failed labels_none · report {labels: none, metrics: null} (시험 접근 0)
+# mlcore/train/metrics.py
+extract(y, pred, classes) · extract_detail(y, pred, classes) · extract_eval(pred, truth|None, classes, *, labels) -> {labels, metrics|None}
+```
+
+guard 변경(F13-1): 인덱스는 클로저(slot 없음) · 모르는 속성 조회는 ledger `getattr:<이름>` 후 TestLeak · `SplitPlan.boundaries` 에 `test_ts` 없음 →
+`GuardedTest.bounds()`(final_eval 뒤에만) · FORBIDDEN += `queue_scoring`. 1차 보고서 모양은 그대로(`split.boundaries.test_ts` 는 보고서에 남는다).
+
+### §7.2 실측
+
+| 항목 | 실측 | 명령 |
+|---|---|---|
+| G2-R01 | **PASS** — `tests/test_review_queue.py` 31 passed (시험 DB 끝까지 1 포함) · check_leakage PASS | `make gate2` |
+| 대기열 시험 내용 | 시험 잔차 = final_eval 행 그대로 · ledger `[final_eval, report]` · 검증 잔차 = 학습 구간 모델 독립 재계산 일치 · \|잔차\| ≥ 4 포함(≥) · 상위 10% = 검증 분위(시험 분위와 다름) · 시험 구간 교란에 임계값 불변 · 출처 6종 거부 + ledger `queue_scoring` · quantile_from 5종 거부 · 평창식 4변형(전체 재적합 같은 데이터 · 재적합 모델로 검증 행 · 보고서 위조 행/분위 · ledger 없음 · source 위조) 거부 · 운영 잔차 prediction_id 필수 · DB jsonb 보고서 · live_pairs SQL | `uv run pytest -q tests/test_review_queue.py` |
+| extract 모델 학습 | `tests/test_extract_model.py` 12 passed — 층화 960/320/320(클래스별 240/80/80) · 검증 macro-F1 선정 · 균형 4클래스 기준선 0.1(손 계산) · 불균형 최빈 클래스 · sklearn 독립 재계산 일치 · 시험 설명자 교란에 선정 불변 · labels none 지표 null · 모르는 클래스 failed · 결정성 | `uv run pytest -q tests/test_extract_model.py` |
+| F13-1 | **해결** — `tests/test_guard_bypass_r2.py` 5 passed (실행 4종 차단 + 정적 12사례 · 오탐 0 · src 위반 0). QA-R2 재현 스크립트: 여집합만 실행 시 복원 가능(정적이 잡음, 원리상 막을 수 없음 — D2-41) · 나머지 PASS | `PYTHONPATH=src:. uv run python outputs/qa-r2/qa1/guard_bypass_r2.py` |
+| 화면 7 | `web/src/screens/Sources.tsx` + `screens/index.ts` 7번 행 · e2e `tests/e2e/test_console_sources.py` 4 passed(ks · sw — doctor 표 = API · 스냅숏 행 · sha · 합성 = models/runs · 1024px 가로 스크롤 0 · viewer 403 그대로) · 화면 4 에 extract 클래스별 F1 · 혼동행렬 | `uv run pytest -q tests/e2e/test_console_sources.py` · `npx tsc --noEmit` |
+| 전체 시험 | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` **624 passed · 8 failed · 3 skipped** — 실패 8 은 전부 다른 담당 진행 중: `test_api_contract::test_phase2_routes_are_501` 7(개발2 B09~B11 구현 → 1차 501 시험) · `test_predict_validation::test_reject_policy…` 1(개발3 F20-4 덮어쓰기 키 검사 R1 이 `out_of_range` 거부). 개발1 시험 실패 0 | 이번 회전 |
+| make gate (1차) | PASS 20 · FAIL 3 · BLOCKED 1 — FAIL 3 은 개발2 진행 중 파일: G-S06(`tests/test_quote.py` 호스트 'x') · G-M01(`tasks/dxf.py` · `serve/documents.py` · `api/routers/phase2.py` 의 'kd') · G-M09(`api/routers/phase2.py:54` decide 호출처 2). G-M05 PASS(래퍼 자체 시험 20→21 — queue_scoring) | `make gate2` 1차 절 |
+| make gate2 | 합계 PASS 24 · FAIL 15 · BLOCKED 2. **G2-R01 FAIL → PASS** · G2-H01 열림 15 → 6(F13-1 은 개발1 몫) | `make gate2` |
+
+### §7.3 요청 (decisions.md D2-41~D2-44)
+
+- 아키텍트: D2-41 check_leakage 패턴 7행 추가(사유 기록) 확인 · D2-42 interfaces §3 `Purpose` 에 `queue_scoring` · D2-44 task-contract §6.2 `model.target`(라벨 열 이름) 키 추가 여부.
+- 개발2(B09): test_split 항목 = `review.from_run(GET run 보고서, 과제 rule, origins…)` → mlp_review_item INSERT(version = 모델 버전 · rule · threshold 채움). 추출기 model 은 `model.joblib.predict(X[order])` → 클래스 이름.
+- 개발3: 일정 작업 live_residual = `review.live_pairs` → `review.from_live(…, run_report=production run 보고서)` · 같은 prediction_id 1회. `monitor.daily.live_performance` 는 extract(macro_f1)에서 NotImplementedError — extract 는 실측 성능 대상 밖으로 거를 것. doctor `_probe_fixture` 가 extract 과제 변수를 `task.raw["features"]` 로 읽는다 — `mlcore.data.taskview.learn_view(task)` 를 거칠 것. 팩 `rollform-quote` 객체 분류 합성 생성기 라벨 열 = `label`(또는 `model.target`).
+- CSV 업로드 API 가 계약에 없다 — 화면 7 은 등록된 csv 소스만 보인다(지어내지 않음).
+
+### §7.4 남은 일
+
+- A2: 팩 `solder` · `kimchi` 학습 과제 · 4개사 이관 재현(`migration/reproduce.py`) — pc 재측정 값 병기(D2-02) · krs IQR 학습 구간(D2-03).
+- ot 실데이터(1,600 설명자 합성) 로 extract 학습은 팩 생성기가 생기면 G2-E01 · 이관 대조에서.

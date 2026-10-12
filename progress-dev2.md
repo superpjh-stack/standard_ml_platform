@@ -3,6 +3,93 @@
 > 담당: `src/mlcore/registry/models.py` · `registry/artifacts.py`(interfaces §5 경로) · `serve/*` · `tasks/*` · `approval/` · `audit/` · `auth/` · `api/{main,middleware,errors}.py` · `api/routers/{models,predict,train}.py`
 > 시험: `tests/test_registry.py` · `tests/test_approval.py` · `tests/test_trace.py` · `tests/test_predict_*.py` · 공용 도우미 `tests/_dev2.py`
 
+## 2차 §1 공표 — 웨이브 P (2026-10-13, 기준 커밋 283dd31) — 추출기 · 견적식 플러그인 · 공용 컴포넌트
+
+> 개발1(모델 추출기 학습 · 화면 7) · 개발3(팩 `eto` · `rollform-quote` 추출기 · 견적식)이 이 모양을 따른다. 계약 정본은 `task-contract.md` §6.2 · §6.3 · `predict-contract.md` §8 — 아래는 그 구현 시그니처다(계약 기대값과 같고, 더한 것은 선택 키뿐).
+
+### 2.1.1 추출기 — `packs/<pack>/extractors/<name>.py` (코어 로더 `mlcore.tasks.extract`)
+
+```python
+# 모듈 수준 (task-contract §6.2 그대로)
+NAME = "cad_regions"; VERSION = "1.0.0"; KIND = "rule"            # 또는 "model"
+def extract(raw: bytes, filename: str, *, unit: str, limits: dict, model=None) -> dict: ...
+
+# 코어 프로토콜 (mlcore/tasks/extract.py) — 위 모듈이 그대로 만족한다
+class Extractor(Protocol):
+    NAME: str; VERSION: str; KIND: Literal["rule", "model"]
+    def extract(self, raw: bytes, filename: str, *, unit: str, limits: dict, model: LoadedModel | None = None) -> dict: ...
+class ExtractError(ValueError):            # 추출기가 올린다 — code = "invalid_document"(422) | "document_too_large"(413)
+    def __init__(self, code: str, rule: str, message: str = ""): ...   # rule = format·binary·parse·unit / bytes·entities·vertices·points
+```
+
+**입력** (코어가 미리 검사한 뒤 부른다 — 추출기는 같은 검사를 다시 하지 않아도 된다):
+- `raw` — 업로드 원본 바이트(≤ `limits.max_bytes`). 코어가 이미 확인: 확장자 `.dxf` · 바이너리 DXF 아님 · 텍스트 해독(UTF-8-sig → cp949 → cp1252) · 그룹 코드 쌍 파싱 · 모델 공간 엔티티 수 ≤ `limits.max_entities`.
+- `filename` — 경로를 뗀 150자 이하 이름.
+- `unit` — **코어가 정한 원본 단위** `"mm" | "inch" | "cm" | "m"`: 헤더 `$INSUNITS` 1·4·5·6 이 있으면 헤더(우선), 없거나 0 · 그 밖이면 요청 `unit_override`(mm · inch), 둘 다 없으면 코어가 422 `invalid_document`(rule `unit`) — 추출기까지 오지 않는다. mm 환산 배수 `mlcore.tasks.dxf.SCALE_TO_MM[unit]`.
+- `limits` — `{"max_bytes", "max_entities", "unit_override"}` (과제 `document` 상한, 팩 · 회사가 낮춘 값). 팩 고유 상한(꼭짓점 · 점 수)은 추출기가 보고 넘치면 `ExtractError("document_too_large", "vertices"|"points")`.
+- `model` — `KIND == "model"` 일 때만. 그 extract 과제의 **등록부 production 산출물**(`registry.artifacts.load_artifacts` 의 `LoadedModel`: `.model` · `.lock`). production 이 없으면 코어가 503 `model_not_ready`(추출 전체를 하지 않는다 — 규칙 결과만으로 꾸미지 않는다).
+- 코어 DXF 읽개(선택 사용): `mlcore.tasks.dxf.read(raw, max_entities=...) -> DxfDoc{header: dict, entities: list[Entity{type, layer, codes: list[(int, str)]}], entity_count, encoding}` — ezdxf 없이 ASCII DXF 그룹 코드만 읽는다(외부 의존 0). 추출기가 ezdxf 를 쓰려면 의존성 추가 요청(아키텍트 — G-S07).
+
+**출력** (dict — 모르는 키는 버리지 않고 422 아님, 코어가 계약 키만 골라 담는다):
+`{"regions": [...], "objects": [...], "bom_rows": [...], "confidence": float | None, "counts": {str: int}, "dimensions": {...} | None, "warnings": [str]}`
+— 항목 모양은 predict-contract §8.2(`regions[]` 필수 `id · label · bbox · texts · evidence · status`, `objects[]` 필수 `id · label · model_label · confidence · bbox · review_reason`, `bom_rows[]` 필수 `name · material · quantity · mass_kg · source`). 쓰지 않는 칸은 빈 배열. 좌표는 mm.
+**합침** (과제 `extractors` 순서대로): 배열은 이어 붙임 · `counts` 는 키별 합 · `dimensions` 는 처음의 non-null · `confidence` 는 model 추출기 값의 평균(규칙만이면 null) · `warnings` 이어 붙임. 응답 `extractor[]` = `{name, version, kind, model_version}`.
+**금지:** 원본을 쓰지 않는다 · 네트워크 0 · 라벨 없으면(`labels: none`) 지표를 만들지 않는다(코어가 `metrics: null` 강제).
+
+### 2.1.2 견적식 — `packs/<pack>/formulas/<module>.py` (코어 로더 `mlcore.tasks.quote`)
+
+```python
+def quote(inputs: dict, lines: list[dict], predicted: dict[str, Decimal], rates: dict[str, Decimal]) -> dict: ...
+def prepare(inputs: dict, lines: list[dict]) -> dict: ...      # 선택 — 예측 전 파생 입력(예: Σ 품목 중량 → 회귀 입력). 순수 · Decimal
+```
+- `inputs` 값: JSON 숫자는 **`Decimal`**(요청을 `json.loads(parse_float=Decimal)` 로 읽는다 — float 를 거치지 않는다), 정수는 `int`, 범주는 `str`. `lines` 안 숫자도 같다.
+- `predicted` = `{<uses 과제 짧은 이름>: Decimal(str(예측값))}` — 예: `{"labor_hours": Decimal("58.14612…")}`. 반올림(원천 소수 4자리)은 견적식이 한다.
+- `rates` = 과제 `rates`(회사 덮어쓰기 병합 뒤) 를 `Decimal(문자열)` 로.
+- 반환: `{"lines": [{"name": str, "amount": Decimal, ...}], "costs": {name: Decimal}, "total": Decimal, "predicted": {name: Decimal}?}` — 금액은 **원 단위 정수 Decimal**(코어가 `amount == amount.to_integral_value()` 를 확인, 아니면 500 · float 이면 500). `predicted`(선택)는 견적에 실제 쓴 값(응답 `predictions[].value`), 없으면 받은 값 그대로.
+- 규칙: `Decimal` · `quantize(..., rounding=ROUND_HALF_UP)` 만, float 리터럴 · `float()` · `round()` · `math` 0 (`gates/check_decimal.py`).
+
+### 2.1.3 화면 7~10 공용 컴포넌트 — `web/src/components/` (개발2 소유, `index.ts` 에서 내보낸다)
+
+| 컴포넌트 · 함수 | 모양 | 쓰는 화면 |
+|---|---|---|
+| `useList<T>(path)` | `{items, total, next, loadMore, reload, error, loading}` — `{items, next_cursor}` 목록 + 커서 | 7 · 8 · 9 · 10 |
+| `apiUpload<T>(path, form: FormData)` | multipart POST, 오류 봉투 → `ApiError` | 9 (7 의 CSV 업로드도 같은 함수) |
+| `Money({value})` · `MoneyTable({costs, total, lines?, currency})` | 원 단위 **문자열**을 그대로 · 천 단위 구분만(문자열 연산 — Number 변환 0) | 9 |
+| `DocumentViewer({doc})` | SVG 미리보기(영역 · 객체 bbox) + 영역 / 객체 / BOM 표 + `LabelsNotice` | 9 |
+| `LabelsNotice({labels, metrics})` | `labels: none` → "정답 라벨 없음 — 지표 없음 (labels: none)" | 7 · 9 |
+| `KeyValue({rows})` | `dl.kv` 표 | 7 · 8 · 10 |
+| `IdLink({id})` | `prd_…` → `/app/trace?prediction_id=…` | 8 · 9 |
+| `StateBadge` (확장) | 대기열 `open · confirmed_issue · false_alarm` · 견적 `draft · pending_confirm · confirmed` 추가 | 8 · 9 |
+| 타입 `ReviewItem` · `DocumentExtraction` · `Quote` | predict-contract §8.1~8.3 그대로 | 8 · 9 |
+
+기존 `ConnectionBar` · `ErrorBox` · `TaskPicker({types})` · `MetricTable` · `StatusBadge` · `SyntheticBadge` · `FeatureForm` 은 그대로.
+
+## 2차 §2 웨이브 P 실측 (2026-10-13, 기준 커밋 283dd31 + 미커밋 · 커밋 안 함)
+
+### 한 일 (담당 파일만)
+- **추출 서비스** `tasks/dxf.py`(ASCII DXF 읽개 — 바이너리 · 파싱 · 엔티티 상한 · 단위) · `tasks/extract.py`(Extractor 프로토콜 · 로더 · 합침) · `serve/documents.py`(업로드 → 상한 413 · 422 rule format/binary/parse/unit · 원본 `var/documents/<tenant>/<sha>.dxf`(`MLP_DOCUMENT_DIR`) · `mlp_document` size/entity_count/labels · labels none → metrics null).
+- **견적** `serve/quotes.py`(Decimal · ROUND_HALF_UP 만 — check_decimal 통과, 요청 `parse_float=Decimal`, 응답 `serve/jsonout.py` 로 Decimal 그대로 · 금액 문자열) — 초안 → revisions(overrides 누적) → confirm(reviewed + 메모 ≥ 5자 → pending_confirm + 승인 kind=quote) → B13 decide(approver 이상) → confirmed 새 행 · 반려/만료 → draft 새 행 · 409 quote_locked · CSV(BOM · 수식 주입 방지). `approval/__init__.py` 에 quote 결정 · 만료 되돌림, F20-5(TTL inf · nan · > 1년 거부). `serve/validate.ml_inputs`(모델 입력 경계 변환).
+- **대기열 B09** `serve/review.py`(목록 · 판정 open → confirmed_issue|false_alarm 한 번, 409 already_decided, 감사).
+- **API** `api/routers/phase2.py`(B09 · B10 · B11 — api-contract §6 경로 11, multipart 는 표준 email 파서 · 스트림 상한), `v1.py` 501 스텁 제거, `serve/predict.py` 2차 유형 predict 404 `type_route`.
+- 포크: Agent 어댑터 `integrations/agent_tools.py` + optimize `request_approval` · trace `?view=explain` · 화면 8 · 9 · 10 + `web/src/components/Phase2.tsx` 등(2차 §1.3) · F7-4 · F7-11 · F7-12 · F16-8 · F16-9 · F19-3 · F20-1 · F20-2.
+- 시험: `tests/test_types_phase2.py` 15 · `tests/test_extract.py` 16 · `tests/test_quote.py` 10 · `tests/test_agent_tools.py` 7 · `tests/test_followups_dev2.py` · `tests/test_web_followups.py` · `tests/e2e/test_console_phase2.py` 8 · `test_api_contract.py` +2(phase2 경로 type_route · 역할/범위/목록). 시험 팩 도우미 `tests/_phase2.py`(시험용 추출기 · 견적식 — 원천 식 아님). `test_predict_validation` 의 out_of_range 덮어쓰기 → 병합 결과 직접(F20-4 로더가 모르는 키 거부).
+
+### 실측
+| 항목 | 값 | 명령 |
+|---|---|---|
+| pytest | **724 passed · 3 skipped · 0 failed** (기준 462) | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| e2e | 22 passed | `uv run pytest -q tests/e2e` |
+| 빌드 | 통과 | `cd web && npm run build` |
+| make gate (1차 24행) | PASS 22 · FAIL 1(G-M14) · BLOCKED 1 — G-M14 는 bench compose 의 db 초기화 실패: 개발3 F7-7 의 `docker/initdb/20-app-login.sh` 가 `MLP_DB_APP_USER/PASSWORD` 를 요구하는데 `gates/bench.py` 임시 env 에 없다(내 변경과 무관, 수동 재현 `dependency db failed to start`) | `make gate2` 1차 절 |
+| make gate2 | G2-E01 · G2-Q01 · G2-I01 **PASS**(P0 FAIL), G2-T01 · G2-A01 · G2-S01 은 남은 사유가 계약 표(§1 단계 · screen-map ○)뿐, G2-H01 열림 1(F7-5 아키텍트) | `make gate2` |
+
+### 요청
+- **아키텍트:** ① api-contract §1 의 B09~B11 행을 단계 1 로 + §6 행 합치기(코드 · 시험 준비됨 — `test_phase2_routes_exist_and_route_by_type` 는 P2 0 이 되면 자동으로 빈다) ② screen-map 7~10 `○` ③ `gates/bench.py` compose env 에 앱 LOGIN 변수(D-123) ④ `check_routes` 문구 "2차 501 3/3" → 경로 존재 ⑤ (선택) `mlp_prediction.channel` CHECK 에 `quote` — 지금은 견적 예측을 `api` 로 기록 ⑥ (선택) `auth.allowed_sub(role, area, sub)` — 하위 권한표(explain_view · quotes.confirm) 판정(지금은 trace.py 도우미).
+- **개발3:** ① 과제 상세(GET …/tasks/{task})에 quote 의 `inputs` · `recognized` · `rates`, extract 의 `document` 를 내 주면 화면 9 가 인식값을 폼에 채운다 ② 팩 추출기 · 견적식은 2차 §1.1 · §1.2 모양(견적 `inputs` 중 features.yaml 밖 이름은 0 이상 수치로 검증, 예측 전 파생은 `prepare`) ③ 견적식 원천 대조 fixture 가 생기면 `tests/test_quote.py` · `test_extract.py` 에 원천 일치 시험을 더한다(개발2).
+
+### 남은 일
+G2-E01 의 원천 추출기 결과 일치 · G2-Q01 의 원천 견적 원 단위 대조(팩 생긴 뒤) · 감사 행 조회 API(계약에 없음 — 화면 10 은 trace 의 caller/channel/ts 만) · 4개사 호환 라우터(A2).
+
 ## §1 공표 (웨이브 A0 첫 작업 — 2026-10-12)
 
 `contracts/interfaces.md` §5 · §6 · §7 을 그대로 구현한다. 더한 것은 **선택 키워드 인자**뿐이다(기존 호출을 깨지 않는다).

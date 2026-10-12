@@ -1,0 +1,3 @@
+# 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (pack-contract §3). 이관 대조(M5) 뒤 아키텍트가 값을 적는다 — 비어 있으면 G2-P01 FAIL.
+sensory_score:   {metric: mae,        value: null, measured_by: null, source_reported: null}   # 원천 기록 수치 없음 — 재측정이 정본(D2-02)
+residual_review: {metric: queue_size, value: null, measured_by: null, source_reported: null}

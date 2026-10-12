@@ -126,9 +126,19 @@ class Compat:
 
     def _need(self, ttype: str):
         s = self.bundle.get(ttype)
+        if s is None and self._disabled(ttype):      # 꺼진 과제 = 표준과 같은 503 model_not_ready (DEF-QAR2-002 · D-120a)
+            raise CompatError(503, {"detail": "이 과제는 꺼져 있어 운영 모델을 쓸 수 없습니다", "code": "model_not_ready"})
         if s is None:
             raise CompatError(404, {"detail": "이 회사에는 해당 과제가 켜져 있지 않습니다"})
         return s
+
+    def _disabled(self, ttype: str) -> bool:
+        """병합에서 꺼진 과제(R4 등) 중 이 유형이 있는가 — 유형은 팩 과제 정의에서 읽는다."""
+        for tid in (getattr(self.merged, "disabled", None) or {}):
+            raw = (self.merged.pack.tasks or {}).get(tid.split(".", 1)[-1]) or {}
+            if raw.get("type") == ttype:
+                return True
+        return False
 
     # ── 옛 묶음 예측 ──────────────────────────────────────────────────────
     def predict(self, body: Any, *, caller: str) -> dict:
@@ -172,7 +182,8 @@ class Compat:
         key = self._target_key(reg_spec)
         out = {key: self._round(key, "regression", reg["prediction"]["value"]) if reg else None}
         out["risk_probability"] = self._round("risk_probability", "risk", risk["probability"]) if risk else None
-        out["anomaly"] = bool(ano["anomaly"]["flag"]) if ano and ano["anomaly"]["flag"] is not None else False
+        # 예측하지 않은 anomaly(rejected · flag null) 는 false 가 아니라 null — 판정이 없음을 숨기지 않는다 (F7-12)
+        out["anomaly"] = bool(ano["anomaly"]["flag"]) if ano and ano["anomaly"]["flag"] is not None else None
         out["status"] = self.status_text.get("review", "review") if msgs else self.status_text.get("ok", "ok")
         out["warnings"] = msgs
         out["imputed_fields"] = imputed
@@ -390,25 +401,35 @@ class Compat:
 
     # ── 옛 기록 목록 ──────────────────────────────────────────────────────
     def _frame(self):
-        from ...data import snapshot
+        """옛 records 행 — B12 records 와 **같은 행 함수**(api/routers/ops.py `_frame`: 회사 mode 소스의 표준 프레임, D-81).
+        열 순서는 옛 demo_data 순서: 변수(과제 순서, 옛 키) → 회귀 목표 → risk 목표 → lot_id → recorded_at."""
         import pandas as pd
-        rs, rref, _ = self._prod("regression")
-        if rref is None:
-            raise CompatError(503, {"detail": "운영(production) 모델이 없습니다", "code": "model_not_ready"})
-        base = snapshot.load(rref.snapshot_id)
+        from ...api.routers.ops import _frame as b12_frame
+        rs = self._need("regression")
+        try:
+            base = b12_frame(self.merged, self.merged.tasks[rs.task.id])
+        except ServeError as e:
+            if e.status == 503:
+                raise CompatError(503, {"detail": e.message, "code": e.code}) from None
+            raise
         key = self._target_key(rs)
-        df = pd.DataFrame({"lot_id": base["entity_id"].astype(str),
-                           "recorded_at": pd.to_datetime(base["ts"]).dt.strftime("%Y-%m-%dT%H:%M:%S%z")
-                           .str.replace(r"(\+\d\d)(\d\d)$", r"\1:\2", regex=True)})
+        df = pd.DataFrame(index=range(len(base)))
         for f in rs.defs:
             df[self.back.get(f.name, f.name)] = base[f.name].to_numpy()
         df[key] = base["target"].to_numpy()
-        ks_, kref, _ = self._prod("risk")
-        if kref is not None:
-            other = snapshot.load(kref.snapshot_id)
-            m = dict(zip(other["entity_id"].astype(str), other["target"]))
-            df[self._target_key(ks_)] = df["lot_id"].map(m)
-        df["lot_id"] = df["lot_id"].map(self.lot_id)                 # 옛 LOT 번호 형식 (DEF-QA3-003)
+        risk = self.bundle.get("risk")
+        if risk is not None:
+            try:
+                other = b12_frame(self.merged, self.merged.tasks[risk.task.id])
+                m = dict(zip(other["entity_id"].astype(str), other["target"]))
+                df[self._target_key(risk)] = base["entity_id"].astype(str).map(m).to_numpy()
+            except ServeError as e:
+                if e.status != 503:
+                    raise
+                df[self._target_key(risk)] = None                    # risk 소스 미연결 — 값을 지어내지 않는다
+        df["lot_id"] = base["entity_id"].astype(str).map(self.lot_id).to_numpy()   # 옛 LOT 번호 형식 (DEF-QA3-003)
+        df["recorded_at"] = (pd.to_datetime(base["ts"]).dt.tz_convert("Asia/Seoul").dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+                             .str.replace(r"(\+\d\d)(\d\d)$", r"\1:\2", regex=True).to_numpy())
         return df
 
     def lot_id(self, entity_id: str) -> str:
@@ -483,10 +504,13 @@ class Compat:
         for ttype, spec in self.bundle.items():
             try:
                 ref = self.registry.get(self.catalog.tenant_id, spec.task.id)
+                self.catalog.require_servable(self.catalog.tenant_id, spec.task.id, ref)   # live + 합성 = 준비 안 됨 (DEF-QAR2-001)
                 synthetic = synthetic or ref.synthetic
                 if ttype == "regression":
                     version = ref.version
             except ModelNotReady:
                 ready = False
+        if any(self._disabled(t) and t not in self.bundle for t in BUNDLE_TYPES):
+            ready = False
         return {"status": "ok", "model_ready": ready,
                 "data_mode": "synthetic_demo" if synthetic else self.merged.tenant.config.get("mode"), "version": version}

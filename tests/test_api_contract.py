@@ -71,12 +71,17 @@ def _envelope(r, status: int, code: str):
 
 
 @pytest.mark.parametrize("row", P2, ids=[f"{r['bundle']}-{r['method']}-{r['path']}" for r in P2])
-def test_phase2_routes_are_501(world, row):
+def test_phase2_routes_exist_and_route_by_type(world, row):
+    """웨이브 P(goal2 G2-T01 "2차 유형 경로의 501 은 0"): §1 의 B09~B11 행은 앱에 있고, 1차 유형 과제로 부르면
+    501 이 아니라 404 not_found(detail.rule type_route — api-contract §6.1 · D2-20). 아키텍트가 §1 단계를 1 로 바꾸면
+    이 행들은 P1 로 옮겨 test_phase1_route_exists 가 본다(그때 P2 = 0)."""
     m, task, ref, res, k, ko = world
+    assert (row["method"], row["path"]) in _app_routes()
     path = row["path"].replace("{t}", m.tenant.code).replace("{task}", task)
     path = re.sub(r"\{[a-z_]+\}", "x1", path)
     r = h.client(m).request(row["method"], path, headers=h.hdr(k["admin"]), json={} if row["method"] != "GET" else None)
-    _envelope(r, 501, "not_implemented")
+    e = _envelope(r, 404, "not_found")
+    assert e["detail"].get("rule") == "type_route", e
 
 
 # ── 오류 계약 (goal §2.3) ─────────────────────────────────────────────────────────────────────
@@ -194,3 +199,44 @@ def test_actuals_and_health_shapes(world):
     with connect() as c:
         assert c.execute("SELECT count(*) AS n FROM mlp_audit WHERE tenant_id = %s AND action LIKE 'POST %%actuals'",
                          (m.tenant.code,)).fetchone()["n"] >= 1           # 쓰기 요청 감사
+
+
+# ── 2차 B09 · B10 · B11 — 역할(goal2 §6) · 회사 범위 · 목록 모양 (G2-A01) ─────────────────────────────────
+@pytest.fixture(scope="module")
+def world2(tmp_path_factory):
+    import _phase2 as p2
+    m = p2.make_world(tmp_path_factory.mktemp("api2"))
+    h.to_production(m, p2.tid(m, "target_value"))
+    other = p2.make_world(tmp_path_factory.mktemp("api2-other"))
+    return m, h.keys(m), h.keys(other), p2
+
+
+def test_phase2_roles_scope_and_lists(world2):
+    m, k, ko, p2 = world2
+    tc = h.client(m)
+    t = m.tenant.code
+    rv = f"/api/v1/tenants/{t}/tasks/{p2.tid(m, 'value_review')}/review"
+    dc = f"/api/v1/tenants/{t}/tasks/{p2.tid(m, 'drawing')}/documents"
+    qt = f"/api/v1/tenants/{t}/tasks/{p2.tid(m, 'estimate')}/quotes"
+    item = p2.review_item(m)
+    # 화면 8 · B09: viewer ✕ · operator 조회 · approver(자기 과제) · admin 판정
+    _envelope(tc.get(rv, headers=h.hdr(k["viewer"])), 403, "forbidden")
+    for role in ("operator", "approver", "admin"):
+        body = tc.get(rv, headers=h.hdr(k[role])).json()
+        assert set(body) == {"items", "next_cursor", "total"}, (role, body)
+    _envelope(tc.patch(f"{rv}/{item}", headers=h.hdr(k["operator"]), json={"state": "false_alarm", "note": "x"}), 403, "forbidden")
+    # 화면 9 · B10 · B11: viewer ✕ · operator ○ (확정 결정 ✕ — test_quote.py)
+    for url in (dc, qt):
+        _envelope(tc.get(url, headers=h.hdr(k["viewer"])), 403, "forbidden")
+        for role in ("operator", "approver", "admin"):
+            body = tc.get(url, headers=h.hdr(k[role])).json()
+            assert set(body) == {"items", "next_cursor", "total"}, (role, url, body)
+    assert p2.upload(tc, m, k["operator"], p2.sample_dxf()).status_code == 201
+    q = tc.post(qt, headers=h.hdr(k["operator"]), json={"inputs": {"x1": 50, "x2": 50, "c1": "A", "quantity": 1}})
+    assert q.status_code == 201, q.text
+    # 다른 회사 키 · 401 · 오류 봉투
+    for url in (rv, dc, qt, f"{qt}/{q.json()['quote_id']}", f"{qt}/{q.json()['quote_id']}.csv"):
+        _envelope(tc.get(url, headers=h.hdr(ko["admin"])), 404, "not_found")
+        _envelope(tc.get(url), 401, "auth_required")
+    _envelope(tc.post(f"{qt}/{q.json()['quote_id']}/confirm", headers=h.hdr(ko["operator"]),
+                      json={"reviewed": True, "review_note": "다른 회사"}), 404, "not_found")

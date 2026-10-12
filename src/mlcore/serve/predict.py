@@ -14,7 +14,7 @@ import pandas as pd
 
 from ..registry.artifacts import ArtifactMismatch, load_artifacts
 from ..registry.models import ModelNotReady, ModelRef, Registry
-from ..tasks.base import kind_for, warn
+from ..tasks.base import PHASE2, kind_for, warn
 from .catalog import TaskCatalog, TaskSpec
 from .contract import to_contract
 from ..db.conn import connect
@@ -153,7 +153,9 @@ class Predictor:
         self.catalog.require_servable(tenant_id, task_id)                    # 꺼진 과제 → 503 (D-120a)
         spec = self.catalog.get(tenant_id, task_id)                          # 없는 과제 → 404
         if spec.task.type == "optimize":
-            raise NotFound("최적화 과제는 predict 가 아니라 optimize 로 부릅니다")
+            raise NotFound("최적화 과제는 predict 가 아니라 optimize 로 부릅니다", {"rule": "type_route", "field": None})
+        if spec.task.type in PHASE2:                                         # 2차 유형은 자원 경로(B09~B11) — D2-20
+            raise NotFound("이 과제 유형은 predict 로 부르지 않습니다", {"rule": "type_route", "field": None})
         kind_for(spec.task.type)                                             # 2차 유형 → 501
         self._check(spec, req)
         ref, loaded = self._model(spec, req.model_version)
@@ -170,7 +172,9 @@ class Predictor:
         self.catalog.require_servable(tenant_id, task_id)
         spec = self.catalog.get(tenant_id, task_id)
         if spec.task.type == "optimize":
-            raise NotFound("최적화 과제는 predict 가 아니라 optimize 로 부릅니다")
+            raise NotFound("최적화 과제는 predict 가 아니라 optimize 로 부릅니다", {"rule": "type_route", "field": None})
+        if spec.task.type in PHASE2:                                         # 2차 유형은 자원 경로(B09~B11) — D2-20
+            raise NotFound("이 과제 유형은 predict 로 부르지 않습니다", {"rule": "type_route", "field": None})
         kind_for(spec.task.type)
         items: list[dict | None] = [None] * len(reqs)
         groups: dict[str | None, list[int]] = {}

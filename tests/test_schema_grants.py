@@ -8,13 +8,14 @@ QA2 재현: 소유자 · 슈퍼유저가 `SET session_replication_role = replica
 - 트리거는 `ENABLE ALWAYS` — replica 모드에서도 돈다.
 - 권한 구간(`-- @grants-begin` 이후)은 **데이터를 지우지 않고** 기존 DB 에 다시 적용된다(`make db-grants`).
 
-전용 DB `ml_grants_check_db` 를 쓴다(없으면 만들고 schema.sql 을 처음 한 번 적용 — 새 DB 확인). 이미 있으면 schema.sql 을
-다시 적용하지 않는다(DROP 0). ml_db · ml_test_db 는 건드리지 않는다.
+시험마다 임시 DB `mlp_tmp_grants_<hex>` 를 만들어 schema.sql 전체를 처음 한 번 적용하고(새 DB 확인), 그 위에 데이터를 넣은 뒤
+보호 구간만 다시 적용해(기존 DB 확인 — `make db-grants` 와 같은 sed 구간) 본다. 끝나면 **시험이 만든 그 DB 만** 지운다
+(F7-8 — 예전 고정 DB `ml_grants_check_db` · `ml_grants_fresh_db` 가 남던 문제). ml_db · ml_test_db 는 건드리지 않는다.
 """
 
 from __future__ import annotations
 
-import os
+import secrets
 import shutil
 import subprocess
 import uuid
@@ -27,7 +28,8 @@ pytestmark = [pytest.mark.gate("G-M07")]
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "src" / "mlcore" / "db" / "schema.sql"
-DB = os.environ.get("MLP_GRANTS_DB") or "ml_grants_check_db"     # 새 DB 확인: MLP_GRANTS_DB=<없는 이름>
+TMP_PREFIX = "mlp_tmp_grants_"
+DB = f"{TMP_PREFIX}{secrets.token_hex(4)}"                       # 시험 세션마다 새 이름 — 끝나면 지운다(F7-8)
 HOST = "/tmp"
 APPEND_ONLY = ("mlp_prediction", "mlp_audit", "mlp_quote")
 MUTABLE = ("mlp_tenant", "mlp_task", "mlp_source", "mlp_snapshot", "mlp_train_run", "mlp_model_version", "mlp_actual",
@@ -50,21 +52,23 @@ def db():
         pytest.fail("psql 없음 — PostgreSQL 17 클라이언트가 필요하다")
     try:
         with _conn("postgres", autocommit=True) as c:
-            exists = c.execute("SELECT 1 FROM pg_database WHERE datname = %s", (DB,)).fetchone()
-            if not exists:
-                c.execute(f'CREATE DATABASE "{DB}"')
+            c.execute(f'CREATE DATABASE "{DB}"')
     except psycopg.OperationalError:
         pytest.fail("PostgreSQL(/tmp) 연결 불가")
-    fresh = not exists
-    if fresh:                                    # 새 DB — 스키마 전체를 처음 한 번
+    try:
         r = subprocess.run(["psql", "-h", HOST, "-v", "ON_ERROR_STOP=1", "-q", "-d", DB, "-f", str(SCHEMA)],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True)              # 새 DB — 스키마 전체를 처음 한 번
         assert r.returncode == 0, r.stderr
-    else:                                        # 기존 DB — 보호 구간만(비파괴) 적용한 상태에서 본다
-        r = subprocess.run(["psql", "-h", HOST, "-v", "ON_ERROR_STOP=1", "-q", "-d", DB], input=grants_section(),
-                           capture_output=True, text=True)
-        assert r.returncode == 0, r.stderr
-    return {"fresh": fresh}
+        yield {"fresh": True}
+    finally:                                                             # 시험이 만든 임시 DB 만(이름 접두 확인)
+        assert DB.startswith(TMP_PREFIX)
+        with _conn("postgres", autocommit=True) as c:
+            c.execute(f'DROP DATABASE IF EXISTS "{DB}" WITH (FORCE)')
+
+
+def test_temp_db_name_is_isolated():
+    """F7-8 — 고정 이름 DB 를 쓰지 않는다(ml_db · ml_test_db · 예전 ml_grants_* 와 다른 임시 이름)."""
+    assert DB.startswith(TMP_PREFIX) and DB not in ("ml_db", "ml_test_db", "ml_grants_check_db", "ml_grants_fresh_db")
 
 
 def _seed_one(c) -> str:

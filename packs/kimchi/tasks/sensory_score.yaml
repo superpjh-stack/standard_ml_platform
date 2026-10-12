@@ -1,0 +1,22 @@
+# 관능 점수 회귀 (task-contract §6.5 · source_inventory §9.3). 원천은 무작위 78/22 + 시험 구간 선정 + 전체 재적합(P1 · P2 · P3) —
+# 표준은 시각 열이 있으므로 time_60_20_20(D2-02), 선정은 검증 구간, 시험 1회. 원천의 표본 내 평가는 가져오지 않는다.
+id: kimchi.sensory_score
+type: regression
+title: 관능 점수 예측
+entity: lot
+time_key: produced_at          # 원천 12시간 간격 생산 시각
+group_key: null
+target: {name: sensory_score, unit: 점, direction: higher_is_better}
+features: [cabbage_pct, radish_pct, seasoning_pct, salt_pct, brine_salinity_pct, brining_hours, fermentation_temp_c, fermentation_hours, storage_temp_c, cabbage_origin, prod_line]
+thresholds: {review_below: 78.0}   # 원천 데모 검토 기준(예측 < 78 이면 "검토 필요")
+interval: {method: split_conformal, alpha: 0.1}
+candidates: [ridge, extra_trees, gbr]
+candidate_params:
+  ridge: {alpha: 1.0}
+  extra_trees: {n_estimators: 180, min_samples_leaf: 3}
+  gbr: {n_estimators: 140, max_depth: 2}
+split: time_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: quality_lead
+seed: 42

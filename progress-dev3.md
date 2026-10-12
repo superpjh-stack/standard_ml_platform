@@ -1,5 +1,49 @@
 # progress-dev3.md — 개발3 (팩 · 회사 · 감시 · 이관)
 
+## 2차 웨이브 P — 개발3 (2026-10-13, 기준 커밋 283dd31 위 작업 트리, 커밋 안 함) — 결정 D2-30 ~ D2-40
+
+### 2차 §1 공표 (다른 담당이 쓰는 모양)
+
+```python
+# mlcore/registry/packs.py — 유형 3 키 검사(task-contract §6.1~§6.3). Pack.extractors = {이름: sha256}(R5)
+validate_task(name, task, pack_code, features, all_tasks, pack_path=None) -> list[str]
+validate_document(name, doc, sc, ceiling=None) · validate_rates(name, rates)        # 덮어쓰기 검사도 같은 함수
+# mlcore/registry/tenants.py
+material_aliases(merged) -> {별칭 대문자: 정규 값}   ·   normalize_category(merged, value) -> str
+#   덮어쓰기: 모르는 키 → RegistryRejected("R1", "… 모르는 덮어쓰기 키 …") (DEF-QAR2-004)
+# mlcore/monitor/review.py — 대기열 일정 작업(감시 뒤, task-contract §6.1 schedule)
+run_review(tenant_id, day, *, merged=None) -> [ {task_id, uses, version, rule, threshold, threshold_from, pairs, created, skipped?, error?} ]
+# mlcore/monitor/hub_export.py — make export-hub [DATE=]
+build(day, *, codes=None) -> dict   ·   write(day, *, out_dir=None) -> Path   # var/export/hub/<date>.json (mlp-hub-export/1)
+# mlcore/monitor/scheduler.run_once = 승인 요청 → 감시 → run_review → export_hub_after(day)
+```
+
+추출기 플러그인(개발2 2차 §2.1.1 모양 그대로) `packs/eto/extractors/{cad_regions,bom_text}.py` — `extract(raw, filename, *, unit, limits, model=None, context=None)`.
+**개발2 요청:** 코어가 `context={"categories": 회사 categories, "material_aliases": tenants.material_aliases(merged)}` 를 넘겨 달라(bom_text 재질 검사 — 없으면 검사 없이 경고).
+cad_regions 결과의 `preview`(bbox · paths · texts · scale_to_mm · source_unit · unsupported)는 화면 9 미리보기용 — 코어가 버려도 된다.
+견적식 `packs/eto/formulas/quote.py` — `prepare(inputs, lines) -> {total_mass_kg}` · `quote(inputs, lines, predicted={"labor_hours": D}, rates) -> {lines[amount], costs{material, labor, outsource, markup, subtotal, vat}, total, predicted}`.
+
+### 2차 실측
+
+| 항목 | 실측 | 검증 명령 |
+|---|---|---|
+| 1. 등록부 유형 3 키 · 모르는 덮어쓰기 키 | 정상 팩 통과 · review_queue 14 · extract 15 · quote 16 거부 사례 · 덮어쓰기 모르는 키 4 · 허용 7 · 금지 16 · material_aliases 6 · 추출기 R5 · 저장소 등록부 회귀 — **86 passed** | `uv run pytest -q tests/test_registry_phase2.py` |
+| 2. 대기열 일정 작업 | pc 학습 → 승인 → 예측 12 · 실측 8 → 검증 잔차 분위 임계값으로 항목 생성 · 재실행 0 · 늦은 실측 1 · max_items · production 없음 · 증거 없음 거부 · 스케줄러 연결 — **8 passed** (`test_monitor.py` 15 그대로) | `uv run pytest -q tests/test_monitor_review.py tests/test_monitor.py` |
+| 3. 허브 내보내기 | 계약 스키마 통과 · 허브 schema.sql CHECK ⊇ · 허브 `registry.validate` 별도 프로세스 읽기 전용 import(허브 src · companies mtime 불변) · 비밀 · IP · URL · 입력/예측값 0 · 같은 날짜 같은 바이트 — **11 passed**. `make export-hub DATE=2026-10-12` → 회사 4 · 소비자 58 · 변수 96 (`var/export/hub/`, git 무시) | `uv run pytest -q tests/test_export_hub.py` |
+| 4. 1차 잔여 | F7-7(D-123 앱 LOGIN 역할) 5 · F7-8(임시 DB teardown) 8 · F20-3(CONFIRM 명령줄만, 가짜 psql) 24 · F20-4 → `check_followups` 해결 32 · 열림 1(F7-5 아키텍트) | `uv run python gates/check_followups.py` |
+| 5. 팩 eto · kimchi / 회사 kd · pc | kd 원천 절차 재현 시험 MAE **4.1071** · RMSE **5.0456** · R² **0.9956** · 샘플 58.146 h (원천 문서와 같음) · pc 행 일치 100%(420 · 결측 15) · 샘플 도면 영역 3 · BOM 4 · Σ650 kg · 경고 문구 = 원천 저장 결과 · 원천 저장 견적 2건 원 단위 일치(8,486,493 · 5,235,023) — 추출 **22** · 견적식 **10** · 합성 **6** passed | `uv run pytest -q tests/test_extract_eto.py tests/test_formula_eto_quote.py tests/test_synth_phase2.py` |
+| 전체 시험 | **754 passed · 3 skipped** (--ignore=tests/e2e, 다른 담당 작업 포함) | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| make gate | **PASS 23 · BLOCKED 1** (G-M14 는 bench 를 앱 LOGIN 역할로 다시 재서 PASS — compose p95 28.2 ms · 기동 1.68 s · RSS 250 MB, D2-34) | `make gate` |
+| make gate2 (2차 줄) | **G2-I02 FAIL → PASS** · **G2-H01 열림 15 → 1**(F7-5 아키텍트만) · G2-R01 · G2-E01 · G2-Q01 · G2-I01 PASS(개발1 · 2 시험 포함) · 6사 판정 팩 없음 4 → 2 · 회사 없음 4 → 2 (rollform-quote · solder · krs · ot — A2) · G2-P01 FAIL(남은 팩 · 회사 + baselines 값) | `make gate2` (합계 41행 — PASS 27 · FAIL 12 · BLOCKED 2, bench 재측정 전 실행 기준) |
+| 정적 | G-M01 PASS(코어 113 · 팩 55 파일 위반 0) · G2-Q01 정적 PASS(견적식 2 파일) · G-S02 · G-M03 PASS(팩 5 · 회사 5 · 과제 YAML 14) · G-M11 PASS | `gates/check_core_terms.py` · `check_decimal.py` · `check_registry.py` · `check_tasks.py` · `check_deploy.py` |
+
+### 2차 요청 · 남은 일
+
+- **아키텍트:** D2-31(과제 이름 `quote` ↔ 유형 코드 — G-M01 금지어, `eto.quote` · `kd.quote` 보류) · D2-30(task-schema 에 `overridable_on_override` · 2차 규칙 표) · D2-33(review_item 부분 고유 색인) · D2-34(`gates/bench.py` 대행 확인) · D2-36(Makefile 대행 확인) · D2-39(baselines 값).
+- **오케스트레이터:** 옛 시험 DB `ml_grants_check_db` 삭제 허락(D2-35 — 지우지 않았다).
+- **개발2:** 추출기 `context` 인자(D2-37). **개발1:** 코어 주석 '평창식' → 일반어(D2-38, pc 별칭을 넣으면 G-M01).
+- 남은 일(A0-2 · A2): `eto.quote` · `kd.quote`(D2-31 뒤) · kimchi `recipe_optimize` · 팩 solder · rollform-quote · 회사 krs · ot · task-map 6사 · 이관 보고서 · 허브 내보내기 6사.
+
 ## §1 공표 — 합성 생성기 노출 (웨이브 A0, 2026-10-12)
 
 개발1 의 synthetic 어댑터가 쓴다. 계약과 다른 점은 `decisions.md` D-53(계약 불일치).

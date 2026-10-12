@@ -1,0 +1,15 @@
+# 김치 팩 변수 사전 (contracts/feature-contract.md). 원천 이관 근거: migration/source_inventory.md §9.2
+# min/max = 원천 요청 경계(main.py ProcessInput), default = 원천 생성 범위(LIMITS)의 가운데.
+# 절임 염도 · 숙성 온도 · 저장 온도는 원천 합성에서 결측(각 5행)이 있어 보정 허용.
+cabbage_pct:         {label: 배추 배합비,   unit: "%",  dtype: float, min: 55,  max: 85,  default: 71,   required: true,  impute: median, controllable: true, step: 0.5}
+radish_pct:          {label: 무 배합비,     unit: "%",  dtype: float, min: 0,   max: 20,  default: 8,    required: true,  impute: median, controllable: true, step: 0.5}
+seasoning_pct:       {label: 양념 배합비,   unit: "%",  dtype: float, min: 8,   max: 35,  default: 19,   required: true,  impute: median, controllable: true, step: 0.5}
+salt_pct:            {label: 소금 배합비,   unit: "%",  dtype: float, min: 0.5, max: 5,   default: 1.9,  required: true,  impute: median, controllable: true, step: 0.1}
+brine_salinity_pct:  {label: 절임 염도,     unit: "%",  dtype: float, min: 5,   max: 18,  default: 11,   required: false, impute: median, controllable: true, step: 0.1}
+brining_hours:       {label: 절임 시간,     unit: h,    dtype: float, min: 3,   max: 24,  default: 12,   required: true,  impute: median, controllable: true, step: 0.5}
+fermentation_temp_c: {label: 숙성 온도,     unit: "°C", dtype: float, min: -2,  max: 15,  default: 5,    required: false, impute: median, controllable: true, step: 0.5}
+fermentation_hours:  {label: 숙성 시간,     unit: h,    dtype: float, min: 6,   max: 120, default: 45,   required: true,  impute: median, controllable: true, step: 1}
+storage_temp_c:      {label: 저장 온도,     unit: "°C", dtype: float, min: -5,  max: 10,  default: 1.5,  required: false, impute: median, controllable: true, step: 0.5}
+cabbage_origin:      {label: 배추 산지,     dtype: category, values_from: tenant, required: true, controllable: false}
+prod_line:           {label: 생산 라인,     dtype: category, values_from: tenant, required: true, controllable: false}
+std_name: {}   # 허브 std/fields.yaml 대응 미확인 — 내보내기는 <pack>.<변수> 를 표준 이름으로 쓴다(contracts/hub-export.md)

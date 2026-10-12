@@ -5,3 +5,4 @@ export * from './StatusBadge';
 export * from './MetricTable';
 export * from './FeatureForm';
 export * from './Common';
+export * from './Phase2';

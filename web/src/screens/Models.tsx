@@ -38,12 +38,19 @@ type RunView = {
     residuals?: {mean: number; std: number; quantiles: Record<string, number>} | null;
     error_by_category?: Record<string, Record<string, {n: number; mae: number}>> | null;
     calibration_curve?: CalBin[] | null;
+    labels?: string | null;
+    extract_metrics?: {
+      labels?: string; class_f1?: Record<string, number>;
+      confusion_matrix?: {labels: string[]; matrix: number[][]};
+      baseline?: {class_f1?: Record<string, number>};
+    } | null;
   };
 };
 
 const STAGE: Record<string, string> = {candidate: '후보', staging: '검토', production: '운영', archived: '보관'};
 const BASELINE: Record<string, string> = {
   train_mean: '학습 구간 평균', last_value: '직전 값(시계열)', train_positive_rate: '학습 구간 양성률', contamination: '기대 오염률',
+  majority_class: '학습 구간 최빈 클래스',
 };
 
 function BeatsBadge({beats}: {beats: boolean | null | undefined}) {
@@ -169,6 +176,7 @@ function RunBody({r}: {r: RunView}) {
       <Residuals res={rep.residuals} byCat={rep.error_by_category}/>
       {rep.task_type === 'risk' && <CalibrationCurve bins={rep.calibration_curve}/>}
     </div>
+    {rep.task_type === 'extract' && <ExtractDetail rep={rep}/>}
     <h3>경고</h3>
     <Warnings warnings={(r.warnings ?? []).map(w => ({code: w.code, field: w.field ?? null, message: w.message}))}/>
   </>;
@@ -254,5 +262,25 @@ function CalibrationCurve({bins}: {bins?: CalBin[] | null}) {
       <text x={S / 2} y={S - 4} fontSize={10} textAnchor="middle">예측 확률</text>
       <text x={8} y={S / 2} fontSize={10} textAnchor="middle" transform={`rotate(-90 8 ${S / 2})`}>관측 빈도</text>
     </svg>
+  </div>;
+}
+
+function ExtractDetail({rep}: {rep: NonNullable<RunView['report']>}) {
+  const d = rep.extract_metrics;
+  if (rep.labels === 'none' || !d) return <p className="notice" data-labels="none">정답 라벨 없음 — 지표 없음 (labels: none)</p>;
+  const cm = d.confusion_matrix;
+  return <div className="cols">
+    <div>
+      <h3>클래스별 F1 (시험 구간{d.labels === 'synthetic' ? ' · 합성 라벨' : ''})</h3>
+      <table className="grid"><thead><tr><th>클래스</th><th>F1</th><th>기준선 F1</th></tr></thead>
+        <tbody>{Object.entries(d.class_f1 ?? {}).map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{fmt(v)}</td>
+          <td className="muted">{fmt(d.baseline?.class_f1?.[k])}</td></tr>)}</tbody></table>
+    </div>
+    {cm && <div className="table-wrap">
+      <h3>혼동행렬 (행 = 실제 · 열 = 예측)</h3>
+      <table className="grid" data-testid="confusion"><thead><tr><th></th>{cm.labels.map(l => <th key={l}>{l}</th>)}</tr></thead>
+        <tbody>{cm.matrix.map((row, i) => <tr key={i}><th scope="row">{cm.labels[i]}</th>
+          {row.map((v, j) => <td key={j} className="num">{i === j ? <strong>{v}</strong> : v}</td>)}</tr>)}</tbody></table>
+    </div>}
   </div>;
 }

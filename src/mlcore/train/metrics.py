@@ -89,3 +89,34 @@ def with_baseline(model: dict[str, float], base: dict[str, float]) -> dict[str, 
         ok = b is not None and not (isinstance(b, float) and np.isnan(b)) and not np.isnan(v)
         out[k] = {"value": v, "baseline": b if ok else None, "delta_vs_baseline": (v - b) if ok else None}
     return out
+
+
+# ── extract (모델 추출기 — 다중 클래스, D2-15) ────────────────────────────
+def extract(y, pred, classes) -> dict[str, float]:
+    """선정 · 시험 스칼라 지표: macro-F1(클래스 목록 기준 · 없는 클래스는 0) · accuracy."""
+    from sklearn.metrics import accuracy_score, f1_score
+
+    y, pred = np.asarray(y).astype(str), np.asarray(pred).astype(str)
+    if not len(y):
+        return {"macro_f1": float("nan"), "accuracy": float("nan")}
+    return {"macro_f1": float(f1_score(y, pred, labels=list(classes), average="macro", zero_division=0)),
+            "accuracy": float(accuracy_score(y, pred))}
+
+
+def extract_detail(y, pred, classes) -> dict:
+    """클래스별 F1 · 혼동행렬(행 = 실제, 열 = 예측, 순서 = classes)."""
+    from sklearn.metrics import confusion_matrix, f1_score
+
+    y, pred = np.asarray(y).astype(str), np.asarray(pred).astype(str)
+    cls = list(classes)
+    f1s = f1_score(y, pred, labels=cls, average=None, zero_division=0) if len(y) else [float("nan")] * len(cls)
+    return {"class_f1": {c: float(v) for c, v in zip(cls, f1s)},
+            "confusion_matrix": {"labels": cls, "matrix": confusion_matrix(y, pred, labels=cls).tolist() if len(y) else []}}
+
+
+def extract_eval(pred, truth, classes, *, labels: str = "synthetic") -> dict:
+    """문서 · 추출 결과 평가 — 정답이 없으면(truth None 또는 labels=none) 지표를 만들지 않는다(null + labels: none).
+    IoU 는 영역 정답이 없으면 만들지 않는다(이 함수는 객체 분류 지표만)."""
+    if truth is None or labels == "none":
+        return {"labels": "none", "metrics": None}
+    return {"labels": labels, "metrics": {**extract(truth, pred, classes), **extract_detail(truth, pred, classes)}}

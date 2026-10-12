@@ -8,7 +8,9 @@
 #     예) MLP_GIT_SHA=$(git rev-parse --short HEAD) docker compose build
 #   - 비밀값은 env 파일(.env.deploy, 커밋 금지 — 틀은 docker/deploy.env.example) 참조만. 이 파일에는 값이 없다.
 # 기동은 학습하지 않는다(G-M06). 모델은 볼륨 mlp_var 의 등록부 산출물에서만 읽는다.
-# 스키마는 첫 기동 때 db 가 schema.sql 을 실행하고, 표준 시드는 사람이 한 번:
+# 스키마는 첫 기동 때 db 가 schema.sql 을 실행하고, 이어서 docker/initdb/20-app-login.sh 가 앱 LOGIN 역할(mlp_app 구성원,
+# 이름 · 비밀번호 = .env.deploy 의 MLP_DB_APP_USER · MLP_DB_APP_PASSWORD)을 만든다. 앱의 MLP_DB_DSN 은 그 역할로 붙는다
+# (DB 소유자 POSTGRES_USER 로 붙지 않는다 — D-123). 표준 시드는 사람이 한 번(앱 역할로 충분 — mlp_tenant · mlp_task UPSERT 만):
 #   docker compose run --rm app /app/.venv/bin/python -m mlcore.db.seed_std
 name: mlp
 
@@ -22,6 +24,7 @@ services:
     volumes:
       - mlp_pg:/var/lib/postgresql/data
       - ./src/mlcore/db/schema.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+      - ./docker/initdb/20-app-login.sh:/docker-entrypoint-initdb.d/20-app-login.sh:ro   # 앱 LOGIN 역할 = mlp_app 구성원 (D-123)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER:-postgres}\" -d \"$${POSTGRES_DB:-postgres}\""]
       interval: 10s

@@ -226,10 +226,12 @@ def bench_compose(source: str, work: Path) -> dict:
 
     from mlcore.data import jobs
     sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    pw = _s.token_urlsafe(18)
+    pw, app_pw = _s.token_urlsafe(18), _s.token_urlsafe(18)
     envf = work / f"bench-{source}.env"            # 저장소 밖(임시 폴더) · 실행 뒤 삭제
+    # 앱은 소유자(mlp)가 아니라 mlp_app 구성원 LOGIN 역할로 붙는다 — 배포와 같은 계정 모양(D-123 · D2-34, docker/initdb/20-app-login.sh)
     envf.write_text(f"POSTGRES_DB=ml_db\nPOSTGRES_USER=mlp\nPOSTGRES_PASSWORD={pw}\n"
-                    f"MLP_DB_DSN=host=db dbname=ml_db user=mlp password={pw}\nMLP_TENANT={source}\nMLP_MODE=demo\n")
+                    f"MLP_DB_APP_USER=mlp_bench_app\nMLP_DB_APP_PASSWORD={app_pw}\n"
+                    f"MLP_DB_DSN=host=db dbname=ml_db user=mlp_bench_app password={app_pw}\nMLP_TENANT={source}\nMLP_MODE=demo\n")
     override = work / f"bench-{source}.override.yml"
     override.write_text(f"services:\n  db:\n    env_file: [{envf}]\n  app:\n    env_file: [{envf}]\n")
     proj = f"mlpbench-{source}"

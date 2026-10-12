@@ -55,3 +55,40 @@ export function named<T extends {name: string}>(x: T[] | Record<string, Omit<T, 
   if (Array.isArray(x)) return x;
   return Object.entries(x).map(([name, v]) => ({...(v as object), name} as T));
 }
+
+// ── 2차 자원 (contracts/predict-contract.md §8 — 키를 빼지 않는다, 없는 값은 null) ──
+export type ReviewState = 'open' | 'confirmed_issue' | 'false_alarm';
+export type ReviewItem = {
+  item_id: string; task: string; entity_id: string; prediction_id: string | null; model_version: string;
+  predicted: number; actual: number; residual: number; rule: 'abs_residual_ge' | 'top_quantile'; threshold: number;
+  reason: string; origin: 'test_split' | 'live_residual'; state: ReviewState;
+  decided_by: string | null; decided_at: string | null; note: string | null; created_at: string;
+};
+
+export type Bbox = [number, number, number, number];
+export type DocRegion = {id: string; label: 'title_block' | 'bom_table' | 'rev_table' | 'other'; bbox: Bbox;
+  texts: string[]; evidence: unknown; status: string; [k: string]: unknown};
+export type DocObject = {id: string; label: 'outer' | 'hole' | 'slot' | 'other'; model_label: string | null;
+  confidence: number | null; bbox: Bbox; review_reason: string | null; [k: string]: unknown};
+export type BomRow = {name: string; material: string; quantity: number; mass_kg: number; source: string; [k: string]: unknown};
+export type DocumentExtraction = {
+  doc_id: string; task: string; filename: string; raw_sha256: string; unit: 'mm'; entity_count: number;
+  regions: DocRegion[]; objects: DocObject[]; bom_rows: BomRow[]; counts: Record<string, number>;
+  dimensions: Record<string, unknown> | null; confidence: number | null; labels: 'none' | 'synthetic' | 'provided';
+  metrics: Record<string, unknown> | null; extractor: {name: string; version: string; kind: 'rule' | 'model'; model_version?: string | null}[];
+  warnings: string[]; created_at: string;
+};
+
+/** 원 단위 정수의 10진 문자열 — JSON 숫자(float)로 다루지 않는다. */
+export type Won = string;
+export type QuoteStatus = 'draft' | 'pending_confirm' | 'confirmed';
+export type Quote = {
+  quote_id: string; task: string; status: QuoteStatus; revision: number; supersedes: string | null; doc_id: string | null;
+  inputs: Record<string, unknown>; lines: ({name: string; amount: Won; [k: string]: unknown})[];
+  costs: Record<string, Won>; total: Won; currency: 'KRW'; rates: Record<string, string>;
+  predictions: {task: string; prediction_id: string; value: string; unit: string}[];
+  model_versions: {task: string; version: string; synthetic: boolean}[];
+  overrides: {field: string; recognized: unknown; confirmed: unknown}[];
+  reviewed: boolean; review_note: string | null; reviewed_by: string | null; approval_id: string | null;
+  confirmed_by: string | null; confirmed_at: string | null; synthetic: boolean; notice: string; created_at: string;
+};

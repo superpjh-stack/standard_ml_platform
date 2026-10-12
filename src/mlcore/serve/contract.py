@@ -46,6 +46,7 @@ class OptimizeBody(BaseModel):
     current: Optional[dict[str, InputValue]] = None
     params: Optional[dict[str, Number]] = None
     entity_id: Optional[StrictStr] = Field(default=None, max_length=128)
+    request_approval: StrictBool = True        # false = 추천 기록만, 승인 요청 0 (D2-08 · D2-15 ⑥ — Agent 도구)
 
 
 class ActualBody(BaseModel):

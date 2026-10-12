@@ -28,6 +28,18 @@ BYPASS = (
     ("분할 경계 test_ts 로 시험 행 자르기", re.compile(r"\[\s*[\"']test_ts[\"']\s*\](?!\s*=[^=])|\.get\(\s*[\"']test_ts[\"']"),
      {"src/mlcore/train/split.py"}),
     ("overlaps() 질의(표본 내 평가 판정 밖)", re.compile(r"\.overlaps\("), {"src/mlcore/train/guard.py"}),
+    # F13-1 (DEF-QA1-006 잔여 · QA-R2 '다른 문법' 6종 — decisions.md D2-23). 실행 시 guard 가 막는 것도 정적으로 한 번 더 본다.
+    ("getattr 이름 문자열 조립", re.compile(r"getattr\([^)]*[\"']\s*\+|getattr\([^)]*\+\s*[\"']"), set()),
+    ("시험 래퍼 getattr 변수 이름", re.compile(r"getattr\(\s*(?:self\.)?_?test\w*\s*,\s*(?![\"']\w+[\"']\s*[,)])"), set()),
+    ("gc 참조 · 클로저 셀로 내부 열람", re.compile(r"\bgc\.get_(?:referents|referrers|objects)\(|__closure__|\bcell_contents\b"),
+     set()),
+    ("slot 서술자 직접 호출", re.compile(r"\.__get__\("), set()),
+    ("시험 인덱스 여집합 복원(setdiff1d · isin invert · difference)",
+     re.compile(r"\bsetdiff1d\(|isin\([^)]*invert\s*=\s*True|~\s*(?:np|numpy)\.isin\(|set\(\s*range\([^)]*\)\s*\)\s*(?:\.difference\(|-)"),
+     set()),
+    ("시험 인덱스 여집합 복원(내포)", re.compile(r"for\s+\w+\s+in\s+range\([^)]*\)\s*\)?\s*if\s+\w+\s+not\s+in\b"), set()),
+    ("분할 경계 변수 키 · test_ts 조립", re.compile(r"boundaries(?:\[\s*(?![\"'])|\.get\(\s*(?![\"']))|[\"']test_?[\"']\s*\+\s*[\"']_?ts[\"']"),
+     set()),
 )
 
 

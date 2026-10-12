@@ -1,0 +1,15 @@
+# 잔차 검토 대기열 (task-contract §6.1 · source_inventory §9.6 · D2-11). 원천은 전체 재적합 모델의 표본 내 |잔차| 0.9 분위(P2) —
+# 표준은 같은 '상위 10%' 를 검증 구간 잔차 분위로 정하고 시험 구간 · 운영 잔차(실측이 붙은 예측)에만 적용한다.
+id: kimchi.residual_review
+type: review_queue
+title: 잔차 검토 대기열
+entity: lot
+uses: [kimchi.sensory_score]
+rule: {top_quantile: 0.10}
+quantile_from: valid
+origins: [test_split, live_residual]
+max_items: 50
+reason: "|잔차| {abs_residual:.2f}점 ≥ 상위 10% 임계 {threshold}"
+schedule: daily_after_monitor  # 감시 일일 작업 뒤 live_residual 항목 생성(monitor/review.py)
+out_of_range: predict_with_warning
+approver_role: quality_lead

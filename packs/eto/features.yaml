@@ -1,0 +1,11 @@
+# ETO 팩 변수 사전 (contracts/feature-contract.md). 원천 이관 근거: migration/source_inventory.md §11.2 (원천 FEATURE_META 5 + 범주 2).
+# 이름 대응(원천 → 팩): mass_kg → total_mass_kg · material → main_material · product → product_family
+#   (BOM 행 키 mass_kg · material 은 predict-contract §8.2 의 코어 계약 키라 팩 변수 이름으로 쓰지 않는다 — G-M01, D2-31)
+total_mass_kg: {label: BOM 총중량,            unit: kg/대, dtype: float, min: 10, max: 10000, default: 650, required: true,  impute: median, controllable: false}
+cut_m:         {label: 확인한 절단 길이,      unit: m/대,  dtype: float, min: 0,  max: 500,   default: 24,  required: false, impute: median, controllable: false}
+weld_m:        {label: 확인한 용접 길이,      unit: m/대,  dtype: float, min: 0,  max: 300,   default: 18,  required: true,  impute: median, controllable: false}
+thickness_mm:  {label: 대표 판재 두께,        unit: mm,    dtype: float, min: 1,  max: 30,    default: 6,   required: true,  impute: median, controllable: false}
+complexity:    {label: 조립 난이도 (데모 척도), unit: "1–5", dtype: float, min: 1,  max: 5,     default: 3,   required: true,  impute: median, controllable: false}
+main_material: {label: 대표 재질,             dtype: category, values_from: tenant, required: true, controllable: false}
+product_family: {label: 제품군,               dtype: category, values_from: tenant, required: true, controllable: false}
+std_name: {}   # 허브 std/fields.yaml 대응 미확인 — 내보내기는 <pack>.<변수> 를 표준 이름으로 쓴다(contracts/hub-export.md)

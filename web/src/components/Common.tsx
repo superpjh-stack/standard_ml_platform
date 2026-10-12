@@ -25,6 +25,12 @@ const CODE_TEXT: Record<string, string> = {
   already_decided: '이미 결정된 승인입니다 (already_decided)',
   invalid_transition: '등록부 전이 규칙 위반 (invalid_transition)',
   not_implemented: '2차 범위입니다 (not_implemented)',
+  invalid_input: '입력 값이 올바르지 않습니다 (invalid_input)',
+  missing_required: '필수 입력이 없습니다 (missing_required)',
+  out_of_bounds: '허용 범위 밖입니다 (out_of_bounds)',
+  invalid_document: '도면 파일이 올바르지 않습니다 (invalid_document)',
+  document_too_large: '도면이 상한을 넘습니다 (document_too_large)',
+  quote_locked: '확정된 견적은 고칠 수 없습니다 (quote_locked)',
 };
 
 /** 오류를 그대로 보인다 — 숨기거나 대체 값으로 바꾸지 않는다. */

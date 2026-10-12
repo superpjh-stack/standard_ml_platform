@@ -16,6 +16,7 @@ decide() 한 트랜잭션:
 
 from __future__ import annotations
 
+import math
 import os
 
 from .. import audit
@@ -26,6 +27,7 @@ __all__ = ["decide", "AlreadyDecided", "get", "expire_due", "ttl_hours"]
 
 DECIDERS = ("approver", "admin")
 TTL_HOURS = {"model": 168, "recommendation": 24, "quote": 168}      # D-130 제안값(사람 확인 전 가설)
+TTL_MAX_HOURS = 24 * 366                                              # 환경변수 상한 1년 — 넘으면 기본값(F20-5)
 
 
 def ttl_hours(kind: str) -> float:
@@ -34,10 +36,10 @@ def ttl_hours(kind: str) -> float:
     if raw:
         try:
             v = float(raw)
-            if v > 0:
-                return v
         except ValueError:
-            pass
+            v = None
+        if v is not None and math.isfinite(v) and 0 < v <= TTL_MAX_HOURS:   # inf · nan · 과대값은 받지 않는다 (DEF-QAR2-005)
+            return v
     return float(TTL_HOURS.get(kind, TTL_HOURS["model"]))
 
 
@@ -57,6 +59,9 @@ def expire_due(*, tenant_id: str | None = None, approval_id: str | None = None, 
         params.append(approval_id)
     rows = conn.execute(sql + " RETURNING approval_id, tenant_id, task_id, kind, ref_id, action, expires_at", params).fetchall()
     for r in rows:
+        if r["kind"] == "quote":                       # 확정 대기 견적은 초안으로 되돌린다(다시 고칠 수 있게 — 새 행)
+            from ..serve import quotes
+            quotes.decide_in_tx(conn, r, approve=False, actor="system")
         if r["kind"] == "recommendation":
             conn.execute("UPDATE mlp_recommendation SET status = 'dismissed' WHERE tenant_id = %s AND rec_id = %s "
                          "AND status = 'needs_approval'", (r["tenant_id"], r["ref_id"]))
@@ -103,8 +108,11 @@ def decide(approval_id: str, *, actor: str, actor_role: str, approve: bool, reas
         if appr["kind"] == "recommendation":
             return _decide_recommendation(c, appr, state=state, actor=actor, actor_role=actor_role, reason=reason,
                                           request_id=request_id)
+        if appr["kind"] == "quote":
+            return _decide_quote(c, appr, state=state, actor=actor, actor_role=actor_role, reason=reason,
+                                 request_id=request_id)
         if appr["kind"] != "model":
-            raise ServeError("이 승인 종류는 1차 범위가 아닙니다", {"rule": "kind", "field": None})   # quote — 트랜잭션 롤백
+            raise ServeError("모르는 승인 종류입니다", {"rule": "kind", "field": None})
         previous = None
         if approve:
             rows = c.execute("SELECT version, stage FROM mlp_model_version WHERE tenant_id = %s AND task_id = %s "
@@ -144,6 +152,19 @@ def _decide_recommendation(c, appr: dict, *, state: str, actor: str, actor_role:
         raise AlreadyDecided("추천의 상태가 바뀌어 결정할 수 없습니다",
                              {"approval_id": appr["approval_id"], "rule": "recommendation_not_pending"})
     audit.write(tenant_id=appr["tenant_id"], actor=actor, role=actor_role, action=f"recommendation.{state}",
+                target=f"{appr['task_id']}@{appr['ref_id']}",
+                detail={"approval_id": appr["approval_id"], "action": appr["action"], "reason": reason},
+                request_id=request_id, conn=c)
+    return {"approval_id": appr["approval_id"], "state": state, "production_version": None}
+
+
+def _decide_quote(c, appr: dict, *, state: str, actor: str, actor_role: str, reason: str | None,
+                  request_id: str | None) -> dict:
+    """견적 확정 — 승인: confirmed 새 행(스냅숏 고정), 반려: draft 새 행. production 모델 · 설비 쓰기 0. 감사 1행 같은 트랜잭션.
+    확정 결정은 approver 이상(D2-04 · std/roles.yaml quotes.confirm) — DECIDERS 가 이미 막는다."""
+    from ..serve import quotes
+    quotes.decide_in_tx(c, appr, approve=state == "approved", actor=actor)
+    audit.write(tenant_id=appr["tenant_id"], actor=actor, role=actor_role, action=f"quote.{'confirmed' if state == 'approved' else 'rejected'}",
                 target=f"{appr['task_id']}@{appr['ref_id']}",
                 detail={"approval_id": appr["approval_id"], "action": appr["action"], "reason": reason},
                 request_id=request_id, conn=c)

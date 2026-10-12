@@ -29,6 +29,9 @@ export function StateBadge({state}: {state: string}) {
   const map: Record<string, [string, string]> = {
     pending: ['대기', 'watch'], approved: ['승인', 'ok'], rejected: ['반려', 'rejected'], expired: ['만료', 'out_of_range'],
     candidate: ['후보', 'watch'], staging: ['검증', 'review'], production: ['운영', 'ok'], archived: ['보관', 'out_of_range'],
+    // 2차 — 검토 대기열 (mlp_review_item.state) · 견적 (mlp_quote.status)
+    open: ['검토 대기', 'watch'], confirmed_issue: ['문제 확인', 'rejected'], false_alarm: ['오탐', 'ok'],
+    draft: ['초안', 'watch'], pending_confirm: ['확정 대기', 'needs_approval'], confirmed: ['확정 · 잠금', 'locked'],
   };
   const [label, cls] = map[state] ?? [state, 'watch'];
   return <span className={`badge badge-${cls}`} data-state={state}>{label}</span>;

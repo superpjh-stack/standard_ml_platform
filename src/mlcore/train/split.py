@@ -3,7 +3,7 @@
 - time_key 가 있으면 시간순(time_60_20_20, 행 < small_rows_threshold 면 time_cv5)을 강제한다. 과제 YAML 의 split 이
   시간순이 아니어도 시간순으로 돌린다(덮어쓰기 불가 규칙).
 - group_key 가 있으면 같은 그룹이 경계 양쪽에 있지 않게 자른다.
-- 시험 구간 인덱스는 SplitPlan 에 없다. GuardedTest 만 들고 있다.
+- 시험 구간 인덱스 · 시각 범위(test_ts)는 SplitPlan 에 없다. GuardedTest 만 들고 있다(시각 범위는 final_eval 뒤 `bounds()`).
 인덱스는 frame 의 위치(iloc) 이다.
 """
 
@@ -210,5 +210,7 @@ def plan(frame: pd.DataFrame, task, seed: int, *, ledger: AccessLedger | None = 
         bounds = {"order": pol["order"], "seed": seed, "sizes": {"train": len(tr), "valid": len(va), "test": len(te)}}
         if grouped:
             bounds["group_key"] = task.raw["group_key"]
+    # 시험 시각 범위는 SplitPlan 에 두지 않는다 — 래퍼가 갖고 final_eval 뒤 보고서에만 (F13-1 · 변수 키 test_ts)
+    test_bounds = {"test_ts": bounds.pop("test_ts")} if "test_ts" in bounds else {}
     sp = SplitPlan(policy, tuple(int(i) for i in tr), tuple(int(i) for i in va), folds, bounds)
-    return sp, GuardedTest(te, ledger)
+    return sp, GuardedTest(te, ledger, bounds=test_bounds)

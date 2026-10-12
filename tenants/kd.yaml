@@ -1,0 +1,32 @@
+# 회사 등록부 — 경동글로벌텍 (contracts/tenant-contract.md §3). 비밀값은 환경변수 이름만. 확인 못 한 값은 null + "# 미확인".
+code: kd
+name: 경동글로벌텍
+pack: eto
+mode: demo                      # 실데이터 키가 들어오기 전 live 없음 (D-13 · G2-L01)
+hub_company: kd
+aliases: [경동, KyungDong]       # 금지어 검사용 별칭 (G-M01 · G-S06)
+tasks:
+  enable: [kd.labor_hours, kd.drawing_regions]     # kd.quote 는 팩 과제 quote 가 생긴 뒤(decisions.md D2-31)
+categories:                     # values_from: tenant 범주 — 원천 api/config.py:4-5 (목록 순서 = 원천 순서, 합성 효과가 위치에 묶임)
+  main_material: [STS304, STS316L, STS316, SS400, A516, AL6061, STS430, ALUMINUM]
+  product_family: [반응기, 교반기, 진공건조기, 누체필터, 저장탱크, Pure Steam Generator]
+material_aliases:               # 재질 별칭 → 정규 값 (원천 api/config.py:6 · 고객 회신 D-160 ② 재질 통합) — 추출기 · 견적 입력 검증 전에 적용
+  SUS304: STS304
+  STS304F: STS304
+  SUS304L: STS304
+  SUS316L: STS316L
+  A240316L: STS316L
+  SUS316: STS316
+sources:
+  demo:    {kind: synthetic, seed: 42, rows: 900}   # 원천 SEED 42 · n 900 (api/config.py:2 · ml_service.py:17)
+  eval:    {kind: csv, path: tests/fixtures/kd/snapshot.csv}   # migration/make_fixtures.py 생성 (demo 와 같은 행)
+feature_map: {}                 # 미확인 — 실 MES · ERP 열 대응 없음 (D-32)
+target_map: {}                  # 미확인 — 공수 실측 원천 없음 (D-33)
+unmapped: {}
+approvers: {estimating_lead: []}   # 미확인 — 사람 확인 필요 (D-04)
+notify: {webhook_env: null}        # 미확인
+compat:
+  entity_prefix: "KD-SYN-"      # 원천 job_id 접두 (api/ml_service.py:27)
+  input_rename: {mass_kg: total_mass_kg, material: main_material, product: product_family}   # 옛 요청 키 → 팩 변수
+  # 견적 kg 단가 기본값(원천 config.py:5 MATERIALS 의 값, 예시 단가)은 과제 quote 가 생기면 tenants/kd/tasks/quote.yaml 로 (D2-31)
+labels: {}

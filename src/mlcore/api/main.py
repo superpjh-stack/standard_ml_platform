@@ -24,7 +24,7 @@ from ..serve.errors import ServeError
 from ..settings import ROOT, get_settings
 from .errors import ApiError
 from .middleware import AuthAuditMiddleware
-from .routers import compat, models, ops, predict, train, v1
+from .routers import compat, models, ops, phase2, predict, train, v1
 
 log = logging.getLogger("mlcore.api")
 VERSION = "0.1.0"
@@ -102,6 +102,7 @@ app.include_router(predict.router)
 app.include_router(models.router)
 app.include_router(train.router)
 app.include_router(ops.router)       # 개발3 B02 · B06 · B12 · B14 (progress-dev3 §3 요청)
+app.include_router(phase2.router)    # 2차 B09 · B10 · B11 (api-contract §6)
 
 
 def include_compat() -> None:

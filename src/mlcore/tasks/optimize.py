@@ -44,6 +44,7 @@ class OptimizeRequest:
     current: dict[str, Any] | None = None
     params: dict[str, float] | None = None
     entity_id: str | None = None
+    request_approval: bool = True          # false = mlp_recommendation 만, mlp_approval 0 (D2-08)
 
 
 @dataclass
@@ -284,8 +285,8 @@ class Optimizer:
         self.catalog.require_servable(tenant_id, task_id)                    # 꺼진 과제 → 503 (D-120a)
         spec = self.catalog.get(tenant_id, task_id)
         task = spec.task
-        if task.type != "optimize":
-            raise NotFound("최적화 과제가 아닙니다")
+        if task.type != "optimize":     # 회귀 · 2차 유형 과제의 /optimize — 경로가 유형과 맞지 않는다 (predict-contract §8)
+            raise NotFound("최적화 과제가 아닙니다", {"rule": "type_route", "field": None})
         raw = task.raw
         defs = {f.name: f for f in spec.defs}
         controls = list(raw.get("controls") or [])
@@ -559,7 +560,8 @@ class Optimizer:
         stored = {"candidates": rec["candidates"], "current": rec["current"], "strategy": rec["strategy"],
                   "n_candidates": rec["n_candidates"], "n_feasible": rec["n_feasible"],
                   "in_train_range_rate": rec["in_train_range_rate"], "objective": rec["objective"],
-                  "status": out["status"], "warnings": out["warnings"], "channel": channel}
+                  "status": out["status"], "warnings": out["warnings"], "channel": channel,
+                  "request_approval": req.request_approval}
         evidence = {"rec_id": rec["rec_id"], "feasible": rec["feasible"], "best": rec["best"], "uses": out["uses"],
                     "objective": rec["objective"], "status": out["status"]}
         with connect() as c:
@@ -567,12 +569,14 @@ class Optimizer:
                       "feasible, status, created_by) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,'needs_approval',%s)",
                       (rec["rec_id"], spec.tenant_id, spec.task.id, json.dumps(fixed_inputs, ensure_ascii=False, default=str),
                        json.dumps(stored, ensure_ascii=False), json.dumps(uses_versions), rec["feasible"], caller))
-            approval_id = new_id("apr")
-            c.execute("INSERT INTO mlp_approval (approval_id, tenant_id, task_id, kind, ref_id, action, approver_role, state, "
-                      "requested_by, evidence, expires_at) VALUES (%s,%s,%s,'recommendation',%s,'apply',%s,'pending',%s,%s::jsonb, "
-                      "now() + make_interval(secs => %s))",
-                      (approval_id, spec.tenant_id, spec.task.id, rec["rec_id"], spec.task.raw["approver_role"], caller,
-                       json.dumps(evidence, ensure_ascii=False), approval.ttl_hours("recommendation") * 3600))   # D-130
+            approval_id = None
+            if req.request_approval:
+                approval_id = new_id("apr")
+                c.execute("INSERT INTO mlp_approval (approval_id, tenant_id, task_id, kind, ref_id, action, approver_role, state, "
+                          "requested_by, evidence, expires_at) VALUES (%s,%s,%s,'recommendation',%s,'apply',%s,'pending',%s,%s::jsonb, "
+                          "now() + make_interval(secs => %s))",
+                          (approval_id, spec.tenant_id, spec.task.id, rec["rec_id"], spec.task.raw["approver_role"], caller,
+                           json.dumps(evidence, ensure_ascii=False), approval.ttl_hours("recommendation") * 3600))   # D-130
             audit.write(tenant_id=spec.tenant_id, actor=caller, role=None, action="recommendation.create",
                         target=f"{spec.task.id}@{rec['rec_id']}",
                         detail={"approval_id": approval_id, "feasible": rec["feasible"], "uses": uses_versions}, conn=c)

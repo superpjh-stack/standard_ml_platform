@@ -18,6 +18,7 @@ from typing import Callable
 import yaml
 
 from ..settings import ROOT
+from . import packs as _packs
 from .packs import PACKS_DIR, Pack, SynthSpec, def_hash, load_pack, load_synth, sha256_file, synth_spec, task_schema
 
 TENANTS_DIR = ROOT / "tenants"
@@ -60,6 +61,7 @@ class Tenant:
     config: dict
     overrides: dict[str, dict] = field(default_factory=dict)    # 과제 짧은 이름 → 덮어쓰기 YAML
     formulas: dict[str, str] = field(default_factory=dict)      # 회사 플러그인 이름 → sha256
+    extractors: dict[str, str] = field(default_factory=dict)    # 회사 추출기 플러그인 이름 → sha256 (R5)
 
 
 @dataclass(frozen=True)
@@ -125,7 +127,48 @@ def load_tenant(code_or_path: str | Path, base: Path | None = None) -> Tenant:
     f_dir = task_dir.parent / "formulas"
     for p in sorted(f_dir.glob("*.py")) if f_dir.is_dir() else []:
         formulas[p.stem] = sha256_file(p)
-    return Tenant(code, path, cfg, overrides, formulas)
+    e_dir = task_dir.parent / "extractors"
+    extractors = {p.stem: sha256_file(p) for p in sorted(e_dir.glob("*.py")) if not p.stem.startswith("_")} \
+        if e_dir.is_dir() else {}
+    _check_aliases(cfg)
+    return Tenant(code, path, cfg, overrides, formulas, extractors)
+
+
+# ── material_aliases (tenant-contract §3 — 2차 새 최상위 키, 범주 값 정규화 표) ───────────────────────
+
+ALIASES_KEY = "material_aliases"
+
+
+def _check_aliases(cfg: dict) -> None:
+    """{<별칭>: <정규 값>} — 정규 값은 회사 categories 의 값이어야 하고, 정규 값 자체를 별칭으로 두지 않는다."""
+    if ALIASES_KEY not in cfg or cfg[ALIASES_KEY] in (None, {}):
+        return
+    table = cfg[ALIASES_KEY]
+    if not isinstance(table, dict):
+        raise RegistryRejected("T0", f"{ALIASES_KEY} 는 {{별칭: 정규 값}} 표여야 한다")
+    canon = {str(v) for vals in (cfg.get("categories") or {}).values() for v in (vals or [])}
+    for alias, value in table.items():
+        if not isinstance(alias, str) or not alias.strip() or not isinstance(value, str) or not value.strip():
+            raise RegistryRejected("T0", f"{ALIASES_KEY}: 별칭 · 정규 값은 비지 않은 문자열 ({alias!r}: {value!r})")
+        if value not in canon:
+            raise RegistryRejected("T0", f"{ALIASES_KEY}: 정규 값 {value!r} 가 회사 categories 에 없다")
+        if alias in canon or alias.upper() in {c.upper() for c in canon}:
+            raise RegistryRejected("T0", f"{ALIASES_KEY}: {alias!r} 는 정규 값이라 별칭으로 둘 수 없다")
+
+
+def material_aliases(merged: "Merged") -> dict[str, str]:
+    """회사 별칭 표(대문자 키). 추출기 · 견적 입력 검증 전에 적용한다(tenant-contract §3)."""
+    return {str(k).upper(): str(v) for k, v in (merged.tenant.config.get(ALIASES_KEY) or {}).items()}
+
+
+def normalize_category(merged: "Merged", value: str) -> str:
+    """원천 재질 규칙(대문자 비교 + 별칭 통합). 모르는 값은 그대로 돌려준다 — 거부는 검증 단계 몫."""
+    table = material_aliases(merged)
+    key = str(value).strip().upper()
+    if key in table:
+        return table[key]
+    canon = {str(v).upper(): str(v) for vals in (merged.tenant.config.get("categories") or {}).values() for v in vals or []}
+    return canon.get(key, value)
 
 
 def all_codes(base: Path | None = None, include_template: bool = False) -> list[str]:
@@ -140,9 +183,64 @@ def all_codes(base: Path | None = None, include_template: bool = False) -> list[
 FIXED_ON_OVERRIDE = ("approver_role", "target")
 
 
-def _apply_override(name: str, base: dict, over: dict) -> dict:
-    """R1 — 덮어쓸 수 없는 키를 바꾸면 거부."""
+# task-contract §3 "바꿀 수 있다" + §6.4(2차). 이 밖의 키(오타 · `auto_promote` 같은 모르는 키)는 R1 거부 — DEF-QAR2-004.
+# 계약 task-schema 블록에 `overridable_on_override` 가 생기면 그 값을 쓴다(아키텍트 요청 D2-30).
+OVERRIDABLE = ("thresholds", "features", "candidates", "candidate_params", "constraints", "params", "monitor", "notice",
+               "title", "rule", "max_items", "reason", "document", "rates", "csv", "recognized")
+# 같은 값으로 다시 적는 것만 허용(바꾸면 R1) — 계약 §4 immutable 목록 + §6.4 의 `quantile_from` · `confirm`.
+SAME_VALUE_ONLY = ("id", "quantile_from", "confirm")
+
+
+def _check_override_keys(name: str, base: dict, over: dict, sc: dict) -> None:
+    allowed = set(sc.get("overridable_on_override") or OVERRIDABLE) | set(sc["immutable_on_override"]) | set(SAME_VALUE_ONLY)
+    unknown = sorted(str(k) for k in over if k not in allowed)
+    if unknown:
+        raise RegistryRejected("R1", f"{name}: 모르는 덮어쓰기 키 {unknown} — 바꿀 수 있는 키만 "
+                                     f"({', '.join(sc.get('overridable_on_override') or OVERRIDABLE)})")
+    for key in SAME_VALUE_ONLY:
+        if key in over and over[key] != base.get(key):
+            raise RegistryRejected("R1", f"{name}: 덮어쓰기로 {key} 를 바꿀 수 없다")
+
+
+def _phase2_override(name: str, base: dict, over: dict, sc: dict) -> dict:
+    """§6.4 — 대기열 rule 은 같은 종류 안의 값만 · document 상한은 낮추기만 · rates 는 값만 · recognized 는 tolerance 만.
+    병합할 값(dict 키 → 새 값)을 돌려준다. rule 은 통째로 바꾼다(종류 하나라 dict 합치기를 하지 않는다)."""
+    out: dict = {}
+    if "rule" in over:
+        r, b = over["rule"], base.get("rule") or {}
+        if not isinstance(r, dict) or set(r) != set(b):
+            raise RegistryRejected("R1", f"{name}: rule 은 같은 종류({sorted(b)}) 안에서 값만 바꿀 수 있다 (있음 {r!r})")
+        out["rule"] = dict(r)
+    if "document" in over:
+        d, b = over["document"], base.get("document") or {}
+        if not isinstance(d, dict):
+            raise RegistryRejected("R1", f"{name}: document 덮어쓰기는 map")
+        merged = {**b, **d}
+        probs = _packs.validate_document(name, merged, sc, ceiling=b)
+        if probs:
+            raise RegistryRejected("R1", f"{name}: document 상한은 낮추기만 — {probs[0]}")
+        out["document"] = merged
+    if "rates" in over:
+        r, b = over["rates"], base.get("rates") or {}
+        if not isinstance(r, dict) or set(r) - set(b):
+            extra = sorted(set(r) - set(b)) if isinstance(r, dict) else r
+            raise RegistryRejected("R1", f"{name}: rates 는 팩 단가 이름의 값만 덮어쓴다 (새 이름 {extra})")
+        probs = _packs.validate_rates(name, {**b, **r})
+        if probs:
+            raise RegistryRejected("R1", f"{name}: rates — {probs[0]}")
+        out["rates"] = {**b, **r}
+    if "recognized" in over:
+        r, b = over["recognized"], base.get("recognized") or {}
+        if not isinstance(r, dict) or any(k != "tolerance" and r[k] != b.get(k) for k in r):
+            raise RegistryRejected("R1", f"{name}: recognized 는 tolerance 만 바꿀 수 있다 (있음 {r!r})")
+        out["recognized"] = {**b, **r}
+    return out
+
+
+def _apply_override(name: str, base: dict, over: dict, pack: Pack | None = None) -> dict:
+    """R1 — 덮어쓸 수 없는 키를 바꾸거나 모르는 키를 쓰면 거부. 병합 결과는 과제 계약으로 다시 검사한다."""
     sc = task_schema()
+    _check_override_keys(name, base, over, sc)
     for key in sc["immutable_on_override"]:
         if key in over and over[key] != base.get(key):
             raise RegistryRejected("R1", f"{name}: 덮어쓰기로 {key} 를 바꿀 수 없다")
@@ -152,8 +250,11 @@ def _apply_override(name: str, base: dict, over: dict) -> dict:
     if "id" in over and over["id"] != base.get("id"):
         raise RegistryRejected("R1", f"{name}: id 를 바꿀 수 없다")
     merged = copy.deepcopy(base)
+    special = _phase2_override(name, base, over, sc)
     for k, v in over.items():
-        if isinstance(v, dict) and isinstance(merged.get(k), dict):
+        if k in special:
+            merged[k] = special[k]
+        elif isinstance(v, dict) and isinstance(merged.get(k), dict):
             merged[k] = {**merged[k], **v}
         else:
             merged[k] = v
@@ -162,6 +263,10 @@ def _apply_override(name: str, base: dict, over: dict) -> dict:
             what = "승인 지점" if key == "approver_role" else "목표 — 팩 정의만"
             raise RegistryRejected("R1", f"{name}: 덮어쓰기로 {key} 를 바꿀 수 없다({what})")
     _check_target_leak(name, merged)
+    if over and pack is not None:              # 병합 결과도 과제 계약을 지킨다(예: rule 값 범위 · 없는 변수 추가)
+        probs = _packs.validate_task(name, merged, pack.code, pack.features, pack.tasks, pack.path)
+        if probs:
+            raise RegistryRejected("R1", f"{name}: 덮어쓴 결과가 과제 계약 위반 — {probs[0]}")
     return merged
 
 
@@ -199,7 +304,7 @@ def merge(pack: Pack, tenant: Tenant,
     disabled: dict[str, str] = {}
 
     for name, full in short.items():
-        raw = _apply_override(name, pack.tasks[name], tenant.overrides.get(name, {}))
+        raw = _apply_override(name, pack.tasks[name], tenant.overrides.get(name, {}), pack)
         # R2 — 켜진 과제의 변수가 feature_map 또는 합성 소스로 채워지는가
         feats = list(raw.get("features") or []) + list(raw.get("fixed") or []) + list(raw.get("controls") or [])
         for f in dict.fromkeys(feats):
@@ -233,6 +338,9 @@ def merge(pack: Pack, tenant: Tenant,
     for module, digest in tenant.formulas.items():
         if module in pack.formulas and pack.formulas[module] != digest:
             raise RegistryRejected("R5", f"비용식 {module} 이 팩과 회사에 다른 구현으로 있다")
+    for module, digest in tenant.extractors.items():
+        if module in pack.extractors and pack.extractors[module] != digest:
+            raise RegistryRejected("R5", f"추출기 {module} 이 팩과 회사에 다른 구현으로 있다")
     return Merged(tenant, pack, tasks, disabled, warnings)
 
 

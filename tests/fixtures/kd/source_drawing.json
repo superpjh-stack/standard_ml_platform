@@ -1,0 +1,236 @@
+{
+  "note": "원천 앱이 저장한 합성 데모 결과(읽기 전용 사본). 생성: migration/source_expected.py — 손질 금지",
+  "rows": [
+    {
+      "bbox": [
+        0.0,
+        0.0,
+        420.0,
+        297.0
+      ],
+      "bom": [
+        {
+          "mass_kg": 320.0,
+          "material": "STS316L",
+          "name": "SHELL",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 90.0,
+          "material": "STS316L",
+          "name": "HEAD",
+          "quantity": 2,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 110.0,
+          "material": "STS304",
+          "name": "JACKET",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 10.0,
+          "material": "SS400",
+          "name": "SUPPORT",
+          "quantity": 4,
+          "source": "REG-002"
+        }
+      ],
+      "counts": {
+        "bom_table": 1,
+        "other": 0,
+        "rev_table": 1,
+        "title_block": 1
+      },
+      "created_at": "2026-09-19T06:16:19.550823+00:00",
+      "entity_count": 21,
+      "filename": "KD-demo-reactor.dxf",
+      "mode": "synthetic_demo",
+      "objects": [
+        {
+          "bbox": [
+            260.0,
+            15.0,
+            410.0,
+            63.0
+          ],
+          "evidence": "DRAWING NO: KD-DEMO-R1000",
+          "id": "REG-001",
+          "label": "title_block",
+          "status": "검토 필요",
+          "texts": [
+            "DRAWING NO: KD-DEMO-R1000",
+            "TITLE: REACTOR ASSEMBLY",
+            "MATERIAL: STS316L",
+            "DEMO / NOT FOR FABRICATION"
+          ]
+        },
+        {
+          "bbox": [
+            235.0,
+            170.0,
+            410.0,
+            280.0
+          ],
+          "evidence": "BILL OF MATERIALS (DEMO)",
+          "id": "REG-002",
+          "label": "bom_table",
+          "status": "검토 필요",
+          "texts": [
+            "BILL OF MATERIALS (DEMO)",
+            "NAME | MATERIAL | QTY | MASS_KG",
+            "SHELL | STS316L | 1 | 320",
+            "HEAD | STS316L | 2 | 90",
+            "JACKET | STS304 | 1 | 110",
+            "SUPPORT | SS400 | 4 | 10"
+          ]
+        },
+        {
+          "bbox": [
+            260.0,
+            85.0,
+            410.0,
+            145.0
+          ],
+          "evidence": "REVISION HISTORY",
+          "id": "REG-003",
+          "label": "rev_table",
+          "status": "검토 필요",
+          "texts": [
+            "REVISION HISTORY",
+            "A | 2026-09-19 | DEMO ONLY"
+          ]
+        }
+      ],
+      "paths_count": 9,
+      "ref": "drawings/CAD-1858970fd2d8",
+      "scale_to_mm": 1,
+      "texts_count": 12,
+      "unit": "mm",
+      "unit_source": "header",
+      "unsupported": {},
+      "warnings": [
+        "텍스트 키워드가 포함된 폐합 사각형을 후보로 제시합니다. 학습된 영역 탐지·OCR 결과가 아니며, 담당자 검토가 필요합니다.",
+        "BOM 자동 전개는 '품명 | 재질 | 수량 | 개당중량kg' 텍스트 형식만 지원합니다. 일반 표의 셀 연결·치수·중량 자동 추론은 지원하지 않습니다."
+      ]
+    },
+    {
+      "bbox": [
+        0.0,
+        0.0,
+        420.0,
+        297.0
+      ],
+      "bom": [
+        {
+          "mass_kg": 320.0,
+          "material": "STS316L",
+          "name": "SHELL",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 90.0,
+          "material": "STS316L",
+          "name": "HEAD",
+          "quantity": 2,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 110.0,
+          "material": "STS304",
+          "name": "JACKET",
+          "quantity": 1,
+          "source": "REG-002"
+        },
+        {
+          "mass_kg": 10.0,
+          "material": "SS400",
+          "name": "SUPPORT",
+          "quantity": 4,
+          "source": "REG-002"
+        }
+      ],
+      "counts": {
+        "bom_table": 1,
+        "other": 0,
+        "rev_table": 1,
+        "title_block": 1
+      },
+      "created_at": "2026-09-19T06:23:50.603033+00:00",
+      "entity_count": 21,
+      "filename": "KD-demo-reactor.dxf",
+      "mode": "synthetic_demo",
+      "objects": [
+        {
+          "bbox": [
+            260.0,
+            15.0,
+            410.0,
+            63.0
+          ],
+          "evidence": "DRAWING NO: KD-DEMO-R1000",
+          "id": "REG-001",
+          "label": "title_block",
+          "status": "검토 필요",
+          "texts": [
+            "DRAWING NO: KD-DEMO-R1000",
+            "TITLE: REACTOR ASSEMBLY",
+            "MATERIAL: STS316L",
+            "DEMO / NOT FOR FABRICATION"
+          ]
+        },
+        {
+          "bbox": [
+            235.0,
+            170.0,
+            410.0,
+            280.0
+          ],
+          "evidence": "BILL OF MATERIALS (DEMO)",
+          "id": "REG-002",
+          "label": "bom_table",
+          "status": "검토 필요",
+          "texts": [
+            "BILL OF MATERIALS (DEMO)",
+            "NAME | MATERIAL | QTY | MASS_KG",
+            "SHELL | STS316L | 1 | 320",
+            "HEAD | STS316L | 2 | 90",
+            "JACKET | STS304 | 1 | 110",
+            "SUPPORT | SS400 | 4 | 10"
+          ]
+        },
+        {
+          "bbox": [
+            260.0,
+            85.0,
+            410.0,
+            145.0
+          ],
+          "evidence": "REVISION HISTORY",
+          "id": "REG-003",
+          "label": "rev_table",
+          "status": "검토 필요",
+          "texts": [
+            "REVISION HISTORY",
+            "A | 2026-09-19 | DEMO ONLY"
+          ]
+        }
+      ],
+      "paths_count": 9,
+      "ref": "drawings/CAD-d0c940a70495",
+      "scale_to_mm": 1,
+      "texts_count": 12,
+      "unit": "mm",
+      "unit_source": "header",
+      "unsupported": {},
+      "warnings": [
+        "텍스트 키워드가 포함된 폐합 사각형을 후보로 제시합니다. 학습된 영역 탐지·OCR 결과가 아니며, 담당자 검토가 필요합니다.",
+        "BOM 자동 전개는 '품명 | 재질 | 수량 | 개당중량kg' 텍스트 형식만 지원합니다. 일반 표의 셀 연결·치수·중량 자동 추론은 지원하지 않습니다."
+      ]
+    }
+  ],
+  "source": "data/kyungdong.sqlite3"
+}

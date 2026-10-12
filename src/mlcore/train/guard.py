@@ -10,6 +10,8 @@ Phase 0 아키텍트 공표 — 이후 소유 개발1. `gates/check_leakage.py` 
 - 우회 경로(DEF-QA1-006): `__dict__` 없음(`vars()` 불가 · __slots__) · copy / deepcopy / pickle → TestLeak ·
   final_eval 1회는 **ledger 단위**(같은 ledger 의 다른 래퍼 · 복사본으로도 2회째 거부) · `overlaps()` 는 래퍼당 1회
   (표본 내 평가 판정용 — 한 행씩 묻는 질의로 인덱스를 복원하지 못하게). 정적 우회 패턴은 `gates/check_leakage.py` 가 본다.
+- 다른 문법(F13-1 · QA-R2): 인덱스는 속성이 아니라 클로저에 있다(getattr 문자열 조립 · slot 서술자 · gc 참조로 시퀀스가
+  나오지 않는다) · 모르는 속성 조회는 기록 후 TestLeak · 시험 시각 범위는 SplitPlan 이 아니라 래퍼가 갖고 final_eval 뒤에만.
 """
 
 from __future__ import annotations
@@ -18,9 +20,11 @@ import inspect
 import threading
 from typing import Literal, Sequence
 
-Purpose = Literal["final_eval", "report", "selection", "calibration", "interval", "threshold", "baseline", "queue"]
+Purpose = Literal["final_eval", "report", "selection", "calibration", "interval", "threshold", "baseline", "queue",
+                  "queue_scoring"]
 ALLOWED: frozenset[str] = frozenset({"final_eval", "report"})
-FORBIDDEN: frozenset[str] = frozenset({"selection", "calibration", "interval", "threshold", "baseline", "queue"})
+FORBIDDEN: frozenset[str] = frozenset({"selection", "calibration", "interval", "threshold", "baseline", "queue",
+                                       "queue_scoring"})   # queue_scoring = std/split_policies.yaml 이름 (G2-R01)
 
 
 class TestLeak(Exception):
@@ -60,21 +64,45 @@ def _caller() -> str:
     return "?"
 
 
+def _seal(idx: tuple[int, ...], bounds: dict):
+    """인덱스 · 시험 시각 범위를 클로저에 가둔다 — 래퍼 속성(slot · getattr · gc 참조)에 시퀀스가 없다(F13-1)."""
+    def rows(frame):
+        return frame.iloc[list(idx)]
+
+    def reveal():
+        return dict(bounds)
+
+    def overlap(other) -> bool:
+        member = frozenset(idx)
+        return any(int(i) in member for i in other)
+
+    return rows, reveal, overlap
+
+
 class GuardedTest:
     __test__ = False
-    __slots__ = ("__idx", "_ledger", "_final_done", "_overlap_done")
+    __slots__ = ("_n", "_rows", "_reveal", "_overlap", "_ledger", "_final_done", "_overlap_done")
 
-    def __init__(self, idx: Sequence[int], ledger: AccessLedger):
-        self.__idx = tuple(int(i) for i in idx)
+    def __init__(self, idx: Sequence[int], ledger: AccessLedger, *, bounds: dict | None = None):
+        sealed = tuple(int(i) for i in idx)
+        self._n = len(sealed)
+        self._rows, self._reveal, self._overlap = _seal(sealed, bounds or {})
         self._ledger = ledger
         self._final_done = False
         self._overlap_done = False
 
     def __len__(self) -> int:  # 길이 조회는 접근이 아니다
-        return len(self.__idx)
+        return self._n
+
+    def __getattr__(self, name: str):
+        """정의되지 않은 속성 조회(getattr 문자열 조립 · 이름 맹글링 추측 등)는 기록 후 TestLeak (F13-1).
+        dunder 는 파이썬 · 라이브러리의 정상 탐색이라 AttributeError 그대로."""
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(name)
+        self._deny(f"getattr:{name}")
 
     def _deny(self, what: str):
-        self._ledger.record(what, len(self.__idx), _caller(), ok=False, reason="직접 인덱스 접근")
+        self._ledger.record(what, self._n, _caller(), ok=False, reason="직접 인덱스 접근")
         raise TestLeak(f"시험 구간 인덱스 직접 접근({what}) 금지")
 
     def __iter__(self):
@@ -102,26 +130,34 @@ class GuardedTest:
         """표본 내 평가 판정용(래퍼당 1회) — 겹침 여부만 알려 주고 인덱스는 내주지 않는다.
         2회째는 질의로 인덱스를 복원하려는 시도로 보고 기록 후 TestLeak."""
         if self._overlap_done:
-            self._ledger.record("overlaps", len(self.__idx), _caller(), ok=False, reason="overlaps 2회째")
+            self._ledger.record("overlaps", self._n, _caller(), ok=False, reason="overlaps 2회째")
             raise TestLeak("시험 구간 겹침 질의는 1회만(표본 내 평가 판정)")
         self._overlap_done = True
-        return bool(set(self.__idx) & {int(i) for i in other_idx})
+        return self._overlap(other_idx)
+
+    def bounds(self) -> dict:
+        """시험 구간 시각 범위(`test_ts`) — final_eval 뒤 보고서용으로만. 그 전에는 기록 후 TestLeak (F13-1:
+        SplitPlan.boundaries 에 test_ts 를 두지 않아 변수 키로 시험 행을 자를 수 없다)."""
+        if not self._final_done:
+            self._ledger.record("bounds", self._n, _caller(), ok=False, reason="final_eval 전 시험 경계")
+            raise TestLeak("시험 구간 경계는 final_eval 뒤에만")
+        return self._reveal()
 
     def take(self, frame, purpose: str):
         where = _caller()
         if purpose in FORBIDDEN or purpose not in ALLOWED:
-            self._ledger.record(purpose, len(self.__idx), where, ok=False, reason="금지 목적")
+            self._ledger.record(purpose, self._n, where, ok=False, reason="금지 목적")
             raise TestLeak(f"시험 구간을 {purpose} 에 쓸 수 없다")
         if purpose == "final_eval":
             if self._final_done or self._ledger.final_eval_count():
-                self._ledger.record(purpose, len(self.__idx), where, ok=False, reason="final_eval 2회째")
+                self._ledger.record(purpose, self._n, where, ok=False, reason="final_eval 2회째")
                 raise TestLeak("시험 구간 평가는 1회만")
             self._final_done = True
         elif not self._final_done:
-            self._ledger.record(purpose, len(self.__idx), where, ok=False, reason="final_eval 전 report")
+            self._ledger.record(purpose, self._n, where, ok=False, reason="final_eval 전 report")
             raise TestLeak("report 는 final_eval 뒤에만")
-        self._ledger.record(purpose, len(self.__idx), where, ok=True)
-        return frame.iloc[list(self.__idx)]
+        self._ledger.record(purpose, self._n, where, ok=True)
+        return self._rows(frame)
 
 
 def assert_not_in_sample(fit_idx: Sequence[int], test: GuardedTest) -> None:

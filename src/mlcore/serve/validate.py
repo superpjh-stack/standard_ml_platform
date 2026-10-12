@@ -140,3 +140,17 @@ def range_check(inputs: dict, lock: dict, skip: Iterable[str] = ()) -> tuple[lis
             if edge > 0 and (x - lo < edge or hi - x < edge):
                 near.append(name)
     return oor, near
+
+
+def ml_inputs(values: dict) -> dict:
+    """견적 · 문서 입력(JSON 숫자 = Decimal, parse_float=Decimal) → 회귀 모델 입력.
+    금액 계산은 Decimal 그대로 두고(serve/quotes.py), **모델 입력 경계에서만** 수치형으로 바꾼다 — 모델은 실수로 예측한다.
+    정수값 Decimal 은 int, 그 밖 Decimal 은 float. 문자열 · None · int 는 그대로."""
+    from decimal import Decimal
+    out = {}
+    for k, v in values.items():
+        if isinstance(v, Decimal):
+            out[k] = int(v) if v == v.to_integral_value() else float(v)
+        else:
+            out[k] = v
+    return out

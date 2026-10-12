@@ -29,6 +29,7 @@ ks:
   record_detail_keys: [record, source]                                               # api/main.py:107
   records_bad_queries: ["limit=0", "limit=101", "offset=-1", "machine=PRS-18", "product=invalid", "search=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]   # tests/test_api.py:63
   records_total: 720
+  record_key_order: [press_force, vibration, motor_current, equip_temp, mold_temp, cycle_time, shot_count, machine, product, remaining_hours, failure_24h, lot_id, recorded_at]   # api/ml_service.py:20-37 demo_data 열 순서 (FEATURE_META · CATEGORICAL · TARGET · failure_24h · lot_id · recorded_at)
   health_keys: [status, model_ready, data_mode, version]                             # api/main.py:73
   error_shape: detail_list                                                           # api/main.py:25-31 {"detail": [{loc, msg, type}]}
   optimize_row_keys: [stop_after_hours, cost_index, reserve_hours, violation]       # api/ml_service.py:138-139 · :147 (json_rows(ranked) 열 순서)
@@ -77,6 +78,7 @@ sw:
   record_detail_keys: [record, source]                                               # api/main.py:107
   records_bad_queries: ["limit=0", "limit=101", "offset=-1", "print_type=자수", "color_tone=invalid", "search=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]   # tests/test_api.py:79
   records_total: 720
+  record_key_order: [set_temp, set_pressure, line_speed, ink_usage, dwell_time, absorb_rate, fabric_strength, print_type, color_tone, delta_e, defect, lot_id, recorded_at]   # api/ml_service.py:41-58 demo_data 열 순서 (equip_code 는 differs.record_equip_code)
   health_keys: [status, model_ready, data_mode, version]                             # api/main.py:73
   error_shape: detail_list
   optimize_row_keys: [set_temp, set_pressure, line_speed, ink_usage, dwell_time, pred_delta_e, risk_probability, cost_index, violation, anomaly]   # api/ml_service.py:184
@@ -91,6 +93,7 @@ sw:
   overview_values: {print_types: [나염, 승화, DTF], color_tones: [연한 색상, 중간 색상, 진한 색상]}   # api/config.py:5 · :8
   overview_controls: [set_temp, set_pressure, line_speed, ink_usage, dwell_time]       # api/config.py:9-15 CONTROLS · ml_service.py:212
   differs:
+    record_equip_code: "옛 records 행의 equip_code(api/ml_service.py:49)는 내지 않는다 — 옛 열 이름이 회사 등록부 compat 설정에 없다(코어에 회사 열 이름을 두지 않는다, G-M01). 같은 값은 compat.equipment_by_print_type 의 첫 칸"
     optimize_candidate_count: "원천 전수 8,400점(학습 범위 무시) ↔ 표준 학습 범위 ∩ min/max (D-31) — 이관 보고서 사유"
     model: "표시 이름 ↔ 후보 코드"
     version: "옛 상수 ↔ 등록부 버전"

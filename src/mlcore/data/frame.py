@@ -79,7 +79,11 @@ def standardize(raw: pd.DataFrame, spec: "ReadSpec", *, kind: str, source_ref: s
             out[f.name] = pd.to_numeric(col, errors="coerce").astype(float)
     target = (task.get("target") or {}).get("name")
     if target and target in raw.columns:
-        out["target"] = pd.to_numeric(raw[target], errors="coerce").astype(float)
+        if spec.task.type in ("extract",):           # 클래스 이름 목표(다중 클래스 — taskview.CLASS_TARGET_TYPES)
+            col = raw[target]
+            out["target"] = col.where(col.notna(), None).map(lambda v: None if v is None else str(v)).astype(object)
+        else:
+            out["target"] = pd.to_numeric(raw[target], errors="coerce").astype(float)
     out["_source"] = kind
     out["_source_ref"] = source_ref
     if not has_entity:

@@ -1,4 +1,4 @@
-"""/api/v1 라우터 (contracts/api-contract.md). Phase 0: B01 health + 2차 묶음(B09 · B10 · B11) 501.
+"""/api/v1 라우터 (contracts/api-contract.md) — B01 health. 2차 묶음(B09 · B10 · B11)은 routers/phase2.py.
 
 나머지 1차 묶음(B02~B08 · B12~B15)은 웨이브 A0/A 에서 담당 개발자가 붙인다(goal §3.2).
 """
@@ -8,7 +8,6 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from ...db.conn import DbUnavailable, q, q1
-from ..errors import not_implemented
 
 router = APIRouter(prefix="/api/v1")
 
@@ -32,7 +31,7 @@ def health(request: Request):
         for task_id in registry.tasks:
             item = {"task": task_id, "model_ready": task_id in production, "version": production.get(task_id)}
             if task_id in production:
-                err = _artifact_error(registry.tenant.code, task_id)
+                err = _artifact_error(registry.tenant.code, task_id, request)
                 if err is not None:        # 산출물이 등록부와 다르면 predict 가 503 — health 도 준비 안 됨으로 (QA2 관찰)
                     item.update(model_ready=False, error=err)
             tasks.append(item)
@@ -47,33 +46,20 @@ def health(request: Request):
     }
 
 
-def _artifact_error(tenant_id: str, task_id: str) -> str | None:
-    """production 산출물 적재 대조(해시 · env.lock) — predict 와 같은 함수 · 같은 캐시. 통과면 None, 아니면 오류 코드."""
+def _artifact_error(tenant_id: str, task_id: str, request: Request | None = None) -> str | None:
+    """production 을 predict 와 같은 판정으로 본다 — 예측 시점 방어(require_servable: live 회사의 합성 모델 → 503,
+    DEF-QAR2-001) + 산출물 적재 대조(해시 · env.lock, 같은 함수 · 같은 캐시). 통과면 None, 아니면 오류 코드."""
     from ...registry.artifacts import load_artifacts
     from ...registry.models import Registry
     from ...serve.errors import ServeError
     try:
-        load_artifacts(Registry().get(tenant_id, task_id))
+        ref = Registry().get(tenant_id, task_id)
+        if request is not None:
+            from ._common import catalog
+            catalog(request).require_servable(tenant_id, task_id, ref)
+        load_artifacts(ref)
     except ServeError as e:
         return e.code
     return None
 
-
-# ── 2차 유형 경로 — 경로는 두되 501 (goal §2.3) ─────────────────────────────
-@router.get("/tenants/{t}/tasks/{task}/review")
-@router.patch("/tenants/{t}/tasks/{task}/review/{item_id}")
-def review_queue(t: str, task: str, item_id: str | None = None):
-    raise not_implemented("검토 대기열(review_queue)")
-
-
-@router.post("/tenants/{t}/tasks/{task}/documents")
-@router.get("/tenants/{t}/tasks/{task}/documents/{doc_id}")
-def documents(t: str, task: str, doc_id: str | None = None):
-    raise not_implemented("문서 · 도면 추출(extract)")
-
-
-@router.post("/tenants/{t}/tasks/{task}/quotes")
-@router.get("/tenants/{t}/tasks/{task}/quotes")
-@router.get("/tenants/{t}/tasks/{task}/quotes/{quote_id}.csv")
-def quotes(t: str, task: str, quote_id: str | None = None):
-    raise not_implemented("견적(quote)")
+# 2차 유형 경로(B09 · B10 · B11)는 routers/phase2.py (웨이브 P — 501 0, goal2 G2-T01)

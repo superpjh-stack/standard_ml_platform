@@ -5,6 +5,8 @@
 
 한 번의 실행 = (1) 감시가 전에 접수한 재학습 중 작업자가 candidate 로 등록한 것 → 승인 요청,
 (2) 어제 하루치 `run_daily` → 기준 초과면 재학습 접수. 학습 실행은 작업자(`python -m mlcore.train.jobs --pending`).
+(3) 대기열 일정 작업 `review.run_review` — 실측이 붙은 운영 잔차 → mlp_review_item (task-contract §6.1 schedule).
+(4) 허브 내보내기 파일 1회 `var/export/hub/<day>.json` (D2-09 · contracts/hub-export.md).
 production 은 바꾸지 않는다.
 """
 
@@ -16,6 +18,7 @@ from datetime import date, datetime, timedelta
 
 from .daily import KST, run_daily
 from .retrain import request_approvals
+from .review import run_review
 
 CRON = {"hour": 2, "minute": 0}
 
@@ -25,8 +28,22 @@ def run_once(tenant_id: str, day: date | None = None, *, retrain_source: str | N
     approvals = request_approvals(tenant_id)
     rows = run_daily(tenant_id, day, retrain_source=retrain_source)
     summary = [r for r in rows if r["metric"] == "_summary"]
+    queue = run_review(tenant_id, day)
+    hub = export_hub_after(day)
     return {"tenant": tenant_id, "day": day.isoformat(), "approvals": approvals,
-            "tasks": summary, "rows": sum(1 for r in rows if r["metric"] != "_summary")}
+            "tasks": summary, "rows": sum(1 for r in rows if r["metric"] != "_summary"), "review": queue,
+            "hub_export": hub}
+
+
+def export_hub_after(day: date) -> dict:
+    """감시 일일 작업 뒤 허브 내보내기 1회(D2-09). 실패는 숨기지 않고 결과에 남긴다(감시 결과는 이미 기록됨)."""
+    from . import hub_export
+
+    try:
+        path = hub_export.write(day)
+        return {"path": str(path.relative_to(hub_export.ROOT)) if path.is_relative_to(hub_export.ROOT) else str(path)}
+    except Exception as e:  # noqa: BLE001
+        return {"error": {"type": type(e).__name__, "message": str(e)[:200]}}
 
 
 def build(tenant_id: str, *, retrain_source: str | None = None):

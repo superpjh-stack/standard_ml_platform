@@ -139,8 +139,10 @@ def test_near_range_is_watch(world, post):
 
 
 def test_reject_policy_returns_rejected_without_value(tmp_path):
-    m = h.make_tenant("ks", tmp_path, overrides={"remaining_hours": {"out_of_range": "reject"}})
+    # out_of_range 는 회사 덮어쓰기 키가 아니다(task-contract §3 · F20-4 로더) — 팩 과제 정의가 reject 인 경우를 병합 결과에 둔다
+    m = h.make_tenant("ks", tmp_path)
     task = f"{m.tenant.code}.remaining_hours"
+    m.tasks[task].raw["out_of_range"] = "reject"
     _, res = h.to_production(m, task)
     k, tc = h.keys(m), h.client(m)
     feats = h.task_features(m, task)

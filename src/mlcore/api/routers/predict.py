@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from typing import Literal
+
+from fastapi import APIRouter, Query, Request
 
 from ... import auth
 from ...serve import actuals as actuals_mod
@@ -50,7 +52,8 @@ def predict_batch(t: str, task: str, body: BatchBody, request: Request):
 @router.post("/tenants/{t}/tasks/{task}/optimize")
 def optimize(t: str, task: str, body: OptimizeBody, request: Request):
     p = auth.require(principal(request), "optimize")
-    req = OptimizeRequest(fixed=body.fixed, current=body.current, params=body.params, entity_id=body.entity_id)
+    req = OptimizeRequest(fixed=body.fixed, current=body.current, params=body.params, entity_id=body.entity_id,
+                          request_approval=body.request_approval)
     return Optimizer(catalog(request)).optimize(t, task_id(t, task), req, caller=actor(p))
 
 
@@ -63,6 +66,13 @@ def actuals(t: str, task: str, body: ActualBody, request: Request):
 
 
 @router.get("/predictions/{prediction_id}/trace")
-def trace(prediction_id: str, request: Request):
-    p = auth.require(principal(request), "trace")
+def trace(prediction_id: str, request: Request, view: Literal["full", "explain"] = Query(default="full")):
+    """전체 추적은 admin(roles.yaml trace). `?view=explain` 축약 보기(모델 · 스냅숏 · 기여, 원천 ref 없음)는
+    roles.yaml `trace.explain_view`(operator 이상 — Agent ml.get_explanation, agent-tools §4)."""
+    pr = principal(request)
+    if view == "explain":
+        if trace_mod.explain_view_rule(pr.role) != "allow":
+            raise auth.Forbidden()
+        return trace_mod.explain_view(prediction_id, tenant_id=pr.tenant_id)
+    p = auth.require(pr, "trace")
     return trace_mod.trace(prediction_id, tenant_id=p.tenant_id)

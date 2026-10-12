@@ -1,0 +1,10 @@
+# 업종 팩 — 김치 · 발효 식품 (contracts/pack-contract.md §6). 회사 · 원천 테이블 이름을 두지 않는다.
+code: kimchi
+name: 김치 · 발효 식품
+version: 0.1.0
+core_min: 0.1.0
+synth: {module: synth/kimchi_lots.py, seed: 42, rows: 420}   # 원천 _demo_data() 이관 — 행 일치 시험 packs/kimchi/tests/test_kimchi_synth.py
+notice: "모델 예측은 관능검사, 이화학검사 또는 출하 승인을 대체하지 않습니다."
+status_labels: {}
+monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}
+tasks: [sensory_score, residual_review]     # recipe_optimize 는 웨이브 A2 (task-contract §6.5)

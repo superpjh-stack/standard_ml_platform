@@ -66,6 +66,9 @@ def default_seed(task, pack_meta: dict) -> int:
 
 
 def task_candidates(task) -> tuple[tuple[str, ...], dict[str, dict]]:
+    from .taskview import learn_view
+
+    task = learn_view(task)               # extract 는 model: 블록의 후보 (D2-15)
     cands = tuple(task.raw.get("candidates") or ())
     params = {c: dict((task.raw.get("candidate_params") or {}).get(c) or {}) for c in cands}
     return cands, params
@@ -85,7 +88,9 @@ def read_frame(tenant_id: str, task_id: str, *, source_role: str | None = None,
     m = load_merged(tenant_id, tenants_base)
     if task_id not in m.tasks:
         raise KeyError(f"과제 {task_id} 가 켜져 있지 않다")
-    task = m.tasks[task_id]
+    from .taskview import learn_view
+
+    task = learn_view(m.tasks[task_id])   # extract 는 model: 블록의 변수 · 목표로 읽는다
     cfg = m.tenant.config
     sname = source_name_for(cfg, source_role)
     scfg = cfg["sources"][sname]
@@ -193,8 +198,11 @@ def run_view(run_id: str, *, tenant_id: str | None = None, test: bool = False) -
         "report": {k: rep.get(k) for k in ("selection_metric", "selection_reason", "valid_baseline", "baseline",
                                            "baseline_value", "baselines_compared", "beats_baseline_rule", "interval",
                                            "threshold", "threshold_rule", "calibration", "search", "outliers",
-                                           "outliers_removed", "split", "task_type")}
+                                           "outliers_removed", "split", "task_type", "labels", "extract_metrics")}
         | {"permutation_importance": test_part.get("permutation_importance"),
            "residuals": test_part.get("residuals"), "error_by_category": test_part.get("error_by_category"),
-           "calibration_curve": test_part.get("calibration_curve")},
+           "calibration_curve": test_part.get("calibration_curve"),
+           # 대기열 재료 요약(G2-R01) — 시험 구간 잔차 행 수 · 검증 잔차 행 수만(행 자체는 대기열 API 가 쓴다)
+           "queue_residuals": ({"origin": q.get("origin"), "source": q.get("source"), "test_rows": len(q.get("test") or []),
+                                "valid_rows": q.get("valid_rows")} if (q := rep.get("queue_residuals")) else None)},
     }

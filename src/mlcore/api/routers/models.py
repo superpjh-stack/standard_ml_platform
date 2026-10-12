@@ -66,7 +66,7 @@ def rollback(t: str, task: str, v: str, request: Request, body: ReasonBody | Non
 @router.get("/tenants/{t}/approvals")
 def list_approvals(t: str, request: Request, state: str | None = Query(default=None, pattern="^(pending|approved|rejected|expired)$"),
                    limit: int = Query(default=20, ge=1, le=100), cursor: str | None = Query(default=None, max_length=64)):
-    auth.require(principal(request), "approve", write=False)
+    p = auth.require(principal(request), "approve", write=False)
     approval.expire_due(tenant_id=t)                           # 만료 대기 건을 닫은 뒤 보인다(D-130 · DEF-QA3-004)
     sql = ("SELECT approval_id, task_id, kind, ref_id, action, approver_role, state, requested_by, requested_at, "
            "expires_at, decided_by, decided_at, reason, evidence FROM mlp_approval WHERE tenant_id = %s")
@@ -74,6 +74,9 @@ def list_approvals(t: str, request: Request, state: str | None = Query(default=N
     if state:
         sql += " AND state = %s"
         params.append(state)
+    if auth.permissions()["approve"].get(p.role) == "own_task":   # approver 는 자기 approver_role 과제 승인만 (F16-8)
+        sql += " AND approver_role = ANY(%s)"
+        params.append(list(p.approver_roles))
     if cursor:
         sql += " AND approval_id < %s"
         params.append(cursor)

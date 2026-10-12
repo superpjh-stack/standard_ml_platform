@@ -7,12 +7,14 @@ export OMP_NUM_THREADS := 1
 TENANT ?=
 TASK   ?=
 NEW    ?=
+DATE   ?=
 PACK   ?= _template
 CSV    ?=
 GIT_SHA = $(shell git rev-parse --short HEAD)
 need    = @test -n "$($(1))" || { echo "$(1)= 가 필요하다 — $(2)"; exit 2; }
-# DB 를 지우는 대상은 CONFIRM=1 이 있어야 돈다 (#7 · D-124). 예: make db-reset CONFIRM=1
-confirm = @test "$(CONFIRM)" = 1 || { echo "$@: ml_db · ml_test_db 의 mlp 데이터를 전부 지운다 — 정말이면 'make $@ CONFIRM=1'"; exit 2; }
+# DB 를 지우는 대상은 **명령줄** CONFIRM=1 이 있어야 돈다 (#7 · D-124). 셸에 export 된 CONFIRM · make -e 는 받지 않는다
+# (DEF-QAR2-003 · F20-3 — $(origin) 이 'command line' 인 것만). 예: make db-reset CONFIRM=1
+confirm = @test "$(origin CONFIRM)" = "command line" && test "$(CONFIRM)" = 1 || { echo "$@: ml_db · ml_test_db 의 mlp 데이터를 전부 지운다 — 정말이면 명령줄 인자로 'make $@ CONFIRM=1' (셸 환경변수 CONFIRM 은 받지 않는다)"; exit 2; }
 GRANTS  = sed -n '/^-- @grants-begin/,$$p' src/mlcore/db/schema.sql
 MIGRATE = sed -n '/^-- @migrate-begin/,/^-- @migrate-end/p' src/mlcore/db/schema.sql
 
@@ -66,8 +68,8 @@ gate:             ## 판정표 → outputs/gate-latest.md (goal §2)
 gate2:            ## 2차 판정표 = 1차 게이트 전부 + 6개사로 넓힌 판정 + G2-* → outputs/gate2-latest.md (goal2 §2). 대상 없는 2차 게이트는 FAIL
 	$(UV) python gates/gate2.py
 
-export-hub:       ## G2-I02 — 6개사 과제 · 변수 · 소스 · 일 호출 수 → var/export/hub/<date>.json (contracts/hub-export.md, 웨이브 P 개발3)
-	@echo "미구현 — 웨이브 P 개발3 가 contracts/hub-export.md 대로 채운다 (G2-I02 FAIL)"; exit 2
+export-hub:       ## G2-I02 — 회사 전부 과제 · 변수 · 소스 · 일 호출 수 → var/export/hub/<date>.json (contracts/hub-export.md). DATE= 기본 어제 KST
+	$(UV) python -m mlcore.monitor.hub_export $(if $(DATE),--date $(DATE))
 
 gate-full:        ## 스키마 재생성(데이터 삭제 — CONFIRM=1 필수) + (A) 과제 8 재학습 2회 · 이관 대조 · 새 회사 · 승인 경합 · bench → 판정
 	$(confirm)

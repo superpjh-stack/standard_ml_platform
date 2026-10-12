@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Literal, Sequence
 
@@ -26,6 +26,7 @@ import pandas as pd
 
 from ..data import snapshot as snapshots
 from ..data.features import FeatureDef, feature_defs
+from ..data.taskview import has_model, learn_view
 from ..data.jobs import config_hash as _config_hash
 from ..data.jobs import default_seed, run_id_for, submit, task_candidates  # noqa: F401  submit 은 interfaces §4 이름
 from ..settings import ROOT, get_settings
@@ -38,7 +39,22 @@ from .guard import AccessLedger, InSampleEvaluation, TestLeak
 from .report import test_report
 
 calls = 0                      # 학습 호출 계측 (G-M06: API 기동 후 0)
-TRAINABLE = ("regression", "risk", "anomaly")
+TRAINABLE = ("regression", "risk", "anomaly", "extract")   # extract = model: 블록이 있는 모델 추출기만 (D2-15)
+
+
+class TrainRefused(ValueError):
+    """학습 전 거부 — `code` 가 보고 · 경고에 남는다(labels_none · unknown_class 등)."""
+
+    def __init__(self, code: str, message: str, **detail):
+        super().__init__(message)
+        self.code, self.detail = code, detail
+
+
+def majority_class(y, classes) -> str:
+    """최빈 클래스 — 동률이면 과제 classes 순서의 앞(결정적)."""
+    vals = [str(v) for v in y]
+    counts = {c: vals.count(c) for c in classes}
+    return max(classes, key=lambda c: (counts[c], -list(classes).index(c)))
 
 
 
@@ -161,6 +177,7 @@ def tenant_of(task) -> str:
 def resolve_features(task, *, tenants_base=None, merged=None) -> list[FeatureDef]:
     from ..data.jobs import load_merged
 
+    task = learn_view(task)
     m = merged if merged is not None else load_merged(tenant_of(task), tenants_base)
     return feature_defs(m.pack.features, task.raw.get("features") or [], m.tenant.config.get("categories") or {},
                         m.pack.std_name)
@@ -212,10 +229,20 @@ class StandardTrainer:
         global calls
         calls += 1
         task = cfg.task
-        if task.type not in TRAINABLE:
-            raise NotTrainable(f"{task.id}: {task.type} 는 학습 과제가 아니다")
+        if task.type not in TRAINABLE or (task.type == "extract" and not has_model(task)):
+            raise NotTrainable(f"{task.id}: {task.type} 는 학습 과제가 아니다(extract 는 model: 추출기만)")
         tenant = tenant_of(task)
         run_id = run_id_for(tenant, task.id, cfg.snapshot_id, cfg.config_hash())
+        if task.type == "extract":
+            cfg = replace(cfg, task=learn_view(task))
+            task = cfg.task
+            if task.raw.get("labels", "none") == "none":   # 정답 없음 → 학습 · 지표를 만들지 않는다(시험 구간도 보지 않는다)
+                msg = "정답 라벨 없음(labels: none) — 모델 추출기를 학습하지 않고 지표를 만들지 않는다"
+                warns = [_w("labels_none", msg)]
+                return TrainResult(run_id, "failed", None, {}, msg, {}, False, None,
+                                   {"run_id": run_id, "task_type": "extract", "labels": "none", "metrics": None,
+                                    "error": {"type": "TrainRefused", "code": "labels_none", "message": msg},
+                                    "warnings": warns}, warns, [])
         frame, info = self._load(cfg)
         feats = self.features if self.features is not None else resolve_features(task)
         ledger = AccessLedger()
@@ -241,7 +268,8 @@ class StandardTrainer:
         if missing_cols:
             raise KeyError(f"스냅숏에 변수 열이 없다: {missing_cols}")
         warnings: list[dict] = []
-        supervised = ttype in ("regression", "risk")
+        supervised = ttype in ("regression", "risk", "extract")
+        classes = list(raw.get("classes") or []) if ttype == "extract" else []
         if supervised:
             if "target" not in frame.columns or not frame["target"].notna().any():
                 raise ValueError("목표 없음")
@@ -249,6 +277,12 @@ class StandardTrainer:
             if n_missing:
                 warnings.append(_w("target_missing_rows", "목표 결측 행을 학습에서 뺐다", rows=n_missing))
                 frame = frame[frame["target"].notna()].reset_index(drop=True)
+            if ttype == "extract":
+                if not classes:
+                    raise TrainRefused("missing_classes", "extract model.classes 가 비었다")
+                unknown = sorted(set(frame["target"].astype(str)) - set(classes))
+                if unknown:
+                    raise TrainRefused("unknown_class", f"과제 classes 에 없는 라벨 {unknown[:5]}", labels=unknown[:20])
         n = len(frame)
         if n < 200:
             warnings.append(_w("few_rows", "행 < 200", rows=n))
@@ -262,6 +296,8 @@ class StandardTrainer:
         def y_of(df: pd.DataFrame) -> np.ndarray:
             if ttype == "risk":
                 return (df["target"].to_numpy(dtype=float) == float(positive)).astype(int)
+            if ttype == "extract":
+                return df["target"].astype(str).to_numpy()
             return df["target"].to_numpy(dtype=float)
 
         use_last_value = ttype == "regression" and bool(raw.get("time_key")) and "ts" in frame.columns
@@ -290,6 +326,8 @@ class StandardTrainer:
             if ttype == "risk":
                 cls = list(model.classes_)
                 return np.asarray(model.predict_proba(X), float)[:, cls.index(1)]
+            if ttype == "extract":
+                return np.asarray(model.predict(X)).astype(str)
             return -np.asarray(model.score_samples(X), float)          # anomaly: 클수록 이상
 
         # ── 2) 후보 학습 · 검증 ──────────────────────────
@@ -330,6 +368,8 @@ class StandardTrainer:
                 return metrics.regression(yv, p)
             if ttype == "risk":
                 return metrics.risk(yv, p, threshold)
+            if ttype == "extract":
+                return metrics.extract(yv, p, classes)
             thr = float(np.quantile(p, 1 - contamination))
             return metrics.anomaly((p >= thr).astype(float))
 
@@ -364,9 +404,14 @@ class StandardTrainer:
             raise ValueError("학습 가능한 후보가 없다")
 
         # 검증 구간 기준선 — 학습 구간 평균 · 양성률(시계열 회귀는 직전 값도) 중 검증 구간에서 나은 것
-        baseline_kind = {"regression": "train_mean", "risk": "train_positive_rate", "anomaly": "contamination"}[ttype]
+        baseline_kind = {"regression": "train_mean", "risk": "train_positive_rate", "anomaly": "contamination",
+                         "extract": "majority_class"}[ttype]
         base_alt: dict = {}
-        if supervised:
+        if ttype == "extract":
+            bp = np.concatenate([np.full(len(va), majority_class(y_all[list(tr)], classes), dtype=object) for tr, va in folds])
+            by = np.concatenate([y_all[list(va)] for _, va in folds])
+            base_valid = metrics.extract(by, bp, classes)
+        elif supervised:
             base_parts, base_y = [], []
             for tr, va in folds:
                 base_parts.append(np.full(len(va), float(np.mean(y_all[list(tr)]))))
@@ -433,7 +478,7 @@ class StandardTrainer:
         model = build(champion, ttype, feats, chosen_params.get(champion), seed)
         if supervised:
             model.fit(X_all.iloc[fit_idx], y_all[fit_idx])
-            base_const = float(np.mean(y_all[fit_all]))
+            base_const = majority_class(y_all[fit_all], classes) if ttype == "extract" else float(np.mean(y_all[fit_all]))
         else:
             model.fit(X_all.iloc[fit_idx])
             base_const = contamination
@@ -454,9 +499,19 @@ class StandardTrainer:
                 return test_last_value(df)
             return np.full(len(df), base_const)
 
+        extract_detail: dict = {}       # extract 시험 구간 클래스별 F1 · 혼동행렬(+ 기준선) — final_eval 안에서만
+        queue_test: list[dict] = []     # 대기열 재료(test_split) — final_eval 로 받은 시험 행에서 이 자리에서만 만든다
+
+        def capture(df: pd.DataFrame, y: np.ndarray, p: np.ndarray) -> None:
+            ts = df["ts"].astype(str).tolist() if "ts" in df.columns else [None] * len(df)
+            queue_test.extend({"entity_id": str(e), "ts": t_, "actual": float(a), "predicted": float(q_),
+                               "residual": float(a - q_)} for e, t_, a, q_ in zip(df["entity_id"], ts, y, p))
+
         def score(df: pd.DataFrame):
             X = df[names]
             p = predict(model, X)
+            if supervised and ttype != "extract":
+                capture(df, y_of(df), p)
             if ttype == "regression":
                 y = y_of(df)
                 lo, hi = clipped(p - interval["q"]), clipped(p + interval["q"])
@@ -470,6 +525,12 @@ class StandardTrainer:
             if ttype == "risk":
                 y = y_of(df)
                 return metrics.risk(y, p, threshold), metrics.risk(y, np.full(len(df), base_const), threshold), p, {}
+            if ttype == "extract":
+                y = y_of(df)
+                b = np.full(len(df), base_const, dtype=object)
+                extract_detail.update(metrics.extract_detail(y, p, classes))
+                extract_detail["baseline"] = metrics.extract_detail(y, b, classes)
+                return metrics.extract(y, p, classes), metrics.extract(y, b, classes), p, {}
             flags = (p >= anomaly_thr).astype(float)
             return metrics.anomaly(flags), {"flag_rate": contamination}, p, {}
 
@@ -488,6 +549,17 @@ class StandardTrainer:
                     f"(std/metrics.yaml flag_rate.beats_band — 라벨 없는 비지도라 우열 비교가 없다, D-50)")
         if not beats:
             warnings.append(_w("below_baseline", "기준선 미달 — candidate 까지만", metric=sel or "flag_rate"))
+
+        # 대기열 재료 — 시험 구간 잔차(위 final_eval 안에서 계산) + 검증 구간 잔차(학습 구간 모델, 임계값 분위용 · task-contract §6.1)
+        queue = None
+        if supervised and ttype != "extract":
+            pv, yv_ = oof[champion]
+            valid_abs = sorted(float(x) for x in np.abs(np.asarray(yv_, float) - np.asarray(pv, float)))
+            queue = {"origin": "test_split", "source": "final_eval", "test": queue_test,
+                     "valid_abs": valid_abs, "valid_rows": len(valid_abs),
+                     "valid_sha256": hashlib.sha256(np.asarray(valid_abs, float).tobytes()).hexdigest(),
+                     "valid_source": "학습 구간 모델의 검증 구간 |실측 − 예측| (표본 밖)",
+                     "residual": "actual - predicted"}
 
         # ── 4) 보고 · 산출물 ────────────────────────────
         rep_test = test_report(frame, test, model=model, task_type=ttype, features=feats,
@@ -512,7 +584,9 @@ class StandardTrainer:
                    "positive": positive if ttype == "risk" else None, "clip": clip or None,
                    "threshold": threshold if ttype == "risk" else anomaly_thr, "contamination": contamination,
                    "calibration": calibration, "baseline_kind": baseline_kind,
-                   "score": {"regression": "predict", "risk": "predict_proba[:,1]", "anomaly": "-score_samples"}[ttype],
+                   "score": {"regression": "predict", "risk": "predict_proba[:,1]", "anomaly": "-score_samples",
+                             "extract": "predict"}[ttype],
+                   "classes": classes or None, "labels": raw.get("labels") if ttype == "extract" else None,
                    "range_from": "train+valid p1/p99 (test excluded)", "rows_fit": len(fit_idx),
                    "max_imputed": raw.get("max_imputed", 3),
                    "defined_values": {f.name: list(f.values) for f in feats if f.values}})
@@ -522,7 +596,7 @@ class StandardTrainer:
                          "synthetic": bool(info.get("synthetic")), "source_ref": info.get("source_ref") or {}},
             "config": {"seed": seed, "code_version": cfg.code_version, "candidates": list(cfg.candidates),
                        "candidate_params": cfg.candidate_params, "config_hash": cfg.config_hash()},
-            "split": {"policy": sp.policy, "boundaries": sp.boundaries},
+            "split": {"policy": sp.policy, "boundaries": {**sp.boundaries, **test.bounds()}},
             "selection_metric": sel, "valid_metrics": valid_metrics, "valid_baseline": base_valid,
             "champion": champion, "selection_reason": reason,
             "baseline": baseline_kind, "baseline_value": base_const,
@@ -535,8 +609,13 @@ class StandardTrainer:
             "calibration": calibration, "search": search_log or None, "chosen_params": chosen_params,
             "outliers": outliers or None,
             "outliers_removed": (sum(outliers["folds"]) + outliers["refit"]) if outliers else 0,
-            "test": rep_test, "warnings": warnings, "ledger": ledger.events(),
-            "test_predictions_sha256": hashlib.sha256(np.asarray(test_pred, float).tobytes()).hexdigest(),
+            "test": rep_test, "queue_residuals": queue,
+            "labels": raw.get("labels") if ttype == "extract" else None,
+            "extract_metrics": ({"labels": raw.get("labels"), **metrics.with_baseline(tm, bm), **extract_detail}
+                                if ttype == "extract" else None), "warnings": warnings, "ledger": ledger.events(),
+            "test_predictions_sha256": (hashlib.sha256("\n".join(map(str, test_pred)).encode()).hexdigest()
+                                        if ttype == "extract" else
+                                        hashlib.sha256(np.asarray(test_pred, float).tobytes()).hexdigest()),
         }
         out_dir = self.artifact_root / tenant / task.id / run_id
         report = artifacts.clean(report)
@@ -545,7 +624,7 @@ class StandardTrainer:
         return TrainResult(run_id, "succeeded", champion, artifacts.clean(valid_metrics), reason, test_metrics,
                            bool(beats), _rel(out_dir), report, artifacts.clean(warnings), ledger.events(),
                            artifact_sha256=bundle, synthetic=bool(info.get("synthetic")),
-                           test_predictions=tuple(float(x) for x in test_pred))
+                           test_predictions=() if ttype == "extract" else tuple(float(x) for x in test_pred))
 
 
 def train(cfg: TrainConfig, **kw) -> TrainResult:
