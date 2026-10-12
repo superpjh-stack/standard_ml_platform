@@ -1,0 +1,367 @@
+{
+ "kd.labor_hours": {
+  "source_procedure": {
+   "candidates": [
+    {
+     "mae": 3.5159,
+     "model": "Ridge",
+     "r2": 0.9966,
+     "rmse": 4.5369
+    },
+    {
+     "mae": 8.0412,
+     "model": "Gradient Boosting",
+     "r2": 0.9825,
+     "rmse": 10.3594
+    },
+    {
+     "mae": 12.7764,
+     "model": "Extra Trees",
+     "r2": 0.9594,
+     "rmse": 15.7562
+    },
+    {
+     "mae": 13.7213,
+     "model": "Random Forest",
+     "r2": 0.9524,
+     "rmse": 17.0648
+    }
+   ],
+   "champion": "Ridge",
+   "split": [
+    540,
+    180,
+    180
+   ],
+   "test": {
+    "mae": 4.1071,
+    "r2": 0.9956,
+    "rmse": 5.0456
+   },
+   "valid": {
+    "mae": 3.5159,
+    "model": "Ridge",
+    "r2": 0.9966,
+    "rmse": 4.5369
+   }
+  },
+  "source_reported": {
+   "mae": 4.1071,
+   "r2": 0.9956,
+   "rmse": 5.0456
+  },
+  "standard": {
+   "baseline": {
+    "interval_coverage": 0.8778,
+    "mae": 62.9053,
+    "mape": 0.3035,
+    "r2": -0.01,
+    "rmse": 74.4358
+   },
+   "beats_baseline": true,
+   "champion": "ridge",
+   "rows": 900,
+   "selection": "검증 구간 mae 최소: ridge 3.8305 (검증 기준선 train_mean 64.5269) — 후보 4개, 분할 random_60_20_20",
+   "snapshot_sha256": "55b2c16688694c66f73d722269b0b4b6ad9a9a233e0b8cd28648c4ef9a08c7d2",
+   "split": {
+    "test": 180,
+    "train": 540,
+    "valid": 180
+   },
+   "split_policy": "random_60_20_20",
+   "test": {
+    "interval_coverage": 0.9333,
+    "mae": 3.7017,
+    "mape": 0.0171,
+    "r2": 0.9962,
+    "rmse": 4.5892
+   },
+   "valid": {
+    "mae": 3.8305,
+    "mape": 0.0179,
+    "r2": 0.9959,
+    "rmse": 4.9386
+   }
+  }
+ },
+ "note": "ot · kd 이관 재현 (migration/reproduce_quote.py) — 시험 구간 1회 지표만, 원천 실행 0",
+ "ot.cad_objects": {
+  "source_procedure": {
+   "candidates": [
+    {
+     "accuracy": 1.0,
+     "macro_f1": 1.0,
+     "model": "Extra Trees"
+    },
+    {
+     "accuracy": 1.0,
+     "macro_f1": 1.0,
+     "model": "Logistic Regression"
+    },
+    {
+     "accuracy": 1.0,
+     "macro_f1": 1.0,
+     "model": "Random Forest"
+    }
+   ],
+   "champion": "Extra Trees",
+   "classes": [
+    "outer",
+    "hole",
+    "slot",
+    "other"
+   ],
+   "confusion_matrix": [
+    [
+     80,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     80,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     80,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     80
+    ]
+   ],
+   "rows": 1600,
+   "split": [
+    960,
+    320,
+    320
+   ],
+   "test": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0
+   },
+   "valid": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "model": "Extra Trees"
+   }
+  },
+  "standard": {
+   "baseline": {
+    "accuracy": 0.25,
+    "macro_f1": 0.1
+   },
+   "baseline_class": "outer",
+   "beats_baseline": true,
+   "champion": "logreg",
+   "class_f1": {
+    "hole": 1.0,
+    "other": 1.0,
+    "outer": 1.0,
+    "slot": 1.0
+   },
+   "confusion_matrix": {
+    "labels": [
+     "outer",
+     "hole",
+     "slot",
+     "other"
+    ],
+    "matrix": [
+     [
+      80,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      80,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      80,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      80
+     ]
+    ]
+   },
+   "labels": "synthetic",
+   "rows": 1600,
+   "selection": "검증 구간 macro_f1 최대: logreg 1 (검증 기준선 majority_class 0.1) — 후보 3개, 분할 stratified_60_20_20",
+   "snapshot_sha256": "26d07b32a2b643bfc24dacd0b9dbb364a223babf2bf0d5b0b19b0aa53864ab68",
+   "split": {
+    "test": 320,
+    "train": 960,
+    "valid": 320
+   },
+   "split_policy": "stratified_60_20_20",
+   "test": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0
+   },
+   "valid": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0
+   }
+  }
+ },
+ "ot.machining_minutes": {
+  "source_procedure": {
+   "candidates": [
+    {
+     "mae": 0.3421,
+     "model": "Ridge",
+     "r2": 0.9772,
+     "rmse": 0.4373
+    },
+    {
+     "mae": 0.486,
+     "model": "Gradient Boosting",
+     "r2": 0.9503,
+     "rmse": 0.6451
+    },
+    {
+     "mae": 0.7405,
+     "model": "Extra Trees",
+     "r2": 0.8916,
+     "rmse": 0.9532
+    },
+    {
+     "mae": 0.8388,
+     "model": "Random Forest",
+     "r2": 0.8643,
+     "rmse": 1.0662
+    }
+   ],
+   "champion": "Ridge",
+   "first_test_id": "DEMO-0721",
+   "missing_cells": 12,
+   "split": [
+    540,
+    180,
+    180
+   ],
+   "test": {
+    "mae": 0.3166,
+    "r2": 0.9788,
+    "rmse": 0.4099
+   },
+   "valid": {
+    "mae": 0.3421,
+    "model": "Ridge",
+    "r2": 0.9772,
+    "rmse": 0.4373
+   }
+  },
+  "standard": {
+   "baseline": {
+    "interval_coverage": 0.9222,
+    "mae": 1.9377,
+    "mape": 0.234,
+    "r2": -0.0002,
+    "rmse": 2.4815
+   },
+   "beats_baseline": true,
+   "champion": "ridge",
+   "rows": 900,
+   "selection": "검증 구간 mae 최소: ridge 0.303109 (검증 기준선 train_mean 2.06948) — 후보 4개, 분할 random_60_20_20",
+   "snapshot_sha256": "3aba38e0813d68ff37bd2ef61412981fc0848747c6bacad710993e648048b503",
+   "split": {
+    "test": 180,
+    "train": 540,
+    "valid": 180
+   },
+   "split_policy": "random_60_20_20",
+   "test": {
+    "interval_coverage": 0.9111,
+    "mae": 0.2956,
+    "mape": 0.0353,
+    "r2": 0.9775,
+    "rmse": 0.372
+   },
+   "valid": {
+    "mae": 0.3031,
+    "mape": 0.0378,
+    "r2": 0.9778,
+    "rmse": 0.3928
+   }
+  }
+ },
+ "ot.quote": {
+  "rows": [
+   {
+    "minutes_per_piece": {
+     "standard": "1.3286",
+     "stored": 1.3286
+    },
+    "minutes_raw": 1.3286235959456238,
+    "ref": "quotes/QT-0bd485deb3dc",
+    "source_formula_now": {
+     "markup": 86144,
+     "material": 423222,
+     "processing": 119574,
+     "setup": 31500,
+     "subtotal": 660440,
+     "total": 726484,
+     "vat": 66044
+    },
+    "source_formula_stored_revision": {
+     "markup": 86145,
+     "material": 423222,
+     "processing": 119576,
+     "setup": 31500,
+     "subtotal": 660443,
+     "total": 726487,
+     "vat": 66044
+    },
+    "stage_match": {
+     "markup_from_stored_base": true,
+     "material": true,
+     "processing_unrounded_minutes": true,
+     "setup": true,
+     "vat_from_stored_subtotal": true
+    },
+    "standard_decimal": {
+     "markup": 86144,
+     "material": 423222,
+     "processing": 119574,
+     "setup": 31500,
+     "subtotal": 660440,
+     "total": 726484,
+     "vat": 66044
+    },
+    "standard_equals_source_formula_now": true,
+    "stored": {
+     "markup": 86145,
+     "material": 423222,
+     "processing": 119576,
+     "setup": 31500,
+     "subtotal": 660443,
+     "total": 726487,
+     "vat": 66044
+    },
+    "stored_equals_source_stored_revision": true,
+    "weight_per_piece": {
+     "standard": "3.0144",
+     "stored": 3.0144
+    }
+   }
+  ]
+ }
+}

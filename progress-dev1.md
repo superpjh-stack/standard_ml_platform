@@ -301,3 +301,45 @@ guard 변경(F13-1): 인덱스는 클로저(slot 없음) · 모르는 속성 조
 
 - A2: 팩 `solder` · `kimchi` 학습 과제 · 4개사 이관 재현(`migration/reproduce.py`) — pc 재측정 값 병기(D2-02) · krs IQR 학습 구간(D2-03).
 - ot 실데이터(1,600 설명자 합성) 로 extract 학습은 팩 생성기가 생기면 G2-E01 · 이관 대조에서.
+
+## §8 2차 웨이브 A2 — 개발1 (2026-10-13, 기준 5a51d2f · 태그 core-freeze-2 위 작업 트리 · 커밋 안 함)
+
+### §8.1 한 일 (시험 먼저 — 각 파일 처음 실행 FAIL 확인 뒤 구현)
+
+| 항목 | 파일 | 내용 |
+|---|---|---|
+| 팩 solder | `packs/solder/{pack,features,baselines}.yaml` · `synth/{solder_lots,joint_strength}.py` · `formulas/material_cost.py` · `tasks/{joint_strength,recipe_optimize,residual_review}.yaml` · `tests/test_solder_formulas.py` | 변수 8(sn · ag · cu · sb · flux % · 온도 · 혼합 분 · 공급사 `values_from: tenant`, 중립 S1~S3) · 생성기 = 원천 `make_sample_data()` RNG 순서 그대로(효과는 목록 위치) · joint_strength 후보 5(원천 하이퍼파라미터) · `outlier: iqr` 1.5 · `input_rules` 조성 합 99.9~100.1 · recipe_optimize derived `sn_pct` · random 5,000 · `max_cost` optional · 비용 지수 최소 · 목표 강도 제약 · residual_review `abs_residual_ge: 4.0` |
+| 팩 kimchi 나머지 | `packs/kimchi/tasks/recipe_optimize.yaml` · `formulas/material_cost.py` · `pack.yaml` tasks 3 · `sensory_score.yaml` `input_rules` 98~102 · `baselines.yaml` recipe_optimize 행 · `tests/test_kimchi_formulas.py` · README | derived `seasoning_pct` · random 3,500 · 제약 `scale` 3 · 5 · least_violation |
+| 이관 재현 | `migration/reproduce.py` `run_phase2` · `--phase2 [--tenants-base]` → `outputs/reproduce-krs-pc.json` | 원천 절차 재현(원천 코드를 읽어 다시 씀 · 실행 0) + 표준 값(StandardTrainer · `train.review` · 코어 `Optimizer.space`) 나란히, 행 6 · `compare` · `diff_pct` · `within_10pct` · `reason` |
+| 시험 | `tests/test_solder_pack.py` 13 · `tests/test_kimchi_optimize.py` 4 · `tests/test_reproduce_krs_pc.py` 8 · 팩 시험 4 | 아래 실측 |
+
+### §8.2 원천 대조 실측 (같은 합성 시드 — `migration/reproduce.py --phase2`, 2.9 s)
+
+| 과제 | 원천 절차 재현 | 표준 | 차이 | 대조 · 사유 |
+|---|---|---|---|---|
+| krs.joint_strength | svr · 80/20(568/142, IQR 전체 10행 제거) · 시험 MAE 2.0199 · RMSE 2.6349 · R² 0.9043 | gbr · random_60_20_20 432/144/144 · IQR 학습 구간 5행 · 시험 MAE **2.0935** · RMSE 2.9711 · R² 0.8677 (기준선 MAE 6.9701) | MAE +3.65% · **RMSE +12.76%** · R² −4.05% | ±10% — RMSE 밖, 사유: 원천 시험 RMSE 선정 누수(K1, 원천 값 낙관) · IQR 전체(K6 ↔ D2-03) · 분할 · RobustScaler |
+| krs.residual_review | 정제 전체 710행 채점(K4) · \|잔차\| ≥ 4 = 27 | 시험 144행 · 대기열 **16** | — | 제외(모수 다름) |
+| krs.recipe_optimize | 시드 4765 · 충족률 0.2658 · 최저 비용 51.71 | 수락 5,000(뽑음 5,064) · 충족 774/5000 = **0.1548** · 최저 비용 61.25 | — | 제외(K2 · 표집 · 범위) |
+| pc.sensory_score | gbr · 78/22(327/93) · 시험 MAE 1.7912 · R² 0.4814 / **표본 내** MAE 1.0829 · R² 0.7716 | gbr · **time_cv5**(420 < 500) 시험 84 · MAE **1.5375** · RMSE 1.9540 · R² 0.4747 | MAE −14.17% | 제외(D2-02 — 재측정 정본 · 원천 시험 · 표본 내 병기) |
+| pc.residual_review | 표본 내 q90 2.3190 · 넘음 42 · 표시 8 | 검증 q90 **4.2338** · 시험 84 · 대기열 **3** | — | 제외 |
+| pc.recipe_optimize | 시드 927 · 충족률 0.1554 | 수락 3,500(뽑음 4,738) · 충족 517/3500 = **0.1477** | — | 제외 |
+
+kimchi 기준선(아키텍트 D2-39) MAE 1.5375 · queue 3 · 임계 4.2338 과 같다(재현 확인). solder 기준선 새로 적음(아키텍트 확인 요청).
+
+### §8.3 확인
+
+| 항목 | 실측 | 명령 |
+|---|---|---|
+| 새 시험 | 25 + 팩 4 passed | `OMP_NUM_THREADS=1 uv run pytest -q tests/test_solder_pack.py tests/test_kimchi_optimize.py tests/test_reproduce_krs_pc.py packs/solder packs/kimchi` |
+| 전체 | **870 passed · 3 skipped · 1 xfailed · 2 failed** — 실패 2 는 개발3 진행 중 `packs/rollform-quote`(주석 'ot' G-M01 · 추출기 파일 없음) | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| 코어 동결 | `git diff core-freeze-2 -- src/mlcore web/src/components std contracts` **0줄** · 미추적 0 | 직접 실행 |
+| make gate | PASS 22 · FAIL 1(G-M01 = rollform-quote 'ot', 개발3) · BLOCKED 1 — 내 팩 G-M01 위반 0(rollform 제외 실행 PASS) | `make gate` |
+| make gate2 | 41행 PASS 34 · FAIL 5 · BLOCKED 2 · **G2-C01 PASS** · G2-P01 = 회사 없음 krs · rollform baselines(내 팩 solder · kimchi 통과) · G-M12(6사) 과제 행 없음(이관 보고서 — 개발3) | `make gate2` |
+
+### §8.4 요청 · 발견
+
+- **개발3 (`tenants/krs.yaml`):** pack `solder` · enable `krs.joint_strength` · `krs.recipe_optimize` · `krs.residual_review` · `sources.demo {synthetic, seed 20260917, rows 720}` · `compat.entity_prefix "KS-"` · `categories.supplier` 3값(원천 순서 — 효과가 위치에 묶임). **원천 값 `A · B · C` 를 그대로 넣으면 G-M01 이 깨진다** — 한 글자 금지어가 packs · 코어에서 27곳 걸림(코어는 동결). 겹치지 않는 표기 + 옛 값은 호환 쪽에서 바꾸기를 권함.
+- **개발3 (`tenants/pc.yaml`):** `pc.recipe_optimize` 켜기. 그 뒤 `OMP_NUM_THREADS=1 uv run python migration/reproduce.py --phase2`(--tenants-base 없이)로 JSON 다시 생성 — 지금 파일은 임시 등록부로 만든 것(`meta.tenants_base` 에 표기, 값은 범주 위치만 같으면 같다).
+- **개발3 (이관 보고서):** `outputs/reproduce-krs-pc.json` 행 6 → `docs/migration-report.md`. pc 행에는 "재측정" · "원천" 두 말이 다 있어야 G-M12(6사) 통과.
+- **아키텍트:** ① D2-02 · kimchi baselines 주석은 `time_60_20_20` 인데 실제 정책은 `time_cv5`(행 420 < 500, std D-05) — 문구 정리 ② solder baselines 값 확인 ③ krs RMSE +12.76% 는 사유(원천 시험 구간 선정)로 남김 — 넓히지 않음.
+- 코어 결함(2차): **없음**.

@@ -1,4 +1,5 @@
 # 합성 기준 지표 — 아키텍트만 고친다 · 좋게만 (pack-contract §3). 값 = 표준 학습기 시험 구간 실측(합성 seed 42 · 420 행 ·
 # time_60_20_20 · 시험 1회, 2026-10-13 웨이브 P 마감 D2-39). 원천 표본 내 수치는 대조 대상이 아니다(D2-02 — 재측정이 정본).
 sensory_score:   {metric: mae,        value: 1.5375, baseline: 2.0952, measured_by: "표준 학습기 submit → run_and_register (회사 demo 합성 소스, champion gbr)", source_reported: null}
+recipe_optimize: {metric: constraint_satisfaction_rate, value: 0.1477, baseline: null, measured_by: "migration/reproduce.py --phase2 (517/3500 — 원천 시험 요청 목표 80 · 상한 85, 2026-10-13 A2 개발1)", source_reported: null}
 residual_review: {metric: queue_size, value: 3,      baseline: null,   measured_by: "train.review.from_run(production run 보고서, top_quantile 0.10 — 임계값 4.2338 = 검증 잔차 분위, 시험 84 행)", source_reported: null}

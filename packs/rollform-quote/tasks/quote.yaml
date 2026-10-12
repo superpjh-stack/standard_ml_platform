@@ -1,0 +1,31 @@
+# 롤포밍 부품 견적 — 도면 인식값 검토 → 가공시간 예측 → 견적식 (task-contract §6.3 · source_inventory §10.6 · D2-07 · D2-07a).
+# 과제 이름 quote = 유형 코드 quote (D2-31). 원천 QuoteInput(api/main.py:31-44): 재질 · 형상 · 치수 · 홀 · 슬롯 · 굽힘 · 수량 ·
+# 검토 + 메모 5자 이상. 재질별 밀도 · kg 단가는 단가표(rate_tables) — 팩은 빈 표, 회사가 재질마다 칸을 채운다(D2-45 ④).
+id: rollform-quote.quote
+type: quote
+title: 롤포밍 부품 견적 초안
+entity: job
+uses: [rollform-quote.machining_minutes]
+from_extract: rollform-quote.cad_objects
+recognized:                            # 도면 인식값 ↔ 확정 입력이 0.001 넘게 다르면 overrides (원천 quote.py:24-27)
+  hole_count: counts.hole
+  slot_count: counts.slot
+  part_length_mm: dimensions.length
+  blank_width_mm: dimensions.width
+  tolerance: "0.001"
+inputs: [part_length_mm, blank_width_mm, sheet_thickness_mm, hole_count, slot_count, bend_count, steel_grade, section_profile, quantity]
+formula: formulas/quote.py
+rates:                                 # 원천 config.py COST (예시 단가 — 승인 단가 아님) · 문자열
+  machine_per_min: "900"
+  setup_minutes: "35"
+  scrap_rate: "0.08"
+  markup: "0.15"
+  vat_rate: "0.10"
+  density: {}                          # 재질별 밀도 kg/m³ — 회사 칸
+  price_kg: {}                         # 재질별 kg 단가 원 — 회사 칸
+rate_tables: {density: steel_grade, price_kg: steel_grade}
+rounding: ROUND_HALF_UP
+currency: KRW
+confirm: {requires: [reviewed, review_note], review_note_min: 5, approver_role: estimating_lead}
+out_of_range: predict_with_warning
+approver_role: estimating_lead

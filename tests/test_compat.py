@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 
 import pytest
@@ -256,3 +258,451 @@ def test_compat_auth_scope_and_unknown_routes(world):
     assert r.status_code == 404 and r.json()["error"]["code"] == "not_found"
     r = tc.get("/api/does-not-exist", headers=h.hdr(k["admin"]))
     assert r.status_code == 404 and r.json()["error"]["code"] == "not_found"
+
+
+# ═══════════════════════ 2차 4개사 — 객체 경로 + 회사 모양 플러그인 (api-contract §5 · §6.3 · predict-contract §7.1) ═══════════════════════
+# 기대값 = tests/compat_expected.yaml kd · pc (원천 파일:줄). 플러그인 = tenants/<code>/compat.py (등록부 폴더 안 파일 — 시험은 임시 등록부에 복사).
+
+def _with_plugin(source: str, tmp):
+    import shutil
+    m = h.make_tenant(source, tmp)
+    d = h.tenants_base(m) / m.tenant.code
+    d.mkdir(exist_ok=True)
+    shutil.copy(h.ROOT / "tenants" / source / "compat.py", d / "compat.py")
+    return m
+
+
+def _route_paths(m) -> set:
+    return {r["path"] if isinstance(r, dict) else r for r in m.tenant.config["compat"]["routes"]}
+
+
+@pytest.fixture(scope="module")
+def kd(tmp_path_factory):
+    m = _with_plugin("kd", tmp_path_factory.mktemp("compat-kd"))
+    with h.use_tenants_dir(m):
+        ref, _ = h.real_production(m, f"{m.tenant.code}.labor_hours")
+        k = h.keys(m)
+        tc = h.client(m)
+        from importlib.util import module_from_spec, spec_from_file_location
+        sp = spec_from_file_location("eto_sample_dxf_compat", h.ROOT / "packs" / "eto" / "synth" / "sample_dxf.py")
+        sample = module_from_spec(sp)
+        sp.loader.exec_module(sample)
+        raw = sample.sample_bytes(m.tenant.config["categories"]["main_material"])
+        yield m, k, tc, ref, raw, EXP["kd"]
+
+
+def _kd_quote_input(e, d):
+    return {**e["quote_input"], "drawing_id": d["id"],
+            "bom": [{**{kk: r[kk] for kk in ("name", "material", "quantity", "mass_kg")}, "price_kg": e["price_kg"][r["material"]]}
+                    for r in d["bom"]]}
+
+
+def test_kd_registry_routes_and_health(kd):
+    m, k, tc, ref, raw, e = kd
+    want = {v.replace("{id}", "{drawing_id}" if v.startswith("/api/cad") else "{quote_id}") for v in e["routes"].values()}
+    assert want <= _route_paths(m)
+    assert not set(e["pending_routes"].values()) & _route_paths(m)              # 아직 없는 것은 없다고(가짜 응답 0)
+    d = tc.get(e["routes"]["health"]).json()                                     # 옛 health 만 키 없이 (D-59)
+    assert list(d) == e["health_keys"] and d["model_ready"] is True and d["version"] == ref.version
+
+
+def test_kd_overview_old_keys(kd):
+    m, k, tc, ref, raw, e = kd
+    assert tc.get(e["routes"]["overview"]).status_code == 401
+    d = tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).json()
+    assert list(d) == e["overview_keys"]
+    omitted = set(e["differs"]["overview_omitted"])
+    assert not [x for x in e["overview_source_keys"] if x not in d and x not in omitted] and not omitted & set(d)
+    assert d["split"] == e["overview_split"] and d["missing_cells"] == e["overview_missing_cells"]
+    assert len(d["metrics"]) == e["overview_metric_count"] and all(list(x) == e["overview_metric_keys"] for x in d["metrics"])
+    assert d["champion"] == min(d["metrics"], key=lambda x: (x["mae"], x["model"]))["model"] == ref.algo   # tests/test_api.py:116
+    assert list(d["features"]) == e["overview_feature_keys"]
+    assert d["products"] == m.tenant.config["categories"]["product_family"]
+    assert d["recognition"]["measured_accuracy"] is e["recognition_measured_accuracy"]
+    assert "NaN" not in tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).text
+
+
+def test_kd_analyze_and_drawing_old_keys(kd):
+    m, k, tc, ref, raw, e = kd
+    r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("KD-demo-reactor.dxf", raw)})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert list(d) == e["drawing_keys"]
+    omitted = set(e["differs"]["drawing_omitted"])
+    assert not [x for x in e["drawing_source_keys"] if x not in d and x not in omitted] and not omitted & set(d)
+    assert d["counts"] == e["drawing_counts"] and len(d["bom"]) == e["drawing_bom_rows"]
+    assert sum(b["quantity"] * b["mass_kg"] for b in d["bom"]) == e["drawing_bom_mass"]
+    assert len(d["sha256"]) == 64 and d["mode"] == "uploaded_dxf" and d["scale_to_mm"] == 1.0
+    assert all(list(o) == e["drawing_object_keys"] for o in d["objects"])
+    assert tc.get(e["routes"]["drawing"].replace("{id}", d["id"]), headers=h.hdr(k["operator"])).json() == d   # :36
+    nf = tc.get(e["routes"]["drawing"].replace("{id}", "doc_NOPE"), headers=h.hdr(k["operator"]))
+    assert nf.status_code == 404 and nf.json() == {"detail": e["drawing_404_text"]}
+    codes = e["analyze_errors"]
+    r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("x.dwg", b"bad")})
+    assert r.status_code == codes["wrong_ext"] and r.json() == {"detail": e["analyze_error_text"][415]}
+    r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("x.dxf", b"bad")})
+    assert r.status_code == codes["not_dxf"] and isinstance(r.json()["detail"], str)       # main.py:96 HTTPException(422, str)
+    r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("x.dxf", b"x" * (5 * 1024 * 1024 + 1))})
+    assert r.status_code == codes["too_big"] and r.json() == {"detail": e["analyze_error_text"][413]}
+    assert tc.post(e["routes"]["analyze"], headers=h.hdr(k["viewer"]), files={"file": ("a.dxf", raw)}).status_code == 403
+
+
+def test_kd_quote_old_keys_and_money_matches_standard(kd):
+    m, k, tc, ref, raw, e = kd
+    d = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("KD-demo-reactor.dxf", raw)}).json()
+    data = _kd_quote_input(e, d)
+    data["bom"][0]["name"] = "=malicious()"                                      # tests/test_api.py:41
+    r = tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json=data)
+    assert r.status_code == 200, r.text
+    q = r.json()
+    assert list(q) == e["quote_keys"] and q["status"] == e["quote_status_draft"]
+    assert all(list(ln) == e["quote_line_keys"] for ln in q["lines"])
+    assert q["material_cost"] == sum(ln["cost"] for ln in q["lines"])           # tests/test_api.py:43-46
+    assert q["outsource_cost"] == e["quote_outsource_cost"]
+    assert q["subtotal"] == q["material_cost"] + q["labor_cost"] + q["outsource_cost"] + q["markup_cost"]
+    assert q["total"] == q["subtotal"] + q["vat"]
+    assert q["source_bom"] == d["bom"] and q["input"] == data                   # :47
+    assert tc.get(e["routes"]["quote"].replace("{id}", q["id"]), headers=h.hdr(k["operator"])).json() == q   # :48
+    std = tc.get(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.quote/quotes/{q['id']}",
+                 headers=h.hdr(k["operator"])).json()                            # 같은 견적의 표준 응답 — 금액은 표준 Decimal 결과 그대로
+    assert std["status"] == "draft" and str(q["total"]) == std["total"]
+    assert [str(ln["cost"]) for ln in q["lines"]] == [ln["amount"] for ln in std["lines"]]
+    assert str(q["hours_per_unit"]) == std["predictions"][0]["value"]
+    text = tc.get(e["routes"]["quote_csv"].replace("{id}", q["id"]), headers=h.hdr(k["operator"])).content.decode("utf-8-sig")
+    assert "'=malicious()" in text and str(q["total"]) in text                  # :50-51
+    rows = list(csv.reader(io.StringIO(text)))
+    labels = [r[0] for r in rows if r]
+    assert all(x in labels for x in e["quote_csv_rows"]) and e["quote_csv_line_head"] in rows
+    assert dict(r for r in rows if len(r) == 2)["합계(원)"] == str(q["total"])
+    nf = tc.get(e["routes"]["quote"].replace("{id}", "missing"), headers=h.hdr(k["operator"]))
+    assert nf.status_code == 404 and nf.json() == {"detail": e["quote_404_text"]}   # :109
+
+
+@pytest.mark.parametrize("i", range(12))
+def test_kd_quote_invalid_old_422(kd, i):
+    m, k, tc, ref, raw, e = kd
+    d = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("KD-demo-reactor.dxf", raw)}).json()
+    change = e["quote_invalid_422"][i]
+    _old_422(tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json={**_kd_quote_input(e, d), **change}))
+
+
+def test_kd_quote_list_paging_and_export_matches_visible(kd):
+    m, k, tc, ref, raw, e = kd
+    d = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("KD-demo-reactor.dxf", raw)}).json()
+    for _ in range(3):
+        assert tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json=_kd_quote_input(e, d)).status_code == 200
+    params = {"offset": 1, "limit": 1}
+    page = tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"]), params=params).json()
+    assert list(page) == e["quote_list_keys"] and page["total"] >= 3 and len(page["records"]) == 1   # :102
+    assert tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"]), params=params).json() == page   # :103
+    ex = tc.get(e["routes"]["export_csv"], headers=h.hdr(k["operator"]), params=params)
+    assert ex.content.startswith(b"\xef\xbb\xbf")
+    rows = list(csv.reader(io.StringIO(ex.content.decode("utf-8-sig"))))
+    assert rows[0] == e["export_head"] and len(rows) == 2 and rows[1][0] == page["records"][0]["id"]   # :104-105
+    assert rows[1][4] == str(page["records"][0]["total"])
+    assert tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"]), params={"search": "%"}).json()["total"] == 0   # :106
+    for q in e["quote_list_bad_queries"]:
+        _old_422(tc.get(f"{e['routes']['quotes']}?{q}", headers=h.hdr(k["operator"])))
+
+
+def test_kd_quote_old_route_never_confirms(kd):
+    """옛 견적 경로는 원천에 확정이 없으므로 draft 만 만든다 — 확정은 표준 경로 · 승인으로만 (api-contract §6.3)."""
+    m, k, tc, ref, raw, e = kd
+    with connect() as c:
+        n = c.execute("SELECT count(*) AS n FROM mlp_quote WHERE tenant_id = %s AND status <> 'draft'",
+                      (m.tenant.code,)).fetchone()["n"]
+        a = c.execute("SELECT count(*) AS n FROM mlp_approval WHERE tenant_id = %s AND kind = 'quote'",
+                      (m.tenant.code,)).fetchone()["n"]
+    assert n == 0 and a == 0
+
+
+@pytest.fixture(scope="module")
+def pc(tmp_path_factory):
+    m = _with_plugin("pc", tmp_path_factory.mktemp("compat-pc"))
+    with h.use_tenants_dir(m):
+        k = h.keys(m)
+        tc = h.client(m)
+        before = tc.get(EXP["pc"]["routes"]["health"]).json()
+        ref, _ = h.real_production(m, f"{m.tenant.code}.sensory_score")
+        yield m, k, tc, ref, before, EXP["pc"]
+
+
+def test_pc_registry_routes_and_health(pc):
+    m, k, tc, ref, before, e = pc
+    assert set(e["routes"].values()) <= _route_paths(m)
+    assert not set(e["pending_routes"].values()) & _route_paths(m)
+    assert before["model_ready"] is False                                        # 운영 모델 없으면 준비 안 됨 — 지어내지 않는다
+    d = tc.get(e["routes"]["health"]).json()
+    assert list(d) == e["health_keys"] and d["model_ready"] is True and d["data_mode"] == e["health_data_mode"]
+    assert d["product"] == m.tenant.config["name"]                               # tests/test_api.py:9 (회사 이름 = 등록부)
+
+
+def test_pc_overview_old_keys(pc):
+    m, k, tc, ref, before, e = pc
+    d = tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).json()
+    assert list(d) == e["overview_keys"]
+    omitted = set(e["differs"]["overview_omitted"])
+    assert not [x for x in e["overview_source_keys"] if x not in d and x not in omitted] and not omitted & set(d)
+    assert d["data_mode"] == "demo" and len(d["metrics"]) == e["overview_metric_count"]    # tests/test_api.py:10
+    assert all(list(x) == e["overview_metric_keys"] for x in d["metrics"])
+    assert [x["mae_score"] for x in d["metrics"]] == sorted(x["mae_score"] for x in d["metrics"])   # ml_service.py:78
+    assert d["champion"] == d["metrics"][0]["model"] == ref.algo
+    assert d["features"] == e["overview_features"] and d["target"] == e["overview_target"]
+    assert d["rows"] == e["overview_rows"] and d["missing_cells"] == e["overview_missing_cells"] and d["duplicate_lots"] == 0
+
+
+def test_pc_predict_old_keys_and_recipe_rules(pc):
+    m, k, tc, ref, before, e = pc
+    url = e["routes"]["predict"]
+    r = tc.post(url, headers=h.hdr(k["operator"]), json=e["valid_record"])
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert list(body) == e["predict_keys"] and body["prediction_score"] > 0                 # tests/test_api.py:13
+    std = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.sensory_score/predict", headers=h.hdr(k["operator"]),
+                  json={"inputs": {("prod_line" if kk == "line" else kk): v for kk, v in e["valid_record"].items()}}).json()
+    assert body["prediction_score"] == round(std["prediction"]["value"], e["predict_round"])
+    assert body["model"] == std["model"]["name"] and body["notice"] == std["notice"]
+    assert body["status"] == (e["status_text"]["review"] if body["warnings"] else e["status_text"]["ok"])
+    if std["prediction"]["value"] < m.tasks[f"{m.tenant.code}.sensory_score"].raw["thresholds"]["review_below"]:
+        assert e["low_score_text"] in body["warnings"]
+    _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["valid_record"], **e["recipe_reject"]}))   # :14
+    w = tc.post(url, headers=h.hdr(k["operator"]), json={**e["valid_record"], **e["recipe_warn"]}).json()
+    assert e["recipe_warn_text"] in w["warnings"] and w["status"] == e["status_text"]["review"]
+    _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["valid_record"], "line": "K3"}))
+    _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={kk: v for kk, v in e["valid_record"].items() if kk != "salt_pct"}))
+    assert tc.post(url, headers=h.hdr(k["viewer"]), json=e["valid_record"]).status_code == 403
+    assert tc.post(url, json=e["valid_record"]).status_code == 401
+
+
+def test_pc_quality_overview_is_standard_queue(pc):
+    from datetime import date
+    from mlcore.monitor import review as job
+    m, k, tc, ref, before, e = pc
+    empty = tc.get(e["routes"]["queue"], headers=h.hdr(k["operator"])).json()
+    assert empty["priority_queue"] == [] and empty["residual_review_threshold"] is None   # 대기열이 비면 비었다고
+    job.run_review(m.tenant.code, date(2026, 10, 3), merged=m)
+    d = tc.get(e["routes"]["queue"], headers=h.hdr(k["operator"])).json()
+    assert list(d) == e["queue_keys"] and d["notice"] == e["queue_notice"]
+    omitted = set(e["differs"]["queue_omitted"])
+    assert not [x for x in e["queue_source_keys"] if x not in d and x not in omitted] and not omitted & set(d)
+    assert 0 < len(d["priority_queue"]) <= e["queue_top"]
+    assert all(list(x) == e["queue_row_keys"] for x in d["priority_queue"])
+    res = [x["residual_score"] for x in d["priority_queue"]]
+    assert res == sorted(res, reverse=True) and min(res) >= d["residual_review_threshold"] - 0.01
+    items = tc.get(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.residual_review/review",
+                   headers=h.hdr(k["operator"]), params={"limit": 100}).json()["items"]
+    assert {i["origin"] for i in items} <= {"test_split", "live_residual"}       # 표본 내 채점 항목 0 (G2-R01)
+    assert d["residual_review_threshold"] == round(items[0]["threshold"], 2)
+    assert tc.get(e["routes"]["queue"], headers=h.hdr(k["viewer"])).status_code == 403   # 대기열 조회는 operator 이상(goal2 §6)
+
+
+def test_pc_records_old_keys_filters(pc):
+    m, k, tc, ref, before, e = pc
+    url = e["routes"]["records"]
+    b = tc.get(f"{url}?{e['records_query']}", headers=h.hdr(k["viewer"])).json()
+    assert list(b) == e["records_keys"] and 0 < len(b["records"]) <= 7                  # tests/test_api.py:22
+    assert all(r["line"] == "K1" and r["cabbage_origin"] == "평창" for r in b["records"])
+    assert all(list(r) == e["record_key_order"] for r in b["records"])
+    times = [r["produced_at"] for r in b["records"]]
+    assert times == sorted(times, reverse=True)                                  # main.py:56
+    assert tc.get(url, headers=h.hdr(k["viewer"]), params={"limit": 100}).json()["total"] == e["records_total"]
+    for q in e["records_bad_queries"]:
+        _old_422(tc.get(f"{url}?{q}", headers=h.hdr(k["viewer"])))               # :23
+
+
+@pytest.fixture(scope="module")
+def ot(tmp_path_factory):
+    import shutil
+    overrides = {p.stem: yaml.safe_load(p.read_text(encoding="utf-8"))
+                 for p in sorted((h.ROOT / "tenants" / "ot" / "tasks").glob("*.yaml"))}
+    m = h.make_tenant("ot", tmp_path_factory.mktemp("compat-ot"), overrides=overrides)
+    d = h.tenants_base(m) / m.tenant.code
+    shutil.copy(h.ROOT / "tenants" / "ot" / "compat.py", d / "compat.py")
+    with h.use_tenants_dir(m):
+        ref, _ = h.real_production(m, f"{m.tenant.code}.machining_minutes")
+        h.real_production(m, f"{m.tenant.code}.cad_objects")
+        yield m, h.keys(m), h.client(m), ref, EXP["ot"]
+
+
+def _ot_payload(e, d):
+    return {**e["quote_payload"], "drawing_id": d["id"]}
+
+
+def test_ot_registry_routes_health_overview(ot):
+    m, k, tc, ref, e = ot
+    want = {v.replace("{id}", "{drawing_id}" if v.startswith("/api/cad") else "{quote_id}") for v in e["routes"].values()}
+    assert want <= _route_paths(m) and not set(e["pending_routes"].values()) & _route_paths(m)
+    d = tc.get(e["routes"]["health"]).json()
+    assert list(d) == e["health_keys"] and d["model_ready"] is True and d["version"] == ref.version
+    o = tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).json()
+    assert list(o) == e["overview_keys"]
+    omitted = set(e["differs"]["overview_omitted"])
+    assert not [x for x in e["overview_source_keys"] if x not in o and x not in omitted] and not omitted & set(o)
+    assert len(o["metrics"]) == e["overview_metric_count"] and sum(o["split"]["jobs"]) == o["job_rows"]   # :149-150
+    assert list(o["features"]) == e["overview_feature_keys"] and o["profiles"] == m.tenant.config["categories"]["section_profile"]
+
+
+def test_ot_demo_sample_analyze_drawing(ot):
+    m, k, tc, ref, e = ot
+    s = tc.get(e["routes"]["sample_dxf"], headers=h.hdr(k["viewer"]))
+    assert s.status_code == 200 and s.headers["content-type"].startswith("application/dxf")
+    r = tc.post(e["routes"]["demo"], headers=h.hdr(k["operator"]))
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert list(d) == e["drawing_keys"] and d["data_mode"] == "synthetic_demo"
+    omitted = set(e["differs"]["drawing_omitted"])
+    assert not [x for x in e["drawing_source_keys"] if x not in d and x not in omitted] and not omitted & set(d)
+    assert d["counts"] == e["demo_counts"] and d["dimensions"] == e["demo_dimensions"] and len(d["objects"]) == e["demo_objects"]
+    assert tc.get(e["routes"]["drawing"].replace("{id}", d["id"]), headers=h.hdr(k["operator"])).json() == {**d, "data_mode": "uploaded_geometry_synthetic_model"}
+    for name in e["analyze_415"]:
+        r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": (name, s.content)})
+        assert r.status_code == 415 and r.json() == {"detail": e["analyze_error_text"][415]}
+    r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("bad.dxf", b"not DXF")})
+    assert r.status_code == 422 and isinstance(r.json()["detail"], str)
+    r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": ("large.dxf", b"0" * (5 * 1024 * 1024 + 1))})
+    assert r.status_code == 413 and r.json() == {"detail": e["analyze_error_text"][413]}
+    r = tc.post(e["routes"]["analyze"], headers=h.hdr(k["operator"]), files={"file": (e["path_filename"]["upload"], s.content)})
+    assert r.status_code == 200 and r.json()["filename"] == e["path_filename"]["saved"]
+    assert r.json()["data_mode"] == "uploaded_geometry_synthetic_model"
+
+
+def test_ot_quote_accounting_overrides_csv(ot):
+    m, k, tc, ref, e = ot
+    d = tc.post(e["routes"]["demo"], headers=h.hdr(k["operator"])).json()
+    p = {**_ot_payload(e, d), "holes": 7, "review_note": "=SUM(1,2) 수식이 아닌 사용자 확인 내용"}   # tests/test_api.py:48-50
+    r = tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json=p)
+    assert r.status_code == 200, r.text
+    q = r.json()
+    assert list(q) == e["quote_keys"]
+    assert q["weight_per_piece"] == e["quote_weight_per_piece"] and q["setup_cost"] == e["quote_setup_cost"]
+    from decimal import ROUND_HALF_UP, Decimal
+    want = (Decimal(str(q["minutes_per_piece"])) * Decimal(str(q["assumptions"]["machine_per_min"])) * p["quantity"]).quantize(
+        Decimal(1), rounding=ROUND_HALF_UP)                                    # :55 won(minutes × 단가 × 수량)
+    assert q["processing_cost"] == int(want)
+    assert q["subtotal"] == q["material_cost"] + q["processing_cost"] + q["setup_cost"] + q["markup_cost"]
+    assert q["total"] == q["subtotal"] + q["vat"]
+    assert Decimal(str(q["unit_price"])) == (Decimal(q["subtotal"]) / 100).quantize(Decimal("0.01"))   # :58
+    assert q["overrides"] == e["quote_override_holes"]                         # :59 — 사람 수정 이력(옛 키)
+    assert tc.get(e["routes"]["quote"].replace("{id}", q["id"]), headers=h.hdr(k["operator"])).json() == q   # :60
+    std = tc.get(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.quote/quotes/{q['id']}", headers=h.hdr(k["operator"])).json()
+    assert str(q["total"]) == std["total"] and std["status"] == "draft"        # 금액 = 표준 Decimal 결과 그대로
+    rows = dict(r for r in csv.reader(io.StringIO(tc.get(e["routes"]["quote_csv"].replace("{id}", q["id"]),
+                                                         headers=h.hdr(k["operator"])).content.decode("utf-8-sig"))) if len(r) == 2)
+    c = e["quote_csv_checks"]
+    assert rows[c["supply"]] == str(q["subtotal"]) and rows[c["holes"]] == "7" and rows[c["note"]].startswith("'=SUM")   # :63-65
+
+
+@pytest.mark.parametrize("i", range(14))
+def test_ot_quote_invalid_old_422(ot, i):
+    m, k, tc, ref, e = ot
+    d = tc.post(e["routes"]["demo"], headers=h.hdr(k["operator"])).json()
+    key, value = e["quote_invalid_422"][i]
+    r = tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json={**_ot_payload(e, d), key: value})
+    assert r.status_code == 422, (key, value, r.text)
+
+
+def test_ot_quote_nonfinite_paging_and_404(ot):
+    m, k, tc, ref, e = ot
+    d = tc.post(e["routes"]["demo"], headers=h.hdr(k["operator"])).json()
+    for v in e["quote_nonfinite"]:                                             # :76-83
+        body = json.dumps(_ot_payload(e, d)).replace('"thickness": 2', '"thickness": ' + v)
+        r = tc.post(e["routes"]["quotes"], headers={**h.hdr(k["operator"]), "Content-Type": "application/json"}, content=body)
+        assert r.status_code == 422 and isinstance(r.json()["detail"], list), v
+    before = tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"])).json()["total"]
+    for _ in range(3):
+        assert tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json=_ot_payload(e, d)).status_code == 200
+    first = tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"]), params={"limit": 2}).json()
+    second = tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"]), params={"limit": 2, "offset": 2}).json()
+    assert first["total"] == before + 3 and len(first["records"]) == 2
+    assert not {r["id"] for r in first["records"]} & {r["id"] for r in second["records"]}
+    assert tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"]), params={"limit": 2}).json() == first
+    assert tc.get(e["routes"]["quotes"], headers=h.hdr(k["operator"]), params={"search": "%"}).json()["total"] == 0
+    for q in e["quote_list_bad_queries"]:
+        _old_422(tc.get(f"{e['routes']['quotes']}?{q}", headers=h.hdr(k["operator"])))
+    for path in e["quote_404"]:
+        assert tc.get(path, headers=h.hdr(k["operator"])).status_code == 404, path
+    r = tc.post(e["routes"]["quotes"], headers=h.hdr(k["operator"]), json={**_ot_payload(e, d), "drawing_id": "doc_01M4RNXVMPYNZGXXNWJZ6CP01R"})
+    assert r.status_code == 404 and r.json() == {"detail": "먼저 CAD 도면을 분석하세요."}   # main.py:104
+
+
+@pytest.fixture(scope="module")
+def krs(tmp_path_factory):
+    m = _with_plugin("krs", tmp_path_factory.mktemp("compat-krs"))
+    with h.use_tenants_dir(m):
+        k, tc = h.keys(m), h.client(m)
+        before = tc.get(EXP["krs"]["routes"]["health"]).json()
+        ref, _ = h.real_production(m, f"{m.tenant.code}.joint_strength")
+        yield m, k, tc, ref, before, EXP["krs"]
+
+
+def test_krs_routes_health_overview(krs):
+    m, k, tc, ref, before, e = krs
+    assert set(e["routes"].values()) <= _route_paths(m) and not set(e["pending_routes"].values()) & _route_paths(m)
+    assert before == {"status": "ok", "model_ready": False}                     # 원천은 늘 true — 표준은 운영 모델이 있어야
+    d = tc.get(e["routes"]["health"]).json()
+    assert list(d) == e["health_keys"] and d["model_ready"] is True
+    o = tc.get(e["routes"]["overview"], headers=h.hdr(k["viewer"])).json()
+    assert list(o) == e["overview_keys"]
+    omitted = set(e["differs"]["overview_omitted"])
+    assert not [x for x in e["overview_source_keys"] if x not in o and x not in omitted] and not omitted & set(o)
+    assert list(o["quality"]) == e["overview_quality_keys"] and o["quality"]["missing_cells"] > 0     # tests/test_api.py:12
+    assert len(o["models"]) == e["overview_model_count"] and all(list(x) == e["overview_model_keys"] for x in o["models"])
+    assert o["models"][0]["rmse"] <= o["models"][-1]["rmse"]                     # :11
+    assert o["features"] == e["overview_features"] and o["target"] == e["overview_target"] and o["champion"] == ref.algo
+
+
+def test_krs_samples_old_keys_and_supplier_codes(krs):
+    m, k, tc, ref, before, e = krs
+    b = tc.get(e["routes"]["samples"], headers=h.hdr(k["viewer"])).json()
+    assert list(b) == e["samples_keys"] and b["total"] == e["samples_total"] and len(b["items"]) == e["samples_default_limit"]
+    assert all(list(x) == e["samples_item_keys"] for x in b["items"])
+    assert {x["supplier"] for x in b["items"]} <= set(e["old_suppliers"])        # 옛 표기 A · B · C
+    _old_422(tc.get(f"{e['routes']['samples']}?limit=0", headers=h.hdr(k["viewer"])))
+
+
+def test_krs_predict_old_keys_rules_and_warnings(krs):
+    m, k, tc, ref, before, e = krs
+    url = e["routes"]["predict"]
+    r = tc.post(url, headers=h.hdr(k["operator"]), json=e["predict_record"])
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert list(body) == e["predict_keys"] and body["predicted_strength"] > 0   # tests/test_api.py:33-35
+    std_in = {**e["predict_record"], "supplier": m.tenant.config["categories"]["supplier"][0]}
+    std = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.joint_strength/predict", headers=h.hdr(k["operator"]),
+                  json={"inputs": std_in}).json()
+    assert body["predicted_strength"] == round(std["prediction"]["value"], 2) and body["model"] == std["model"]["name"]
+    assert body["status"] == (e["predict_status"]["warn"] if body["warnings"] else e["predict_status"]["ok"])
+    no_sup = {kk: v for kk, v in e["predict_record"].items() if kk != "supplier"}
+    assert tc.post(url, headers=h.hdr(k["operator"]), json=no_sup).json()["predicted_strength"] == body["predicted_strength"]   # 기본 A
+    _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["predict_record"], **e["predict_unbalanced"]}))   # :38-42
+    _old_422(tc.post(url, headers=h.hdr(k["operator"]), json={**e["predict_record"], "supplier": "D"}))
+    w = tc.post(url, headers=h.hdr(k["operator"]), json={**e["predict_record"], "temperature_c": e["recommended_warn"]["temperature_c"]}).json()
+    assert e["recommended_warn"]["text"] in w["warnings"] and w["status"] == e["predict_status"]["warn"]
+
+
+def test_krs_quality_overview_is_standard_queue(krs):
+    from datetime import date
+    from mlcore.monitor import review as job
+    m, k, tc, ref, before, e = krs
+    job.run_review(m.tenant.code, date(2026, 10, 4), merged=m)
+    d = tc.get(e["routes"]["queue"], headers=h.hdr(k["operator"])).json()
+    assert list(d) == e["queue_keys"] and d["review_threshold"] == e["queue_threshold"]
+    omitted = set(e["differs"]["queue_omitted"])
+    assert not [x for x in e["queue_source_keys"] if x not in d and x not in omitted] and not omitted & set(d)
+    assert d["flagged_lots"] > 0 and d["flagged"] and d["flagged"][0]["absolute_error"] >= d["review_threshold"]   # tests/test_api.py:27-29
+    assert all(list(x) == e["queue_row_keys"] for x in d["flagged"]) and len(d["flagged"]) <= 12
+    errs = [x["absolute_error"] for x in d["flagged"]]
+    assert errs == sorted(errs, reverse=True)
+    items = tc.get(f"/api/v1/tenants/{m.tenant.code}/tasks/{m.tenant.code}.residual_review/review",
+                   headers=h.hdr(k["operator"]), params={"limit": 100}).json()["items"]
+    assert {i["origin"] for i in items} <= {"test_split", "live_residual"}
+
+
+def test_krs_records_old_keys(krs):
+    m, k, tc, ref, before, e = krs
+    b = tc.get(e["routes"]["records"], headers=h.hdr(k["viewer"]), params={"limit": 5}).json()
+    assert list(b) == e["records_keys"] and len(b["items"]) == 5 and b["total"] == e["samples_total"]   # tests/test_api.py:47-48
+    assert all(list(x) == e["records_item_keys"] for x in b["items"])
+    assert {x["supplier"] for x in b["items"]} <= set(e["old_suppliers"])
+    for q in e["records_bad_queries"]:
+        _old_422(tc.get(f"{e['routes']['records']}?{q}", headers=h.hdr(k["viewer"])))

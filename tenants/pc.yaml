@@ -6,7 +6,7 @@ mode: demo                      # 실데이터 키가 들어오기 전 live 없�
 hub_company: pc
 aliases: [PyoungChang, 꽃순이김치]   # 금지어 검사용 별칭 (G-M01 · G-S06) — 지명 '평창' 단독은 산지 범주값이라 별칭에 두지 않는다
 tasks:
-  enable: [pc.sensory_score, pc.residual_review]    # pc.recipe_optimize 는 웨이브 A2
+  enable: [pc.sensory_score, pc.recipe_optimize, pc.residual_review]
 categories:                     # values_from: tenant 범주 — 원천 api/ml_service.py:46 (목록 순서 = 원천 순서, 합성 효과가 위치에 묶임)
   cabbage_origin: [평창, 강릉, 기타계약]
   prod_line: [K1, K2]
@@ -21,4 +21,11 @@ notify: {webhook_env: null}     # 미확인
 compat:
   entity_prefix: "PC-K-"        # 원천 lot_id 접두 (api/ml_service.py:50)
   input_rename: {line: prod_line}   # 옛 요청 키 → 팩 변수 (api/main.py:16 ProcessInput.line)
+  routes:                       # 옛 경로 (원천 api/main.py:27-59 · api-contract §6.3) — 모양은 tenants/pc/compat.py (개발2)
+    - {path: /api/health, action: health}                                                          # :27
+    - {path: /api/ml/overview, action: overview}                                                   # :30
+    - {path: /api/quality/predict, method: POST, action: predict_one, task: sensory_score}        # :39
+    - {path: /api/quality/overview, action: review_list, task: residual_review, params: {limit: 50, max_limit: 50}}   # :42
+    - {path: /api/data/records, action: records}                                                   # :49
+    # /api/ml/optimize (:36) 는 pc.recipe_optimize 가 켜지면 (웨이브 A2 — 개발1 팩 kimchi)
 labels: {}

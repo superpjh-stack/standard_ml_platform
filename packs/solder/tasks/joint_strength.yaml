@@ -1,0 +1,28 @@
+# 접합강도 회귀 (task-contract §6.5 · source_inventory §8.3). 원천: IQR(1.5) 이상치를 분할 전 전체에서 제거(원천 결함 §13) · 무작위 80/20 ·
+# 시험 RMSE 선정(시험 구간 재사용 — 원천 결함 §13) · RobustScaler. 표준: 시각 열이 없으므로 random_60_20_20(D2-21), 이상치 경계는 학습 구간에서만(D2-03),
+# 선정은 검증 구간, 시험 1회, 표준 전처리. 원천 절차 재현값은 migration/reproduce.py(이관 보고서에 나란히).
+id: solder.joint_strength
+type: regression
+title: 접합강도 예측
+entity: lot
+time_key: null
+group_key: null
+target: {name: joint_strength_mpa, unit: MPa, direction: higher_is_better}
+features: [sn_pct, ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min, supplier]
+thresholds: {review_below: 35.0}       # 원천 내부 검토 기준 35 MPa(ml_service.py:158)
+interval: {method: split_conformal, alpha: 0.1}
+outlier: {method: iqr, k: 1.5, columns: [sn_pct, ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min]}   # 원천 :59-73 — 학습 구간에서만(D2-03)
+input_rules:
+  - {name: composition_sum, expr: "sn_pct + ag_pct + cu_pct + sb_pct + flux_pct", between: [99.9, 100.1]}   # 원천 main.py:70-72
+candidates: [decision_tree, svr, random_forest, gbr, extra_trees]
+candidate_params:                      # 원천 ml_service.py:97-103 그대로
+  decision_tree: {max_depth: 8, min_samples_leaf: 5}
+  svr: {C: 20, epsilon: 0.15, gamma: scale}
+  random_forest: {n_estimators: 180, max_depth: 10, min_samples_leaf: 1}
+  gbr: {n_estimators: 180, max_depth: 3, learning_rate: 0.04}
+  extra_trees: {n_estimators: 180, max_depth: 12, min_samples_leaf: 1}
+split: random_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: quality_lead
+seed: 42

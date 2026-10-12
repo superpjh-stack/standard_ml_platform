@@ -1,0 +1,49 @@
+{
+  "note": "원천 앱이 저장한 합성 데모 결과(읽기 전용 사본). 생성: migration/source_expected.py — 손질 금지",
+  "rows": [
+    {
+      "assumptions": {
+        "density": 7850,
+        "machine_per_min": 900,
+        "markup": 0.15,
+        "price_kg": 1300,
+        "scrap_rate": 0.08,
+        "setup_minutes": 35,
+        "vat_rate": 0.1
+      },
+      "created_at": "2026-09-18T16:43:30.494688+00:00",
+      "input": {
+        "bends": 2,
+        "drawing_id": "CAD-b4c2e97a330b",
+        "holes": 6,
+        "length": 1200.0,
+        "material": "SPCC",
+        "profile": "잔넬",
+        "quantity": 100,
+        "review_note": "브라우저 검증: 샘플 전개도 홀 6개·슬롯 2개, 두께 2mm와 굽힘 2회 확인",
+        "reviewed": true,
+        "slots": 2,
+        "thickness": 2.0,
+        "width": 160.0
+      },
+      "markup_cost": 86145,
+      "material_cost": 423222,
+      "minutes_per_piece": 1.3286,
+      "model": "Ridge",
+      "model_version": "ot-cad-demo-2026.09",
+      "overrides": [],
+      "processing_cost": 119576,
+      "ref": "quotes/QT-0bd485deb3dc",
+      "setup_cost": 31500,
+      "status": "검토용 초안",
+      "subtotal": 660443,
+      "test_mae": 0.3166,
+      "total": 726487,
+      "total_minutes": 167.86,
+      "unit_price": 6604.43,
+      "vat": 66044,
+      "weight_per_piece": 3.0144
+    }
+  ],
+  "source": "data/onetouch.sqlite3"
+}

@@ -8,6 +8,8 @@ time_key: produced_at          # 원천 12시간 간격 생산 시각
 group_key: null
 target: {name: sensory_score, unit: 점, direction: higher_is_better}
 features: [cabbage_pct, radish_pct, seasoning_pct, salt_pct, brine_salinity_pct, brining_hours, fermentation_temp_c, fermentation_hours, storage_temp_c, cabbage_origin, prod_line]
+input_rules:
+  - {name: recipe_sum, expr: "cabbage_pct + radish_pct + seasoning_pct + salt_pct", between: [98, 102]}   # 원천 main.py:18-21 배합 합 거부
 thresholds: {review_below: 78.0}   # 원천 데모 검토 기준(예측 < 78 이면 "검토 필요")
 interval: {method: split_conformal, alpha: 0.1}
 candidates: [ridge, extra_trees, gbr]

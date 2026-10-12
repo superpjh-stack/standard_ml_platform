@@ -1,0 +1,24 @@
+# 개당 통합 가공시간 회귀 (task-contract §6.5 · source_inventory §10.3 OT-M1). 원천: 행 순서 540/180/180 · 검증 MAE 선정(동률 이름순) ·
+# 학습+검증 재적합 · 시험 1회 · 예측 하한 0.05 분. 원천에 시각 열이 없다 → 표준 random_60_20_20 (D2-21, 차이 사유는 이관 보고서).
+id: rollform-quote.machining_minutes
+type: regression
+title: 개당 가공시간 예측
+entity: job
+time_key: null
+group_key: null
+target: {name: machining_minutes, unit: 분/개, direction: lower_is_better}
+features: [part_length_mm, blank_width_mm, sheet_thickness_mm, hole_count, slot_count, bend_count, steel_grade, section_profile]
+thresholds: {}                  # 원천에 회귀 검토 기준 없음
+clip: {min: 0.05}               # 원천 predict_time: max(.05, …) (ml_service.py:122)
+interval: {method: split_conformal, alpha: 0.1}
+candidates: [ridge, random_forest, extra_trees, gbr]
+candidate_params:
+  ridge: {alpha: 1}
+  random_forest: {n_estimators: 100, min_samples_leaf: 2}
+  extra_trees: {n_estimators: 100, min_samples_leaf: 2}
+  gbr: {n_estimators: 180, max_depth: 3}
+split: random_60_20_20
+out_of_range: predict_with_warning
+max_imputed: 3
+approver_role: estimating_lead
+seed: 42

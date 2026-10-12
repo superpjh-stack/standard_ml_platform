@@ -1,0 +1,32 @@
+# 회사 등록부 — 고려솔더 (contracts/tenant-contract.md §3). 비밀값은 환경변수 이름만. 확인 못 한 값은 null + "# 미확인".
+# live 불가 (D2-01): 실데이터 원천이 없다 — demo(합성) + CSV(eval)만 두고 sources.train 을 두지 않는다. doctor 는 demo · eval 만 본다.
+code: krs
+name: 고려솔더
+pack: solder
+mode: demo                      # live 불가 (D2-01) — 실데이터 키가 들어와도 원천 테이블이 없다
+hub_company: krs
+aliases: [Koreal]               # 금지어 검사용 별칭 (G-M01 · G-S06)
+tasks:
+  enable: [krs.joint_strength, krs.recipe_optimize, krs.residual_review]
+categories:                     # values_from: tenant 범주 — 원천 ml_service.py:40 의 A · B · C (목록 순서 = 원천 순서, 합성 효과 · 확률이 위치에 묶임)
+  supplier: [공급사A, 공급사B, 공급사C]   # 원천 한 글자 표기는 G-M01 금지어 충돌(D2-61) — 옛 값 A · B · C 는 호환 쪽(tenants/krs/compat.py)이 바꾼다
+sources:
+  demo:    {kind: synthetic, seed: 20260917, rows: 720}   # 원천 make_sample_data() 시드 · 행 (ml_service.py:31-33)
+  eval:    {kind: csv, path: tests/fixtures/krs/snapshot.csv}   # migration/make_fixtures.py 생성 (demo 와 같은 행) — CSV 업로드 대신 등록 CSV (D2-01)
+feature_map: {}                 # 없음 — 실데이터 원천 없음 (D2-01)
+target_map: {}                  # 없음 — 접합강도 실측 원천 없음 (D2-01)
+unmapped: {}
+approvers: {quality_lead: []}   # 미확인 — 사람 확인 필요 (D-04)
+notify: {webhook_env: null}     # 미확인
+compat:
+  entity_prefix: "KS-"          # 원천 lot_id 접두 (ml_service.py:48 — 1차 회사 접두와 겹침 주의, source_inventory K7)
+  # 옛 경로(routes) · 옛 응답 모양 · 공급사 옛 표기 변환은 개발2(tenants/krs/compat.py)
+  routes:                       # 옛 경로 (원천 api/main.py:36-82 · api-contract §6.3)
+    - {path: /api/health, action: health}                                                          # :36
+    - {path: /api/ml/overview, action: overview}                                                   # :41
+    - {path: /api/ml/samples, action: samples, task: joint_strength, params: {limit: 12, max_limit: 100}}   # :47
+    - {path: /api/quality/overview, action: review_list, task: residual_review, params: {limit: 12, max_limit: 50}}   # :62
+    - {path: /api/quality/predict, method: POST, action: predict_one, task: joint_strength}       # :67
+    - {path: /api/data/records, action: records}                                                   # :76
+    # /api/ml/optimize (:54) 는 코어 결함(2차) D2-A2-02 — 고정 변수 + params 만 받는 옛 최적화 동작이 없다(멈춤)
+labels: {}

@@ -1,0 +1,12 @@
+# 솔더 팩 변수 사전 (contracts/feature-contract.md). 원천 이관 근거: migration/source_inventory.md §8.2
+# min/max = 원천 요청 경계(QualityPredictRequest), default = 원천 생성 범위 가운데. 결측이 주입되는 은 · 온도 · 혼합 시간은 보정 허용.
+# step = 무작위 탐색 격자 간격(원천은 연속 균등 표집 — 표준은 격자 위 표집, 간격을 잘게 둔다).
+sn_pct:        {label: 주석 함량,     unit: "%",   dtype: float, min: 90,  max: 100, default: 96.5, required: true,  impute: median, controllable: false}
+ag_pct:        {label: 은 함량,       unit: "%",   dtype: float, min: 0,   max: 6,   default: 2.2,  required: false, impute: median, controllable: true, step: 0.01}
+cu_pct:        {label: 구리 함량,     unit: "%",   dtype: float, min: 0,   max: 3,   default: 0.6,  required: true,  impute: median, controllable: true, step: 0.01}
+sb_pct:        {label: 안티몬 함량,   unit: "%",   dtype: float, min: 0,   max: 3,   default: 0.85, required: true,  impute: median, controllable: true, step: 0.01}
+flux_pct:      {label: 플럭스 함량,   unit: "%",   dtype: float, min: 0,   max: 2,   default: 0.4,  required: true,  impute: median, controllable: true, step: 0.01}
+temperature_c: {label: 용탕 온도,     unit: "°C",  dtype: float, min: 150, max: 350, default: 246,  required: false, impute: median, controllable: true, step: 0.5}
+mixing_min:    {label: 혼합 시간,     unit: 분,    dtype: float, min: 5,   max: 150, default: 53,   required: false, impute: median, controllable: true, step: 0.5}
+supplier:      {label: 원료 공급사,   dtype: category, values_from: tenant, required: true, controllable: false}
+std_name: {}   # 허브 std/fields.yaml 대응 미확인 — 내보내기는 <pack>.<변수> 를 표준 이름으로 쓴다(contracts/hub-export.md)

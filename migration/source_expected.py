@@ -5,6 +5,7 @@
 옮기는 것은 합성 데모 결과뿐이다(원천 mode=synthetic_demo · 예시 단가 — 실데이터 0). 도면 원본 바이트(raw)는 옮기지 않는다.
 
     uv run python migration/source_expected.py --tenant kd     # → tests/fixtures/kd/source_drawing.json · source_quotes.json
+    uv run python migration/source_expected.py --tenant ot     # → tests/fixtures/ot/source_drawing.json · source_quotes.json
 """
 
 from __future__ import annotations
@@ -15,11 +16,21 @@ import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = {"kd": ROOT.parent / "KyungDong ML AI" / "data" / "kyungdong.sqlite3"}
-DRAWING_KEYS = ("filename", "mode", "unit", "scale_to_mm", "unit_source", "entity_count", "bbox", "counts", "unsupported",
-                "objects", "bom", "warnings")
-QUOTE_KEYS = ("input", "source_bom", "lines", "features", "mass_kg", "hours_per_unit", "material_cost", "labor_cost",
-              "outsource_cost", "markup_cost", "subtotal", "vat", "total", "model", "model_version", "cost_snapshot")
+SOURCES = {"kd": ROOT.parent / "KyungDong ML AI" / "data" / "kyungdong.sqlite3",
+           "ot": ROOT.parent / "OneTouch ML AI" / "data" / "onetouch.sqlite3"}
+DRAWING_KEYS = {
+    "kd": ("filename", "mode", "unit", "scale_to_mm", "unit_source", "entity_count", "bbox", "counts", "unsupported",
+           "objects", "bom", "warnings"),
+    "ot": ("filename", "unit", "source_unit", "objects", "counts", "bbox", "dimensions", "skipped", "warnings",
+           "entity_count", "data_mode"),
+}
+QUOTE_KEYS = {
+    "kd": ("input", "source_bom", "lines", "features", "mass_kg", "hours_per_unit", "material_cost", "labor_cost",
+           "outsource_cost", "markup_cost", "subtotal", "vat", "total", "model", "model_version", "cost_snapshot"),
+    "ot": ("input", "status", "minutes_per_piece", "total_minutes", "weight_per_piece", "material_cost", "processing_cost",
+           "setup_cost", "markup_cost", "subtotal", "vat", "total", "unit_price", "model", "model_version", "test_mae",
+           "assumptions", "overrides"),
+}
 
 
 def _ro(path: Path) -> sqlite3.Connection:
@@ -28,20 +39,20 @@ def _ro(path: Path) -> sqlite3.Connection:
     return sqlite3.connect(f"file:{path}?mode=ro", uri=True)
 
 
-def drawings(conn) -> list[dict]:
+def drawings(conn, keys) -> list[dict]:
     out = []
     for did, created, payload in conn.execute("SELECT id, created_at, payload FROM drawings ORDER BY created_at, id"):
         d = json.loads(payload)
-        out.append({"ref": f"drawings/{did}", "created_at": created, **{k: d.get(k) for k in DRAWING_KEYS},
+        out.append({"ref": f"drawings/{did}", "created_at": created, **{k: d.get(k) for k in keys},
                     "paths_count": len(d.get("paths") or []), "texts_count": len(d.get("texts") or [])})
     return out
 
 
-def quotes(conn) -> list[dict]:
+def quotes(conn, keys) -> list[dict]:
     out = []
     for qid, created, payload in conn.execute("SELECT id, created_at, payload FROM quotes ORDER BY created_at, id"):
         q = json.loads(payload)
-        out.append({"ref": f"quotes/{qid}", "created_at": created, **{k: q.get(k) for k in QUOTE_KEYS}})
+        out.append({"ref": f"quotes/{qid}", "created_at": created, **{k: q.get(k) for k in keys}})
     return out
 
 
@@ -53,7 +64,8 @@ def main(argv: list[str] | None = None) -> int:
     out_dir = ROOT / "tests" / "fixtures" / a.tenant
     out_dir.mkdir(parents=True, exist_ok=True)
     note = ("원천 앱이 저장한 합성 데모 결과(읽기 전용 사본). 생성: migration/source_expected.py — 손질 금지")
-    for name, rows in (("source_drawing.json", drawings(conn)), ("source_quotes.json", quotes(conn))):
+    for name, rows in (("source_drawing.json", drawings(conn, DRAWING_KEYS[a.tenant])),
+                       ("source_quotes.json", quotes(conn, QUOTE_KEYS[a.tenant]))):
         (out_dir / name).write_text(json.dumps({"note": note, "source": f"data/{SOURCES[a.tenant].name}", "rows": rows},
                                                ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(f"{a.tenant}/{name}: {len(rows)} 행")

@@ -1,0 +1,5 @@
+# ot.quote 덮어쓰기 — 재질별 밀도 · kg 단가 (원천 api/config.py:4-8 MATERIALS — 예시 단가, 승인 단가 아님). 10진 문자열만(G2-Q01).
+# 단가표 칸 = categories.steel_grade 와 정확히 같아야 한다(없는 칸 · 남는 칸 R2 — D2-45 ④).
+rates:
+  density:  {SPCC: "7850", SS400: "7850", SUS304: "7930"}
+  price_kg: {SPCC: "1300", SS400: "1100", SUS304: "4500"}

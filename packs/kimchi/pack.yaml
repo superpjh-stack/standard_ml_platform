@@ -7,4 +7,4 @@ synth: {module: synth/kimchi_lots.py, seed: 42, rows: 420}   # 원천 _demo_data
 notice: "모델 예측은 관능검사, 이화학검사 또는 출하 승인을 대체하지 않습니다."
 status_labels: {}
 monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}
-tasks: [sensory_score, residual_review]     # recipe_optimize 는 웨이브 A2 (task-contract §6.5)
+tasks: [sensory_score, recipe_optimize, residual_review]

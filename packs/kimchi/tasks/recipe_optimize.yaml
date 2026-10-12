@@ -1,0 +1,25 @@
+# 배합 · 숙성 조건 최적화 — 무작위 탐색 (task-contract §2 · §6.5 · source_inventory §9.5). 원천: 배합 3(배추 · 무 · 소금) 균등 →
+# 양념 = 100 − 합, 양념이 범위 안인 배합만 수락해 3,500 · 공정 5 균등 · 예측 ≥ 목표 · 원재료비 ≤ 상한 ·
+# 위반 = max(0, 목표 − 예측)/3 + max(0, 비용 − 상한)/5 · 충족: 비용 ↑ 예측 ↓ · 미충족: 위반 ↑ 비용 ↑ · 추천 1.
+# 표준: 수락 표집 3,500(derived 양념이 [min, max] ∩ 학습 범위 안) · 제약 scale 3 · 5 · least_violation · 상위 5 · 시드 고정.
+id: kimchi.recipe_optimize
+type: optimize
+title: 배합 · 숙성 조건 추천
+entity: lot
+uses: [kimchi.sensory_score]
+controls: [cabbage_pct, radish_pct, salt_pct, brine_salinity_pct, brining_hours, fermentation_temp_c, fermentation_hours, storage_temp_c]
+fixed: [cabbage_origin, prod_line]
+derived: {seasoning_pct: "100 - cabbage_pct - radish_pct - salt_pct"}     # 배합 등식(원천 :93)
+params:
+  target_score:      {label: 목표 관능 점수,   unit: 점,   default: 80, min: 65, max: 95}    # 원천 OptimizeInput :23-25 · 원천 시험 요청
+  max_material_cost: {label: 원재료비 지수 상한, unit: 지수, default: 85, min: 45, max: 100}
+formulas: {material_cost_index: material_cost}     # formulas/material_cost.py::cost — 원천 COST 식(:32,97)
+objective: {minimize: material_cost_index, tiebreak: [{maximize: sensory_score}]}
+constraints:
+  - {name: target_score,      expr: "sensory_score >= target_score",             scale: 3}   # 원천 위반 가중 /3
+  - {name: max_material_cost, expr: "material_cost_index <= max_material_cost", scale: 5}   # 원천 위반 가중 /5
+search: {strategy: random, max_points: 3500}
+on_infeasible: least_violation
+out_of_range: predict_with_warning
+approver_role: quality_lead
+seed: 42

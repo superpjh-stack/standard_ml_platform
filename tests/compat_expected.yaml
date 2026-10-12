@@ -100,3 +100,223 @@ sw:
     overview: "시험 구간 행 단위 예측에서 만든 키(equipment 의 LOT별 예측 · review_count · trend · priority_queue)와 데모 검토 기준 상수(delta_e_review · defect_rate 는 합성 라벨 비율)는 내지 않는다 — 표준 API 는 시험 구간을 다시 채점하지 않고(goal §8), 검토 기준은 과제 thresholds(B02 tasks) 가 정본이다. 표준 자리 = 화면 4 학습 보고서 · 화면 1 개요(B06) · B02 과제 정의"
     overview_omitted: [equipment, review_count, trend, priority_queue, delta_e_review, defect_rate]
     importance: "옛 importance 는 검증 구간, 표준은 시험 구간 순열 중요도(report.test.permutation_importance)"
+# ── 2차 4개사 (웨이브 A2 — 객체 경로 + tenants/<code>/compat.py 모양 플러그인, api-contract §5 · §6.3) ──────────────────────
+kd:
+  source_repo: "../KyungDong ML AI"
+  routes:                                        # api/main.py:70,74,89,100,107,113,129,135,142
+    health: /api/health
+    overview: /api/ml/overview
+    analyze: /api/cad/analyze
+    drawing: "/api/cad/{id}"
+    quotes: /api/quotes
+    export_csv: /api/quotes/export/csv
+    quote: "/api/quotes/{id}"
+    quote_csv: "/api/quotes/{id}/csv"
+  pending_routes:                                # 팩 eto samples/sample.dxf 가 생기면 (개발3 요청 — 팩에 회사 재질 이름을 둘 수 없어 원천 데모와 같지 않다)
+    sample_dxf: /api/cad/sample.dxf              # main.py:78
+    demo: /api/cad/demo                          # main.py:82
+  health_keys: [status, model_ready, version, mode]                                    # main.py:71
+  overview_keys: [version, mode, job_rows, missing_cells, champion, metrics, test_metrics, split, features, products, recognition, warning]   # ml_service.py:59-66 (부분)
+  overview_source_keys: [version, mode, job_rows, missing_cells, duplicates, champion, metrics, test_metrics, split, seed, trend, features, materials, products, cost, recognition, warning]   # ml_service.py:59-66 (전부)
+  overview_metric_keys: [model, mae, rmse, r2]                                        # ml_service.py:41,51
+  overview_split: [540, 180, 180]                                                     # ml_service.py:45 · tests/test_api.py:114
+  overview_missing_cells: 12                                                          # tests/test_api.py:114
+  overview_metric_count: 4                                                            # tests/test_api.py:114 (후보 4)
+  overview_feature_keys: [mass_kg, cut_m, weld_m, thickness_mm, complexity]          # config.py:8-14 FEATURE_META
+  recognition_measured_accuracy: null                                                 # tests/test_api.py:115
+  drawing_keys: [filename, sha256, unit, scale_to_mm, mode, objects, bom, counts, warnings, entity_count, id, created_at]   # cad.py:123 · storage.py:25 (부분)
+  drawing_source_keys: [filename, sha256, unit, scale_to_mm, unit_source, mode, bbox, paths, texts, objects, bom, counts, unsupported, warnings, entity_count, id, created_at]
+  drawing_counts: {title_block: 1, bom_table: 1, rev_table: 1, other: 0}             # tests/test_api.py:32
+  drawing_bom_rows: 4                                                                 # tests/test_api.py:33
+  drawing_bom_mass: 650                                                               # tests/test_api.py:34
+  drawing_object_keys: [id, label, bbox, texts, evidence, status]                    # cad.py:105
+  analyze_errors: {wrong_ext: 415, not_dxf: 422, too_big: 413}                        # tests/test_api.py:92-94 · main.py:92-96
+  analyze_error_text: {415: "ASCII DXF만 지원합니다. DWG·CAD·PDF는 DXF로 변환 후 업로드하세요.", 413: "도면 파일은 5 MiB 이하만 지원합니다."}   # main.py:92,94
+  drawing_404_text: 도면 분석을 찾을 수 없습니다.                                       # main.py:103
+  quote_404_text: 견적을 찾을 수 없습니다.                                              # main.py:138
+  quote_input:                                                                        # tests/test_api.py:19-23 quote_input (가격 = config.py:5 MATERIALS)
+    product: 반응기
+    material: STS316L
+    quantity: 2
+    cut_m: 24
+    weld_m: 18
+    thickness_mm: 6
+    complexity: 3
+    labor_rate: 45000
+    outsource_cost: 100000
+    reviewed: true
+    review_note: 데모 BOM과 공정 조건 확인
+  price_kg: {STS316L: 6500, STS304: 4500, SS400: 1100}                                 # config.py:5
+  quote_keys: [drawing_id, filename, status, input, source_bom, source_sha256, lines, features, mass_kg, hours_per_unit, material_cost, labor_cost, outsource_cost, markup_cost, subtotal, vat, total, model_version, cost_snapshot, notice, scope, id, created_at]   # quote.py:18-23 · storage.py:37 (model 만 뺌)
+  quote_line_keys: [name, material, quantity, mass_kg, price_kg, weight_total, cost]  # quote.py:11
+  quote_status_draft: 검토용 초안                                                      # quote.py:18
+  quote_outsource_cost: 200000                                                        # tests/test_api.py:44 (외주비 × 대수)
+  quote_invalid_422:                                                                  # tests/test_api.py:54-57 전부 (값 범위 · 모양 — 같은 422)
+    - {product: C형강}
+    - {material: 미상}
+    - {weld_m: 301}
+    - {cut_m: -1}
+    - {reviewed: false}
+    - {quantity: 0}
+    - {quantity: 1.5}
+    - {labor_rate: 0}
+    - {review_note: "     "}
+    - {thickness_mm: 200}
+    - {complexity: 6}
+    - {extra: invalid}
+  quote_list_keys: [total, offset, limit, records]                                    # storage.py:54
+  quote_list_bad_queries: ["limit=101", "offset=-1"]                                   # tests/test_api.py:107-108
+  quote_csv_rows: [소재비(원), 가공비(원), 외주비(원), 원가 가산액(원), 공급가액(원), 부가세(원), 합계(원)]   # main.py:145
+  quote_csv_line_head: [품명, 재질, 수량/대, 개당 중량kg, 단가 원/kg, 금액 원]          # main.py:145
+  export_head: [견적번호, 도면명, 제품, 상태, 합계(원), 모델버전]                       # main.py:132
+  differs:
+    overview: "시험 구간 행 단위 예측(trend)은 내지 않는다(시험 구간 재채점 금지, goal §8). 예시 단가표(materials)·견적 계수(cost)는 회사 등록부 · 과제 rates 가 정본(견적 kg 단가는 BOM 행 입력). duplicates(특성 중복 행 수)는 표준 품질 지표에 없다. seed 는 등록부 sources.demo.seed"
+    overview_omitted: [duplicates, seed, trend, materials, cost]
+    model: "옛 champion 은 표시 이름(Ridge), 표준은 후보 코드(ridge). 견적의 model 키는 내지 않는다 — 표준 견적 스냅숏은 모델 버전(model_versions)만 남긴다"
+    model_version: "옛 VERSION 상수(config.py:3), 표준은 등록부 버전(v<n>)"
+    drawing: "unit_source · bbox · paths · texts · unsupported 는 표준 추출 응답에 없다(도형 좌표 원본은 var/documents 의 원본 DXF — 응답에 싣지 않음). 영역(objects)·BOM·counts·경고·엔티티 수는 같은 키"
+    drawing_omitted: [unit_source, bbox, paths, texts, unsupported]
+    ids: "도면 id 는 doc_<ULID>(원천 CAD-<hex12>), 견적 id 는 qte_<ULID>(원천 QT-<hex12>)"
+    quote_status: "원천은 초안만(검토용 초안). 표준은 확정을 승인 경로로 하므로 상태 3(검토용 초안 · 확정 대기 · 확정)"
+    quote_search: "옛 검색은 파일 이름 · id, 표준 목록 검색은 견적 id · 검토 메모 · 문서 id"
+    quote_rule_material_in_bom: "대표 재질 ∈ BOM 재질(main.py:66)은 표준 입력 검증에 없다 — 이관 보고서 사유"
+    rounding: "원천 float + round(짝수), 표준 Decimal · HALF_UP — .5 경계에서 1원 다를 수 있다(D2-07a, tests/test_formula_eto_quote.py)"
+pc:
+  source_repo: "../PyoungChang ML AI"
+  routes:                                        # api/main.py:27,30,39,42,49
+    health: /api/health
+    overview: /api/ml/overview
+    predict: /api/quality/predict
+    queue: /api/quality/overview
+    records: /api/data/records
+  pending_routes:
+    optimize: /api/ml/optimize                   # main.py:36 — pc.recipe_optimize 가 켜지면 (웨이브 A2 개발1)
+  health_keys: [status, model_ready, data_mode, product]                              # main.py:28
+  health_data_mode: demo
+  overview_keys: [data_mode, rows, missing_cells, duplicate_lots, features, target, champion, metrics, warning]   # main.py:32-34 (부분)
+  overview_source_keys: [data_mode, rows, missing_cells, duplicate_lots, features, target, champion, metrics, limits, warning]
+  overview_metric_keys: [model, r2, mae_score, rmse_score]                            # ml_service.py:77
+  overview_metric_count: 3                                                            # tests/test_api.py:10
+  overview_features: [cabbage_pct, radish_pct, seasoning_pct, salt_pct, brine_salinity_pct, brining_hours, fermentation_temp_c, fermentation_hours, storage_temp_c, cabbage_origin, line]   # ml_service.py:21-24
+  overview_target: {name: sensory_score, unit: 점}                                     # main.py:33
+  overview_rows: 420                                                                  # ml_service.py:36
+  overview_missing_cells: 15                                                          # ml_service.py:54 (3열 × 5)
+  valid_record: {cabbage_pct: 71, radish_pct: 7, seasoning_pct: 20, salt_pct: 2, brine_salinity_pct: 11.1, brining_hours: 12, fermentation_temp_c: 4.8, fermentation_hours: 42, storage_temp_c: 1, cabbage_origin: 평창, line: K1}   # tests/test_api.py:5-6
+  predict_keys: [prediction_score, status, warnings, model, notice]                  # ml_service.py:86-87
+  predict_round: 2
+  status_text: {review: 검토 필요, ok: 예측 범위 양호}                                  # ml_service.py:86
+  recipe_reject: {cabbage_pct: 60}                                                    # tests/test_api.py:14 (합 89 → 422, main.py:20)
+  recipe_warn: {cabbage_pct: 71.5}                                                    # 합 100.5 — 98~102 안 · 99.7~100.3 밖 경고 (ml_service.py:84)
+  recipe_warn_text: "배합 합계가 100.50%입니다(데모 허용 99.7~100.3%)."                  # ml_service.py:84
+  low_score_text: 예측 점수가 데모 검토 기준보다 낮아 관능·이화학 검사가 필요합니다.       # ml_service.py:85
+  queue_keys: [residual_review_threshold, priority_queue, notice]                    # main.py:46-47 (부분)
+  queue_source_keys: [evaluated, demo_review_score, residual_review_threshold, priority_queue, notice]
+  queue_row_keys: [lot_id, measured_score, predicted_score, residual_score]           # main.py:45
+  queue_top: 8                                                                        # main.py:44
+  queue_notice: 잔차 우선순위는 불량 판정이 아니라 데이터/모델 검토 순서입니다.          # main.py:47
+  records_keys: [total, limit, offset, records]                                      # main.py:59
+  record_key_order: [lot_id, produced_at, cabbage_pct, radish_pct, seasoning_pct, salt_pct, brine_salinity_pct, brining_hours, fermentation_temp_c, fermentation_hours, storage_temp_c, cabbage_origin, line, sensory_score]   # ml_service.py:50-53
+  records_query: "limit=7&line=K1&cabbage_origin=평창"                                 # tests/test_api.py:22
+  records_bad_queries: ["limit=101", "limit=0", "offset=-1", "line=K3", "cabbage_origin=invalid"]   # tests/test_api.py:23 · main.py:50-51
+  records_total: 420
+  differs:
+    overview: "limits(합성 생성 · 탐색 범위, ml_service.py:27-31)는 내지 않는다 — 표준 입력 범위는 팩 features min/max, 탐색 범위는 recipe_optimize 과제(웨이브 A2). 지표는 표본 내가 아니라 시험 1회(D2-02 — 재측정 값)"
+    overview_omitted: [limits]
+    queue: "원천은 전체 재적합 모델로 같은 데이터를 채점한 표본 내 |잔차| 상위 8(ml_service.py:78-79 · main.py:44) — 표준은 대기열(시험 구간 · 실측이 붙은 운영 잔차, 임계값 = 검증 구간 잔차 상위 10% 분위). evaluated(표본 내 채점 행 수)와 demo_review_score(데모 상수 — 과제 thresholds 가 정본)는 내지 않는다"
+    queue_omitted: [evaluated, demo_review_score]
+    model: "옛 표시 이름(릿지 회귀 …) ↔ 후보 코드(ridge …)"
+    lot_id: "표준 엔티티 DEMO-0001 → 옛 LOT 번호 PC-K-DEMO-0001 (compat.entity_prefix 겹침 규칙, 원천 PC-K-0001)"
+    records_default_limit: "옛 기본 limit 25 · 검색 30자, 1차 호환 records 장치는 기본 15 · 60자 — limit 를 주면 같다(코어 동결)"
+ot:
+  source_repo: "../OneTouch ML AI"
+  routes:                                        # api/main.py:47,52,69,74,82,94,101,109,114,126
+    health: /api/health
+    overview: /api/ml/overview
+    sample_dxf: /api/cad/sample.dxf
+    demo: /api/cad/demo
+    analyze: /api/cad/analyze
+    drawing: "/api/cad/{id}"
+    quotes: /api/quotes
+    quote: "/api/quotes/{id}"
+    quote_csv: "/api/quotes/{id}/csv"
+  pending_routes:
+    data_demo: /api/data/demo                    # main.py:56 — 20행 참조 데이터(data/demo/*.json)를 팩 samples/ 에 두면 (개발3 요청)
+  health_keys: [status, model_ready, version, mode]                                    # main.py:49
+  overview_keys: [version, mode, job_rows, missing_cells, champion, metrics, test_metrics, split, features, profiles, warning]
+  overview_source_keys: [version, mode, job_rows, object_rows, missing_cells, champion, metrics, test_metrics, recognition_champion, recognition_metrics, recognition_test, split, trend, features, materials, profiles, cost, warning]   # ml_service.py:28-38
+  overview_metric_count: 4                                                            # tests/test_api.py:149
+  overview_feature_keys: [length, width, thickness, holes, slots, bends]             # config.py:10-17
+  drawing_keys: [filename, unit, source_unit, objects, counts, bbox, dimensions, warnings, entity_count, data_mode, id, created_at]
+  drawing_source_keys: [filename, unit, source_unit, objects, counts, bbox, dimensions, skipped, warnings, entity_count, data_mode, id, created_at]   # cad.py:136 · storage.py:25
+  demo_counts: {outer: 1, hole: 6, slot: 2, other: 0}                                 # tests/test_api.py:37
+  demo_dimensions: {length: 1200, width: 160}                                         # tests/test_api.py:38
+  demo_objects: 9                                                                     # tests/test_api.py:39
+  analyze_415: [a.dwg, a.pdf, a.exe]                                                  # tests/test_api.py:87-88
+  analyze_error_text: {415: "ASCII DXF만 지원합니다. DWG·PDF는 자동 인식하지 않습니다. 원본 CAD에서 DXF 전개도로 내보내세요.", 413: "도면 파일은 5MB 이하만 지원합니다."}   # main.py:86,88
+  path_filename: {upload: ../../part.dxf, saved: part.dxf}                            # tests/test_api.py:91-93
+  quote_payload: {material: SPCC, profile: 잔넬, length: 1200, width: 160, thickness: 2, holes: 6, slots: 2, bends: 2, quantity: 100, reviewed: true, review_note: "단일 전개도 치수와 홀·슬롯, 재질·두께 확인"}   # tests/test_api.py:27-30
+  quote_keys: [drawing_id, filename, status, input, minutes_per_piece, total_minutes, weight_per_piece, material_cost, processing_cost, setup_cost, markup_cost, subtotal, vat, total, unit_price, model_version, assumptions, overrides, notice, recognition_warnings, scope, id, created_at]   # quote.py:28-35 (model · test_mae 뺌)
+  quote_weight_per_piece: 3.0144                                                      # tests/test_api.py:52
+  quote_setup_cost: 31500                                                             # tests/test_api.py:53
+  quote_override_holes: [{field: holes, recognized: 6, confirmed: 7}]                 # tests/test_api.py:59
+  quote_csv_checks: {supply: 공급가액(원), holes: 홀 수, note: 확인 내용}               # tests/test_api.py:62-65
+  quote_invalid_422: [[length, 99], [width, 601], [thickness, 0], [holes, -1], [holes, 1.2], [slots, 51], [quantity, 0], [quantity, 10001], [bends, 13], [reviewed, false], [review_note, "     "], [material, unknown], [profile, unknown], [extra, 1]]   # tests/test_api.py:69
+  quote_nonfinite: [NaN, Infinity, -Infinity]                                         # tests/test_api.py:76
+  quote_404: ["/api/quotes/unknown", "/api/cad/unknown", "/api/quotes/unknown/csv"]   # tests/test_api.py:143
+  quote_list_bad_queries: ["limit=101", "offset=-1"]                                   # tests/test_api.py:141
+  differs:
+    overview: "가공시간 회귀 부분만 — 객체 분류 지표(recognition_champion · recognition_metrics · recognition_test)와 객체 설명자 행 수(object_rows)는 표준 cad_objects 과제(B06 개요 · 화면 4 학습 보고서)가 정본, 시험 구간 행 단위 예측(trend)은 내지 않는다(시험 구간 재채점 금지), 예시 단가표(materials)·견적 계수(cost)는 과제 rates · 회사 단가표"
+    overview_omitted: [object_rows, recognition_champion, recognition_metrics, recognition_test, trend, materials, cost]
+    drawing: "skipped(제외 도형 수)는 표준 추출 응답에 없다 — 경고 문구에는 그대로"
+    drawing_omitted: [skipped]
+    model: "옛 champion 은 표시 이름, 표준은 후보 코드. 견적의 model · test_mae 키와 CSV 의 '모델' 행은 내지 않는다(표준 견적 스냅숏은 모델 버전만)"
+    ids: "도면 doc_<ULID> · 견적 qte_<ULID> (원천 CAD- · QT-<hex12>)"
+    sample_name: "옛 /api/cad/sample.dxf 의 내려받기 이름 OT-demo-1200x160.dxf ↔ 팩 samples/sample.dxf"
+    quote_status: "원천은 초안만. 표준은 확정을 승인 경로로 — 상태 3"
+    quote_search: "옛 검색은 파일 이름 · id(tests/test_api.py:139 search=OT-demo), 표준 목록 검색은 견적 id · 검토 메모 · 문서 id"
+krs:
+  source_repo: "../Koreal Solder ML AI"
+  routes:                                        # api/main.py:36,41,47,62,67,76
+    health: /api/health
+    overview: /api/ml/overview
+    samples: /api/ml/samples
+    queue: /api/quality/overview
+    predict: /api/quality/predict
+    records: /api/data/records
+  pending_routes:
+    optimize: /api/ml/optimize                   # main.py:54 — 코어 결함(2차) D2-A2-02 (고정 변수 + params 만 받는 옛 최적화 동작 없음)
+  health_keys: [status, model_ready]                                                   # main.py:38
+  overview_keys: [quality, models, champion, features, target, data_mode]             # main.py:44 · ml_service.py:121 (부분)
+  overview_source_keys: [quality, models, champion, statistics, features, target, data_mode]
+  overview_quality_keys: [source_rows, missing_cells]
+  overview_quality_source_keys: [source_rows, training_rows, missing_cells, outlier_rows_removed, outliers_by_column]   # ml_service.py:70-73
+  overview_model_count: 5                                                             # tests/test_api.py:10
+  overview_model_keys: [name, r2, mae, rmse]                                          # ml_service.py:111-115
+  overview_features: [sn_pct, ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min, supplier]   # ml_service.py:20
+  overview_target: joint_strength_mpa
+  samples_keys: [total, items]                                                        # main.py:51
+  samples_default_limit: 12                                                           # main.py:48
+  samples_item_keys: [lot_id, sn_pct, ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min, supplier, joint_strength_mpa]   # ml_service.py:47-51
+  samples_total: 720                                                                  # ml_service.py:31
+  old_suppliers: [A, B, C]                                                            # ml_service.py:40
+  predict_record: {sn_pct: 96, ag_pct: 2.5, cu_pct: 0.6, sb_pct: 0.5, flux_pct: 0.4, temperature_c: 246, mixing_min: 54, supplier: A}   # tests/test_api.py:31-32
+  predict_keys: [model, predicted_strength, status, warnings, notice]                # ml_service.py:160-166
+  predict_unbalanced: {sn_pct: 90, ag_pct: 1, cu_pct: 1, sb_pct: 1, flux_pct: 1}     # tests/test_api.py:39-42 (합 94 → 422)
+  predict_status: {warn: 주의, ok: 정상}                                              # ml_service.py:163
+  recommended_warn: {temperature_c: 262, text: 권장 용탕 온도(232~260°C)를 벗어났습니다.}   # ml_service.py:154-155
+  queue_keys: [flagged_lots, review_threshold, flagged, notice]
+  queue_source_keys: [model, evaluated_lots, normal_lots, flagged_lots, mean_absolute_error, review_threshold, flagged, notice]   # ml_service.py:187-195
+  queue_row_keys: [lot_id, actual_strength, predicted_strength, absolute_error, status]
+  queue_threshold: 4.0                                                                # ml_service.py:193
+  records_keys: [total, offset, limit, items]                                         # ml_service.py:220-222 (summary 뺌)
+  records_item_keys: [lot_id, sn_pct, ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min, supplier, joint_strength_mpa]
+  records_bad_queries: ["limit=0", "limit=101", "offset=-1"]                           # main.py:78
+  differs:
+    overview: "statistics(정제 후 기술통계) · training_rows · outlier_rows_removed · outliers_by_column 은 원천이 분할 전 전체 데이터로 쟀다(ml_service.py:59-73, 원천 결함 — 표준은 학습 구간 IQR, D2-03). 지표는 시험 1회 · 검증 선정(원천은 시험 구간 RMSE 선정)"
+    overview_omitted: [statistics]
+    quality_omitted: [training_rows, outlier_rows_removed, outliers_by_column]
+    queue: "원천은 정제 전체 데이터를 같은 모델로 다시 채점한 표본 내 대시보드(ml_service.py:169-195) — 표준은 대기열(|잔차| ≥ 4 MPa, 시험 구간 · 실측이 붙은 운영 잔차). evaluated_lots · normal_lots · mean_absolute_error(표본 내 채점)와 모델 이름 · 행의 공급사 · 온도 · 혼합시간은 대기열 항목에 없다"
+    queue_omitted: [model, evaluated_lots, normal_lots, mean_absolute_error]
+    model: "옛 표시 이름(Gradient Boosting …) ↔ 후보 코드(gbr …)"
+    lot_id: "표준 엔티티 DEMO-0001 → KS-DEMO-0001 (compat.entity_prefix 겹침 규칙, 원천 KS-20240000)"
+    records: "옛 q(LOT 검색) · supplier(A · B · C) · state(정상 · 결측 · 이상) 필터와 summary · missing_fields · data_status 는 1차 호환 records 장치에 없다 — 코어 결함(2차) D2-A2-05(쿼리 값 변환 훅 없음). 기본 limit 20 ↔ 15"

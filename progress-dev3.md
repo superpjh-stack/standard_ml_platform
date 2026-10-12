@@ -1,5 +1,39 @@
 # progress-dev3.md — 개발3 (팩 · 회사 · 감시 · 이관)
 
+## 2차 웨이브 A2 — 개발3 (2026-10-13, 태그 core-freeze-2 위 작업 트리, 커밋 안 함) — 결정 D2-60 ~ D2-65
+
+### 한 일 (파일)
+
+| 묶음 | 파일 |
+|---|---|
+| 팩 `rollform-quote` | `pack.yaml`(synth jobs 900 · `synth.tasks.cad_objects` 1,600) · `features.yaml`(작업 8 + 기하 설명자 6) · `tasks/{machining_minutes,cad_objects,quote}.yaml` · `synth/{jobs,machining_minutes,cad_objects,sample_dxf}.py` · `extractors/{geometry_objects,object_classifier}.py` · `formulas/quote.py` · `samples/sample.dxf` · `baselines.yaml`(D2-62 확인 요청) |
+| 회사 | `tenants/ot.yaml` · `tenants/ot/tasks/quote.yaml`(재질별 density · price_kg) · `tenants/krs.yaml`(demo + CSV · live 불가 D2-01 · 공급사A/B/C D2-61) · `tenants/pc.yaml`(`pc.recipe_optimize` 켬 — 개발1 요청) |
+| fixture | `tests/fixtures/ot/{snapshot.parquet,snapshot.csv,source_drawing.json,source_quotes.json}` · `tests/fixtures/krs/{snapshot.parquet,snapshot.csv}` (생성: `migration/make_fixtures.py` · `migration/source_expected.py --tenant ot` — 원천 SQLite `mode=ro`) |
+| 이관 | `migration/source_expected.py`(ot 키 묶음 추가 · kd 출력 불변 확인) · 새 `migration/reproduce_quote.py`(ot · kd 표준 재측정 + 원천 절차 재현 + 저장 견적 대조 → `outputs/reproduce-ot-kd.json`) · `migration/reproduce.py --phase2` 재실행(개발1 도구 · 등록부 tenants/) |
+| 문서 | `docs/task-map.md` 6사 100 단위 · `docs/migration-report.md` §7~§12(2차 과제 12) |
+| 시험 | 새 `tests/test_rollform_quote_pack.py`(21) · `tests/test_ot_quote_flow.py`(6, DB · API) · `tests/test_export_hub.py` +1 (6사) |
+
+### 실측
+
+| 항목 | 실측 | 명령 |
+|---|---|---|
+| 행 일치 | ot 작업 900 · 설명자 1,600 원천 참조와 100% · 원천 절차 시험 MAE **0.3166** = 원천 저장 견적 `test_mae` · 예측 1.3286 = 저장 `minutes_per_piece` | `pytest tests/test_rollform_quote_pack.py` |
+| 추출 | 샘플 전개도 객체 9개 점 · 면적 · 둘레 · 라벨 · 점수(0.99/1.0)가 원천 저장 분석과 같다 · counts 1/6/2/0 · 1200 × 160 · 기하 8 사유 · 상한 413(vertices · points) · 요소 2,000 초과 413 entities(API) | 같은 시험 · `tests/test_ot_quote_flow.py` |
+| 견적 | 표준 Decimal **726,484** = 원천 현행 식 726,484(원 단위) · 저장 **726,487** = 반올림 전 분 경로(앞 판, D2-60 — 가공비 +2 · 가산 +1) · .5 경계 사례 193.5 → 표준 194 / 원천 float 193 (D2-07a) | `uv run python migration/reproduce_quote.py` |
+| 지표 (시험 1회) | ot.machining_minutes 표준 ridge MAE 0.2956 ↔ 원천 절차 0.3166 (−6.63%) · ot.cad_objects logreg macro-F1 1.0 (기준선 0.1, 혼동행렬 대각 80×4) ↔ 원천 절차 Extra Trees 1.0 · kd.labor_hours 3.7017 ↔ 보고 4.1071 (−9.87%) · krs MAE +3.65% · RMSE +12.76%(사유 K1 · K6) · pc 재측정 1.5375 ↔ 원천 1.7912 · 표본 내 1.0829 | `outputs/reproduce-ot-kd.json` · `outputs/reproduce-krs-pc.json` |
+| 허브 6사 | `make export-hub DATE=2026-10-12` → 회사 6 · 소비자 92 · 변수 131 · 시험 12 passed (extract `model.features` · quote `inputs` 누락 = 코어 결함(2차) D2-63, 고치지 않음) | `make export-hub` · `pytest tests/test_export_hub.py` |
+| 팩 4 baselines | eto 3.7017 · kimchi 1.5375 · solder 2.0935 = 재현 도구 값과 같다 · rollform-quote 0.2956 / 1.0 새로 적음(D2-62) | 위 두 JSON |
+| pytest | **941 passed · 3 skipped · 1 xfailed · 0 failed** (83 s) | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| make gate | **PASS 23 · BLOCKED 1** | `make gate` |
+| make gate2 | **41행 PASS 39 · BLOCKED 2(D-13) · FAIL 0** — G-S02 · G-M03 · G-M02(100/100) · G-M12(6사, 과제 20) · G2-P01 · G2-C01 · G2-I02 PASS. 첫 실행은 G-M14 bench FAIL(같은 시각 다른 담당 bench 컨테이너 `mlpbench-sw-*` 와 겹침) → 단독 bench PASS 30.97 ms → 재실행 FAIL 0 | `make gate2` · `gates/bench.py --compose` |
+| 코어 동결 | `git diff core-freeze-2 -- src/mlcore web/src/components std contracts` **0줄** · 미추적 0 | 직접 실행 |
+
+### 요청
+
+- **아키텍트:** D2-62 rollform-quote baselines 값 확인 · D2-60(저장 견적 판 차이) 사람 확인 · D2-63 코어 결함(허브 내보내기 extract/quote 입력) 웨이브 P 여부.
+- **개발2:** `tenants/ot.yaml` · `tenants/krs.yaml` 의 `compat.routes` 와 `tenants/{ot,krs}/compat.py` — ot 샘플 도면 `packs/rollform-quote/samples/sample.dxf`(pack_file · document_demo), `input_rename` 은 등록부에 있음, krs 공급사 옛 표기 A·B·C ↔ 공급사A·B·C 변환. kd `samples/sample.dxf` 는 재질이 회사 값이라 팩에 두지 않았다.
+- **오케스트레이터:** bench 컨테이너 이름이 담당 간 겹친다(동시 gate 실행 시 G-M14 FAIL) — 동시에 돌리지 않도록.
+
 ## 2차 웨이브 P — 개발3 (2026-10-13, 기준 커밋 283dd31 위 작업 트리, 커밋 안 함) — 결정 D2-30 ~ D2-40
 
 ### 2차 §1 공표 (다른 담당이 쓰는 모양)

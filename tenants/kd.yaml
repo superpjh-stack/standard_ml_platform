@@ -28,5 +28,17 @@ notify: {webhook_env: null}        # 미확인
 compat:
   entity_prefix: "KD-SYN-"      # 원천 job_id 접두 (api/ml_service.py:27)
   input_rename: {mass_kg: total_mass_kg, material: main_material, product: product_family}   # 옛 요청 키 → 팩 변수
+  overview_values: {products: product_family}   # 옛 개요 products ← 회사 범주 (ml_service.py:63 PRODUCTS)
+  routes:                       # 옛 경로 (원천 api/main.py:70-143 · api-contract §6.3) — 모양은 tenants/kd/compat.py (개발2)
+    - {path: /api/health, action: health}                                                     # :70
+    - {path: /api/ml/overview, action: overview}                                              # :74
+    - {path: /api/cad/analyze, method: POST, action: document_upload, task: drawing_regions}  # :89
+    - {path: "/api/cad/{drawing_id}", action: document_get, task: drawing_regions}            # :100
+    - {path: /api/quotes, method: POST, action: quote_create, task: quote}                    # :107 (draft 만 — 확정은 표준 경로 · 승인)
+    - {path: /api/quotes, method: GET, action: quote_list, task: quote, params: {limit: 10, max_limit: 100, search_max: 80}}   # :113
+    - {path: /api/quotes/export/csv, action: quote_list, task: quote, shape: old_quote_export, params: {limit: 10, max_limit: 100, search_max: 80}}   # :129
+    - {path: "/api/quotes/{quote_id}", action: quote_get, task: quote}                        # :135
+    - {path: "/api/quotes/{quote_id}/csv", action: quote_get, task: quote, shape: old_quote_csv}   # :142
+    # /api/cad/sample.dxf · /api/cad/demo (:78 · :82) 는 팩 eto samples/sample.dxf 가 생기면 pack_file · document_demo 로 (개발3 요청)
   # 견적 kg 단가는 BOM 행 입력(price_kg — 원천 QuoteInput 과 같다). 재질별 기본 단가표가 필요하면 과제 rate_tables + tenants/kd/tasks/quote.yaml (D2-45)
 labels: {}

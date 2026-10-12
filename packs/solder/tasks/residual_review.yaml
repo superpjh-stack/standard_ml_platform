@@ -1,0 +1,14 @@
+# 잔차 검토 대기열 (task-contract §6.1 · source_inventory §8.6 · D2-11). 원천은 학습 구간을 포함한 정제 데이터 전체를 채점(표본 내 잔차 — 원천 결함 §13) —
+# 표준은 같은 |잔차| ≥ 4 MPa 규칙을 시험 구간 잔차 · 운영 잔차(실측이 붙은 예측)에만 적용한다.
+id: solder.residual_review
+type: review_queue
+title: 접합강도 잔차 검토 대기열
+entity: lot
+uses: [solder.joint_strength]
+rule: {abs_residual_ge: 4.0}
+origins: [test_split, live_residual]
+max_items: 50
+reason: "|잔차| {abs_residual:.2f} MPa ≥ {threshold} MPa"
+schedule: daily_after_monitor  # 감시 일일 작업 뒤 live_residual 항목 생성(monitor/review.py)
+out_of_range: predict_with_warning
+approver_role: quality_lead

@@ -405,3 +405,34 @@ API: `POST …/predict:batch`(operator) · `POST …/optimize`(operator, `{fixed
 - **개발3**: 6.1 표 값 기입(`tenants/ks.yaml` · `sw.yaml compat`) → G-M04 PASS. 선택 `print_setpoint.yaml warn_with`.
 - **아키텍트**: D-131 경고 코드 enum(`anomaly_flag`) · tenant-contract §1 에 D-132 키 목록 · D-130 만료 기간 확인.
 - 개발2 다음: D-81(호환 records → B12 행 함수) · 원천 records 행 키 순서 대조(`equip_code` 등) · 호환 bundle anomaly 가 rejected 일 때 false 대신 null 검토(QA2 관찰).
+
+## 2차 §3 웨이브 A0-2 + A2 실측 (2026-10-13, 기준 커밋 5a51d2f · 태그 core-freeze-2 · 커밋 안 함)
+
+### 한 일 (담당 파일만 — 코어 0줄)
+- **G2-V01** `tests/test_vertical_slice_2.py` — (a) kd.quote: 실제 auth 로 DXF 업로드(영역 3 · BOM 4 = 원천 저장 도면) → 모델 없음 503 → labor_hours 학습 → stage → promote → decide(production) → 초안(사람 수정 SUPPORT 4→5, overrides 1) → 개정(원천 BOM — overrides 이력 유지) → 확정 요청(422 검토 없음 · 짧은 메모) → 대기 중 수정 409 → approver 결정 → 확정 스냅숏 → CSV(BOM · 품목 금액 · 수식 주입) → 확정 뒤 수정 · 재확정 409 → 새 모델 v2 승격 뒤에도 확정 금액 · 근거 불변. (b) pc.residual_review: 운영 모델 없음 → 항목 0 · 대기열 predict 404 type_route → 학습 → 승인 → 운영 예측 12 · 실측 8 → 일정 작업 → 항목 출처 test_split(시험 구간 = 스냅숏 시간순 끝 20% 안 · 학습/검증 행 0) · live_residual(실측 붙은 예측만, 잔차 = 실측 오프셋) · 임계값 = 검증 잔차 분위 → PATCH(operator · 다른 과제 approver 403 · approver 200) → 재검토 409 → 재실행 새 항목 0.
+- **호환 4개사** — 등록부 `compat.routes` 객체 경로 + 플러그인 `tenants/{kd,pc,ot,krs}/compat.py`: kd 9 경로 · pc 5 · ot 10 · krs 6 (원천 `api/main.py` 를 읽어 옛 키 · 순서 · 문구 · 옛 오류 `{"detail": 문구}` · 422 목록). 기대값 `tests/compat_expected.yaml` kd · pc · ot · krs(파일:줄, differs 사유), 시험 `tests/test_compat.py` +46(원천 시험 `tests/test_api.py` 의 판정을 옮김 — kd 12 · ot 14 무효 입력 등).
+- **e2e** `tests/e2e/test_console_ot_quote.py` — 화면 9 에서 ot 견적: 업로드(기하 규칙 + 분류 모델) → 인식값이 폼 초기값 → 초안(금액 = 서버 문자열) → 홀 수 수정 revision(overrides 표) → 확정 요청 → approver 결정 → 확정 · 잠금, 1024px 가로 스크롤 0 · 페이지 오류 0. 회사 화면 코드 0(등록부 · 팩 데이터만).
+
+### 견적 대조 (kd 샘플 — 원천 저장 견적 `tests/fixtures/kd/source_quotes.json` QT-c32bb3ece4ad)
+| 칸 | 원천 | 표준(API) | 비고 |
+|---|---|---|---|
+| 품목 금액 4 | 2,246,400 · 1,263,600 · 534,600 · 47,520 | 같음 | 공수 무관 |
+| 소재비 · 외주비 | 4,092,120 · 0 | 같음 | 공수 무관 |
+| 공수 · 가공비 · 가산 · 부가세 · 합계 | 58.146 h → 2,616,570 · 1,006,304 · 771,499 · 8,486,493 | 표준 모델 공수(4자리)로 원천 식(`quote.py:5-17`, 시험 안 Decimal 재작성)과 원 단위 일치 · 같은 확정 스냅숏에 원천 공수 58.146 을 넣으면 8,486,493 | 공수는 표준 재학습 값이라 다름 |
+
+### 실측
+| 항목 | 값 | 명령 |
+|---|---|---|
+| pytest | **946 passed · 3 skipped · 1 xfailed(D2-A2-01 strict) · 0 failed** | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| e2e | **23 passed** (+1 ot 화면 9) | `uv run pytest -q tests/e2e` |
+| make gate | **PASS 23 · BLOCKED 1** | `make gate` |
+| make gate2 | **PASS 39 · BLOCKED 2 · FAIL 0** — G2-V01 PASS(2 passed · 1 xfailed) · G2-C01 PASS | `make gate2` |
+| 동결 경로 diff | **0줄 · 새 파일 0** | `git diff core-freeze-2 -- src/mlcore web/src/components std contracts \| wc -l` |
+
+### 코어 결함(2차) · 요청 — decisions.md
+- D2-A2-01 견적 CSV 합계 행 없음(`quotes.to_csv` 가 과제 `csv` 를 요약 거르개로) — strict xfail 로 표시.
+- D2-A2-02 호환 optimize 가 1차 모양뿐 → pc · krs `/api/ml/optimize` 멈춤(현재 배합을 지어내야 함).
+- D2-A2-03 표준 견적 수량 0 · 1.5 허용(옛 경로는 플러그인이 원천 범위로 422).
+- D2-A2-04 개발3: kd `/api/cad/sample.dxf` · `/api/cad/demo` · ot `/api/data/demo` 는 팩 samples 파일이 생기면.
+- D2-A2-05 호환 records 쿼리 변환 훅 없음 → krs supplier · q · state 필터 · 기본 limit 재현 불가.
+- 게이트: `tests/e2e/test_console_ot_quote.py` 는 G2-S01 판정 파일 목록(gates/gate2.py)에 없다 — 아키텍트가 넣을지 결정.

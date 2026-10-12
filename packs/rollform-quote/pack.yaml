@@ -1,0 +1,14 @@
+# 업종 팩 — 롤포밍 형강 · 도면 견적 (contracts/pack-contract.md §6). 회사 · 원천 테이블 이름을 두지 않는다.
+code: rollform-quote
+name: 롤포밍 형강 · 도면 견적
+version: 0.1.0
+core_min: 0.1.0
+synth:                          # 원천 demo_jobs() 900 · geometry_training_data() 1,600 이관 — 행 일치 tests/test_rollform_quote_pack.py
+  module: synth/jobs.py
+  seed: 42
+  rows: 900
+  tasks: {cad_objects: {rows: 1600, seed: 42}}     # 객체 설명자는 작업과 다른 생성기 · 행 수 (D2-45 ⑤)
+notice: "합성 학습 데이터·예시 단가 기반 견적 초안입니다. 도면 해석·재질·전개 치수·공정과 실제 단가 확인 후 담당자가 확정해야 합니다."
+status_labels: {}
+monitor: {psi_warn: 0.2, psi_retrain: 0.3, oor_warn: 0.05, missing_warn_pp: 0.10, perf_drop: 0.25, perf_window_days: 30}
+tasks: [machining_minutes, cad_objects, quote]    # quote = 유형 코드와 같은 과제 이름(D2-31 결정)

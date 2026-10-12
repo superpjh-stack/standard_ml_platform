@@ -1,0 +1,37 @@
+# 도면 객체 인식 — 기하 추출(규칙) + 객체 분류(모델) + 기하 검증 8 사유 (task-contract §6.2 · source_inventory §10.3 OT-M2 · §10.5 X1~X10).
+# 정답은 합성 기하 설명자의 생성 라벨뿐이다(labels: synthetic) — 학습 · 시험 지표는 합성 설명자에서만 잰다. 업로드 도면에는 정답이
+# 없으므로 문서 응답 metrics 는 null 이다(지표를 만들지 않는다).
+# 추출기 순서: geometry_objects(규칙 — 도형 · 설명자 · 외곽 · 치수 · 기하 사유 X9 앞 3) → object_classifier(모델 — 같은 객체를
+# context.previous 에서 받아 분류 · 점수 · 나머지 사유 5 · counts, 결과 replaces [objects, counts]).
+id: rollform-quote.cad_objects
+type: extract
+title: 도면 객체 인식 (외곽 · 홀 · 슬롯)
+entity: drawing
+document: {formats: [dxf], max_bytes: 5242880, max_entities: 2000, unit_override: [mm, inch]}   # 원천 MAX_BYTES · MAX_ENTITIES 2,000 (config.py:24-25, D2-22)
+extractors:
+  - name: geometry_objects
+    kind: rule
+    module: extractors/geometry_objects.py
+    version: "1.0.0"
+    params: {max_vertices: 500, flatten_mm: 0.2, flatten_segments: 8, max_points_entity: 2000, max_points: 60000, coord_limit: 10000000, aspect_cap: 1000}   # 원천 cad.py:69-104
+  - name: object_classifier
+    kind: model
+    module: extractors/object_classifier.py
+    version: "1.0.0"
+    params: {score_min: 0.8}                    # 원천 cad.py:117 — 분류 점수 80% 미만은 검토 대상
+labels: synthetic
+model:
+  features: [is_circle, is_closed, aspect_ratio, area_ratio, circularity, is_curved]
+  classes: [outer, hole, slot, other]
+  target: label
+  split: stratified_60_20_20
+  candidates: [logreg, rf_clf, et_clf]
+  candidate_params:
+    logreg: {max_iter: 2000}
+    rf_clf: {n_estimators: 100}
+    et_clf: {n_estimators: 100}
+  selection: macro_f1
+outputs: [objects]
+out_of_range: reject
+approver_role: estimating_lead
+seed: 42

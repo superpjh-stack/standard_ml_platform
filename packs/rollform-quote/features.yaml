@@ -1,0 +1,23 @@
+# 롤포밍 견적 팩 변수 사전 (contracts/feature-contract.md). 원천 이관 근거: migration/source_inventory.md §10.2 (원천 FEATURE_META 6 + 범주 2)
+# · §10.2 객체 설명자 6 (원천 GEOMETRY_FEATURES — cad_objects 모델 추출기의 입력).
+# 이름 대응(원천 → 팩): length → part_length_mm · width → blank_width_mm · thickness → sheet_thickness_mm · holes → hole_count ·
+#   slots → slot_count · bends → bend_count · material → steel_grade · profile → section_profile
+#   (원천 이름은 코어 · 계약 단어와 겹친다 — G-M01 · D2-31 ②. 호환 `input_rename` 이 옛 키를 받는다)
+# 전개 폭은 원천 합성에서 결측 12(앞 540 행)가 있어 보정 허용(원천 API 는 필수 — 차이는 이관 보고서).
+part_length_mm:     {label: 제품 길이,      unit: mm,      dtype: float, min: 100, max: 6000, default: 1200, required: true,  impute: median, controllable: false}
+blank_width_mm:     {label: 전개 폭,        unit: mm,      dtype: float, min: 30,  max: 600,  default: 160,  required: false, impute: median, controllable: false}
+sheet_thickness_mm: {label: 소재 두께,      unit: mm,      dtype: float, min: 0.5, max: 6,    default: 2,    required: true,  impute: median, controllable: false}
+hole_count:         {label: 홀 수,          unit: 개/제품, dtype: int,   min: 0,   max: 100,  default: 6,    required: true,  impute: median, controllable: false, integer: true}
+slot_count:         {label: 슬롯 수,        unit: 개/제품, dtype: int,   min: 0,   max: 50,   default: 2,    required: true,  impute: median, controllable: false, integer: true}
+bend_count:         {label: 성형 굽힘 수,   unit: 개/단면, dtype: int,   min: 0,   max: 12,   default: 2,    required: true,  impute: median, controllable: false, integer: true}
+steel_grade:        {label: 재질,           dtype: category, values_from: tenant, required: true, controllable: false}
+section_profile:    {label: 제품 형상,      dtype: category, values_from: tenant, required: true, controllable: false}
+# 도면 객체 기하 설명자 — 규칙 추출기(geometry_objects)가 도형마다 계산하고 모델 추출기(object_classifier)가 분류한다.
+# 범위는 정의역(0/1 표시 · 비율). aspect_ratio 는 원천처럼 1,000 에서 자른다(cad.py:110).
+is_circle:          {label: 원 요소 여부,   unit: "-",     dtype: float, min: 0,   max: 1,    required: true, controllable: false}
+is_closed:          {label: 폐곡선 여부,    unit: "-",     dtype: float, min: 0,   max: 1,    required: true, controllable: false}
+aspect_ratio:       {label: 외접 사각 종횡비, unit: "-",   dtype: float, min: 1,   max: 1000, required: true, controllable: false}
+area_ratio:         {label: 외곽 대비 면적비, unit: "-",   dtype: float, min: 0,   max: 1000, required: true, controllable: false}
+circularity:        {label: 원형도 4πA/P²,  unit: "-",     dtype: float, min: 0,   max: 1.5,  required: true, controllable: false}
+is_curved:          {label: 곡선 포함 여부, unit: "-",     dtype: float, min: 0,   max: 1,    required: true, controllable: false}
+std_name: {}   # 허브 std/fields.yaml 대응 미확인 — 내보내기는 <pack>.<변수> 를 표준 이름으로 쓴다(contracts/hub-export.md)

@@ -1,0 +1,24 @@
+# 배합 최적화 — 무작위 탐색 (task-contract §2 · §6.5 · source_inventory §8.5). 원천: ag · cu · sb · flux · 온도 · 혼합 시간 연속 균등 5,000 ·
+# sn = 100 − 합 · 강도 ≥ 목표 · (있으면) 비용 ≤ 상한 · 비용 ↑ 강도 ↓ 정렬 · 미충족이면 위반량을 보지 않고 최저 비용(원천 결함 §13) · 추천 1.
+# 표준: 수락 표집 5,000(derived sn 이 [min, max] ∩ 학습 범위 안인 점만) · least_violation · 상위 5 · 시드 고정(요청 의존 시드 아님).
+id: solder.recipe_optimize
+type: optimize
+title: 배합 · 공정 조건 추천
+entity: lot
+uses: [solder.joint_strength]
+controls: [ag_pct, cu_pct, sb_pct, flux_pct, temperature_c, mixing_min]
+fixed: [supplier]
+derived: {sn_pct: "100 - ag_pct - cu_pct - sb_pct - flux_pct"}     # 조성 등식(원천 :131)
+params:
+  target_strength: {label: 목표 접합강도, unit: MPa, default: 48, min: 30, max: 70}          # 원천 OptimizeRequest :19-22
+  max_cost:        {label: 비용지수 상한, unit: 지수, default: null, optional: true, min: 0, max: 200}
+formulas: {cost_index: material_cost}     # formulas/material_cost.py::cost — 원천 COST 식(:28,134)
+objective: {minimize: cost_index, tiebreak: [{maximize: joint_strength}]}
+constraints:
+  - {name: target_strength, expr: "joint_strength >= target_strength"}
+  - {name: max_cost,        expr: "cost_index <= max_cost"}
+search: {strategy: random, max_points: 5000}
+on_infeasible: least_violation
+out_of_range: predict_with_warning
+approver_role: quality_lead
+seed: 42

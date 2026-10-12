@@ -1,0 +1,384 @@
+{
+ "meta": {
+  "tool": "migration/reproduce.py --phase2",
+  "source_executed": false,
+  "tolerance": 0.1,
+  "decisions": [
+   "D2-02",
+   "D2-03",
+   "D2-11",
+   "D2-12",
+   "D2-21"
+  ],
+  "source_requests": {
+   "krs": {
+    "target_strength": 47.0,
+    "max_cost": null,
+    "supplier_index": 0,
+    "supplier_source": "A"
+   },
+   "pc": {
+    "target_score": 80.0,
+    "max_material_cost": 85.0,
+    "origin_index": 0,
+    "line_index": 1
+   }
+  },
+  "tenants_base": "tenants/"
+ },
+ "rows": [
+  {
+   "task": "krs.joint_strength",
+   "type": "regression",
+   "metric": "mae",
+   "compare": true,
+   "source_procedure": {
+    "rows": 720,
+    "rows_after_outlier": 710,
+    "outlier_rows_removed": 10,
+    "outlier_scope": "all_rows_before_split",
+    "split": {
+     "train": 568,
+     "test": 142
+    },
+    "candidates": [
+     {
+      "name": "svr",
+      "mae": 2.0199134261673035,
+      "rmse": 2.6348558022303843,
+      "r2": 0.9043298197801186
+     },
+     {
+      "name": "gbr",
+      "mae": 2.060899666740017,
+      "rmse": 2.807668793560028,
+      "r2": 0.8913687850285754
+     },
+     {
+      "name": "extra_trees",
+      "mae": 2.173182155488376,
+      "rmse": 2.897434593783491,
+      "r2": 0.8843115056096001
+     },
+     {
+      "name": "random_forest",
+      "mae": 2.2209905337810754,
+      "rmse": 2.9415138936953067,
+      "r2": 0.8807647422031875
+     },
+     {
+      "name": "decision_tree",
+      "mae": 2.8546030756749277,
+      "rmse": 3.715883513937418,
+      "r2": 0.8097226609496476
+     }
+    ],
+    "champion": "svr",
+    "test": {
+     "mae": 2.0199134261673035,
+     "rmse": 2.6348558022303843,
+     "r2": 0.9043298197801186
+    },
+    "preprocess": "median + RobustScaler · most_frequent + OneHot"
+   },
+   "standard": {
+    "split_policy": "random_60_20_20",
+    "split": {
+     "train": 432,
+     "valid": 144,
+     "test": 144
+    },
+    "champion": "gbr",
+    "selection": "검증 구간 mae 최소: gbr 1.98609 (검증 기준선 train_mean 6.42489) — 후보 5개, 분할 random_60_20_20",
+    "beats_baseline": true,
+    "valid": {
+     "mae": 1.9860886669947844,
+     "rmse": 2.844487249808834,
+     "r2": 0.8703394968065276,
+     "mape": 0.052740378738756116
+    },
+    "test": {
+     "mae": 2.0935478148997637,
+     "rmse": 2.9710819745955814,
+     "r2": 0.8676613981742682
+    },
+    "baseline": {
+     "mae": 6.9701429139040325,
+     "rmse": 8.205616158903934,
+     "r2": -0.009438043754120606
+    },
+    "outlier_scope": "train_only",
+    "outlier_rows_removed_train": 5,
+    "snapshot_sha256": "2627a6d7bea9881c8ac8f344726c955ba2d1b7023ba8016030911758674f794e",
+    "rows": 720,
+    "preprocess": "표준(median + StandardScaler(scale 후보만) · OneHot)"
+   },
+   "diff_pct": {
+    "mae": 3.65,
+    "rmse": 12.76,
+    "r2": -4.05
+   },
+   "within_10pct": {
+    "mae": true,
+    "rmse": false,
+    "r2": true
+   },
+   "reason": "원천 보고 수치 없음 → 원천 절차 재현값과 대조(D2-12). 차이 사유: 원천은 IQR 이상치 경계를 분할 전 전체에서 재고(K6) 표준은 학습 구간에서만(D2-03) · 원천 무작위 80/20 · 검증 구간 없음 → 표준 random_60_20_20(D2-21) · 원천은 모델을 시험 구간 RMSE 로 선정(시험 구간 선정 누수 K1 — 원천 시험 지표는 낙관 편향) · 표준 선정은 검증 구간 · 원천 RobustScaler → 표준 전처리"
+  },
+  {
+   "task": "krs.recipe_optimize",
+   "type": "optimize",
+   "metric": "feasible_rate",
+   "compare": false,
+   "source_procedure": {
+    "n_points": 5000,
+    "feasible": true,
+    "feasible_rate": 0.2658,
+    "best": {
+     "sn_pct": 95.78657738457703,
+     "ag_pct": 1.7572640183339732,
+     "cu_pct": 0.762574371891654,
+     "sb_pct": 1.5414007799512195,
+     "flux_pct": 0.15218344524612532,
+     "temperature_c": 244.82983674663626,
+     "mixing_min": 47.11707967470024,
+     "joint_strength": 47.38949315366152,
+     "cost_index": 51.70768452500665
+    },
+    "seed": 4765,
+    "sampling": "연속 균등(ag · cu · sb · flux 생성 범위, 온도 232~260, 혼합 35~75)",
+    "on_infeasible": "전체 표본 최저 비용(위반량 무시 — K2)",
+    "returned": 1
+   },
+   "standard": {
+    "n_points": 5000,
+    "n_drawn": 5064,
+    "strategy": "random",
+    "feasible": true,
+    "feasible_rate": 0.1548,
+    "constraints": [
+     "target_strength"
+    ],
+    "scales": {},
+    "best": {
+     "ag_pct": 2.56,
+     "cu_pct": 0.92,
+     "sb_pct": 1.25,
+     "flux_pct": 0.14,
+     "temperature_c": 249.0,
+     "mixing_min": 51.0,
+     "sn_pct": 95.13,
+     "joint_strength": 47.677439245260544,
+     "cost_index": 61.2451,
+     "violation": 0.0
+    },
+    "seed": 42,
+    "on_infeasible": "least_violation",
+    "returned": 5
+   },
+   "reason": "대조 제외(추천 조건은 모델 · 표집이 달라 점 대 점 비교 불가): 원천 요청 의존 시드 · 연속 균등 표집 · 온도 232~260 · 혼합 35~75 → 표준 고정 시드 · 격자 위 수락 표집(features step) · 범위 = 요청 경계 ∩ 학습 범위 p1~p99 · 원천 미충족 시 위반량 무시 최저 비용(K2) → 표준 least_violation · 원천 추천 1 → 표준 상위 5"
+  },
+  {
+   "task": "krs.residual_review",
+   "type": "review_queue",
+   "metric": "queue_size",
+   "compare": false,
+   "source_procedure": {
+    "threshold": 4.0,
+    "scored_rows": 710,
+    "scored_rows_scope": "cleaned_all_rows_incl_train",
+    "flagged": 27,
+    "queue_shown": 12,
+    "mean_abs_error": 1.072969278584672
+   },
+   "standard": {
+    "rule": {
+     "abs_residual_ge": 4.0
+    },
+    "threshold": 4.0,
+    "threshold_from": "rule",
+    "origin": "test_split",
+    "scored_rows": 144,
+    "queue_size": 16,
+    "max_items": 50
+   },
+   "reason": "대조 제외: 원천은 학습 80% 를 포함한 정제 데이터 전체를 채점(표본 내 잔차 K4) — 표준은 같은 |잔차| ≥ 4 MPa 규칙을 시험 구간 잔차 · 운영 잔차에만(G2-R01). 모수 행이 달라 건수 대조는 뜻이 없다"
+  },
+  {
+   "task": "pc.sensory_score",
+   "type": "regression",
+   "metric": "mae",
+   "compare": false,
+   "source_procedure": {
+    "rows": 420,
+    "split": {
+     "train": 327,
+     "test": 93
+    },
+    "candidates": [
+     {
+      "name": "gbr",
+      "mae": 1.7912118336538605,
+      "rmse": 2.326052428512128,
+      "r2": 0.48142153030371226
+     },
+     {
+      "name": "extra_trees",
+      "mae": 2.0852101993302603,
+      "rmse": 2.6802596192616654,
+      "r2": 0.3114599452386202
+     },
+     {
+      "name": "ridge",
+      "mae": 2.5241417637964787,
+      "rmse": 3.243355453316679,
+      "r2": -0.00824152013330326
+     }
+    ],
+    "champion": "gbr",
+    "test": {
+     "mae": 1.7912118336538605,
+     "rmse": 2.326052428512128,
+     "r2": 0.48142153030371226
+    },
+    "in_sample": {
+     "mae": 1.0829022107788708,
+     "rmse": 1.3863168028579587,
+     "r2": 0.7716418202938892
+    },
+    "refit": "all_rows"
+   },
+   "standard": {
+    "split_policy": "time_cv5",
+    "split": {
+     "train": 336,
+     "valid": 0,
+     "test": 84
+    },
+    "champion": "gbr",
+    "selection": "검증 구간 mae 최소: gbr 1.92644 (검증 기준선 train_mean 2.29387) — 후보 3개, 분할 time_cv5",
+    "beats_baseline": true,
+    "valid": {
+     "mae": 1.9264367075966398,
+     "rmse": 2.5410101973331876,
+     "r2": 0.22348327284569725,
+     "mape": 0.024875531771457432
+    },
+    "test": {
+     "mae": 1.5374734470493745,
+     "rmse": 1.9539765658253503,
+     "r2": 0.47467315826842993
+    },
+    "baseline": {
+     "mae": 2.0952159223296056,
+     "rmse": 2.7000122285639088,
+     "r2": -0.0030494687273703303
+    },
+    "outlier_scope": null,
+    "outlier_rows_removed_train": null,
+    "snapshot_sha256": "4ffd60911e2d94a737de3acc7966ab5a01bd5724cd53f75500485f620c7e55b5",
+    "rows": 420,
+    "preprocess": "표준(median + StandardScaler(scale 후보만) · OneHot)"
+   },
+   "diff_pct": {
+    "mae": -14.17,
+    "rmse": -16.0,
+    "r2": -1.4
+   },
+   "within_10pct": {
+    "mae": false,
+    "rmse": false,
+    "r2": true
+   },
+   "reason": "±10% 대조 제외(D2-02): 표준 절차 재측정(time_60_20_20 · 검증 선정 · 시험 1회)이 정본, 원천 값은 병기만. 원천은 시각 열이 있는데 무작위 78/22(P3) · 시험 MAE 선정(P1) · 전체 재적합 모델의 표본 내 평가(P2). 표준 분할 실제 정책 = time_cv5(행 420 < 500 이면 time_cv5 — std/split_policies.yaml D-05, 마지막 20% 시험)"
+  },
+  {
+   "task": "pc.recipe_optimize",
+   "type": "optimize",
+   "metric": "feasible_rate",
+   "compare": false,
+   "source_procedure": {
+    "n_points": 3500,
+    "feasible": true,
+    "feasible_rate": 0.15542857142857142,
+    "best": {
+     "cabbage_pct": 72.30402336558166,
+     "radish_pct": 10.130703134728805,
+     "seasoning_pct": 15.096451291483909,
+     "salt_pct": 2.468822208205631,
+     "brine_salinity_pct": 10.481768144406606,
+     "brining_hours": 12.733603626626948,
+     "fermentation_temp_c": 5.583630348185753,
+     "fermentation_hours": 37.587779659181464,
+     "storage_temp_c": 3.1725555566377635,
+     "sensory_score": 80.95314759144898,
+     "material_cost_index": 66.70479602096786,
+     "violation": 0.0
+    },
+    "seed": 927,
+    "sampling": "연속 균등(원천 LIMITS) · 양념 범위 안 배합만 수락",
+    "on_infeasible": "위반 ↑ 비용 ↑",
+    "returned": 1
+   },
+   "standard": {
+    "n_points": 3500,
+    "n_drawn": 4738,
+    "strategy": "random",
+    "feasible": true,
+    "feasible_rate": 0.14771428571428571,
+    "constraints": [
+     "target_score",
+     "max_material_cost"
+    ],
+    "scales": {
+     "target_score": 3,
+     "max_material_cost": 5
+    },
+    "best": {
+     "cabbage_pct": 72.0,
+     "radish_pct": 10.0,
+     "salt_pct": 2.5,
+     "brine_salinity_pct": 11.3,
+     "brining_hours": 12.5,
+     "fermentation_temp_c": 5.5,
+     "fermentation_hours": 34.0,
+     "storage_temp_c": -0.5,
+     "seasoning_pct": 15.5,
+     "sensory_score": 81.56775082423637,
+     "material_cost_index": 67.125,
+     "violation": 0.0
+    },
+    "seed": 42,
+    "on_infeasible": "least_violation",
+    "returned": 5
+   },
+   "reason": "대조 제외(D2-02 — 의존 모델이 재측정 모델): 원천 요청 의존 시드 · 연속 균등 → 표준 고정 시드 · 격자 위 수락 표집 3,500 · 위반 가중 /3 · /5 는 제약 scale 로 같게 · 원천 추천 1 → 표준 상위 5"
+  },
+  {
+   "task": "pc.residual_review",
+   "type": "review_queue",
+   "metric": "queue_size",
+   "compare": false,
+   "source_procedure": {
+    "threshold": 2.3190414299022835,
+    "threshold_from": "in_sample_refit_q90",
+    "scored_rows": 420,
+    "scored_rows_scope": "all_rows_refit_model",
+    "above_threshold": 42,
+    "queue_shown": 8
+   },
+   "standard": {
+    "rule": {
+     "top_quantile": 0.1
+    },
+    "threshold": 4.23381182426332,
+    "threshold_from": "valid",
+    "origin": "test_split",
+    "scored_rows": 84,
+    "queue_size": 3,
+    "max_items": 50
+   },
+   "reason": "대조 제외(D2-02 · D2-11): 원천 임계값 = 전체 재적합 모델의 표본 내 |잔차| 0.9 분위(P2) · 화면 상위 8 고정(P4) → 표준 임계값 = 검증 구간 잔차 0.9 분위, 시험 구간 · 운영 잔차에만 적용"
+  }
+ ]
+}
