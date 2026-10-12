@@ -321,7 +321,7 @@ def test_pc_residual_review_end_to_end(pc):
     for e, off in offsets.items():
         r = tc.post(f"{ubase}/actuals", headers=h.hdr(k["operator"]),
                     json={"entity_id": e, "value": preds[e]["prediction"]["value"] + off,
-                          "observed_at": (datetime.now(KST) + timedelta(hours=1)).isoformat()})
+                          "observed_at": datetime.now(KST).isoformat()})
         assert r.status_code in (200, 201), r.text
         assert preds[e]["prediction_id"] in r.json()["linked_prediction_ids"]
 

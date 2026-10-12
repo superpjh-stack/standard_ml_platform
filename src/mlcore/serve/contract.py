@@ -21,7 +21,23 @@ _STRICT = ConfigDict(extra="forbid", allow_inf_nan=False, protected_namespaces=(
 
 
 # ── 요청 ────────────────────────────────────────────────────────────────────
-class PredictBody(BaseModel):
+class _Req(BaseModel):
+    """요청 본문 공통 — 문자열 · 키의 NUL(U+0000)은 형식 검사 전에 422 rule `nul`(DB 가 받지 않는다 — DEF-QA2R2-002 · D2-111).
+    위치는 `validate.find_nul` 이 되풀이해도 되는 모양(이름 꼴 키 · 색인)으로 정해 ctx 로 넘긴다(safe_errors 가 쓴다)."""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _no_nul(cls, data: Any) -> Any:
+        from pydantic_core import PydanticCustomError
+
+        from .validate import find_nul
+        hit = find_nul(data)
+        if hit is not None:
+            raise PydanticCustomError("nul", "문자열에 NUL 문자(U+0000)가 있습니다", {"nul_field": hit[1] or ""})
+        return data
+
+
+class PredictBody(_Req):
     model_config = _STRICT
     inputs: dict[str, InputValue]
     entity_id: Optional[StrictStr] = Field(default=None, max_length=128)
@@ -40,7 +56,7 @@ class BatchBody(BaseModel):
 Number = Union[StrictInt, StrictFloat]
 
 
-class OptimizeBody(BaseModel):
+class OptimizeBody(_Req):
     model_config = _STRICT
     fixed: dict[str, InputValue]
     current: Optional[dict[str, InputValue]] = None
@@ -49,7 +65,7 @@ class OptimizeBody(BaseModel):
     request_approval: StrictBool = True        # false = 추천 기록만, 승인 요청 0 (D2-08 · D2-15 ⑥ — Agent 도구)
 
 
-class ActualBody(BaseModel):
+class ActualBody(_Req):
     model_config = _STRICT
     entity_id: StrictStr = Field(min_length=1, max_length=128)
     value: Union[StrictInt, StrictFloat]
@@ -62,18 +78,18 @@ class ActualBody(BaseModel):
         return self
 
 
-class TrainBody(BaseModel):
+class TrainBody(_Req):
     model_config = _STRICT
     source_role: Literal["demo", "eval", "train"] = "demo"
     seed: Optional[StrictInt] = None
 
 
-class ReasonBody(BaseModel):
+class ReasonBody(_Req):
     model_config = _STRICT
     reason: Optional[StrictStr] = Field(default=None, max_length=2000)
 
 
-class DecideBody(BaseModel):
+class DecideBody(_Req):
     model_config = _STRICT
     decision: Literal["approve", "reject"]
     reason: Optional[StrictStr] = Field(default=None, max_length=2000)
@@ -276,6 +292,8 @@ def safe_errors(errors: Iterable[dict], *, skip: int = 0, prefix: str | None = N
     seen, out = set(), []
     for e in errors:
         f = safe_field(e.get("loc", ()), skip=skip)
+        if e.get("type") == "nul":                       # _Req 가 정한 안전한 위치(입력값 · 임의 키 되풀이 없음)
+            f = ((e.get("ctx") or {}).get("nul_field") or None) if f is None else f
         if prefix:
             f = prefix if f is None else f"{prefix}.{f}"
         item = (f, str(e.get("type"))[:40])

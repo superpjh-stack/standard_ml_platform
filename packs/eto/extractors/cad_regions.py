@@ -70,6 +70,17 @@ def _point(x: float, y: float, factor: float) -> list[float]:
     return a
 
 
+ARC_SEGMENTS = 48                  # 원천 원 · 호 분할 수(api/cad.py — 49점)
+MIN_ARC_SEGMENTS = 8               # 점 예산으로 줄일 때의 최소 분할 수
+
+
+def _arc_points(arc: tuple, segments: int, factor: float) -> list[list[float]]:
+    cx, cy, r, start, end = arc
+    return [_point(cx + r * math.cos(math.radians(start + (end - start) * i / segments)),
+                   cy + r * math.sin(math.radians(start + (end - start) * i / segments)), factor)
+            for i in range(segments + 1)]
+
+
 def _lw_vertices(ent) -> list[tuple[float, float, float]]:
     """LWPOLYLINE 꼭짓점 (x, y, bulge) — 10/20 이 꼭짓점을 열고 42 가 그 꼭짓점의 bulge."""
     out: list[list[float]] = []
@@ -125,9 +136,13 @@ def parse(raw: bytes, *, unit: str, limits: dict | None = None) -> dict:
             if end <= start:
                 end += 360
             cx, cy, r = ent.num(10, 0.0), ent.num(20, 0.0), ent.num(40, 0.0)
-            paths.append({"points": [_point(cx + r * math.cos(math.radians(start + (end - start) * i / 48)),
-                                            cy + r * math.sin(math.radians(start + (end - start) * i / 48)), factor)
-                                     for i in range(49)], "layer": layer})
+            # 원천 48분할 점으로 좌표 검사 · 외곽(bbox)을 재되, 점은 들고 있지 않는다(원 · 호 2만 개 = 98만 점 — #34).
+            # 미리보기 점은 _preview 가 점 예산 안에서 다시 만든다(같은 식 — 예산 안이면 원천과 같은 49점).
+            arc = (cx, cy, r, start, end)
+            pts = _arc_points(arc, ARC_SEGMENTS, factor)
+            xs = [p[0] for p in pts]
+            ys = [p[1] for p in pts]
+            paths.append({"arc": arc, "layer": layer, "box": [min(xs), min(ys), max(xs), max(ys)]})
         else:
             unsupported[kind] += 1
     return {"paths": paths, "texts": texts, "rects": rects, "unsupported": unsupported,
@@ -221,7 +236,9 @@ def analyze(raw: bytes, *, unit: str, limits: dict | None = None, max_region_tex
 
 def _analyze(raw: bytes, *, unit: str, limits: dict | None, max_region_texts: int | None) -> dict:
     g = parse(raw, unit=unit, limits=limits)
-    coords = [p for path in g["paths"] for p in path["points"]] + [t["point"] for t in g["texts"]]
+    boxes = [path["box"] for path in g["paths"] if "box" in path]
+    coords = [p for path in g["paths"] if "points" in path for p in path["points"]] + [t["point"] for t in g["texts"]] \
+        + [[b[0], b[1]] for b in boxes] + [[b[2], b[3]] for b in boxes]
     if not coords:
         raise ExtractError("invalid_document", "parse", "지원하는 모델 공간 도형이나 텍스트가 없습니다.")
     regions = regions_from(g["texts"], g["rects"], max_region_texts=max_region_texts)
@@ -243,6 +260,34 @@ def extract(raw: bytes, filename: str, *, unit: str, limits: dict, model=None, c
         "regions": [dict(r, texts=list(r["texts"]), bbox=list(r["bbox"])) for r in a["regions"]], "objects": [], "bom_rows": [], "confidence": None,
         "counts": {k: sum(r["label"] == k for r in a["regions"]) for k in LABELS},
         "dimensions": None, "unit": "mm", "entity_count": a["entity_count"], "warnings": a["warnings"],
-        "preview": {"bbox": a["bbox"], "paths": a["paths"], "texts": a["texts"], "scale_to_mm": a["factor"],
-                    "source_unit": unit, "unsupported": dict(a["unsupported"])},
+        "preview": {"bbox": a["bbox"], **_preview(a["paths"], a["factor"], _budget((context or {}).get("params"))),
+                    "texts": a["texts"], "scale_to_mm": a["factor"], "source_unit": unit, "unsupported": dict(a["unsupported"])},
     }
+
+
+def _budget(params: dict | None) -> int | None:
+    v = (params or {}).get("preview_max_points")
+    return int(v) if v is not None else None
+
+
+def _preview(paths: list[dict], factor: float, budget: int | None) -> dict:
+    """미리보기 경로(표시용 점) — 점 예산(과제 params `preview_max_points`, 팩 YAML) 안으로 (#34 · D2-110).
+    ① 예산 안이면 원천 그대로(원 · 호 49점) ② 넘으면 원 · 호 분할 수를 예산에 맞춰 줄이고(최소 8분할)
+    ③ 그래도 넘으면 파일 순서 뒤쪽 경로를 생략 — `reduced: {arc_segments, omitted_paths, max_points}` 로 줄였음을 보인다.
+    params 가 없으면 예산 없음(원천과 같음). 영역 · BOM(판정용 결과)은 이 함수와 무관하다."""
+    fixed = sum(len(p["points"]) for p in paths if "points" in p)
+    arcs = sum(1 for p in paths if "arc" in p)
+    seg = ARC_SEGMENTS
+    if budget is not None and fixed + arcs * (ARC_SEGMENTS + 1) > budget:
+        seg = max(MIN_ARC_SEGMENTS, min(ARC_SEGMENTS, (budget - fixed) // max(arcs, 1) - 1))
+    out, used, omitted = [], 0, 0
+    for p in paths:
+        n = len(p["points"]) if "points" in p else seg + 1
+        if budget is not None and used + n > budget:
+            omitted += 1
+            continue
+        used += n
+        out.append({"points": p["points"] if "points" in p else _arc_points(p["arc"], seg, factor), "layer": p["layer"]})
+    reduced = None if seg == ARC_SEGMENTS and omitted == 0 else {"arc_segments": seg, "omitted_paths": omitted,
+                                                                   "max_points": budget}
+    return {"paths": out, "reduced": reduced}

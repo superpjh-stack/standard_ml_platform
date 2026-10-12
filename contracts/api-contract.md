@@ -43,6 +43,7 @@
 ## 2. 공통 규칙
 
 - **오류 봉투:** `{"error": {"code": <std/statuses.yaml error_codes>, "message": <한국어>, "detail": {...}}}`. `detail` 에 입력값을 되풀이하지 않는다(`field` · `rule` 만). FastAPI 기본 `{"detail": …}` 422 는 쓰지 않는다(호환 라우터만 예외).
+- **NUL:** JSON 본문의 문자열 · 키에 NUL(U+0000)이 있으면 422 `invalid_input` detail `{field, rule: "nul"}`(field = 이름 꼴 키 · 색인 경로, 그 밖 `*` — 입력값 · 키 되풀이 없음). 표준 요청 모델(`serve.contract._Req`) · 견적 · 대기열 본문 · 옛 호환 경로(옛 422 모양 type `nul`)가 같은 판정 `serve.validate.find_nul` 을 쓴다. 행 0 (C2 2회전 D2-111 · DEF-QA2R2-002)
 - **목록:** `{"items": [...], "next_cursor": <불투명 문자열 | null>, "total": <int, 선택>}`. 인자 `search` · `limit`(기본 20, 1~100) · `cursor`. `q` · `offset` · `records` 키 없음(F2 통일).
 - **시각:** ISO-8601 + `+09:00`. **멱등:** `POST .../train` 같은 스냅숏 · 설정 → 200 + 기존 `run_id`(새 학습 없음).
 - **응답 헤더:** `X-Request-Id`(감사 로그 `request_id` 와 같다).
@@ -73,7 +74,7 @@
 | 경로 | 요청 | 응답 |
 |---|---|---|
 | `predict` · `predict:batch` · `optimize` | `contracts/predict-contract.md` §1 | 같은 문서 §5 |
-| `actuals` | `{entity_id, value, observed_at}` | `{actual_id, linked_prediction_ids: [...]}` |
+| `actuals` | `{entity_id, value, observed_at}` — `observed_at` 는 시간대 필수, 서버 시각 + 5분(시계 차이 허용) 보다 뒤면 422 `invalid_input` `{field: observed_at, rule: future}`(행 0) | `{actual_id, linked_prediction_ids: [...]}` — **이 실측과 짝이 된 예측**(0 또는 1개): D2-81 1:1 규칙(예측마다 그 뒤 가장 이른 실측, 같은 실측을 가리키는 예측이 여럿이면 직전 마지막 하나) — 대기열 `live_pairs` 와 같은 SQL(`train.review.pairs_cte`). 같은 entity 예측 전부가 아니다 (C2 2회전 D2-112 · DEF-QA2R2-003) |
 | `train` | `{source_role: "demo"\|"eval"\|"train", seed?: int}` | 202 `{run_id, status: "queued"}` · 멱등이면 200 `{run_id, status, reused: true}` — 단 같은 run_id 의 **failed** 실행 재접수는 새 실행(학습기가 queued 로 되돌림 · 감사 `train.retry`)이라 202 (D-64). 접수만 한다 — 실행 · candidate 등록은 API 밖 작업자(`interfaces.md` §4.1, D-57). 등록부에 없는 `source_role` 은 503 `source_disconnected` |
 | `runs/{id}` | — | `{run_id, status, task, snapshot: {snapshot_id, rows, ts_from, ts_to, sha256}, champion, valid_metrics, test_metrics: {name: {value, baseline, delta_vs_baseline}}, beats_baseline, version, warnings}` + 덧붙임(D-63): `stage · seed · code_version · config_hash · created_at · started_at · finished_at · error · report{선정 사유 · 기준선 종류 · 구간 · 보정 · 임계값 · 중요도 · 잔차 · 보정 곡선 …}`. 다른 회사 · 없음 → 404 |
 | `models` | — | `{items: [{version, run_id, stage, algo, metrics, beats_baseline, synthetic, snapshot_id, created_at, promoted_at, promoted_by}], next_cursor}` |
@@ -110,7 +111,7 @@
 | 상황 | HTTP | code |
 |---|---|---|
 | DXF 아님(확장자 · 바이너리 DXF · 파싱 실패 · 단위 미지정인데 `unit_override` 없음 · NUL 문자 — 원본 또는 추출 결과) | 422 | `invalid_document` (detail.rule = `format` · `binary` · `parse` · `unit` · `nul` — C2 D2-92) — 원천 415 는 호환 라우터만 |
-| 5 MiB · 20,000 엔티티(또는 과제 `document` 상한) 초과 · 좌표 · 꼭짓점 상한 초과 · 영역 안 텍스트 합계 상한(추출기 params `max_region_texts`) 초과 · 추출 시간 · 결과 상한 초과(task-contract §6.2 `document` — 코어) | 413 | `document_too_large` (detail.rule = `bytes` · `entities` · `vertices` · `points` · `region_texts` — D2-101 · `time` · `items` · `result_bytes` · `resources` — C2 D2-91) |
+| 5 MiB · 20,000 엔티티(또는 과제 `document` 상한) 초과 — 결과 상한은 판정용 결과만(미리보기는 따로 줄이고 생략 표시 — 413 아님, D2-110 · #34) · 좌표 · 꼭짓점 상한 초과 · 영역 안 텍스트 합계 상한(추출기 params `max_region_texts`) 초과 · 추출 시간 · 결과 상한 초과(task-contract §6.2 `document` — 코어) | 413 | `document_too_large` (detail.rule = `bytes` · `entities` · `vertices` · `points` · `region_texts` — D2-101 · `time` · `items` · `result_bytes` · `resources` — C2 D2-91) |
 | 학습 대상이 아닌 과제(review_queue · 규칙 extract · quote · optimize)에 `train` | 422 | `invalid_input` (detail.rule = `not_trainable`, detail.type — 전용 코드 두지 않음, D2-82 · D2-107) |
 | 정답 라벨 없음(평가 요청) | 200 | `labels: "none"` · `metrics: null` |
 | 검토 없는 견적 확정 | 422 | `missing_required` (detail.field = `reviewed` · `review_note`) |

@@ -78,7 +78,11 @@ async def _auth_required(request: Request, exc):
 @app.exception_handler(RequestValidationError)
 async def _validation(request: Request, exc: RequestValidationError):
     # 입력값 · 요청 키 문자열을 되풀이하지 않는다 — 계약 필드 위치와 규칙 이름만 (goal §2.3)
-    return _err(422, "invalid_input", "입력 값이 올바르지 않습니다", {"errors": safe_errors(exc.errors(), skip=1)})
+    errs = safe_errors(exc.errors(), skip=1)
+    nul = next((e for e in errs if e["rule"] == "nul"), None)
+    if nul is not None:              # NUL 은 공통 검증(D2-111) — 견적 · 대기열 경로와 같은 {field, rule: nul} 모양으로도
+        return _err(422, "invalid_input", "문자열에 NUL 문자(U+0000)가 있습니다", {**nul, "errors": [nul]})
+    return _err(422, "invalid_input", "입력 값이 올바르지 않습니다", {"errors": errs})
 
 
 @app.exception_handler(StarletteHTTPException)

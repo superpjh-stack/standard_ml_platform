@@ -1,5 +1,28 @@
 # progress.md — 검증된 현황의 유일한 진실
 
+## 2차 — 웨이브 C2 2회전 (개발2 + 이번 회전 아키텍트 권한 · 코어 재진입, 2026-10-13, 기준 HEAD c18af0f) — 다음: 오케스트레이터 `core-freeze-2` 재태그 → QA 재검증 r3
+
+### 지금 해야 할 것
+
+1. **오케스트레이터:** 이 커밋에 `core-freeze-2` 재태그(사유 decisions D2-110 ~ D2-113). 그 뒤 G2-C01 PASS(지금 FAIL = 옛 태그 대비 동결 경로 231줄 — 정상).
+2. QA 재검증 r3: #34 · DEF-QA2R2-002~004 재현 스크립트(`outputs/qa2-r2/q3/server_extract_r2.py` · `q2/probe_nul_r2.py`)를 다시 돌려 확인 → #34 닫기.
+3. 아키텍트 확인 1건: D2-113 정규형 해석(숫자 = Decimal 10진 숫자, 문자열 저장 아님).
+4. QA r2 리포트(`outputs/qa2-r2-재검증.md` · `outputs/qa2-r2/`)는 QA 산출물이라 이 커밋에 넣지 않았다.
+
+### 실측
+
+| 항목 | 실측 | 검증 방법 |
+|---|---|---|
+| #34 DEF-QA2R2-001 (중대) | 결과 상한 = 판정용 결과(preview 제외)만. 미리보기는 `max_preview_bytes` 4 MiB(넘으면 생략 표시) + eto 점 예산 `preview_max_points` 100,000(원 · 호 분할 48 → 최소 8, 넘는 경로 생략 · `preview.reduced`). QA 원 3,000 · 5,000 · 19,000 → **201**(이전 5,000 · 19,000 413). 최악 원 · 호만 20,000 엔티티 → 201 경로 **0.77 s · RSS 163 MB**(≤ 5 s · ≤ 300 MB), 미리보기 2.2 MB. DoS 시험(region_texts · items · time · 판정용 result_bytes) 그대로 통과 | `tests/test_c2r2_extract_preview.py`(7) · `tests/test_extract_eto_scale.py` · `tests/test_c2_dev2.py` |
+| DEF-QA2R2-002 | NUL → 422 `invalid_input` rule `nul`(위치만, 값 · 키 되풀이 0) — 견적 품목 이름 · 메모 · 입력 · 키, 수정, 확정 요청, predict · batch(건별) · actuals entity_id, 옛 `/api/quotes`(옛 모양 type nul). 행 0, 뒤 정상 확정 요청 202 | `tests/test_c2r2_dev2.py` NUL 5 |
+| DEF-QA2R2-003 | 관측 시각 > 서버 + 5분 → 422 `{field: observed_at, rule: future}`(30일 · 6분), 4분 200. `linked_prediction_ids` = D2-81 1:1(`train.review.pairs_cte` — live_pairs 와 같은 SQL): 예측 전 실측 [] · p1 p2 → a1 [p2] · a2 [] · p3 → a3 [p3] | `tests/test_c2r2_dev2.py` 실측 4 · 기존 시험 5곳의 미래 · 예측 전 시각을 "예측 뒤 지금"으로 고침(옛 링크 뜻 `[p1, p2]` → `[p2]`) |
+| DEF-QA2R2-004 | 품목 · 입력 숫자 정규형(정수값 int, 그 밖 최단 Decimal — jsonb number): `" 6500 "` · 1000000 · `" 4 "` → 숫자, 혼재 0, overrides 0. 입력 quantity `"1"` · `" 2 "` 201, `"1.5"` integer · `"abc"` `"-1"` `"1e2"` number — 품목과 같은 rule. 모델 수치 입력 `"24"` · 범주 `" 반응기 "` 도 같은 규칙 | `tests/test_c2r2_dev2.py` 정규형 8 |
+| pytest | **1112 passed · 3 skipped · 0 failed** | `OMP_NUM_THREADS=1 uv run pytest -q --ignore=tests/e2e` |
+| e2e | **23 passed** | `uv run pytest -q tests/e2e` |
+| make gate | 24행 **PASS 22 · WARN 1 · BLOCKED 1** — WARN = G-S06 goal.md 홈 경로(사람 몫 #33), BLOCKED = G-M08(D-13) | `make gate` 1회 |
+| make gate2 | 41행 **PASS 37 · FAIL 1 · WARN 1 · BLOCKED 2** — FAIL = G2-C01(재태그 대기, 정상) · WARN = G-S06 · BLOCKED = G-M08 · G2-L01(D-13). C01 밖 FAIL 0 | `make gate2` 1회 |
+
+
 ## 2차 — 웨이브 P 재진입 (아키텍트, 2026-10-13, 기준 커밋 780e960 · 태그 core-freeze-2 = 5a51d2f) — 다음: 오케스트레이터 `core-freeze-2` 재태그
 
 ### 지금 해야 할 것

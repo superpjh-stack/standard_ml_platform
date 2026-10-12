@@ -19,6 +19,7 @@ from ... import auth
 from ...serve import documents, quotes, review
 from ...serve.errors import InvalidInput
 from ...serve.jsonout import DecimalJSONResponse, loads
+from ...serve.validate import reject_nul
 from ._common import actor, catalog, principal, task_id
 
 router = APIRouter(prefix="/api/v1")
@@ -133,9 +134,11 @@ async def _json(request: Request):
     if not raw:
         return {}
     try:
-        return loads(bytes(raw))
+        body = loads(bytes(raw))
     except (ValueError, RecursionError):
         raise InvalidInput("JSON 본문을 읽을 수 없습니다", {"field": None, "rule": "json_invalid"}) from None
+    reject_nul(body)                     # NUL → 422 rule nul (공통 검증 · D2-111)
+    return body
 
 
 def _qc(request: Request, t: str, task: str) -> quotes.QuoteContext:

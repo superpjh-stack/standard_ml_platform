@@ -23,6 +23,7 @@ API 키 · 역할은 실제 auth 경로(mlp_api_key 해시 조회 → 미들웨�
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -159,7 +160,8 @@ def test_vertical_slice(world):
     # ── actuals ──────────────────────────────────────────────────────────────
     actual = round(out["prediction"]["value"] + 0.5, 3)
     r = tc.post(f"{base}/actuals", headers=h.hdr(k["operator"]),
-                json={"entity_id": entity, "value": actual, "observed_at": "2026-10-12T12:00:00+09:00"})
+                json={"entity_id": entity, "value": actual,
+                      "observed_at": datetime.now(timezone.utc).isoformat()})   # 예측 뒤(D2-112)
     assert r.status_code == 200, r.text
     assert r.json()["linked_prediction_ids"] == [pid]
 

@@ -53,7 +53,7 @@ def predict(world, entity: str, i: int) -> dict:
 
 def actual(world, entity: str, value: float):
     r = world["tc"].post(f"/api/v1/tenants/{world['code']}/tasks/sensory_score/actuals",
-                         json={"entity_id": entity, "value": value, "observed_at": (datetime.now(KST) + timedelta(hours=1)).isoformat()},
+                         json={"entity_id": entity, "value": value, "observed_at": datetime.now(KST).isoformat()},
                          headers=h.hdr(world["keys"]["operator"]))
     assert r.status_code in (200, 201), r.text
 

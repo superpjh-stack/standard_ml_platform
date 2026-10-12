@@ -48,10 +48,21 @@ def _no_nan(x: str):
 
 def parse_body(raw: bytes) -> Any:
     try:
-        return json.loads(raw or b"null", parse_constant=_no_nan)
+        body = json.loads(raw or b"null", parse_constant=_no_nan)
     except ValueError:
         raise CompatError(422, {"detail": [{"loc": ["body"], "msg": "JSON 형식이 아니거나 NaN · Infinity 가 있습니다",
                                             "type": "json_invalid"}]}) from None
+    check_nul(body)
+    return body
+
+
+def check_nul(body: Any) -> None:
+    """옛 경로의 NUL — 옛 422 모양(loc · msg · type `nul`), 입력값 되풀이 없음 (표준 validate.find_nul 과 같은 판정 · D2-111)."""
+    from ..validate import find_nul
+    hit = find_nul(body)
+    if hit is not None:
+        loc = ["body"] + ([p for p in hit[1].split(".")] if hit[1] else [])
+        raise CompatError(422, {"detail": [{"loc": loc, "msg": "문자열에 NUL 문자(U+0000)가 있습니다", "type": "nul"}]})
 
 
 def old_422(e: ServeError, rename_back: dict[str, str], prefix: tuple = ("body",)) -> CompatError:

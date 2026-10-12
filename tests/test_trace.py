@@ -19,6 +19,11 @@ def world(tmp_path):
     return m, task, ref, res, h.keys(m), h.client(m)
 
 
+def _now() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
+
+
 def _predict(tc, m, task, k, res, entity="LOT-0001"):
     r = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{task}/predict", headers=h.hdr(k["operator"]),
                 json={"inputs": h.sample_inputs(res), "entity_id": entity})
@@ -31,7 +36,7 @@ def test_trace_walks_model_run_snapshot_sources_and_actuals(world):
     out = _predict(tc, m, task, k, res)
     pid = out["prediction_id"]
     a = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{task}/actuals", headers=h.hdr(k["operator"]),
-                json={"entity_id": "LOT-0001", "value": 1.37, "observed_at": "2026-10-12T10:00:00+09:00"})
+                json={"entity_id": "LOT-0001", "value": 1.37, "observed_at": _now()})          # 예측 뒤 관측(D2-81 · D2-112)
     assert a.status_code == 200, a.text
     assert a.json()["linked_prediction_ids"] == [pid] and isinstance(a.json()["actual_id"], int)
 
@@ -57,11 +62,13 @@ def test_actual_links_by_entity_only(world):
     p1 = _predict(tc, m, task, k, res, "LOT-A")["prediction_id"]
     p2 = _predict(tc, m, task, k, res, "LOT-A")["prediction_id"]
     _predict(tc, m, task, k, res, "LOT-B")
+    obs = _now()
     a = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{task}/actuals", headers=h.hdr(k["operator"]),
-                json={"entity_id": "LOT-A", "value": 2, "observed_at": "2026-10-12T11:00:00+09:00"})
-    assert a.json()["linked_prediction_ids"] == [p1, p2]
+                json={"entity_id": "LOT-A", "value": 2, "observed_at": obs})
+    # 같은 entity 예측 전부가 아니라 D2-81 1:1 짝 — 이 실측 직전 마지막 예측 하나 (C2 2회전 D2-112 · DEF-QA2R2-003)
+    assert a.json()["linked_prediction_ids"] == [p2] and p1 not in a.json()["linked_prediction_ids"]
     again = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{task}/actuals", headers=h.hdr(k["operator"]),
-                    json={"entity_id": "LOT-A", "value": 2, "observed_at": "2026-10-12T11:00:00+09:00"})
+                    json={"entity_id": "LOT-A", "value": 2, "observed_at": obs})
     assert again.json()["actual_id"] == a.json()["actual_id"]          # 같은 실측 재등록은 새 행이 아니다
 
 

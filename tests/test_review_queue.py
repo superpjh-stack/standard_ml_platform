@@ -277,7 +277,7 @@ def test_end_to_end_run_report_and_live_pairs_from_db(tmp_path):
         pids.append(r.json()["prediction_id"])
     pred = r.json()["prediction"]["value"]
     r = tc.post(f"/api/v1/tenants/{m.tenant.code}/tasks/{task_id}/actuals", headers=h.hdr(keys["operator"]),
-                json={"entity_id": "LIVE-1", "value": pred + 1000.0, "observed_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()})   # 예측 뒤 실측(D2-80)
+                json={"entity_id": "LIVE-1", "value": pred + 1000.0, "observed_at": datetime.now(timezone.utc).isoformat()})   # 예측 뒤 실측(D2-80) — 미래 실측은 422(D2-112)
     assert r.status_code in (200, 201), r.text
     with connect() as c:
         pairs = review.live_pairs(c, m.tenant.code, task_id, version=ref.version)

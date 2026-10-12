@@ -52,6 +52,8 @@ POST /api/v1/tenants/{t}/tasks/{task}/optimize          // type=optimize 과제�
 
 요청 모델은 pydantic `extra="forbid"` · `allow_inf_nan=False` 다. NaN · Infinity · 모르는 키 · 문자열이 와야 할 자리의 숫자(또는 반대)는 422 `invalid_input` 이며, **입력값을 메시지에 되풀이하지 않는다** (`detail` 에는 `field` 와 규칙 이름만).
 
+문자열 · 키에 NUL(U+0000)이 있으면 형식 검사 전에 422 `invalid_input` detail `{field, rule: "nul", errors: [{field, rule: "nul"}]}`(batch 는 그 건의 `{index, error}` — field `items.<i>.…`). DB 가 NUL 을 받지 않아 500 이던 결함(C2 2회전 D2-111 · DEF-QA2R2-002).
+
 ## 2. 응답 — 공통 18키
 
 | 키 | 형 | 규칙 |
@@ -475,9 +477,11 @@ PATCH 요청 `{"state": "confirmed_issue" | "false_alarm", "note": "<≥ 1자>"}
 }
 ```
 
-`regions` 는 kd 규칙(영역 3종), `objects` 는 ot 기하 + 객체 분류, `bom_rows` 는 kd BOM 텍스트 — 그 과제가 쓰지 않는 칸은 빈 배열. 원본 바이트는 응답에 넣지 않는다(`raw_sha256` 만, 파일은 D2-05).
+`regions` 는 kd 규칙(영역 3종), `objects` 는 ot 기하 + 객체 분류, `bom_rows` 는 kd BOM 텍스트 — 그 과제가 쓰지 않는 칸은 빈 배열. 원본 바이트는 응답에 넣지 않는다(`raw_sha256` 만, 파일은 D2-05). 추출기의 표시용 `preview`(경로 점 · 텍스트 위치)는 이 응답 · 문서 행에 들지 않고, 결과 상한(`max_result_bytes`)도 판정용 결과(이 스키마의 regions · objects · bom_rows · counts …)만 잰다 — 미리보기는 따로 줄이거나 생략 표시(task-contract §6.2 `document` · C2 2회전 D2-110 · #34).
 
 ### 8.3 견적 (`POST …/quotes` 201 · `GET …/quotes/{quote_id}` · 목록 `items[]`)
+
+`inputs` · `lines[]` 의 숫자는 **정규형**(정수값 = 정수, 그 밖 = 지수 없는 최단 10진 숫자 — Decimal, float 아님)으로 저장 · 응답한다. 요청의 10진 문자열(`" 6500 "` · `"5"`)도 같은 값으로 바뀌어 문자열 숫자 · 공백 · 숫자/문자열 혼재가 남지 않는다(품목 · 입력 같은 규칙 — task-contract §6.3 `line_limits`, C2 2회전 D2-113). 금액(`amount` · `costs` · `total`) · 단가(`rates`) · 예측값은 그대로 10진 **문자열**이다.
 
 ```json quote-schema
 {

@@ -16,12 +16,15 @@ from typing import Any, Literal, Protocol
 from .dxf import DocumentError
 
 __all__ = ["Extractor", "ExtractError", "limits_for", "load_extractor", "merge_results", "run_isolated", "check_result",
-           "SPEC_LIMITS", "OUTPUT_KEYS"]
+           "fit_preview", "SPEC_LIMITS", "OUTPUT_KEYS", "PREVIEW_KEY"]
 
 # spec §8.3 상한 + 결과 상한(재진입 C2 — DEF-QA22-001 · #30 코어 · D2-91): 결과 JSON 바이트 · 출력 배열(regions · objects ·
-# bom_rows)당 항목 수 · 추출기 전체 실행 시간(초). 정본 = task-contract §4 `document_limits`. 팩 · 회사는 낮추기만
+# bom_rows)당 항목 수 · 추출기 전체 실행 시간(초). 정본 = task-contract §4 `document_limits`. 팩 · 회사는 낮추기만.
+# 결과 바이트 상한은 **판정용 결과**(결과에서 `preview` 를 뺀 것 — regions · objects · bom_rows · counts …)만 잰다. 미리보기(표시용 점)는
+# 별도 상한 `max_preview_bytes` — 넘으면 413 이 아니라 미리보기만 생략 표시로 바꾼다(C2 2회전 — DEF-QA2R2-001 · #34 · D2-110).
 SPEC_LIMITS = {"max_bytes": 5 * 1024 * 1024, "max_entities": 20000, "max_result_bytes": 4 * 1024 * 1024,
-               "max_items": 5000, "max_seconds": 20}
+               "max_items": 5000, "max_seconds": 20, "max_preview_bytes": 4 * 1024 * 1024}
+PREVIEW_KEY = "preview"
 OUTPUT_KEYS = ("regions", "objects", "bom_rows")
 REPLACEABLE = OUTPUT_KEYS + ("counts", "dimensions")     # 결과 `replaces` 로 앞 결과를 바꿀 수 있는 키
 
@@ -151,17 +154,38 @@ def _has_nul(v, depth: int = 0) -> bool:
     return False
 
 
-def check_result(res: dict, limits: dict, name: str = "?") -> None:
-    """한 추출기 결과의 상한 — 출력 배열마다 max_items, 결과 JSON(UTF-8) max_result_bytes, NUL 문자 0(jsonb 가 받지 않는다)."""
+def _json_bytes(v) -> int:
     import json
+    return len(json.dumps(v, ensure_ascii=False, default=str).encode("utf-8"))
+
+
+def fit_preview(res: dict, limits: dict) -> dict:
+    """미리보기 상한 — 결과 `preview` 의 JSON 이 max_preview_bytes 를 넘으면 미리보기만 생략 표시
+    `{omitted: true, reason: "preview_bytes", bytes, max_bytes, bbox?}` 로 바꾼다(판정용 결과는 그대로 · 413 아님).
+    미리보기는 표시용이다 — 문서 행 · 응답 계약(predict-contract §8.2)에 들지 않는다. 팩은 먼저 점 예산으로 줄인다(D2-110)."""
+    if not isinstance(res, dict) or not isinstance(res.get(PREVIEW_KEY), dict):
+        return res
+    pv = res[PREVIEW_KEY]
+    n = _json_bytes(pv)
+    cap = limits.get("max_preview_bytes", SPEC_LIMITS["max_preview_bytes"])
+    if n <= cap:
+        return res
+    marker = {"omitted": True, "reason": "preview_bytes", "bytes": n, "max_bytes": cap}
+    if isinstance(pv.get("bbox"), list) and len(pv["bbox"]) == 4:
+        marker["bbox"] = list(pv["bbox"])
+    return {**res, PREVIEW_KEY: marker}
+
+
+def check_result(res: dict, limits: dict, name: str = "?") -> None:
+    """한 추출기 결과의 상한 — 출력 배열마다 max_items, **판정용 결과**(preview 를 뺀 결과) JSON(UTF-8) max_result_bytes,
+    NUL 문자 0(jsonb 가 받지 않는다 — 미리보기 포함). 미리보기 크기는 fit_preview 가 따로 다룬다(D2-110)."""
     if not isinstance(res, dict):
         raise TypeError(f"추출기 {name} 결과가 dict 가 아닙니다")
     for k in OUTPUT_KEYS:
         vals = res.get(k)
         if isinstance(vals, list) and len(vals) > limits["max_items"]:
             raise ExtractError("document_too_large", "items", f"추출 결과 {k} 가 {limits['max_items']:,}개를 넘습니다")
-    text = json.dumps(res, ensure_ascii=False, default=str)
-    if len(text.encode("utf-8")) > limits["max_result_bytes"]:
+    if _json_bytes({k: v for k, v in res.items() if k != PREVIEW_KEY}) > limits["max_result_bytes"]:
         raise ExtractError("document_too_large", "result_bytes",
                            f"추출 결과가 {limits['max_result_bytes']:,} 바이트를 넘습니다")
     if _has_nul(res):
@@ -186,6 +210,7 @@ def _child(conn, pack_path: str, jobs: list, raw: bytes, name: str, unit: str, p
                     conn.send(("doc", code, getattr(e, "rule", "parse"), getattr(e, "message", None) or str(e)))
                     return
                 raise
+            res = fit_preview(res, limits)                       # 표시용 미리보기는 따로 줄인다(413 아님 — D2-110)
             check_result(res, limits, getattr(mod, "NAME", "?"))
             mods.append(mod)
             results.append(res)

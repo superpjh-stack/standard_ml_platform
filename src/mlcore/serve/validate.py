@@ -34,6 +34,49 @@ NEAR_FRACTION = 0.02   # 학습 범위 가장자리 2% (predict-contract §2.1 n
 NUMERIC = ("float", "int")
 
 
+# ── 요청 본문 NUL (C2 2회전 — DEF-QA2R2-002 · D2-111) ─────────────────────────────────────────────────
+# PostgreSQL text · jsonb 는 NUL(U+0000)을 받지 않는다 — 걸러지지 않으면 INSERT 에서 500. JSON 본문을 받는 모든 경로
+# (표준 pydantic 요청 · 견적 · 대기열 · 옛 호환 경로)가 이 한 판정을 쓴다. 위치(field)는 이름 꼴 키 · 배열 색인만 되풀이한다.
+NUL_KEY = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+NUL_DEPTH = 64
+
+
+def find_nul(v: Any) -> tuple[bool, str | None] | None:
+    """첫 NUL 이 든 문자열(값 · 키)의 위치 → (True, "lines.0.name" | "*" | None). 없으면 None.
+    이름 꼴이 아닌 키(요청자가 정한 임의 문자열)를 만나면 그 자리는 `*` 로 두고 끊는다 — 입력값 · 키를 되풀이하지 않는다."""
+    stack: list[tuple[Any, list[str], bool, int]] = [(v, [], False, 0)]
+    while stack:
+        cur, path, cut, depth = stack.pop()
+        if isinstance(cur, str):
+            if "\x00" in cur:
+                return True, ".".join(path) or None
+            continue
+        if depth > NUL_DEPTH:
+            continue
+        if isinstance(cur, dict):
+            items = list(cur.items())
+            for k, x in reversed(items):
+                safe = isinstance(k, str) and NUL_KEY.match(k) is not None
+                kp = path if cut else path + ([k] if safe else ["*"])
+                if isinstance(k, str) and "\x00" in k:
+                    return True, ".".join(path + ["*"]) if not cut else ".".join(path) or None
+                stack.append((x, kp, cut or not safe, depth + 1))
+        elif isinstance(cur, (list, tuple)):
+            for i in range(len(cur) - 1, -1, -1):
+                stack.append((cur[i], path if cut else path + [str(i)], cut, depth + 1))
+    return None
+
+
+def reject_nul(v: Any, *, prefix: str | None = None) -> None:
+    """NUL 이 있으면 422 invalid_input `{field, rule: nul}` (api-contract §2 · D2-111)."""
+    hit = find_nul(v)
+    if hit is not None:
+        f = hit[1]
+        if prefix:
+            f = prefix if f is None else f"{prefix}.{f}"
+        raise InvalidInput("문자열에 NUL 문자(U+0000)가 있습니다", {"field": f, "rule": "nul"})
+
+
 def _missing(v: Any) -> bool:
     return v is None
 

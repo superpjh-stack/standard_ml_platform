@@ -222,6 +222,19 @@ def fit_entities(conn, tenant_id: str, task_id: str, version: str) -> frozenset[
     return frozenset(e for e, n in allc.items() if n > testc.get(e, 0))
 
 
+def pairs_cte(*, one_entity: bool = False) -> str:
+    """D2-81 실측 1 : 예측 1 짝 규칙 — 한 곳(대기열 `live_pairs` · 실측 API 응답 `linked_prediction_ids` 가 같이 쓴다, D2-112).
+    인자: tenant_id, task_id (+ one_entity 면 entity_id). 결과 CTE `r`(rn = 1 이 짝)."""
+    return ("WITH m AS (SELECT p.prediction_id, p.entity_id, p.version AS model_version, p.ts, "
+            "(p.outputs->'prediction'->>'value')::float AS predicted, a.actual_id, a.value AS actual "
+            "FROM mlp_prediction p JOIN LATERAL (SELECT actual_id, value FROM mlp_actual a WHERE a.tenant_id=p.tenant_id "
+            "AND a.task_id=p.task_id AND a.entity_id=p.entity_id AND a.observed_at > p.ts "
+            "ORDER BY a.observed_at, a.actual_id LIMIT 1) a ON true "
+            "WHERE p.tenant_id=%s AND p.task_id=%s AND p.entity_id IS NOT NULL"
+            + (" AND p.entity_id=%s" if one_entity else "") + "), "
+            "r AS (SELECT m.*, row_number() OVER (PARTITION BY actual_id ORDER BY ts DESC, prediction_id DESC) AS rn FROM m)")
+
+
 def live_pairs(conn, tenant_id: str, uses_task_id: str, *, version: str | None = None, since=None,
                ledger: AccessLedger | None = None) -> list[dict]:
     """운영 예측 + 실측 짝 (DB 읽기만 · task-contract §6.1 · D2-80 · D2-81).
@@ -229,14 +242,7 @@ def live_pairs(conn, tenant_id: str, uses_task_id: str, *, version: str | None =
     - 실측 하나는 예측 하나에만 — 같은 실측을 가리키는 예측이 여럿이면 그 실측 직전의 마지막 예측.
     - 그 예측 버전 모델 학습 스냅숏의 재적합 구간(학습 + 검증) entity 는 뺀다(표본 내 잔차) — ledger `queue_scoring`.
     entity_id 없는 예측은 짝이 없다."""
-    sql = ("WITH m AS (SELECT p.prediction_id, p.entity_id, p.version AS model_version, p.ts, "
-           "(p.outputs->'prediction'->>'value')::float AS predicted, a.actual_id, a.value AS actual "
-           "FROM mlp_prediction p JOIN LATERAL (SELECT actual_id, value FROM mlp_actual a WHERE a.tenant_id=p.tenant_id "
-           "AND a.task_id=p.task_id AND a.entity_id=p.entity_id AND a.observed_at > p.ts "
-           "ORDER BY a.observed_at, a.actual_id LIMIT 1) a ON true "
-           "WHERE p.tenant_id=%s AND p.task_id=%s AND p.entity_id IS NOT NULL), "
-           "r AS (SELECT m.*, row_number() OVER (PARTITION BY actual_id ORDER BY ts DESC, prediction_id DESC) AS rn FROM m) "
-           "SELECT prediction_id, entity_id, model_version, predicted, actual FROM r WHERE rn = 1")
+    sql = pairs_cte() + " SELECT prediction_id, entity_id, model_version, predicted, actual FROM r WHERE rn = 1"
     args: list = [tenant_id, uses_task_id]
     if version is not None:
         sql += " AND model_version=%s"

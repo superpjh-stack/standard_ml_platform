@@ -321,6 +321,8 @@ class Phase2:
         except (ValueError, RecursionError):
             raise self.CompatError(422, {"detail": [{"loc": ["body"], "msg": "JSON 형식이 아닙니다",
                                                      "type": "json_invalid"}]}) from None
+        from . import check_nul
+        check_nul(old)                                                   # NUL → 옛 422 (D2-111)
         std = self.parse(route, old, info)
         if isinstance(std, dict) and isinstance(std.get("inputs"), dict):
             std = {**std, "inputs": self._rename_inputs(std["inputs"])}

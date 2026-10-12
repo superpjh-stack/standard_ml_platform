@@ -31,7 +31,7 @@ from . import documents
 from .errors import InvalidInput, MissingRequired, NotFound, ServeError
 from .ids import new_id
 from .jsonout import dumps
-from .validate import as_defs, check_missing, check_rules, ml_inputs, validate_bounds, validate_format
+from .validate import as_defs, check_missing, check_rules, ml_inputs, reject_nul, validate_bounds, validate_format
 
 KST = timezone(timedelta(hours=9))
 ONE = Decimal(1)
@@ -115,6 +115,7 @@ def _check_value(v: Any, depth: int = 0) -> None:
 def parse_body(body: Any, *, keys: set[str] = BODY_KEYS) -> dict:
     if not isinstance(body, dict):
         raise InvalidInput("요청 본문은 객체여야 합니다", {"field": None, "rule": "type"})
+    reject_nul(body)                         # 표준 · 옛 견적 경로 공통 — NUL 은 DB 가 받지 않는다(500 → 422 nul, D2-111)
     unknown = [k for k in body if k not in keys]
     if unknown:
         shown = unknown[0] if isinstance(unknown[0], str) and re.match(r"^[a-z_]{1,32}$", unknown[0]) else None
@@ -165,6 +166,22 @@ def _line_number(v: Any) -> Decimal | None:
     if text is not None and DEC_TEXT.match(text):
         return Decimal(text)
     return None
+
+
+def _canon(d: Decimal) -> Any:
+    """숫자 정규형 — 정수값은 int, 그 밖은 지수 없는 최단 Decimal(1.50 → 1.5). JSON 에는 10진 숫자 하나의 모양으로 남는다."""
+    if d == d.to_integral_value():
+        return int(d)
+    return d.normalize()
+
+
+def canon_number(v: Any) -> Any:
+    """입력 칸 숫자 → 정규형. JSON 숫자(int · Decimal) 또는 10진 문자열(앞뒤 공백 허용 — `_line_number` 와 같은 판정).
+    숫자로 읽을 수 없으면 값을 그대로 둔다(뒤 검사가 그 칸의 오류 — type · number — 를 낸다)."""
+    if isinstance(v, bool) or v is None:
+        return v
+    d = _line_number(v)
+    return v if d is None else _canon(d)
 
 
 def validate_line_limits(name: str, limits: Any, *, inputs: list[str], categories: set[str]) -> list[str]:
@@ -277,10 +294,14 @@ class QuoteContext:
 
     # 입력 3단 검증(predict 와 같은 함수) + 견적 고유 입력
     def check_inputs(self, inputs: dict) -> dict:
+        """→ 정규형 입력(D2-113): 숫자 칸(모델 수치 변수 · input_limits 입력)은 JSON 숫자 또는 10진 문자열(앞뒤 공백 허용)을
+        Decimal 로, 범주 · 문자열은 앞뒤 공백 제거 — 품목(check_lines)과 같은 규칙. 저장 · 응답은 이 값이다."""
         unknown = [k for k in inputs if k not in self.input_names]
         if unknown:
             shown = unknown[0] if re.match(r"^[a-z][a-z0-9_]{0,40}$", str(unknown[0])) else None
             raise InvalidInput("모르는 입력입니다", {"field": shown, "rule": "extra_forbidden"})
+        numeric = {d.name for d in self.defs if d.dtype in ("float", "int")} | set(self.extra)
+        inputs = {k: (canon_number(v) if k in numeric else v.strip() if isinstance(v, str) else v) for k, v in inputs.items()}
         feats = {k: v for k, v in inputs.items() if k not in self.extra}
         ml = ml_inputs(feats)
         validate_format(ml, self.defs)
@@ -339,13 +360,13 @@ class QuoteContext:
             if isinstance(v, str):
                 if len(v) > LINE_TEXT_MAX:
                     raise _line_err(i, key, "length", f"품목 문자열은 {LINE_TEXT_MAX}자 이하입니다")
-                return v               # 문자열 칸의 뜻은 모른다 — 음수 단가 문자열은 견적식 결과 음수 금액 검사가 막는다
+                return v.strip()       # 문자열 칸의 뜻은 모른다(앞뒤 공백만 뗀다) — 음수 단가 문자열은 견적식 결과 음수 금액 검사가 막는다
             d = _line_number(v)
             if d is None:
                 raise _line_err(i, key, "number", "품목 숫자가 올바르지 않습니다")
             if d < 0:
                 raise _line_err(i, key, "range", "품목 숫자는 0 이상입니다")
-            return v
+            return _canon(d)
         if t == "number":
             d = _line_number(v)
             if d is None:
@@ -357,7 +378,7 @@ class QuoteContext:
             if d < lo or (hi is not None and d > hi):
                 text = f"{lo} 이상" + (f" {hi} 이하" if hi is not None else "")
                 raise _line_err(i, key, "range", f"허용 범위({text}) 밖입니다")
-            return int(d) if rule.get("integer") else v
+            return int(d) if rule.get("integer") else _canon(d)          # 정규형(D2-113) — 문자열 · 공백이 남지 않는다
         if not isinstance(v, str):
             raise _line_err(i, key, "type", "문자열이어야 합니다")
         s = v.strip()
