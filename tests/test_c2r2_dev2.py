@@ -149,6 +149,22 @@ def test_nul_old_quote_route_422(kd):
     assert _rows(w, "mlp_quote") == before
 
 
+def test_nul_search_query_422_not_500(kd):
+    """#36 DEF-QA2R3-001 — 목록 search 쿼리의 NUL 이 DB 오류(500)였다 → 표준 422 rule nul · 옛 422 `nul`. 정상 검색은 그대로."""
+    w = kd
+    hd = h.hdr(w["k"]["operator"])
+    D = f"/api/v1/tenants/{w['code']}/tasks/{w['code']}.drawing_regions/documents"
+    for url in (f"{_q(w)}/quotes", D):
+        for q in (NUL, "\u0000"):
+            _std_nul(w["tc"].get(url, params={"search": q}, headers=hd), "search")
+        assert w["tc"].get(url, params={"search": "a"}, headers=hd).status_code == 200
+    for url in ("/api/quotes", "/api/quotes/export/csv"):
+        r = w["tc"].get(url, params={"search": NUL}, headers=hd)
+        assert r.status_code == 422 and "nul" in r.text, (r.status_code, r.text[:300])
+        _no_echo(r)
+        assert w["tc"].get(url, params={"search": "a"}, headers=hd).status_code == 200
+
+
 def test_find_nul_paths():
     from mlcore.serve.validate import find_nul
     assert find_nul({"a": [1, {"name": "x"}]}) is None

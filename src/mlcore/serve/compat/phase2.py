@@ -336,6 +336,9 @@ class Phase2:
 
     def _all_quotes(self, spec, search: str | None) -> list[dict]:
         from .. import quotes
+        if search and "\x00" in search:     # 옛 목록 · CSV 내보내기의 쿼리 NUL → 옛 422 모양 (#36 · D2-111)
+            raise self.CompatError(422, {"detail": [{"loc": ["query", "search"], "msg": "문자열에 NUL 문자(U+0000)가 있습니다",
+                                                     "type": "nul"}]})
         items, cursor = [], None
         while len(items) < LIST_CAP:
             page = quotes.list_quotes(self.tenant, spec.task.id, spec.notice, search=search, limit=100, cursor=cursor)

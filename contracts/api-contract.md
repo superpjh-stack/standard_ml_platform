@@ -43,7 +43,7 @@
 ## 2. 공통 규칙
 
 - **오류 봉투:** `{"error": {"code": <std/statuses.yaml error_codes>, "message": <한국어>, "detail": {...}}}`. `detail` 에 입력값을 되풀이하지 않는다(`field` · `rule` 만). FastAPI 기본 `{"detail": …}` 422 는 쓰지 않는다(호환 라우터만 예외).
-- **NUL:** JSON 본문의 문자열 · 키에 NUL(U+0000)이 있으면 422 `invalid_input` detail `{field, rule: "nul"}`(field = 이름 꼴 키 · 색인 경로, 그 밖 `*` — 입력값 · 키 되풀이 없음). 표준 요청 모델(`serve.contract._Req`) · 견적 · 대기열 본문 · 옛 호환 경로(옛 422 모양 type `nul`)가 같은 판정 `serve.validate.find_nul` 을 쓴다. 행 0 (C2 2회전 D2-111 · DEF-QA2R2-002)
+- **NUL:** JSON 본문의 문자열 · 키에 NUL(U+0000)이 있으면 422 `invalid_input` detail `{field, rule: "nul"}`(field = 이름 꼴 키 · 색인 경로, 그 밖 `*` — 입력값 · 키 되풀이 없음). 표준 요청 모델(`serve.contract._Req`) · 견적 · 대기열 본문 · 옛 호환 경로(옛 422 모양 type `nul`)가 같은 판정 `serve.validate.find_nul` 을 쓴다. 행 0 (C2 2회전 D2-111 · DEF-QA2R2-002). 목록 쿼리 `search` 의 NUL 도 같다 — 표준 field `search`, 옛 loc `["query", "search"]` (D2-114 · #36)
 - **목록:** `{"items": [...], "next_cursor": <불투명 문자열 | null>, "total": <int, 선택>}`. 인자 `search` · `limit`(기본 20, 1~100) · `cursor`. `q` · `offset` · `records` 키 없음(F2 통일).
 - **시각:** ISO-8601 + `+09:00`. **멱등:** `POST .../train` 같은 스냅숏 · 설정 → 200 + 기존 `run_id`(새 학습 없음).
 - **응답 헤더:** `X-Request-Id`(감사 로그 `request_id` 와 같다).

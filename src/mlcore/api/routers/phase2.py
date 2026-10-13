@@ -113,6 +113,7 @@ def list_documents(t: str, task: str, request: Request, search: str | None = Que
     auth.require(principal(request), "quotes", write=False)
     spec = _spec(request, t, task)
     documents.check_type(spec, "extract")
+    reject_nul(search, prefix="search")    # 쿼리 NUL → 422 rule nul (DB 500 이 아니라 — #36 · D2-111)
     return documents.list_docs(t, spec.task.id, search=search, limit=limit, cursor=cursor)
 
 
@@ -159,6 +160,7 @@ def list_quotes(t: str, task: str, request: Request, search: str | None = Query(
     auth.require(principal(request), "quotes", write=False)
     spec = _spec(request, t, task)
     documents.check_type(spec, "quote")
+    reject_nul(search, prefix="search")    # 쿼리 NUL → 422 rule nul (#36 · D2-111)
     return DecimalJSONResponse(quotes.list_quotes(t, spec.task.id, spec.notice, search=search, limit=limit,
                                                   cursor=cursor, status=status))
 
