@@ -1,0 +1,92 @@
+G2-Q01    런타임: 견적식 · prepare 입출력에 float 0 (JSON 실수 입력)  PASS  {"status": 201, "float_paths": {"prepare_in": [], "quote_in": [], "quote_out": [], "prepare_out": []}}
+G2-Q01    금액 문자열 · 소재비 손 계산(Decimal) 일치  PASS  {"total": "9065744", "material": "4563351", "hand": "4563351"}
+G2-Q01    응답 원문에 금액이 JSON 숫자로 나가지 않음  PASS  {"snippet": "\"total\":\"9065744\",\"currency\":\""}
+G2-Q01    DB 저장 형(total numeric · 구성 금액 · 품목 금액)  PASS  {"t": "numeric", "ct": "string", "lt": "string"}
+G2-Q01    런타임: 옛 /api/quotes 견적식 입출력 float 0  PASS  {"status": 200, "float_paths": {"prepare_in": [], "quote_in": [], "quote_out": [], "prepare_out": []}, "body": null}
+G2-Q01    옛 /api/quotes 합계 = 표준 합계(같은 입력)  PASS  {"old_total": 9065744, "std_total": "9065744", "status": "검토용 초안"}
+G2-Q01    경계 · quantity 0  PASS  {"status": 422, "code": "invalid_input", "field": "quantity", "total": null}
+G2-Q01    경계 · quantity 1  PASS  {"status": 201, "code": null, "field": null, "total": "9035689"}
+G2-Q01    경계 · quantity 1000  PASS  {"status": 201, "code": null, "field": null, "total": "9035688173"}
+G2-Q01    경계 · quantity 1001  PASS  {"status": 422, "code": "invalid_input", "field": "quantity", "total": null}
+G2-Q01    경계 · quantity 1.5  PASS  {"status": 422, "code": "invalid_input", "field": "quantity", "total": null}
+G2-Q01    경계 · quantity -1  PASS  {"status": 422, "code": "invalid_input", "field": "quantity", "total": null}
+G2-Q01    경계 · quantity '1'  FAIL  {"status": 201, "code": null, "field": null, "total": "9035689"}
+G2-Q01    경계 · quantity true  PASS  {"status": 422, "code": "invalid_input", "field": "quantity", "total": null}
+G2-Q01    경계 · labor_rate 0.99  PASS  {"status": 422, "code": "invalid_input", "field": "labor_rate", "total": null}
+G2-Q01    경계 · labor_rate 1  PASS  {"status": 201, "code": null, "field": null, "total": "5772268"}
+G2-Q01    경계 · labor_rate 1000000  PASS  {"status": 201, "code": null, "field": null, "total": "78294266"}
+G2-Q01    경계 · labor_rate 1000000.01  PASS  {"status": 422, "code": "invalid_input", "field": "labor_rate", "total": null}
+G2-Q01    경계 · outsource_cost -1  PASS  {"status": 422, "code": "invalid_input", "field": "outsource_cost", "total": null}
+G2-Q01    경계 · outsource_cost 1e9  PASS  {"status": 201, "code": null, "field": null, "total": "1274035689"}
+G2-Q01    경계 · outsource_cost 1e9+1  PASS  {"status": 422, "code": "invalid_input", "field": "outsource_cost", "total": null}
+G2-Q01    경계 · outsource_cost null  PASS  {"status": 422, "code": "missing_required", "field": "outsource_cost", "total": null}
+G2-Q01    경계 · cut_m 1e400 (Decimal 유한 · float inf)  PASS  {"status": 422, "code": "out_of_bounds", "field": "cut_m", "total": null}
+G2-Q01    경계 · 품목 단가 price_kg 음수 -6500  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.price_kg", "total": null}
+G2-Q01    경계 · 품목 단가 price_kg 0  PASS  {"status": 201, "code": null, "field": null, "total": "3263494"}
+G2-Q01    경계 · 품목 단가 price_kg 1e12  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.price_kg", "total": null}
+G2-Q01    경계 · 품목 단가 문자열 'abc'  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.price_kg", "total": null}
+G2-Q01    경계 · 품목 수량 0  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.quantity", "total": null}
+G2-Q01    경계 · 품목 수량 -2  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.quantity", "total": null}
+G2-Q01    경계 · 품목 수량 1.5  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.quantity", "total": null}
+G2-Q01    경계 · 품목 중량 0  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.mass_kg", "total": null}
+G2-Q01    경계 · 품목 이름 없음  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.name", "total": null}
+G2-Q01    경계 · 품목 재질 목록 밖  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.material", "total": null}
+G2-Q01    경계 · 품목 0행  PASS  {"status": 422, "code": "invalid_input", "field": "lines", "total": null}
+G2-Q01    경계 · 품목 201행  PASS  {"status": 422, "code": "invalid_input", "field": "lines", "total": null}
+G2-Q01    경계 · 품목 모르는 키  PASS  {"status": 422, "code": "invalid_input", "field": "lines.0.discount", "total": null}
+G2-Q01    수식 꼴 품목 이름 · 메모로 초안  PASS  {"status": 201, "err": [201, null, null]}
+G2-Q01    CSV 표준 B11: BOM · 시작 문자 위험 칸 0  PASS  {"bom": true, "unsafe": []}
+G2-Q01    CSV 표준 B11: 앞 공백 · 줄바꿈 뒤 위험 칸 (원천 safe_cell 은 lstrip 후 검사)  PASS  {"unsafe_after_lstrip": []}
+G2-Q01    CSV 옛 /api/quotes/{id}/csv: BOM · 시작 문자 위험 칸 0  PASS  {"bom": true, "unsafe": []}
+G2-Q01    CSV 옛 /api/quotes/{id}/csv: 앞 공백 · 줄바꿈 뒤 위험 칸 (원천 safe_cell 은 lstrip 후 검사)  PASS  {"unsafe_after_lstrip": []}
+G2-Q01    CSV 옛 /api/quotes/export/csv: BOM · 시작 문자 위험 칸 0  PASS  {"bom": true, "unsafe": []}
+G2-Q01    CSV 옛 /api/quotes/export/csv: 앞 공백 · 줄바꿈 뒤 위험 칸 (원천 safe_cell 은 lstrip 후 검사)  PASS  {"unsafe_after_lstrip": []}
+G2-Q01    옛 경로 품목 이름 ' =1+1' → CSV 칸  PASS  {"cells": ["\"'=1+1\""]}
+G2-Q01    수정(revision 2) · overrides 누적  PASS  {"status": 201, "total": "9479704"}
+G2-A01    viewer 확정 요청  PASS  {"status": 403}
+G2-Q01    메모 없는 확정 → 422 missing_required  PASS  {"err": [422, "missing_required", "review_note"]}
+G2-Q01    operator 확정 요청 → 202 pending  PASS  {"approval_id": "apr_01M4V1YA5BTF0DMEYQNJ1M8RQG", "state": "pending"}
+G2-Q01    확정 대기 중 수정 → 409 quote_locked  PASS  {"err": [409, "quote_locked", "pending_confirm"]}
+G2-A01    견적 확정 결정 · operator  PASS  {"status": 403}
+G2-A01    견적 확정 결정 · approver_other  PASS  {"status": 403}
+G2-A01    견적 확정 결정 · viewer  PASS  {"status": 403}
+G2-A01    견적 확정 결정 · approver(자기 과제)  PASS  {"status": 200, "body": {"approval_id": "apr_01M4V1YA5BTF0DMEYQNJ1M8RQG", "state": "approved", "production_version": null}}
+감사        견적 확정 → 감사(quote.confirmed · approval.approved)  PASS  {"delta": 1}
+G2-Q01    확정 상태 · 금액  PASS  {"status": "confirmed", "total": "9479704"}
+G2-Q01    확정 뒤 · revisions(최초 ID)  PASS  {"status": 409, "err": ["quote_locked", "confirmed"]}
+G2-Q01    확정 뒤 · revisions(admin)  PASS  {"status": 409, "err": ["quote_locked", "confirmed"]}
+G2-Q01    확정 뒤 · revisions(rev2 ID)  PASS  {"status": 409, "err": ["quote_locked", "confirmed"]}
+G2-Q01    확정 뒤 · revisions(확정 행 ID)  PASS  {"status": 409, "err": ["quote_locked", "confirmed"]}
+G2-Q01    확정 뒤 · confirm 재요청  PASS  {"status": 409, "err": ["quote_locked", "confirmed"]}
+G2-Q01    확정 뒤 · decide 재결정  PASS  {"status": 409, "err": ["already_decided", null]}
+G2-Q01    확정 뒤 · PUT 견적  PASS  {"status": 405, "err": ["method_not_allowed", null]}
+G2-Q01    확정 뒤 · PATCH 견적  PASS  {"status": 405, "err": ["method_not_allowed", null]}
+G2-Q01    확정 뒤 · DELETE 견적  PASS  {"status": 405, "err": ["method_not_allowed", null]}
+G2-Q01    확정 뒤 · 옛 POST /api/quotes/{id}  PASS  {"status": 404, "err": ["not_found", null]}
+G2-Q01    DB UPDATE mlp_quote(확정 행)  PASS  {"result": "InsufficientPrivilege"}
+G2-Q01    DB DELETE mlp_quote(확정 행)  PASS  {"result": "InsufficientPrivilege"}
+G2-Q01    운영 모델 교체 뒤 확정 금액 · CSV 불변  PASS  {"total_before": "9479704", "total_after": "9479704", "csv_same": true, "new_model": "v2", "new_quote_model": "v2"}
+G2-Q01    반려 → draft · 수정 201  PASS  {"decide": 200, "status": "draft", "rev": 201}
+G2-A01    같은 approver 키가 요청 · 결정(자기 승인)  INFO  {"decide_status": 200}
+G2-A01    역할 viewer: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록  PASS  {"got": [403, 403, 403, 403]}
+G2-A01    역할 operator: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록  PASS  {"got": [201, 200, 201, 200]}
+G2-A01    역할 approver: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록  PASS  {"got": [201, 200, 201, 200]}
+G2-A01    역할 admin: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록  PASS  {"got": [201, 200, 201, 200]}
+G2-A01    trace · operator  PASS  {"status": 403}
+G2-A01    trace · approver  PASS  {"status": 403}
+G2-A01    trace · admin  PASS  {"status": 200}
+G2-A01    trace?view=explain · operator  PASS  {"status": 200}
+G2-A01    trace?view=explain · viewer  PASS  {"status": 403}
+G2-A01    다른 회사 키 · GET 견적  PASS  {"status": 404}
+G2-A01    다른 회사 키 · GET 견적 CSV  PASS  {"status": 404}
+G2-A01    다른 회사 키 · GET 견적 목록  PASS  {"status": 404}
+G2-A01    다른 회사 키 · POST 수정  PASS  {"status": 404}
+G2-A01    다른 회사 키 · POST 확정 요청  PASS  {"status": 404}
+G2-A01    다른 회사 키 · POST 결정(남의 승인)  PASS  {"status": 404}
+G2-A01    다른 회사 키 · GET 내 경로로 남의 견적 ID  PASS  {"status": 404}
+G2-A01    다른 회사 키 · GET 옛 /api/quotes/{id}  PASS  {"status": 404}
+G2-A01    다른 회사 키 · GET 옛 /api/cad/{id}  PASS  {"status": 404}
+G2-A01    다른 회사 견적 본문에 내 doc_id → 404  PASS  {"status": 404, "err": [404, "not_found", null]}
+감사        견적 감사 행 종류  FAIL  {"actions": {"approval.approved": 2, "approval.request.promote": 2, "DELETE /api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}": 1, "model.register": 2, "model.stage": 2, "PATCH /api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}": 1, "POST /api/{rest:path}": 2, "POST /api/v1/approvals/{approval_id}/
+
+== 90 검사 · FAIL 2 · WARN 0 → probe_quote_r3-result.json

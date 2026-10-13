@@ -1,0 +1,11 @@
+N-q  kd GET 표준 견적 목록 search NUL  FAIL  HTTP 500
+N-q  kd GET 표준 견적 목록 search(NUL 만) NUL  FAIL  HTTP 500
+N-q  kd GET 표준 문서 목록 search NUL  FAIL  HTTP 500
+N-q  kd GET 옛 견적 목록 search NUL  FAIL  HTTP 500
+N-q  kd GET 옛 견적 CSV 내보내기 search NUL  FAIL  HTTP 500
+N-q  kd GET 표준 견적 CSV id NUL  PASS  HTTP 404
+N-q  kd GET 표준 문서 조회 id NUL  PASS  HTTP 404
+N-q  kd GET 옛 도면 조회 id NUL  PASS  HTTP 404
+N-q  kd GET 표준 견적 목록 cursor NUL  PASS  HTTP 422
+N-f  kd 업로드 파일 이름 NUL  PASS  HTTP 201 {"doc_id":"doc_01M4V1XQ64QN51846YFTSWYYQK","task":"kd.drawing_regions","filename":"a%00b.dxf","raw_sha256":"135822e5819e
+LOG  kd 서버 로그 500 수(관찰)  PASS  500 5 · Traceback 5

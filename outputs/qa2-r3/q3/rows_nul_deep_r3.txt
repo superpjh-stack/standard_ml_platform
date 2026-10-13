@@ -1,0 +1,9 @@
+D  krs 옛 samples 1행  PASS  HTTP 200 keys=['ag_pct', 'cu_pct', 'flux_pct', 'joint_strength_mpa', 'lot_id', 'mixing_min', 'sb_pct', 'sn_pct', 'supplier', 'temperature_c']
+D  krs 옛 예측 맞는 키 아래 63단 NUL  PASS  HTTP 422 {"detail": [{"loc": ["body", "lot_id", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "k", "
+D  krs 옛 예측 맞는 키 아래 65단 NUL  PASS  HTTP 422 {"detail": [{"loc": ["body", "lot_id"], "msg": "알 수 없는 입력입니다", "type": "extra_forbidden"}, {"loc": ["body", "joint_strength_mpa"], "msg": "알 수 없는 입력입니다", "type"
+D  krs 옛 예측 맞는 키 아래 80단 NUL  PASS  HTTP 422 {"detail": [{"loc": ["body", "lot_id"], "msg": "알 수 없는 입력입니다", "type": "extra_forbidden"}, {"loc": ["body", "joint_strength_mpa"], "msg": "알 수 없는 입력입니다", "type"
+D  krs 표준 예측 inputs 65단 NUL  PASS  HTTP 422 {"error": {"code": "invalid_input", "message": "입력 값이 올바르지 않습니다", "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule":
+D  krs 대기열 note 65단 NUL  PASS  HTTP 422 {"error": {"code": "invalid_input", "message": "note 는 1~500자입니다", "detail": {"field": "note", "rule": "length"}}}
+D  krs 표준 예측 inputs 80단 NUL  PASS  HTTP 422 {"error": {"code": "invalid_input", "message": "입력 값이 올바르지 않습니다", "detail": {"errors": [{"field": "inputs.*", "rule": "int_type"}, {"field": "inputs.*", "rule":
+D  krs 대기열 note 80단 NUL  PASS  HTTP 422 {"error": {"code": "invalid_input", "message": "note 는 1~500자입니다", "detail": {"field": "note", "rule": "length"}}}
+LOG  krs 서버 로그 500 · Traceback 0  PASS  500 0 · Traceback 0

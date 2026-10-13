@@ -1,0 +1,1055 @@
+[
+ {
+  "gate": "G2-Q01",
+  "item": "런타임: 견적식 · prepare 입출력에 float 0 (JSON 실수 입력)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "float_paths": {
+    "prepare_in": [],
+    "quote_in": [],
+    "quote_out": [],
+    "prepare_out": []
+   }
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "금액 문자열 · 소재비 손 계산(Decimal) 일치",
+  "verdict": "PASS",
+  "measured": {
+   "total": "9065744",
+   "material": "4563351",
+   "hand": "4563351"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "응답 원문에 금액이 JSON 숫자로 나가지 않음",
+  "verdict": "PASS",
+  "measured": {
+   "snippet": "\"total\":\"9065744\",\"currency\":\""
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "DB 저장 형(total numeric · 구성 금액 · 품목 금액)",
+  "verdict": "PASS",
+  "measured": {
+   "t": "numeric",
+   "ct": "string",
+   "lt": "string"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "런타임: 옛 /api/quotes 견적식 입출력 float 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "float_paths": {
+    "prepare_in": [],
+    "quote_in": [],
+    "quote_out": [],
+    "prepare_out": []
+   },
+   "body": null
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "옛 /api/quotes 합계 = 표준 합계(같은 입력)",
+  "verdict": "PASS",
+  "measured": {
+   "old_total": 9065744,
+   "std_total": "9065744",
+   "status": "검토용 초안"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity 1",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035689"
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity 1000",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035688173"
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity 1001",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity 1.5",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity -1",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity '1'",
+  "verdict": "FAIL",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "9035689"
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · quantity true",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · labor_rate 0.99",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "labor_rate",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · labor_rate 1",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "5772268"
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · labor_rate 1000000",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "78294266"
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · labor_rate 1000000.01",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "labor_rate",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · outsource_cost -1",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "outsource_cost",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · outsource_cost 1e9",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "1274035689"
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · outsource_cost 1e9+1",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "outsource_cost",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · outsource_cost null",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "missing_required",
+   "field": "outsource_cost",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · cut_m 1e400 (Decimal 유한 · float inf)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "out_of_bounds",
+   "field": "cut_m",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 단가 price_kg 음수 -6500",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 단가 price_kg 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "code": null,
+   "field": null,
+   "total": "3263494"
+  },
+  "expected": 201
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 단가 price_kg 1e12",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 단가 문자열 'abc'",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 수량 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 수량 -2",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 수량 1.5",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.quantity",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 중량 0",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.mass_kg",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 이름 없음",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 재질 목록 밖",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.material",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 0행",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 201행",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "경계 · 품목 모르는 키",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.discount",
+   "total": null
+  },
+  "expected": 422
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "수식 꼴 품목 이름 · 메모로 초안",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "err": [
+    201,
+    null,
+    null
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "CSV 표준 B11: BOM · 시작 문자 위험 칸 0",
+  "verdict": "PASS",
+  "measured": {
+   "bom": true,
+   "unsafe": []
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "CSV 표준 B11: 앞 공백 · 줄바꿈 뒤 위험 칸 (원천 safe_cell 은 lstrip 후 검사)",
+  "verdict": "PASS",
+  "measured": {
+   "unsafe_after_lstrip": []
+  },
+  "expected": "원천 KyungDong api/main.py:118-120 `s.lstrip().startswith(...)`"
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "CSV 옛 /api/quotes/{id}/csv: BOM · 시작 문자 위험 칸 0",
+  "verdict": "PASS",
+  "measured": {
+   "bom": true,
+   "unsafe": []
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "CSV 옛 /api/quotes/{id}/csv: 앞 공백 · 줄바꿈 뒤 위험 칸 (원천 safe_cell 은 lstrip 후 검사)",
+  "verdict": "PASS",
+  "measured": {
+   "unsafe_after_lstrip": []
+  },
+  "expected": "원천 KyungDong api/main.py:118-120 `s.lstrip().startswith(...)`"
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "CSV 옛 /api/quotes/export/csv: BOM · 시작 문자 위험 칸 0",
+  "verdict": "PASS",
+  "measured": {
+   "bom": true,
+   "unsafe": []
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "CSV 옛 /api/quotes/export/csv: 앞 공백 · 줄바꿈 뒤 위험 칸 (원천 safe_cell 은 lstrip 후 검사)",
+  "verdict": "PASS",
+  "measured": {
+   "unsafe_after_lstrip": []
+  },
+  "expected": "원천 KyungDong api/main.py:118-120 `s.lstrip().startswith(...)`"
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "옛 경로 품목 이름 ' =1+1' → CSV 칸",
+  "verdict": "PASS",
+  "measured": {
+   "cells": [
+    "\"'=1+1\""
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "수정(revision 2) · overrides 누적",
+  "verdict": "PASS",
+  "measured": {
+   "status": 201,
+   "total": "9479704"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "viewer 확정 요청",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "메모 없는 확정 → 422 missing_required",
+  "verdict": "PASS",
+  "measured": {
+   "err": [
+    422,
+    "missing_required",
+    "review_note"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "operator 확정 요청 → 202 pending",
+  "verdict": "PASS",
+  "measured": {
+   "approval_id": "apr_01M4V1YA5BTF0DMEYQNJ1M8RQG",
+   "state": "pending"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 대기 중 수정 → 409 quote_locked",
+  "verdict": "PASS",
+  "measured": {
+   "err": [
+    409,
+    "quote_locked",
+    "pending_confirm"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "견적 확정 결정 · operator",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "견적 확정 결정 · approver_other",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "견적 확정 결정 · viewer",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "견적 확정 결정 · approver(자기 과제)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200,
+   "body": {
+    "approval_id": "apr_01M4V1YA5BTF0DMEYQNJ1M8RQG",
+    "state": "approved",
+    "production_version": null
+   }
+  },
+  "expected": null
+ },
+ {
+  "gate": "감사",
+  "item": "견적 확정 → 감사(quote.confirmed · approval.approved)",
+  "verdict": "PASS",
+  "measured": {
+   "delta": 1
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 상태 · 금액",
+  "verdict": "PASS",
+  "measured": {
+   "status": "confirmed",
+   "total": "9479704"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · revisions(최초 ID)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409,
+   "err": [
+    "quote_locked",
+    "confirmed"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · revisions(admin)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409,
+   "err": [
+    "quote_locked",
+    "confirmed"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · revisions(rev2 ID)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409,
+   "err": [
+    "quote_locked",
+    "confirmed"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · revisions(확정 행 ID)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409,
+   "err": [
+    "quote_locked",
+    "confirmed"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · confirm 재요청",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409,
+   "err": [
+    "quote_locked",
+    "confirmed"
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · decide 재결정",
+  "verdict": "PASS",
+  "measured": {
+   "status": 409,
+   "err": [
+    "already_decided",
+    null
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · PUT 견적",
+  "verdict": "PASS",
+  "measured": {
+   "status": 405,
+   "err": [
+    "method_not_allowed",
+    null
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · PATCH 견적",
+  "verdict": "PASS",
+  "measured": {
+   "status": 405,
+   "err": [
+    "method_not_allowed",
+    null
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · DELETE 견적",
+  "verdict": "PASS",
+  "measured": {
+   "status": 405,
+   "err": [
+    "method_not_allowed",
+    null
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "확정 뒤 · 옛 POST /api/quotes/{id}",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "err": [
+    "not_found",
+    null
+   ]
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "DB UPDATE mlp_quote(확정 행)",
+  "verdict": "PASS",
+  "measured": {
+   "result": "InsufficientPrivilege"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "DB DELETE mlp_quote(확정 행)",
+  "verdict": "PASS",
+  "measured": {
+   "result": "InsufficientPrivilege"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "운영 모델 교체 뒤 확정 금액 · CSV 불변",
+  "verdict": "PASS",
+  "measured": {
+   "total_before": "9479704",
+   "total_after": "9479704",
+   "csv_same": true,
+   "new_model": "v2",
+   "new_quote_model": "v2"
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-Q01",
+  "item": "반려 → draft · 수정 201",
+  "verdict": "PASS",
+  "measured": {
+   "decide": 200,
+   "status": "draft",
+   "rev": 201
+  },
+  "expected": null
+ },
+ {
+  "gate": "G2-A01",
+  "item": "같은 approver 키가 요청 · 결정(자기 승인)",
+  "verdict": "INFO",
+  "measured": {
+   "decide_status": 200
+  },
+  "expected": "계약에 4안 원칙 없음 — 관찰"
+ },
+ {
+  "gate": "G2-A01",
+  "item": "역할 viewer: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록",
+  "verdict": "PASS",
+  "measured": {
+   "got": [
+    403,
+    403,
+    403,
+    403
+   ]
+  },
+  "expected": [
+   403,
+   403,
+   403,
+   403
+  ]
+ },
+ {
+  "gate": "G2-A01",
+  "item": "역할 operator: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록",
+  "verdict": "PASS",
+  "measured": {
+   "got": [
+    201,
+    200,
+    201,
+    200
+   ]
+  },
+  "expected": [
+   201,
+   200,
+   201,
+   200
+  ]
+ },
+ {
+  "gate": "G2-A01",
+  "item": "역할 approver: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록",
+  "verdict": "PASS",
+  "measured": {
+   "got": [
+    201,
+    200,
+    201,
+    200
+   ]
+  },
+  "expected": [
+   201,
+   200,
+   201,
+   200
+  ]
+ },
+ {
+  "gate": "G2-A01",
+  "item": "역할 admin: 문서 올림 · 문서 목록 · 견적 생성 · 견적 목록",
+  "verdict": "PASS",
+  "measured": {
+   "got": [
+    201,
+    200,
+    201,
+    200
+   ]
+  },
+  "expected": [
+   201,
+   200,
+   201,
+   200
+  ]
+ },
+ {
+  "gate": "G2-A01",
+  "item": "trace · operator",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "trace · approver",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "trace · admin",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200
+  },
+  "expected": 200
+ },
+ {
+  "gate": "G2-A01",
+  "item": "trace?view=explain · operator",
+  "verdict": "PASS",
+  "measured": {
+   "status": 200
+  },
+  "expected": 200
+ },
+ {
+  "gate": "G2-A01",
+  "item": "trace?view=explain · viewer",
+  "verdict": "PASS",
+  "measured": {
+   "status": 403
+  },
+  "expected": 403
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · GET 견적",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · GET 견적 CSV",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · GET 견적 목록",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · POST 수정",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · POST 확정 요청",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · POST 결정(남의 승인)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · GET 내 경로로 남의 견적 ID",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · GET 옛 /api/quotes/{id}",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 키 · GET 옛 /api/cad/{id}",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404
+  },
+  "expected": 404
+ },
+ {
+  "gate": "G2-A01",
+  "item": "다른 회사 견적 본문에 내 doc_id → 404",
+  "verdict": "PASS",
+  "measured": {
+   "status": 404,
+   "err": [
+    404,
+    "not_found",
+    null
+   ]
+  },
+  "expected": "404 not_found(doc) — 운영 모델 없으면 503 이 먼저일 수 있다"
+ },
+ {
+  "gate": "감사",
+  "item": "견적 감사 행 종류",
+  "verdict": "FAIL",
+  "measured": {
+   "actions": {
+    "approval.approved": 2,
+    "approval.request.promote": 2,
+    "DELETE /api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}": 1,
+    "model.register": 2,
+    "model.stage": 2,
+    "PATCH /api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}": 1,
+    "POST /api/{rest:path}": 2,
+    "POST /api/v1/approvals/{approval_id}/decide": 7,
+    "POST /api/v1/tenants/{t}/tasks/{task}/documents": 5,
+    "POST /api/v1/tenants/{t}/tasks/{task}/quotes": 41,
+    "POST /api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/confirm": 6,
+    "POST /api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}/revisions": 7,
+    "PUT /api/v1/tenants/{t}/tasks/{task}/quotes/{quote_id}": 1,
+    "quote.confirm_requested": 3,
+    "quote.confirmed": 2,
+    "quote.rejected": 1
+   }
+  },
+  "expected": null
+ }
+]

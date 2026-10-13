@@ -1,0 +1,15 @@
+T01  kd.labor_hours train 접수  PASS  HTTP 202 {'run_id': 'run_3996ffaa15182ea6', 'status': 'queued'}
+T01  kd.labor_hours 작업자  PASS  <scratch>/art/kd/kd.labor_hours/run_3996ffaa15182ea6", "version": "v1", "stage": "candidate"} | 
+T01  kd.labor_hours 학습  PASS  status=succeeded champion=ridge beats=True v=v1 err=None
+T01  kd.labor_hours stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  kd.labor_hours promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4V1KMBPPVR4SSV8WHN1KTS0', 'state': 'pending'}
+T01  kd.labor_hours 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4V1KMBPPVR4SSV8WHN1KTS0', 'state': 'approved', 'production_version': 'v1'}
+T01  kd health model_ready  PASS  [('kd.labor_hours', True), ('kd.drawing_regions', True), ('kd.quote', True)]
+T01  krs.joint_strength train 접수  PASS  HTTP 202 {'run_id': 'run_92d255512def8101', 'status': 'queued'}
+T01  krs.joint_strength 작업자  PASS  <scratch>/art/krs/krs.joint_strength/run_92d255512def8101", "version": "v1", "stage": "candidate"} | 
+T01  krs.residual_review train 접수  WARN  HTTP 422 {'error': {'code': 'invalid_input', 'message': '학습 대상이 아닌 과제입니다 — uses 과제의 운영 모델을 씁니다', 'detail': {'rule': 'not_trainabl
+T01  krs.joint_strength 학습  PASS  status=succeeded champion=gbr beats=True v=v1 err=None
+T01  krs.joint_strength stage v1  PASS  HTTP 200 {'version': 'v1', 'stage': 'staging'}
+T01  krs.joint_strength promote 요청  PASS  HTTP 202 {'approval_id': 'apr_01M4V1KQ6FR795G3HNQXAYSTHT', 'state': 'pending'}
+T01  krs.joint_strength 승인  PASS  HTTP 200 {'approval_id': 'apr_01M4V1KQ6FR795G3HNQXAYSTHT', 'state': 'approved', 'production_version': 'v1'}
+T01  krs health model_ready  PASS  [('krs.joint_strength', True), ('krs.recipe_optimize', True), ('krs.residual_review', True)]

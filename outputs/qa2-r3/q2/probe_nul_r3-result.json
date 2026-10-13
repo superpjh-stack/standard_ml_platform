@@ -1,0 +1,180 @@
+[
+ {
+  "gate": "r2-NUL",
+  "item": "quote line name",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.name"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "quote review_note",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "review_note"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "quote inputs product_family",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "inputs.product_family"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "quote line material",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.material"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "quote 키 이름 NUL",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.*"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "revision line name",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "lines.0.name"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "confirm review_note",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "review_note"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "predict entity_id",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "entity_id"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "actuals entity_id",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "entity_id"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "old quote bom name",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    null,
+    null
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "old quote review_note",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    null,
+    null
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "NUL 500 뒤 정상 확정 요청(부분 상태 없음)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 202,
+   "err": [
+    null,
+    null
+   ]
+  },
+  "expected": 202
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "predict entity_id(완전한 입력)",
+  "verdict": "PASS",
+  "measured": {
+   "status": 422,
+   "err": [
+    "invalid_input",
+    "entity_id"
+   ]
+  },
+  "expected": 422
+ },
+ {
+  "gate": "r2-NUL",
+  "item": "quote 행 증가(정상 1건 외)",
+  "verdict": "INFO",
+  "measured": {
+   "delta": 2
+  },
+  "expected": null
+ }
+]

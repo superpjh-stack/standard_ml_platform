@@ -1,0 +1,209 @@
+{
+ "circles_only_20000": {
+  "entities_design": 20000,
+  "file_bytes": 748607,
+  "status": 201,
+  "code": null,
+  "rule": null,
+  "resp_KB": 1.1,
+  "entity_count": 20000,
+  "regions": 0,
+  "has_preview_key": false,
+  "sec": 1.66,
+  "rss_tree_peak_MB": 555,
+  "doc_rows_delta": 1,
+  "files_delta": 1
+ },
+ "circles_only_20001": {
+  "entities_design": 20001,
+  "file_bytes": 748645,
+  "status": 413,
+  "code": "document_too_large",
+  "rule": "entities",
+  "resp_KB": 0.1,
+  "sec": 0.09,
+  "rss_tree_peak_MB": 405,
+  "doc_rows_delta": 0,
+  "files_delta": 0
+ },
+ "circles_19998+frame=20000": {
+  "entities_design": 20000,
+  "file_bytes": 748667,
+  "status": 201,
+  "code": null,
+  "rule": null,
+  "resp_KB": 1.1,
+  "entity_count": 20000,
+  "regions": 0,
+  "has_preview_key": false,
+  "sec": 0.92,
+  "rss_tree_peak_MB": 564,
+  "doc_rows_delta": 1,
+  "files_delta": 1
+ },
+ "circles_19999+frame=20001": {
+  "entities_design": 20001,
+  "file_bytes": 748705,
+  "status": 413,
+  "code": "document_too_large",
+  "rule": "entities",
+  "resp_KB": 0.1,
+  "sec": 0.1,
+  "rss_tree_peak_MB": 419,
+  "doc_rows_delta": 0,
+  "files_delta": 0
+ },
+ "arcs_only_20000": {
+  "entities_design": 20000,
+  "file_bytes": 928607,
+  "status": 201,
+  "code": null,
+  "rule": null,
+  "resp_KB": 1.1,
+  "entity_count": 20000,
+  "regions": 0,
+  "has_preview_key": false,
+  "sec": 0.96,
+  "rss_tree_peak_MB": 582,
+  "doc_rows_delta": 1,
+  "files_delta": 1
+ },
+ "circles10000+arcs10000": {
+  "entities_design": 20000,
+  "file_bytes": 831907,
+  "status": 201,
+  "code": null,
+  "rule": null,
+  "resp_KB": 1.1,
+  "entity_count": 20000,
+  "regions": 0,
+  "has_preview_key": false,
+  "sec": 0.97,
+  "rss_tree_peak_MB": 574,
+  "doc_rows_delta": 1,
+  "files_delta": 1
+ },
+ "circles_3000+frame": {
+  "entities_design": 3002,
+  "file_bytes": 110347,
+  "status": 201,
+  "code": null,
+  "rule": null,
+  "resp_KB": 1.1,
+  "entity_count": 3002,
+  "regions": 0,
+  "has_preview_key": false,
+  "sec": 0.28,
+  "rss_tree_peak_MB": 555,
+  "doc_rows_delta": 1,
+  "files_delta": 0
+ },
+ "circles_5000+frame": {
+  "entities_design": 5002,
+  "file_bytes": 184843,
+  "status": 201,
+  "code": null,
+  "rule": null,
+  "resp_KB": 1.1,
+  "entity_count": 5002,
+  "regions": 0,
+  "has_preview_key": false,
+  "sec": 0.36,
+  "rss_tree_peak_MB": 545,
+  "doc_rows_delta": 1,
+  "files_delta": 0
+ },
+ "circles_19000_pad_5MiB": {
+  "entities_design": 19002,
+  "file_bytes": 5242880,
+  "status": 201,
+  "code": null,
+  "rule": null,
+  "resp_KB": 1.1,
+  "entity_count": 19002,
+  "regions": 0,
+  "has_preview_key": false,
+  "sec": 0.91,
+  "rss_tree_peak_MB": 644,
+  "doc_rows_delta": 1,
+  "files_delta": 1
+ },
+ "circles_19000_pad_5MiB+1": {
+  "entities_design": 19002,
+  "file_bytes": 5242881,
+  "status": 413,
+  "code": "document_too_large",
+  "rule": "bytes",
+  "resp_KB": 0.1,
+  "sec": 0.07,
+  "rss_tree_peak_MB": 490,
+  "doc_rows_delta": 0,
+  "files_delta": 0
+ },
+ "grid_longtext_2200(판정 결과 > 4MiB)": {
+  "entities_design": 4400,
+  "file_bytes": 4652965,
+  "status": 413,
+  "code": "document_too_large",
+  "rule": "result_bytes",
+  "resp_KB": 0.1,
+  "sec": 0.19,
+  "rss_tree_peak_MB": 637,
+  "doc_rows_delta": 0,
+  "files_delta": 0
+ },
+ "server_alive": true,
+ "health_after": 200,
+ "server_log_traceback": 0,
+ "server_log_500": 0,
+ "preview_direct": {
+  "circles_3000+frame": {
+   "paths": 3001,
+   "points": 99005,
+   "reduced": {
+    "arc_segments": 32,
+    "omitted_paths": 0,
+    "max_points": 100000
+   },
+   "preview_bytes": 2140983,
+   "judge_bytes": 503,
+   "omitted_marker": false
+  },
+  "circles_5000+frame": {
+   "paths": 5001,
+   "points": 95005,
+   "reduced": {
+    "arc_segments": 18,
+    "omitted_paths": 0,
+    "max_points": 100000
+   },
+   "preview_bytes": 2071614,
+   "judge_bytes": 503,
+   "omitted_marker": false
+  },
+  "circles_only_20000": {
+   "paths": 11111,
+   "points": 99999,
+   "reduced": {
+    "arc_segments": 8,
+    "omitted_paths": 8889,
+    "max_points": 100000
+   },
+   "preview_bytes": 2188308,
+   "judge_bytes": 504,
+   "omitted_marker": false
+  },
+  "arcs_only_20000": {
+   "paths": 11111,
+   "points": 99999,
+   "reduced": {
+    "arc_segments": 8,
+    "omitted_paths": 8889,
+    "max_points": 100000
+   },
+   "preview_bytes": 2387858,
+   "judge_bytes": 504,
+   "omitted_marker": false
+  }
+ }
+}

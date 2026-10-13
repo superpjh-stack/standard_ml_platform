@@ -1,0 +1,248 @@
+[
+ {
+  "tenant_src": "pc",
+  "fit_entities": 336,
+  "test_entities_not_fit": 84,
+  "cases": {
+   "N_predict": 200,
+   "N_actual": [
+    200,
+    "{\"actual_id\":1,\"linked_prediction_ids\":[\"prd_01M4V1JT6APVWDTE6VHN0KC71H\"]}"
+   ],
+   "T_predict": [
+    "DEMO-0337",
+    200
+   ],
+   "T_actual": [
+    200,
+    "{\"actual_id\":2,\"linked_prediction_ids\":[\"prd_01M4V1JT904GKRKGGQ8PB1JTPG\"]}"
+   ],
+   "F_predict": [
+    "DEMO-0001",
+    200
+   ],
+   "F_actual": [
+    200,
+    "{\"actual_id\":3,\"linked_prediction_ids\":[\"prd_01M4V1JT9NAQQ3YXDKRGXX5EP0\"]}"
+   ],
+   "M_predict": [
+    200,
+    200
+   ],
+   "M_actual": [
+    200,
+    "{\"actual_id\":4,\"linked_prediction_ids\":[\"prd_01M4V1JTASHSCQ2X9B58A5YWCY\"]}"
+   ],
+   "U_actual_first": [
+    422,
+    "{\"error\":{\"code\":\"invalid_input\",\"message\":\"관측 시각이 서버 시각보다 뒤입니다(미래 실측)\",\"detail\":{\"field\":\"observed_at\",\"rule\":\"future\"}}}"
+   ],
+   "U_predict": 200,
+   "A_actual1": [
+    200,
+    "{\"actual_id\":5,\"linked_prediction_ids\":[\"prd_01M4V1JVVVS3J15KK3FHFTCB3J\"]}"
+   ],
+   "A_actual2": [
+    200,
+    "{\"actual_id\":6,\"linked_prediction_ids\":[\"prd_01M4V1JXDDEQZRF6DCD8E5095D\"]}"
+   ]
+  },
+  "pairs": {
+   "n": 5,
+   "entities": [
+    "DEMO-0337",
+    "R2-ALT",
+    "R2-ALT",
+    "R2-MULTI",
+    "R2-NEW-1"
+   ],
+   "N": true,
+   "T": true,
+   "F": false,
+   "M_first": false,
+   "M_second": true,
+   "A1": true,
+   "A2": true,
+   "U_future_actual_paired": false
+  },
+  "run_review": [
+   {
+    "tenant_id": "tbec48e",
+    "task_id": "tbec48e.residual_review",
+    "day": "2026-10-14",
+    "origin": "live_residual",
+    "uses": "tbec48e.sensory_score",
+    "rule": "top_quantile",
+    "version": "v1",
+    "threshold": 3.598430347470682,
+    "threshold_from": "valid",
+    "pairs": 5,
+    "created": 5,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 6,
+     "threshold": 3.598430347470682
+    }
+   }
+  ],
+  "live_items": [
+   "DEMO-0337",
+   "R2-ALT",
+   "R2-ALT",
+   "R2-MULTI",
+   "R2-NEW-1"
+  ],
+  "live_items_in_fit": [],
+  "api_review_live": 5,
+  "X_run_review": [
+   {
+    "tenant_id": "tbec48e",
+    "task_id": "tbec48e.residual_review",
+    "day": "2026-10-14",
+    "origin": "live_residual",
+    "uses": "tbec48e.sensory_score",
+    "rule": "top_quantile",
+    "version": "v1",
+    "threshold": 3.598430347470682,
+    "threshold_from": "valid",
+    "pairs": 0,
+    "created": 0,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 0,
+     "skipped": "이 버전의 test_split 항목이 이미 있다"
+    },
+    "error": {
+     "type": "InSampleEvaluation",
+     "message": "tbec48e.sensory_score v1: 학습 스냅숏을 읽을 수 없다(FileNotFoundError)"
+    }
+   }
+  ],
+  "X_item_made": 0
+ },
+ {
+  "tenant_src": "krs",
+  "fit_entities": 576,
+  "test_entities_not_fit": 144,
+  "cases": {
+   "N_predict": 200,
+   "N_actual": [
+    200,
+    "{\"actual_id\":8,\"linked_prediction_ids\":[\"prd_01M4V1K1E1YEP3EPV0FJ3NEAGQ\"]}"
+   ],
+   "T_predict": [
+    "DEMO-20240001",
+    200
+   ],
+   "T_actual": [
+    200,
+    "{\"actual_id\":9,\"linked_prediction_ids\":[\"prd_01M4V1K1GXB46BXVHZZ06N8KXN\"]}"
+   ],
+   "F_predict": [
+    "DEMO-20240000",
+    200
+   ],
+   "F_actual": [
+    200,
+    "{\"actual_id\":10,\"linked_prediction_ids\":[\"prd_01M4V1K1HTJ6PZM22AMSQFJB0S\"]}"
+   ],
+   "M_predict": [
+    200,
+    200
+   ],
+   "M_actual": [
+    200,
+    "{\"actual_id\":11,\"linked_prediction_ids\":[\"prd_01M4V1K1K6TZA7EY8C9QHYDC3N\"]}"
+   ],
+   "U_actual_first": [
+    422,
+    "{\"error\":{\"code\":\"invalid_input\",\"message\":\"관측 시각이 서버 시각보다 뒤입니다(미래 실측)\",\"detail\":{\"field\":\"observed_at\",\"rule\":\"future\"}}}"
+   ],
+   "U_predict": 200,
+   "A_actual1": [
+    200,
+    "{\"actual_id\":12,\"linked_prediction_ids\":[\"prd_01M4V1K34GQ0B7K7F4T21XN5AX\"]}"
+   ],
+   "A_actual2": [
+    200,
+    "{\"actual_id\":13,\"linked_prediction_ids\":[\"prd_01M4V1K4NKC1T7GJEN6VNT6VZN\"]}"
+   ]
+  },
+  "pairs": {
+   "n": 5,
+   "entities": [
+    "DEMO-20240001",
+    "R2-ALT",
+    "R2-ALT",
+    "R2-MULTI",
+    "R2-NEW-1"
+   ],
+   "N": true,
+   "T": true,
+   "F": false,
+   "M_first": false,
+   "M_second": true,
+   "A1": true,
+   "A2": true,
+   "U_future_actual_paired": false
+  },
+  "run_review": [
+   {
+    "tenant_id": "tc15b6f",
+    "task_id": "tc15b6f.residual_review",
+    "day": "2026-10-14",
+    "origin": "live_residual",
+    "uses": "tc15b6f.joint_strength",
+    "rule": "abs_residual_ge",
+    "version": "v1",
+    "threshold": 4.0,
+    "threshold_from": "rule",
+    "pairs": 5,
+    "created": 5,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 16,
+     "threshold": 4.0
+    }
+   }
+  ],
+  "live_items": [
+   "DEMO-20240001",
+   "R2-ALT",
+   "R2-ALT",
+   "R2-MULTI",
+   "R2-NEW-1"
+  ],
+  "live_items_in_fit": [],
+  "api_review_live": 5,
+  "X_run_review": [
+   {
+    "tenant_id": "tc15b6f",
+    "task_id": "tc15b6f.residual_review",
+    "day": "2026-10-14",
+    "origin": "live_residual",
+    "uses": "tc15b6f.joint_strength",
+    "rule": "abs_residual_ge",
+    "version": "v1",
+    "threshold": 4.0,
+    "threshold_from": "rule",
+    "pairs": 0,
+    "created": 0,
+    "test_split": {
+     "origin": "test_split",
+     "version": "v1",
+     "created": 0,
+     "skipped": "이 버전의 test_split 항목이 이미 있다"
+    },
+    "error": {
+     "type": "InSampleEvaluation",
+     "message": "tc15b6f.joint_strength v1: 학습 스냅숏을 읽을 수 없다(FileNotFoundError)"
+    }
+   }
+  ],
+  "X_item_made": 0
+ }
+]

@@ -1,0 +1,107 @@
+N  kd 견적 품목 name  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.name", "rule": "nul"}
+N  kd 견적 review_note  PASS  HTTP 422 {"code": "invalid_input", "field": "review_note", "rule": "nul"}
+N  kd 견적 inputs 범주 값  PASS  HTTP 422 {"code": "invalid_input", "field": "inputs.product_family", "rule": "nul"}
+N  kd 견적 inputs 키  PASS  HTTP 422 {"code": "invalid_input", "field": "inputs.*", "rule": "nul"}
+N  kd 견적 품목 material  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.material", "rule": "nul"}
+N  kd 견적 품목 키  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.*", "rule": "nul"}
+N  kd 견적 doc_id  PASS  HTTP 422 {"code": "invalid_input", "field": "doc_id", "rule": "nul"}
+N  kd 견적 최상위 모르는 키  PASS  HTTP 422 {"code": "invalid_input", "field": "*", "rule": "nul"}
+N  kd 견적 깊은 중첩 70단 NUL  PASS  HTTP 422 {"code": "invalid_input", "field": null, "rule": "depth"}
+N  kd 수정 품목 name  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.name", "rule": "nul"}
+N  kd 수정 review_note  PASS  HTTP 422 {"code": "invalid_input", "field": "review_note", "rule": "nul"}
+N  kd 확정 요청 review_note  PASS  HTTP 422 {"code": "invalid_input", "field": "review_note", "rule": "nul"}
+N  kd 예측 entity_id(입력 빔)  PASS  HTTP 422 {"code": "invalid_input", "field": "entity_id", "rule": "nul"}
+N  kd 예측 entity_id(입력 완전)  PASS  HTTP 422 {"code": "invalid_input", "field": "entity_id", "rule": "nul"}
+N  kd 예측 inputs 범주 값  PASS  HTTP 422 {"code": "invalid_input", "field": "inputs.product_family", "rule": "nul"}
+N  kd 예측 inputs 키  PASS  HTTP 422 {"code": "invalid_input", "field": "inputs.*", "rule": "nul"}
+N  kd 예측 model_version  PASS  HTTP 422 {"code": "invalid_input", "field": "model_version", "rule": "nul"}
+N  kd 예측 깊은 중첩 inputs 값  PASS  HTTP 422 {"code": "invalid_input", "field": null, "rule": null}
+N  kd 실측 entity_id  PASS  HTTP 422 {"code": "invalid_input", "field": "entity_id", "rule": "nul"}
+N  kd 실측 observed_at  PASS  HTTP 422 {"code": "invalid_input", "field": "observed_at", "rule": "nul"}
+N  kd 학습 source_role  PASS  HTTP 422 {"code": "invalid_input", "field": "source_role", "rule": "nul"}
+N  kd 승격 reason  PASS  HTTP 422 {"code": "invalid_input", "field": "reason", "rule": "nul"}
+N  kd 옛 견적 bom name  PASS  HTTP 422 {"old": [{"loc": ["body", "bom", "0", "name"], "type": "nul"}]}
+N  kd 옛 견적 review_note  PASS  HTTP 422 {"old": [{"loc": ["body", "review_note"], "type": "nul"}]}
+N  kd 옛 견적 product  PASS  HTTP 422 {"old": [{"loc": ["body", "product"], "type": "nul"}]}
+N  kd 옛 견적 키  PASS  HTTP 422 {"old": [{"loc": ["body", "*"], "type": "nul"}]}
+N  kd 옛 견적 drawing_id  PASS  HTTP 422 {"old": [{"loc": ["body", "drawing_id"], "type": "nul"}]}
+N  kd 배치 2건 중 1건 entity_id NUL → 200 · 그 건만 오류  PASS  HTTP 200 오류 건 1 [{"code": "invalid_input", "message": "입력 값이 올바르지 않습니다", "detail": {"errors": [{"field": "items.1.entity_id", "rule": "nul"}]}}]
+N  kd 견적 날 NUL 바이트  PASS  HTTP 422 {"code": "invalid_input", "field": null, "rule": "json_invalid"}
+N  kd 실측 날 NUL 바이트  PASS  HTTP 422 {"code": "invalid_input", "field": null, "rule": null}
+N  kd 옛 견적 날 NUL 바이트  PASS  HTTP 422 {"old": [{"loc": ["body"], "type": "json_invalid"}]}
+N  kd NUL 뒤 정상 확정 요청(부분 상태 없음)  PASS  HTTP 202
+N  kd 승인 결정 reason  PASS  HTTP 422 {"code": "invalid_input", "field": "reason", "rule": "nul"}
+N  kd NUL 결정 뒤 정상 결정 200(부분 상태 없음)  PASS  HTTP 200 {'approval_id': 'apr_01M4V1WPV1849K0Q3GA0EHNE1Q', 'state': 'approved', 'production_version': None}
+N  kd NUL 요청 행 증가 = 정상 요청분만  PASS  {'mlp_quote': 1, 'mlp_actual': 0, 'mlp_prediction': 1, 'mlp_approval': 1} → {'mlp_quote': 3, 'mlp_actual': 0, 'mlp_prediction': 2, 'mlp_approval': 2}
+N-q  kd 표준 견적 목록 search NUL  FAIL  HTTP 500 {"body": "Internal Server Error"}
+N-q  kd 표준 문서 목록 search NUL  FAIL  HTTP 500 {"body": "Internal Server Error"}
+N-q  kd 옛 견적 목록 search NUL  FAIL  HTTP 500 {"body": "Internal Server Error"}
+N-q  kd 표준 견적 조회 id NUL  PASS  HTTP 404 {"code": "not_found", "field": null, "rule": null}
+N-q  kd 옛 견적 조회 id NUL  PASS  HTTP 404 {"body": "{'detail': '견적을 찾을 수 없습니다.'}"}
+F  kd 실측 관측 시각 +4분  PASS  HTTP 200 {"body": "{'actual_id': 15, 'linked_prediction_ids': []}"} (기대 200)
+F  kd 실측 관측 시각 +4분50초  PASS  HTTP 200 {"body": "{'actual_id': 16, 'linked_prediction_ids': []}"} (기대 200)
+F  kd 실측 관측 시각 +5분10초  PASS  HTTP 422 {"code": "invalid_input", "field": "observed_at", "rule": "future"} (기대 422)
+F  kd 실측 관측 시각 +6분  PASS  HTTP 422 {"code": "invalid_input", "field": "observed_at", "rule": "future"} (기대 422)
+F  kd 실측 관측 시각 +30일  PASS  HTTP 422 {"code": "invalid_input", "field": "observed_at", "rule": "future"} (기대 422)
+F  kd 실측 관측 시각 +6분 KST 표기  PASS  HTTP 422 {"code": "invalid_input", "field": "observed_at", "rule": "future"} (기대 422)
+F  kd 실측 관측 시각 +6분 -12:00 표기  PASS  HTTP 422 {"code": "invalid_input", "field": "observed_at", "rule": "future"} (기대 422)
+F  kd 실측 관측 시각 +4분 +14:00 표기  PASS  HTTP 200 {"body": "{'actual_id': 17, 'linked_prediction_ids': []}"} (기대 200)
+F  kd 실측 관측 시각 -1일(과거)  PASS  HTTP 200 {"body": "{'actual_id': 18, 'linked_prediction_ids': []}"} (기대 200)
+F  kd 실측 시간대 없음(+6분)  PASS  HTTP 422 {"code": "invalid_input", "field": null, "rule": null}
+F  kd 미래 실측 거부 행 0(통과 4건만 증가)  PASS  실측 0 → 4
+P  kd 예측 2 → 실측 1: 링크 = 뒤 예측 1개  PASS  True n=1
+P  kd 이어진 둘째 실측(새 예측 없음): 링크 0  PASS  n=0
+P  kd 새 예측 → 실측: 링크 = 새 예측만(앞 예측 다시 안 나옴)  PASS  True n=1
+P  kd 같은 (entity, observed_at) 재등록 → 같은 actual_id · 같은 링크  PASS  HTTP 200 same_id=True link=True
+P  kd 예측 뒤 등록했지만 관측 시각이 예측 전 → 링크 0  PASS  HTTP 200 n=0
+P  kd 응답 링크(최종 응답들) = 짝 규칙 SQL 결과  PASS  resp 4 · db 4 · 차이 0
+P  kd 한 예측이 두 실측에 걸리지 않음(1:1)  PASS  짝 4
+P  kd 늦게 온 더 이른 관측 실측: 앞 실측 응답 링크는 그때 값(관찰)  PASS  첫 실측(+3s) 링크 1 → 뒤 실측(+1s) 링크 1 (짝은 뒤 실측으로 옮겨 감)
+Z  kd 품목 quantity "5" → 201 · 저장 정규형  PASS  db=5(int) resp=5(int) total=20955891
+Z  kd inputs.quantity "1" → 201 · 저장 정규형  PASS  db=1(int) resp=1(int) total=9035689
+Z  kd inputs.quantity " 2 " → 201 · 저장 정규형  PASS  db=2(int) resp=2(int) total=18071376
+Z  kd 품목 price_kg " 6500 " → 201 · 저장 정규형  PASS  db=6500(int) resp=6500(int) total=9035689
+Z  kd 품목 price_kg "6500.0" → 201 · 저장 정규형  PASS  db=6500(int) resp=6500(int) total=9035689
+Z  kd 품목 price_kg 6500.50(숫자) → 201 · 저장 정규형  PASS  db=6500.5(float) resp=6500.5(float) total=9035908
+Z  kd 품목 price_kg "6500.50" → 201 · 저장 정규형  PASS  db=6500.5(float) resp=6500.5(float) total=9035908
+Z  kd 품목 mass_kg " 1.50 " → 201 · 저장 정규형  PASS  db=1.5(float) resp=1.5(float) total=6069605
+Z  kd inputs.cut_m " 24.50 " → 201 · 저장 정규형  PASS  db=24.5(float) resp=24.5(float) total=9038290
+Z  kd inputs.labor_rate "45000" → 201 · 저장 정규형  PASS  db=45000(int) resp=45000(int) total=9035689
+Z  kd inputs.product_family " 반응기 " → 201 · 저장 정규형  PASS  db='반응기'(str) resp='반응기'(str) total=9035689
+Z  kd 품목 name " SHELL " → 201 · 저장 정규형  PASS  db='SHELL'(str) resp='SHELL'(str) total=9035689
+Z  kd 품목 price_kg "1e3" → 422  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.price_kg", "rule": "number"}
+Z  kd inputs.quantity "1e0" → 422  PASS  HTTP 422 {"code": "invalid_input", "field": "quantity", "rule": "number"}
+Z  kd inputs.quantity "abc" → 422  PASS  HTTP 422 {"code": "invalid_input", "field": "quantity", "rule": "number"}
+Z  kd inputs.quantity 1.5 → 422  PASS  HTTP 422 {"code": "invalid_input", "field": "quantity", "rule": "integer"}
+Z  kd 품목 quantity 5 · "5" · " 5 " · "5.0" 같은 금액  PASS  {"5": [201, "20955891"], "'5'": [201, "20955891"], "' 5 '": [201, "20955891"], "'5.0'": [201, "20955891"]}
+Z  kd inputs.quantity 1 · "1" · " 1 " · "1.0" 같은 금액  PASS  {"1": [201, "9035689"], "'1'": [201, "9035689"], "' 1 '": [201, "9035689"], "'1.0'": [201, "9035689"]}
+Q  kd #31 음수 단가  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.price_kg", "rule": "number"}
+Q  kd #31 수정 음수 단가  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.price_kg", "rule": "number"}
+Q  kd #31 단가 1e12  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.price_kg", "rule": "range"}
+Q  kd #31 수정 단가 1e12  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.price_kg", "rule": "range"}
+Q  kd #31 수량 1.5  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.quantity", "rule": "integer"}
+Q  kd #31 수정 수량 1.5  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.quantity", "rule": "integer"}
+Q  kd #31 수량 1001  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.quantity", "rule": "range"}
+Q  kd #31 수정 수량 1001  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.quantity", "rule": "range"}
+Q  kd #31 모르는 키 amount  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.amount", "rule": "extra_forbidden"}
+Q  kd #31 수정 모르는 키 amount  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.amount", "rule": "extra_forbidden"}
+Q  kd #31 재질 목록 밖  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.material", "rule": "category"}
+Q  kd #31 수정 재질 목록 밖  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.material", "rule": "category"}
+Q  kd #31 0행  PASS  HTTP 422 {"code": "invalid_input", "field": "lines", "rule": "min_items"}
+Q  kd #31 수정 0행  PASS  HTTP 422 {"code": "invalid_input", "field": "lines", "rule": "min_items"}
+Q  kd #31 101행  PASS  HTTP 422 {"code": "invalid_input", "field": "lines", "rule": "max_items"}
+Q  kd #31 수정 101행  PASS  HTTP 422 {"code": "invalid_input", "field": "lines", "rule": "max_items"}
+Q  kd #31 price NaN 문자열  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.price_kg", "rule": "number"}
+Q  kd #31 수정 price NaN 문자열  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.price_kg", "rule": "number"}
+Q  kd #31 name 81자  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.name", "rule": "length"}
+Q  kd #31 수정 name 81자  PASS  HTTP 422 {"code": "invalid_input", "field": "lines.0.name", "rule": "length"}
+LOG  kd 서버 로그 500 · Traceback 0  FAIL  500 3 · Traceback 3
+N  krs 대기열 검토 note NUL  PASS  HTTP 422 {"code": "invalid_input", "field": "note", "rule": "nul"}
+N  krs 대기열 검토 state NUL  PASS  HTTP 422 {"code": "invalid_input", "field": "state", "rule": "nul"}
+N  krs NUL 뒤 정상 검토 200(부분 상태 없음)  PASS  HTTP 200
+N  krs 옛 예측 /api/quality/predict 값 NUL  PASS  HTTP 422 {"old": [{"loc": ["body", "x"], "type": "nul"}]}
+N  krs 옛 예측 /api/quality/predict 키 NUL  PASS  HTTP 422 {"old": [{"loc": ["body", "*"], "type": "nul"}]}
+N  krs 옛 최적화 /api/ml/optimize 값 NUL  PASS  HTTP 422 {"old": [{"loc": ["body", "x"], "type": "nul"}]}
+N  krs 옛 최적화 /api/ml/optimize 키 NUL  PASS  HTTP 422 {"old": [{"loc": ["body", "*"], "type": "nul"}]}
+N  krs 표준 최적화 fixed 값 NUL  PASS  HTTP 422 {"code": "invalid_input", "field": "fixed.x", "rule": "nul"}
+LOG  krs 서버 로그 500 · Traceback 0  PASS  500 0 · Traceback 0

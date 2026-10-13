@@ -1,0 +1,514 @@
+{
+ "N": {
+  "견적 품목 name": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "rule": "nul"
+  },
+  "견적 review_note": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "review_note",
+   "rule": "nul"
+  },
+  "견적 inputs 범주 값": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "inputs.product_family",
+   "rule": "nul"
+  },
+  "견적 inputs 키": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "inputs.*",
+   "rule": "nul"
+  },
+  "견적 품목 material": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.material",
+   "rule": "nul"
+  },
+  "견적 품목 키": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.*",
+   "rule": "nul"
+  },
+  "견적 doc_id": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "doc_id",
+   "rule": "nul"
+  },
+  "견적 최상위 모르는 키": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "*",
+   "rule": "nul"
+  },
+  "견적 깊은 중첩 70단 NUL": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": null,
+   "rule": "depth"
+  },
+  "수정 품목 name": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.name",
+   "rule": "nul"
+  },
+  "수정 review_note": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "review_note",
+   "rule": "nul"
+  },
+  "확정 요청 review_note": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "review_note",
+   "rule": "nul"
+  },
+  "예측 entity_id(입력 빔)": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "entity_id",
+   "rule": "nul"
+  },
+  "예측 entity_id(입력 완전)": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "entity_id",
+   "rule": "nul"
+  },
+  "예측 inputs 범주 값": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "inputs.product_family",
+   "rule": "nul"
+  },
+  "예측 inputs 키": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "inputs.*",
+   "rule": "nul"
+  },
+  "예측 model_version": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "model_version",
+   "rule": "nul"
+  },
+  "예측 깊은 중첩 inputs 값": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": null,
+   "rule": null
+  },
+  "실측 entity_id": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "entity_id",
+   "rule": "nul"
+  },
+  "실측 observed_at": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "observed_at",
+   "rule": "nul"
+  },
+  "학습 source_role": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "source_role",
+   "rule": "nul"
+  },
+  "승격 reason": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "reason",
+   "rule": "nul"
+  },
+  "옛 견적 bom name": {
+   "status": 422,
+   "old": [
+    {
+     "loc": [
+      "body",
+      "bom",
+      "0",
+      "name"
+     ],
+     "type": "nul"
+    }
+   ]
+  },
+  "옛 견적 review_note": {
+   "status": 422,
+   "old": [
+    {
+     "loc": [
+      "body",
+      "review_note"
+     ],
+     "type": "nul"
+    }
+   ]
+  },
+  "옛 견적 product": {
+   "status": 422,
+   "old": [
+    {
+     "loc": [
+      "body",
+      "product"
+     ],
+     "type": "nul"
+    }
+   ]
+  },
+  "옛 견적 키": {
+   "status": 422,
+   "old": [
+    {
+     "loc": [
+      "body",
+      "*"
+     ],
+     "type": "nul"
+    }
+   ]
+  },
+  "옛 견적 drawing_id": {
+   "status": 422,
+   "old": [
+    {
+     "loc": [
+      "body",
+      "drawing_id"
+     ],
+     "type": "nul"
+    }
+   ]
+  },
+  "배치 1건 NUL": {
+   "status": 200,
+   "body": "{\"items\": [{\"task\": \"kd.labor_hours\", \"type\": \"regression\", \"tenant\": \"kd\", \"entity_id\": \"QA-R3-B0\", \"prediction\": {\"value\": 54.671333, \"unit\": \"h\", \"interval\": [46.80294, 62.539726], \"grade\": null, \"baseline\": 245.857012}, \"probability\": null, \"anomaly\": null, \"recommendation\": null, \"status\": \"watch\", \"warnings\": [{\"code\": \"near_range\", \"field\": \"total_mass_kg\", \"message\": \"학습 범위 가장자리입니다\"}, {\"co"
+  },
+  "견적 날 NUL 바이트": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": null,
+   "rule": "json_invalid"
+  },
+  "실측 날 NUL 바이트": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": null,
+   "rule": null
+  },
+  "옛 견적 날 NUL 바이트": {
+   "status": 422,
+   "old": [
+    {
+     "loc": [
+      "body"
+     ],
+     "type": "json_invalid"
+    }
+   ]
+  },
+  "결정 reason": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "reason",
+   "rule": "nul"
+  }
+ },
+ "N_counts": {
+  "before": {
+   "mlp_quote": 1,
+   "mlp_actual": 0,
+   "mlp_prediction": 1,
+   "mlp_approval": 1
+  },
+  "after": {
+   "mlp_quote": 3,
+   "mlp_actual": 0,
+   "mlp_prediction": 2,
+   "mlp_approval": 2
+  }
+ },
+ "N_query": {
+  "표준 견적 목록 search": {
+   "status": 500,
+   "body": "Internal Server Error"
+  },
+  "표준 문서 목록 search": {
+   "status": 500,
+   "body": "Internal Server Error"
+  },
+  "옛 견적 목록 search": {
+   "status": 500,
+   "body": "Internal Server Error"
+  },
+  "표준 견적 조회 id": {
+   "status": 404,
+   "code": "not_found",
+   "field": null,
+   "rule": null
+  },
+  "옛 견적 조회 id": {
+   "status": 404,
+   "body": "{'detail': '견적을 찾을 수 없습니다.'}"
+  }
+ },
+ "F": {
+  "+4분": {
+   "status": 200,
+   "body": "{'actual_id': 15, 'linked_prediction_ids': []}"
+  },
+  "+4분50초": {
+   "status": 200,
+   "body": "{'actual_id': 16, 'linked_prediction_ids': []}"
+  },
+  "+5분10초": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "observed_at",
+   "rule": "future"
+  },
+  "+6분": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "observed_at",
+   "rule": "future"
+  },
+  "+30일": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "observed_at",
+   "rule": "future"
+  },
+  "+6분 KST 표기": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "observed_at",
+   "rule": "future"
+  },
+  "+6분 -12:00 표기": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "observed_at",
+   "rule": "future"
+  },
+  "+4분 +14:00 표기": {
+   "status": 200,
+   "body": "{'actual_id': 17, 'linked_prediction_ids': []}"
+  },
+  "-1일(과거)": {
+   "status": 200,
+   "body": "{'actual_id': 18, 'linked_prediction_ids': []}"
+  }
+ },
+ "P": {
+  "E1": {
+   "p": [
+    "prd_01M4V1WQ0QWST8VTGFJA8J2EDF",
+    "prd_01M4V1WQ3BSHD11CVDMRX7D7D8",
+    "prd_01M4V1WSKPA2M1A4QNDW6SJ2XR"
+   ],
+   "a1": {
+    "actual_id": 19,
+    "linked_prediction_ids": [
+     "prd_01M4V1WQ3BSHD11CVDMRX7D7D8"
+    ]
+   },
+   "a2": {
+    "actual_id": 20,
+    "linked_prediction_ids": []
+   },
+   "a3": {
+    "actual_id": 21,
+    "linked_prediction_ids": [
+     "prd_01M4V1WSKPA2M1A4QNDW6SJ2XR"
+    ]
+   }
+  },
+  "E4": {
+   "first_link": [
+    "prd_01M4V1WV23FE31PGVRTEQTK3A1"
+   ],
+   "second_link": [
+    "prd_01M4V1WV23FE31PGVRTEQTK3A1"
+   ]
+  },
+  "pairs_db": [
+   [
+    19,
+    "prd_01M4V1WQ3BSHD11CVDMRX7D7D8"
+   ],
+   [
+    21,
+    "prd_01M4V1WSKPA2M1A4QNDW6SJ2XR"
+   ],
+   [
+    22,
+    "prd_01M4V1WTXZ8CJN0PPQFWNNYQA0"
+   ],
+   [
+    26,
+    "prd_01M4V1WV23FE31PGVRTEQTK3A1"
+   ]
+  ],
+  "pairs_resp": [
+   [
+    19,
+    "prd_01M4V1WQ3BSHD11CVDMRX7D7D8"
+   ],
+   [
+    21,
+    "prd_01M4V1WSKPA2M1A4QNDW6SJ2XR"
+   ],
+   [
+    22,
+    "prd_01M4V1WTXZ8CJN0PPQFWNNYQA0"
+   ],
+   [
+    26,
+    "prd_01M4V1WV23FE31PGVRTEQTK3A1"
+   ]
+  ],
+  "live_pairs_qa": [
+   "prd_01M4V1WQ3BSHD11CVDMRX7D7D8",
+   "prd_01M4V1WSKPA2M1A4QNDW6SJ2XR",
+   "prd_01M4V1WTXZ8CJN0PPQFWNNYQA0",
+   "prd_01M4V1WV23FE31PGVRTEQTK3A1"
+  ]
+ },
+ "Z": {
+  "품목 quantity \"5\"": {
+   "status": 201,
+   "db": 5,
+   "db_type": "int",
+   "resp": 5,
+   "resp_type": "int",
+   "total": "20955891"
+  },
+  "inputs.quantity \"1\"": {
+   "status": 201,
+   "db": 1,
+   "db_type": "int",
+   "resp": 1,
+   "resp_type": "int",
+   "total": "9035689"
+  },
+  "inputs.quantity \" 2 \"": {
+   "status": 201,
+   "db": 2,
+   "db_type": "int",
+   "resp": 2,
+   "resp_type": "int",
+   "total": "18071376"
+  },
+  "품목 price_kg \" 6500 \"": {
+   "status": 201,
+   "db": 6500,
+   "db_type": "int",
+   "resp": 6500,
+   "resp_type": "int",
+   "total": "9035689"
+  },
+  "품목 price_kg \"6500.0\"": {
+   "status": 201,
+   "db": 6500,
+   "db_type": "int",
+   "resp": 6500,
+   "resp_type": "int",
+   "total": "9035689"
+  },
+  "품목 price_kg 6500.50(숫자)": {
+   "status": 201,
+   "db": 6500.5,
+   "db_type": "float",
+   "resp": 6500.5,
+   "resp_type": "float",
+   "total": "9035908"
+  },
+  "품목 price_kg \"6500.50\"": {
+   "status": 201,
+   "db": 6500.5,
+   "db_type": "float",
+   "resp": 6500.5,
+   "resp_type": "float",
+   "total": "9035908"
+  },
+  "품목 mass_kg \" 1.50 \"": {
+   "status": 201,
+   "db": 1.5,
+   "db_type": "float",
+   "resp": 1.5,
+   "resp_type": "float",
+   "total": "6069605"
+  },
+  "inputs.cut_m \" 24.50 \"": {
+   "status": 201,
+   "db": 24.5,
+   "db_type": "float",
+   "resp": 24.5,
+   "resp_type": "float",
+   "total": "9038290"
+  },
+  "inputs.labor_rate \"45000\"": {
+   "status": 201,
+   "db": 45000,
+   "db_type": "int",
+   "resp": 45000,
+   "resp_type": "int",
+   "total": "9035689"
+  },
+  "inputs.product_family \" 반응기 \"": {
+   "status": 201,
+   "db": "반응기",
+   "db_type": "str",
+   "resp": "반응기",
+   "resp_type": "str",
+   "total": "9035689"
+  },
+  "품목 name \" SHELL \"": {
+   "status": 201,
+   "db": "SHELL",
+   "db_type": "str",
+   "resp": "SHELL",
+   "resp_type": "str",
+   "total": "9035689"
+  },
+  "품목 price_kg \"1e3\"": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "lines.0.price_kg",
+   "rule": "number"
+  },
+  "inputs.quantity \"1e0\"": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "rule": "number"
+  },
+  "inputs.quantity \"abc\"": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "rule": "number"
+  },
+  "inputs.quantity 1.5": {
+   "status": 422,
+   "code": "invalid_input",
+   "field": "quantity",
+   "rule": "integer"
+  }
+ }
+}
